@@ -63,6 +63,9 @@ export const ROUTES = {
   scorecard: '/metrics/scorecard',
   analytics: '/analytics',
 
+  // Help & Guide
+  guide: '/guide',
+
   // Accountability (Premium)
   accountability: '/accountability',
 

@@ -21,6 +21,7 @@ import {
   Eye,
   Trophy,
   Menu,
+  HelpCircle,
 } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
 
@@ -54,6 +55,7 @@ const advancedNavItems: NavItem[] = [
 ];
 
 const bottomNavItems: NavItem[] = [
+  { title: 'Guide', href: ROUTES.guide, icon: HelpCircle },
   { title: 'Settings', href: ROUTES.settings, icon: Settings },
 ];
 

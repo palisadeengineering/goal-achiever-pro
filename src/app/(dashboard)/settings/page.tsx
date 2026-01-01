@@ -27,7 +27,9 @@ import {
   Check,
   X,
   ExternalLink,
+  Clock,
 } from 'lucide-react';
+import { formatHour } from '@/lib/utils';
 import { useLocalStorage } from '@/lib/hooks/use-local-storage';
 
 interface UserSettings {
@@ -38,6 +40,8 @@ interface UserSettings {
   timeFormat: '12h' | '24h';
   pomodoroWorkMinutes: number;
   pomodoroBreakMinutes: number;
+  calendarStartHour: number;
+  calendarEndHour: number;
 }
 
 const DEFAULT_SETTINGS: UserSettings = {
@@ -48,6 +52,8 @@ const DEFAULT_SETTINGS: UserSettings = {
   timeFormat: '12h',
   pomodoroWorkMinutes: 25,
   pomodoroBreakMinutes: 5,
+  calendarStartHour: 5,
+  calendarEndHour: 23,
 };
 
 function SettingsContent() {
@@ -372,6 +378,66 @@ function SettingsContent() {
               </SelectContent>
             </Select>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Calendar Display */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="h-5 w-5" />
+            Calendar Display
+          </CardTitle>
+          <CardDescription>Configure how your time audit calendar appears</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Calendar Start Time</Label>
+              <p className="text-sm text-muted-foreground">First hour shown on calendar</p>
+            </div>
+            <Select
+              value={settings.calendarStartHour.toString()}
+              onValueChange={(v) => updateSetting('calendarStartHour', parseInt(v))}
+            >
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 24 }, (_, i) => (
+                  <SelectItem key={i} value={i.toString()}>
+                    {formatHour(i, settings.timeFormat)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Calendar End Time</Label>
+              <p className="text-sm text-muted-foreground">Last hour shown on calendar</p>
+            </div>
+            <Select
+              value={settings.calendarEndHour.toString()}
+              onValueChange={(v) => updateSetting('calendarEndHour', parseInt(v))}
+            >
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 24 }, (_, i) => (
+                  <SelectItem key={i} value={i.toString()}>
+                    {formatHour(i, settings.timeFormat)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {settings.calendarStartHour >= settings.calendarEndHour && (
+            <p className="text-sm text-destructive">
+              Start time must be before end time
+            </p>
+          )}
         </CardContent>
       </Card>
 

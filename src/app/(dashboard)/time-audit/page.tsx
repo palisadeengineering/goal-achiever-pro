@@ -7,9 +7,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Calendar, CalendarDays, CalendarRange, Lock } from 'lucide-react';
+import { Plus, Calendar, CalendarDays, CalendarRange, Lock, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { WeeklyCalendarView } from '@/components/features/time-audit/weekly-calendar-view';
+import { BulkCategorizationView } from '@/components/features/time-audit/bulk-categorization-view';
+import { useGoogleCalendar } from '@/lib/hooks/use-google-calendar';
+import { useEventPatterns } from '@/lib/hooks/use-event-patterns';
+import { startOfWeek, endOfWeek, addDays } from 'date-fns';
 import { BiweeklyCalendarView } from '@/components/features/time-audit/biweekly-calendar-view';
 import { MonthlyCalendarView } from '@/components/features/time-audit/monthly-calendar-view';
 import { DripPieChart } from '@/components/features/time-audit/drip-pie-chart';
@@ -61,6 +71,31 @@ export default function TimeAuditPage() {
   const [editingBlock, setEditingBlock] = useState<TimeBlock | undefined>();
   const [initialDate, setInitialDate] = useState<string>();
   const [initialTime, setInitialTime] = useState<string>();
+
+  // Google Calendar integration
+  const {
+    events: googleEvents,
+    isLoading: isLoadingGoogle,
+    isConnected: isGoogleConnected,
+    fetchEvents: fetchGoogleEvents,
+  } = useGoogleCalendar();
+
+  const { getUncategorizedEventIds } = useEventPatterns();
+
+  const [showCategorizationDialog, setShowCategorizationDialog] = useState(false);
+
+  // Fetch Google events when connected
+  const handleSyncGoogle = () => {
+    const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+    const weekEnd = endOfWeek(addDays(weekStart, 6), { weekStartsOn: 1 });
+    fetchGoogleEvents(weekStart, weekEnd);
+  };
+
+  // Count uncategorized events
+  const uncategorizedCount = useMemo(() => {
+    const eventIds = googleEvents.map((e) => e.id);
+    return getUncategorizedEventIds(eventIds).length;
+  }, [googleEvents, getUncategorizedEventIds]);
 
   // Transform time blocks for WeeklyCalendarView (grouped by date)
   const calendarTimeBlocks = useMemo(() => {
@@ -200,10 +235,35 @@ export default function TimeAuditPage() {
         title="Time & Energy Audit"
         description="Track how you spend your time and energy across DRIP quadrants"
         actions={
-          <Button onClick={handleLogTimeBlock}>
-            <Plus className="h-4 w-4 mr-2" />
-            Log Time Block
-          </Button>
+          <div className="flex items-center gap-2">
+            {isGoogleConnected && (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={handleSyncGoogle}
+                  disabled={isLoadingGoogle}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isLoadingGoogle ? 'animate-spin' : ''}`} />
+                  Sync Calendar
+                </Button>
+                {uncategorizedCount > 0 && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => setShowCategorizationDialog(true)}
+                  >
+                    <Badge variant="destructive" className="mr-2">
+                      {uncategorizedCount}
+                    </Badge>
+                    Categorize Events
+                  </Button>
+                )}
+              </>
+            )}
+            <Button onClick={handleLogTimeBlock}>
+              <Plus className="h-4 w-4 mr-2" />
+              Log Time Block
+            </Button>
+          </div>
         }
       />
 
@@ -216,6 +276,19 @@ export default function TimeAuditPage() {
         initialTime={initialTime}
         editBlock={editingBlock}
       />
+
+      {/* Google Calendar Categorization Dialog */}
+      <Dialog open={showCategorizationDialog} onOpenChange={setShowCategorizationDialog}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Categorize Google Calendar Events</DialogTitle>
+          </DialogHeader>
+          <BulkCategorizationView
+            events={googleEvents}
+            onComplete={() => setShowCategorizationDialog(false)}
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* Summary Stats */}
       <TimeSummaryStats

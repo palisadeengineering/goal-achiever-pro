@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { format, startOfWeek, addDays, isSameDay } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatHour } from '@/lib/utils';
 import { DRIP_QUADRANTS } from '@/constants/drip';
+import { useLocalStorage } from '@/lib/hooks/use-local-storage';
 import type { DripQuadrant, EnergyRating } from '@/types/database';
 
 interface TimeBlock {
@@ -19,16 +20,30 @@ interface TimeBlock {
   energyRating: EnergyRating;
 }
 
+interface UserSettings {
+  timeFormat: '12h' | '24h';
+  calendarStartHour: number;
+  calendarEndHour: number;
+  weekStartsOn: 'sunday' | 'monday';
+}
+
+const DEFAULT_SETTINGS: UserSettings = {
+  timeFormat: '12h',
+  calendarStartHour: 5,
+  calendarEndHour: 23,
+  weekStartsOn: 'sunday',
+};
+
 interface WeeklyCalendarViewProps {
   timeBlocks?: Record<string, TimeBlock[]>; // keyed by date string
   onAddBlock?: (date: Date, time: string) => void;
   onBlockClick?: (block: TimeBlock) => void;
 }
 
-// Generate time slots from 6am to 10pm in 15-min increments
-const generateTimeSlots = () => {
+// Generate time slots for given hour range in 15-min increments
+const generateTimeSlots = (startHour: number, endHour: number): string[] => {
   const slots: string[] = [];
-  for (let hour = 6; hour <= 22; hour++) {
+  for (let hour = startHour; hour <= endHour; hour++) {
     for (let min = 0; min < 60; min += 15) {
       slots.push(`${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`);
     }
@@ -36,18 +51,29 @@ const generateTimeSlots = () => {
   return slots;
 };
 
-const TIME_SLOTS = generateTimeSlots();
-
-// Show only hourly labels to reduce clutter
-const HOUR_LABELS = TIME_SLOTS.filter(slot => slot.endsWith(':00'));
-
 export function WeeklyCalendarView({
   timeBlocks = {},
   onAddBlock,
   onBlockClick,
 }: WeeklyCalendarViewProps) {
+  const [settings] = useLocalStorage<UserSettings>('user-settings', DEFAULT_SETTINGS);
+
+  const weekStartsOn = settings.weekStartsOn === 'monday' ? 1 : 0;
+
   const [currentWeekStart, setCurrentWeekStart] = useState(() =>
-    startOfWeek(new Date(), { weekStartsOn: 1 }) // Monday
+    startOfWeek(new Date(), { weekStartsOn })
+  );
+
+  // Generate time slots based on user settings
+  const timeSlots = useMemo(
+    () => generateTimeSlots(settings.calendarStartHour, settings.calendarEndHour),
+    [settings.calendarStartHour, settings.calendarEndHour]
+  );
+
+  // Get hourly labels for the time column
+  const hourLabels = useMemo(
+    () => timeSlots.filter(slot => slot.endsWith(':00')),
+    [timeSlots]
   );
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(currentWeekStart, i));
@@ -61,7 +87,7 @@ export function WeeklyCalendarView({
   };
 
   const goToToday = () => {
-    setCurrentWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }));
+    setCurrentWeekStart(startOfWeek(new Date(), { weekStartsOn }));
   };
 
   const getBlocksForDateAndTime = (date: Date, time: string): TimeBlock | undefined => {
@@ -128,11 +154,11 @@ export function WeeklyCalendarView({
 
             {/* Time Grid */}
             <div className="max-h-[500px] overflow-y-auto">
-              {HOUR_LABELS.map((hourSlot) => (
+              {hourLabels.map((hourSlot: string) => (
                 <div key={hourSlot} className="grid grid-cols-8 border-b">
                   {/* Time Label */}
                   <div className="p-1 text-xs text-muted-foreground border-r flex items-start justify-end pr-2">
-                    {hourSlot}
+                    {formatHour(parseInt(hourSlot.split(':')[0]), settings.timeFormat)}
                   </div>
 
                   {/* Day Columns */}
