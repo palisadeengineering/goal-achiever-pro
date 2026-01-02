@@ -8,8 +8,12 @@ export interface GoogleCalendarEvent {
   description?: string;
   start: { dateTime?: string; date?: string; timeZone?: string };
   end: { dateTime?: string; date?: string; timeZone?: string };
+  date?: string;
+  startTime?: string;
+  endTime?: string;
   colorId?: string;
   htmlLink?: string;
+  source?: string;
 }
 
 interface UseGoogleCalendarReturn {
@@ -17,10 +21,11 @@ interface UseGoogleCalendarReturn {
   isLoading: boolean;
   error: string | null;
   isConnected: boolean;
+  isCheckingConnection: boolean;
   fetchEvents: (startDate: Date, endDate: Date) => Promise<void>;
-  connect: () => void;
+  connect: () => Promise<void>;
   disconnect: () => Promise<void>;
-  checkConnection: () => void;
+  checkConnection: () => Promise<void>;
 }
 
 export function useGoogleCalendar(): UseGoogleCalendarReturn {
@@ -28,11 +33,21 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [isCheckingConnection, setIsCheckingConnection] = useState(true);
 
-  // Check connection status on mount
-  const checkConnection = useCallback(() => {
-    const connected = localStorage.getItem('google_calendar_connected') === 'true';
-    setIsConnected(connected);
+  // Check connection status via API
+  const checkConnection = useCallback(async () => {
+    setIsCheckingConnection(true);
+    try {
+      const response = await fetch('/api/calendar/google/status');
+      const data = await response.json();
+      setIsConnected(data.connected === true);
+    } catch (err) {
+      console.error('Failed to check Google Calendar connection:', err);
+      setIsConnected(false);
+    } finally {
+      setIsCheckingConnection(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -53,7 +68,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
 
       if (response.status === 401) {
         setIsConnected(false);
-        localStorage.removeItem('google_calendar_connected');
         setError('Google Calendar session expired. Please reconnect.');
         return;
       }
@@ -64,7 +78,19 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
       }
 
       const data = await response.json();
-      setEvents(data.items || []);
+      // Transform the response to match our GoogleCalendarEvent interface
+      const transformedEvents: GoogleCalendarEvent[] = (data.events || []).map((event: GoogleCalendarEvent & { activityName?: string }) => ({
+        id: event.id,
+        summary: event.activityName || event.summary || 'Untitled Event',
+        description: event.description,
+        start: event.start || { dateTime: event.startTime },
+        end: event.end || { dateTime: event.endTime },
+        date: event.date,
+        startTime: event.startTime,
+        endTime: event.endTime,
+        source: event.source || 'google_calendar',
+      }));
+      setEvents(transformedEvents);
       setIsConnected(true);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch events';
@@ -75,15 +101,27 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
     }
   }, []);
 
-  const connect = useCallback(() => {
-    // Redirect to OAuth flow
-    window.location.href = '/api/calendar/google';
+  const connect = useCallback(async () => {
+    try {
+      // Get the OAuth URL from the API
+      const response = await fetch('/api/calendar/google');
+      const data = await response.json();
+
+      if (data.authUrl) {
+        // Redirect to Google OAuth
+        window.location.href = data.authUrl;
+      } else if (data.error) {
+        setError(data.error);
+      }
+    } catch (err) {
+      console.error('Failed to initiate Google Calendar connection:', err);
+      setError('Failed to connect to Google Calendar');
+    }
   }, []);
 
   const disconnect = useCallback(async () => {
     try {
       await fetch('/api/calendar/google', { method: 'DELETE' });
-      localStorage.removeItem('google_calendar_connected');
       setIsConnected(false);
       setEvents([]);
       setError(null);
@@ -98,6 +136,7 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
     isLoading,
     error,
     isConnected,
+    isCheckingConnection,
     fetchEvents,
     connect,
     disconnect,

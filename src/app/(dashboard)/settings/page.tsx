@@ -83,11 +83,19 @@ function SettingsContent() {
     }
   }, [searchParams]);
 
-  // Check if Google Calendar is connected (by checking if we have tokens)
+  // Check if Google Calendar is connected via API
   useEffect(() => {
-    // Check local storage for connection status (demo purposes)
-    const connected = localStorage.getItem('google_calendar_connected') === 'true';
-    setGoogleConnected(connected);
+    const checkGoogleConnection = async () => {
+      try {
+        const response = await fetch('/api/calendar/google/status');
+        const data = await response.json();
+        setGoogleConnected(data.connected === true);
+      } catch (error) {
+        console.error('Failed to check Google Calendar status:', error);
+        setGoogleConnected(false);
+      }
+    };
+    checkGoogleConnection();
   }, []);
 
   const connectGoogleCalendar = async () => {
@@ -97,8 +105,6 @@ function SettingsContent() {
       const data = await response.json();
 
       if (data.authUrl) {
-        // Store pending connection status
-        localStorage.setItem('google_calendar_connecting', 'true');
         window.location.href = data.authUrl;
       } else if (data.error) {
         setStatusMessage({ type: 'error', message: data.error });
@@ -113,7 +119,6 @@ function SettingsContent() {
   const disconnectGoogleCalendar = async () => {
     try {
       await fetch('/api/calendar/google', { method: 'DELETE' });
-      localStorage.removeItem('google_calendar_connected');
       setGoogleConnected(false);
       setStatusMessage({ type: 'success', message: 'Disconnected from Google Calendar' });
     } catch (error) {
