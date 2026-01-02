@@ -130,7 +130,8 @@ export default function HomePage() {
             </Badge>
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
               Achieve Your Goals in 2026
-              <span className="text-primary"> with Clarity</span>
+              <br />
+              <span className="text-primary">with Clarity</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
               Picture December 31st, 2026. You&apos;re looking back at the year and you finally stuck to your goals.
@@ -163,6 +164,72 @@ export default function HomePage() {
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-5 w-5 text-green-600" />
                 <span className="text-sm">Cancel anytime</span>
+              </div>
+            </div>
+
+            {/* How It Works Flow Diagram */}
+            <div className="mt-16 pt-12 border-t">
+              <h3 className="text-lg font-semibold text-muted-foreground mb-8">How It Works</h3>
+              <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-0">
+                {/* Step 1 */}
+                <div className="flex flex-col items-center text-center max-w-[160px]">
+                  <div className="h-14 w-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center mb-3 text-xl font-bold">
+                    1
+                  </div>
+                  <h4 className="font-semibold text-sm mb-1">Set Your Vision</h4>
+                  <p className="text-xs text-muted-foreground">Define your 2026 goals & break into 12 projects</p>
+                </div>
+
+                {/* Arrow */}
+                <div className="hidden md:flex items-center px-4">
+                  <ArrowRight className="h-6 w-6 text-primary/40" />
+                </div>
+                <div className="md:hidden py-2">
+                  <ArrowRight className="h-6 w-6 text-primary/40 rotate-90" />
+                </div>
+
+                {/* Step 2 */}
+                <div className="flex flex-col items-center text-center max-w-[160px]">
+                  <div className="h-14 w-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center mb-3 text-xl font-bold">
+                    2
+                  </div>
+                  <h4 className="font-semibold text-sm mb-1">Audit Your Time</h4>
+                  <p className="text-xs text-muted-foreground">Track every hour & categorize with DRIP</p>
+                </div>
+
+                {/* Arrow */}
+                <div className="hidden md:flex items-center px-4">
+                  <ArrowRight className="h-6 w-6 text-primary/40" />
+                </div>
+                <div className="md:hidden py-2">
+                  <ArrowRight className="h-6 w-6 text-primary/40 rotate-90" />
+                </div>
+
+                {/* Step 3 */}
+                <div className="flex flex-col items-center text-center max-w-[160px]">
+                  <div className="h-14 w-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center mb-3 text-xl font-bold">
+                    3
+                  </div>
+                  <h4 className="font-semibold text-sm mb-1">Build Systems</h4>
+                  <p className="text-xs text-muted-foreground">Create routines & use Pomodoro sprints</p>
+                </div>
+
+                {/* Arrow */}
+                <div className="hidden md:flex items-center px-4">
+                  <ArrowRight className="h-6 w-6 text-primary/40" />
+                </div>
+                <div className="md:hidden py-2">
+                  <ArrowRight className="h-6 w-6 text-primary/40 rotate-90" />
+                </div>
+
+                {/* Step 4 */}
+                <div className="flex flex-col items-center text-center max-w-[160px]">
+                  <div className="h-14 w-14 rounded-full bg-green-600 text-white flex items-center justify-center mb-3">
+                    <Trophy className="h-6 w-6" />
+                  </div>
+                  <h4 className="font-semibold text-sm mb-1">Achieve Goals</h4>
+                  <p className="text-xs text-muted-foreground">Track progress & celebrate your wins</p>
+                </div>
               </div>
             </div>
           </div>
