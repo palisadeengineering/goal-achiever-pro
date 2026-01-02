@@ -13,7 +13,20 @@ import { DRIP_QUADRANTS, ENERGY_RATINGS } from '@/constants/drip';
 import type { DripQuadrant, EnergyRating } from '@/types/database';
 import type { GoogleCalendarEvent } from '@/lib/hooks/use-google-calendar';
 import { CheckCircle2, ListTodo, Sparkles } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isValid } from 'date-fns';
+
+// Safe date parsing helper
+function safeParseDate(dateString: string | undefined | null): Date | null {
+  if (!dateString || typeof dateString !== 'string' || dateString.trim() === '') {
+    return null;
+  }
+  try {
+    const parsed = parseISO(dateString);
+    return isValid(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
 
 interface BulkCategorizationViewProps {
   events: GoogleCalendarEvent[];
@@ -284,9 +297,7 @@ function GroupCard({ group, onApply }: GroupCardProps) {
           <div className="p-2 rounded bg-muted/50 mb-3">
             <div className="space-y-1 max-h-32 overflow-y-auto">
               {group.events.map((event) => {
-                const startTime = event.start.dateTime
-                  ? parseISO(event.start.dateTime)
-                  : null;
+                const startTime = safeParseDate(event.start?.dateTime || event.startTime);
                 return (
                   <div
                     key={event.id}

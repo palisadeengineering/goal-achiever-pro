@@ -10,7 +10,20 @@ import { DRIP_QUADRANTS, ENERGY_RATINGS } from '@/constants/drip';
 import type { DripQuadrant, EnergyRating } from '@/types/database';
 import type { GoogleCalendarEvent } from '@/lib/hooks/use-google-calendar';
 import { Calendar, Clock, Sparkles, SkipForward } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isValid } from 'date-fns';
+
+// Safe date parsing helper
+function safeParseDate(dateString: string | undefined | null): Date | null {
+  if (!dateString || typeof dateString !== 'string' || dateString.trim() === '') {
+    return null;
+  }
+  try {
+    const parsed = parseISO(dateString);
+    return isValid(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
 
 interface GoogleEventCategorizerProps {
   event: GoogleCalendarEvent;
@@ -51,18 +64,9 @@ export function GoogleEventCategorizer({
     onCategorize(event.id, suggestion.dripQuadrant, suggestion.energyRating);
   };
 
-  // Get event time info
-  const startTime = event.start.dateTime
-    ? parseISO(event.start.dateTime)
-    : event.start.date
-    ? parseISO(event.start.date)
-    : null;
-
-  const endTime = event.end.dateTime
-    ? parseISO(event.end.dateTime)
-    : event.end.date
-    ? parseISO(event.end.date)
-    : null;
+  // Get event time info - use safe parsing to handle invalid/empty dates
+  const startTime = safeParseDate(event.start?.dateTime) || safeParseDate(event.start?.date) || safeParseDate(event.startTime);
+  const endTime = safeParseDate(event.end?.dateTime) || safeParseDate(event.end?.date) || safeParseDate(event.endTime);
 
   return (
     <Card>
