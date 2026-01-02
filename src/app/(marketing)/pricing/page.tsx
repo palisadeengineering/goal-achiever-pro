@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Check, X, Target, ArrowLeft } from 'lucide-react';
+import { Check, X, Target, ArrowLeft, ArrowRight, Sparkles, Zap } from 'lucide-react';
 import { PRICING_TIERS, FEATURE_COMPARISON } from '@/lib/stripe/config';
 import { ROUTES } from '@/constants/routes';
 
@@ -15,28 +15,33 @@ export default function PricingPage() {
   const [isYearly, setIsYearly] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-background">
+      <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md">
         <div className="container flex h-16 items-center justify-between px-4">
-          <Link href="/" className="flex items-center gap-2 font-semibold">
-            <Target className="h-6 w-6 text-primary" />
-            <span>Goal Achiever Pro</span>
+          <Link href="/" className="flex items-center gap-2.5 font-semibold group">
+            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center group-hover:scale-105 transition-transform">
+              <Target className="h-4.5 w-4.5 text-primary-foreground" />
+            </div>
+            <span className="font-display font-bold text-lg">Goal Achiever Pro</span>
           </Link>
           <Link href="/">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
+            <Button variant="ghost" size="sm" className="gap-2">
+              <ArrowLeft className="h-4 w-4" />
               Back to Home
             </Button>
           </Link>
         </div>
       </header>
 
-      <main className="container py-16 px-4">
+      <main className="container py-20 px-4">
         {/* Hero */}
-        <div className="text-center mb-12">
-          <Badge className="mb-4">Pricing</Badge>
-          <h1 className="text-4xl font-bold tracking-tight mb-4">
+        <div className="text-center mb-16">
+          <Badge className="mb-6 bg-primary/10 text-primary border-0 px-4 py-1.5">
+            <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+            Simple Pricing
+          </Badge>
+          <h1 className="font-display text-4xl md:text-5xl font-bold tracking-tight mb-4">
             Choose Your Path to Success
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -44,71 +49,94 @@ export default function PricingPage() {
           </p>
 
           {/* Billing Toggle */}
-          <div className="flex items-center justify-center gap-3 mt-8">
-            <Label htmlFor="billing-toggle" className={!isYearly ? 'font-medium' : 'text-muted-foreground'}>
+          <div className="flex items-center justify-center gap-4 mt-10 p-1 bg-muted/50 rounded-full w-fit mx-auto">
+            <button
+              onClick={() => setIsYearly(false)}
+              className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
+                !isYearly
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
               Monthly
-            </Label>
-            <Switch
-              id="billing-toggle"
-              checked={isYearly}
-              onCheckedChange={setIsYearly}
-            />
-            <Label htmlFor="billing-toggle" className={isYearly ? 'font-medium' : 'text-muted-foreground'}>
+            </button>
+            <button
+              onClick={() => setIsYearly(true)}
+              className={`px-5 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
+                isYearly
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
               Yearly
-              <Badge variant="secondary" className="ml-2">Save 30%</Badge>
-            </Label>
+              <Badge variant="success" size="sm">Save 30%</Badge>
+            </button>
           </div>
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {PRICING_TIERS.map((tier) => (
+        <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto">
+          {PRICING_TIERS.map((tier, index) => (
             <Card
               key={tier.id}
-              className={`relative ${
+              className={`relative card-hover-lift ${
                 tier.highlighted
-                  ? 'border-2 border-primary shadow-lg scale-105'
-                  : ''
+                  ? 'border-2 border-primary shadow-xl ring-2 ring-primary/20 ring-offset-2 scale-[1.02] md:scale-105'
+                  : 'border-2'
               }`}
             >
               {tier.highlighted && (
-                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  Most Popular
-                </Badge>
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                  <Badge className="shadow-md px-4 py-1">
+                    <Zap className="h-3 w-3 mr-1" />
+                    Most Popular
+                  </Badge>
+                </div>
               )}
-              <CardHeader>
-                <CardTitle>{tier.name}</CardTitle>
-                <CardDescription>{tier.description}</CardDescription>
+              <CardHeader className="pb-4">
+                <CardTitle className="font-display text-xl">{tier.name}</CardTitle>
+                <CardDescription className="text-sm">{tier.description}</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pb-6">
                 <div className="mb-6">
-                  <span className="text-4xl font-bold">
-                    ${isYearly ? Math.round(tier.yearlyPrice / 12) : tier.monthlyPrice}
-                  </span>
-                  <span className="text-muted-foreground">/month</span>
+                  <div className="flex items-baseline gap-1">
+                    <span className="font-display text-5xl font-bold number-display">
+                      ${isYearly ? Math.round(tier.yearlyPrice / 12) : tier.monthlyPrice}
+                    </span>
+                    <span className="text-muted-foreground">/month</span>
+                  </div>
                   {isYearly && tier.yearlyPrice > 0 && (
                     <p className="text-sm text-muted-foreground mt-1">
                       Billed ${tier.yearlyPrice}/year
                     </p>
                   )}
+                  {tier.monthlyPrice === 0 && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Free forever
+                    </p>
+                  )}
                 </div>
 
                 <ul className="space-y-3">
-                  {tier.features.map((feature, index) => (
-                    <li key={index} className="flex items-start gap-2">
-                      <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                  {tier.features.map((feature, featureIndex) => (
+                    <li key={featureIndex} className="flex items-start gap-3">
+                      <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <Check className="h-3 w-3 text-primary" />
+                      </div>
                       <span className="text-sm">{feature}</span>
                     </li>
                   ))}
                 </ul>
               </CardContent>
-              <CardFooter>
-                <Link href={tier.id === 'free' ? ROUTES.signup : ROUTES.signup} className="w-full">
+              <CardFooter className="pt-0">
+                <Link href={ROUTES.signup} className="w-full">
                   <Button
-                    className="w-full"
+                    className={`w-full btn-lift font-semibold ${tier.highlighted ? '' : ''}`}
                     variant={tier.highlighted ? 'default' : 'outline'}
+                    size="lg"
                   >
                     {tier.cta}
+                    <ArrowRight className="h-4 w-4 ml-1" />
                   </Button>
                 </Link>
               </CardFooter>
@@ -117,31 +145,39 @@ export default function PricingPage() {
         </div>
 
         {/* Feature Comparison */}
-        <div className="mt-20">
-          <h2 className="text-2xl font-bold text-center mb-8">
-            Feature Comparison
-          </h2>
-          <div className="overflow-x-auto">
+        <div className="mt-24">
+          <div className="text-center mb-10">
+            <Badge className="mb-4" variant="outline">Compare Plans</Badge>
+            <h2 className="font-display text-2xl md:text-3xl font-bold">
+              Feature Comparison
+            </h2>
+          </div>
+          <div className="overflow-x-auto rounded-xl border bg-card">
             <table className="w-full max-w-4xl mx-auto">
               <thead>
-                <tr className="border-b">
-                  <th className="text-left py-4 px-4">Feature</th>
-                  <th className="text-center py-4 px-4">Free</th>
-                  <th className="text-center py-4 px-4 bg-primary/5">Pro</th>
-                  <th className="text-center py-4 px-4">Premium</th>
+                <tr className="border-b bg-muted/30">
+                  <th className="text-left py-4 px-6 font-display font-semibold">Feature</th>
+                  <th className="text-center py-4 px-6 font-display font-semibold">Free</th>
+                  <th className="text-center py-4 px-6 font-display font-semibold bg-primary/5">
+                    <div className="flex items-center justify-center gap-2">
+                      Pro
+                      <Badge size="sm" className="bg-primary">Popular</Badge>
+                    </div>
+                  </th>
+                  <th className="text-center py-4 px-6 font-display font-semibold">Premium</th>
                 </tr>
               </thead>
               <tbody>
-                {Object.entries(FEATURE_COMPARISON).map(([feature, tiers]) => (
-                  <tr key={feature} className="border-b">
-                    <td className="py-3 px-4 text-sm">{feature}</td>
-                    <td className="py-3 px-4 text-center">
+                {Object.entries(FEATURE_COMPARISON).map(([feature, tiers], index) => (
+                  <tr key={feature} className={`border-b last:border-0 ${index % 2 === 0 ? '' : 'bg-muted/20'}`}>
+                    <td className="py-4 px-6 text-sm font-medium">{feature}</td>
+                    <td className="py-4 px-6 text-center">
                       {renderFeatureValue(tiers.free)}
                     </td>
-                    <td className="py-3 px-4 text-center bg-primary/5">
+                    <td className="py-4 px-6 text-center bg-primary/5">
                       {renderFeatureValue(tiers.pro)}
                     </td>
-                    <td className="py-3 px-4 text-center">
+                    <td className="py-4 px-6 text-center">
                       {renderFeatureValue(tiers.premium)}
                     </td>
                   </tr>
@@ -152,57 +188,77 @@ export default function PricingPage() {
         </div>
 
         {/* FAQ */}
-        <div className="mt-20 max-w-3xl mx-auto">
-          <h2 className="text-2xl font-bold text-center mb-8">
-            Frequently Asked Questions
-          </h2>
-          <div className="space-y-6">
-            <div>
-              <h3 className="font-semibold mb-2">Can I switch plans anytime?</h3>
-              <p className="text-muted-foreground">
-                Yes! You can upgrade, downgrade, or cancel your subscription at any time.
-                Changes take effect at your next billing cycle.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-2">Is there a free trial?</h3>
-              <p className="text-muted-foreground">
-                All paid plans include a 14-day free trial. No credit card required to start.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-2">What payment methods do you accept?</h3>
-              <p className="text-muted-foreground">
-                We accept all major credit cards (Visa, MasterCard, American Express) through Stripe.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-2">Can I get a refund?</h3>
-              <p className="text-muted-foreground">
-                If you&apos;re not satisfied within the first 30 days, contact us for a full refund.
-              </p>
-            </div>
+        <div className="mt-24 max-w-3xl mx-auto">
+          <div className="text-center mb-10">
+            <Badge className="mb-4" variant="outline">FAQ</Badge>
+            <h2 className="font-display text-2xl md:text-3xl font-bold">
+              Frequently Asked Questions
+            </h2>
+          </div>
+          <div className="grid gap-6">
+            {[
+              {
+                q: 'Can I switch plans anytime?',
+                a: 'Yes! You can upgrade, downgrade, or cancel your subscription at any time. Changes take effect at your next billing cycle.',
+              },
+              {
+                q: 'Is there a free trial?',
+                a: 'All paid plans include a 14-day free trial. No credit card required to start.',
+              },
+              {
+                q: 'What payment methods do you accept?',
+                a: 'We accept all major credit cards (Visa, MasterCard, American Express) through Stripe.',
+              },
+              {
+                q: 'Can I get a refund?',
+                a: "If you're not satisfied within the first 30 days, contact us for a full refund.",
+              },
+            ].map((faq, index) => (
+              <Card key={index} className="border-2">
+                <CardContent className="pt-6">
+                  <h3 className="font-display font-semibold text-lg mb-2">{faq.q}</h3>
+                  <p className="text-muted-foreground leading-relaxed">{faq.a}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
 
         {/* CTA */}
-        <div className="mt-20 text-center">
-          <h2 className="text-2xl font-bold mb-4">
-            Ready to Achieve Your Goals?
-          </h2>
-          <p className="text-muted-foreground mb-6">
-            Start your journey today with our free plan. No credit card required.
-          </p>
-          <Link href={ROUTES.signup}>
-            <Button size="lg">Get Started Free</Button>
-          </Link>
+        <div className="mt-24 text-center py-16 px-8 bg-gradient-to-br from-primary to-primary/90 rounded-2xl text-primary-foreground relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-50" />
+          <div className="relative">
+            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
+              Ready to Achieve Your Goals?
+            </h2>
+            <p className="text-primary-foreground/80 mb-8 text-lg max-w-xl mx-auto">
+              Start your journey today with our free plan. No credit card required.
+            </p>
+            <Link href={ROUTES.signup}>
+              <Button size="lg" variant="secondary" className="btn-lift gap-2 font-semibold text-base px-8">
+                Get Started Free <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="border-t py-8 mt-20">
-        <div className="container px-4 text-center text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Goal Achiever Pro. All rights reserved.
+      <footer className="border-t py-8 mt-8">
+        <div className="container px-4 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <div className="h-6 w-6 rounded-md bg-primary flex items-center justify-center">
+              <Target className="h-3.5 w-3.5 text-primary-foreground" />
+            </div>
+            <span className="font-display font-semibold text-sm">Goal Achiever Pro</span>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            &copy; {new Date().getFullYear()} Goal Achiever Pro. All rights reserved.
+          </p>
+          <nav className="flex gap-6 text-sm text-muted-foreground">
+            <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+          </nav>
         </div>
       </footer>
     </div>
@@ -211,10 +267,18 @@ export default function PricingPage() {
 
 function renderFeatureValue(value: boolean | string) {
   if (value === true) {
-    return <Check className="h-5 w-5 text-green-500 mx-auto" />;
+    return (
+      <div className="h-6 w-6 rounded-full bg-emerald-100 flex items-center justify-center mx-auto">
+        <Check className="h-3.5 w-3.5 text-emerald-600" />
+      </div>
+    );
   }
   if (value === false) {
-    return <X className="h-5 w-5 text-muted-foreground mx-auto" />;
+    return (
+      <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center mx-auto">
+        <X className="h-3.5 w-3.5 text-muted-foreground" />
+      </div>
+    );
   }
-  return <span className="text-sm">{value}</span>;
+  return <span className="text-sm font-medium">{value}</span>;
 }

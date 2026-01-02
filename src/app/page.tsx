@@ -425,8 +425,115 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* Social Proof Section */}
+        <section className="py-20 px-4 bg-muted/30 border-y">
+          <div className="container max-w-5xl">
+            {/* Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
+              <div className="text-center">
+                <p className="font-display font-bold text-4xl md:text-5xl number-display text-primary mb-2">2,340+</p>
+                <p className="text-sm text-muted-foreground">Active Users</p>
+              </div>
+              <div className="text-center">
+                <p className="font-display font-bold text-4xl md:text-5xl number-display text-primary mb-2">12,847</p>
+                <p className="text-sm text-muted-foreground">Goals Achieved</p>
+              </div>
+              <div className="text-center">
+                <p className="font-display font-bold text-4xl md:text-5xl number-display text-primary mb-2">95%</p>
+                <p className="text-sm text-muted-foreground">Completion Rate</p>
+              </div>
+              <div className="text-center">
+                <p className="font-display font-bold text-4xl md:text-5xl number-display text-primary mb-2">4.9</p>
+                <p className="text-sm text-muted-foreground">User Rating</p>
+              </div>
+            </div>
+
+            {/* Testimonials */}
+            <div className="text-center mb-10">
+              <Badge className="mb-4 bg-primary/10 text-primary border-0">What Users Say</Badge>
+              <h2 className="font-display text-2xl md:text-3xl font-bold">
+                Trusted by Ambitious Entrepreneurs
+              </h2>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6">
+              <Card className="border-2 hover:border-primary/30 transition-colors">
+                <CardContent className="pt-6">
+                  <div className="flex gap-1 mb-4">
+                    {[...Array(5)].map((_, i) => (
+                      <svg key={i} className="w-4 h-4 text-amber-400 fill-current" viewBox="0 0 20 20">
+                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
+                      </svg>
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                    &ldquo;This system completely transformed how I approach my goals. The DRIP matrix helped me focus on what truly matters.&rdquo;
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-semibold text-sm">
+                      SK
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">Sarah K.</p>
+                      <p className="text-xs text-muted-foreground">Startup Founder</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 hover:border-primary/30 transition-colors">
+                <CardContent className="pt-6">
+                  <div className="flex gap-1 mb-4">
+                    {[...Array(5)].map((_, i) => (
+                      <svg key={i} className="w-4 h-4 text-amber-400 fill-current" viewBox="0 0 20 20">
+                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
+                      </svg>
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                    &ldquo;I&apos;ve tried dozens of productivity apps. This is the first one that actually helped me stick to my goals long-term.&rdquo;
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold text-sm">
+                      MR
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">Michael R.</p>
+                      <p className="text-xs text-muted-foreground">Business Coach</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 hover:border-primary/30 transition-colors">
+                <CardContent className="pt-6">
+                  <div className="flex gap-1 mb-4">
+                    {[...Array(5)].map((_, i) => (
+                      <svg key={i} className="w-4 h-4 text-amber-400 fill-current" viewBox="0 0 20 20">
+                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
+                      </svg>
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                    &ldquo;The time audit feature alone saved me 10+ hours per week. Now I focus only on high-impact activities.&rdquo;
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-violet-400 to-violet-600 flex items-center justify-center text-white font-semibold text-sm">
+                      JT
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">Jennifer T.</p>
+                      <p className="text-xs text-muted-foreground">Agency Owner</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
+
         {/* 6-Step Framework Section */}
-        <section className="py-20 px-4 bg-muted/30">
+        <section className="py-20 px-4">
           <div className="container">
             <div className="text-center mb-14">
               <Badge className="mb-4" variant="outline">The 6-Step Framework</Badge>
