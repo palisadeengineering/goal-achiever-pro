@@ -120,7 +120,15 @@ export async function GET(request: NextRequest) {
         activityName: event.summary || 'Untitled Event',
         description: event.description || '',
         source: 'google_calendar',
-        originalEvent: event,
+        // Include full datetime info for display
+        start: {
+          dateTime: event.start.dateTime || start.toISOString(),
+          date: event.start.date,
+        },
+        end: {
+          dateTime: event.end.dateTime || end.toISOString(),
+          date: event.end.date,
+        },
       };
     }) || [];
 

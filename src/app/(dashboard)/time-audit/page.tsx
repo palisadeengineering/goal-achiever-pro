@@ -7,7 +7,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Calendar, CalendarDays, CalendarRange, Lock, RefreshCw } from 'lucide-react';
+import { Plus, Calendar, CalendarDays, CalendarRange, Lock, RefreshCw, ChevronDown } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import Link from 'next/link';
 import {
   Dialog,
@@ -19,7 +25,7 @@ import { WeeklyCalendarView } from '@/components/features/time-audit/weekly-cale
 import { BulkCategorizationView } from '@/components/features/time-audit/bulk-categorization-view';
 import { useGoogleCalendar } from '@/lib/hooks/use-google-calendar';
 import { useEventPatterns } from '@/lib/hooks/use-event-patterns';
-import { startOfWeek, endOfWeek, addDays } from 'date-fns';
+import { startOfWeek, endOfWeek, addDays, addWeeks, addMonths } from 'date-fns';
 import { BiweeklyCalendarView } from '@/components/features/time-audit/biweekly-calendar-view';
 import { MonthlyCalendarView } from '@/components/features/time-audit/monthly-calendar-view';
 import { DripPieChart } from '@/components/features/time-audit/drip-pie-chart';
@@ -83,12 +89,41 @@ export default function TimeAuditPage() {
   const { getUncategorizedEventIds, getCategorization } = useEventPatterns();
 
   const [showCategorizationDialog, setShowCategorizationDialog] = useState(false);
+  const [syncTimeframe, setSyncTimeframe] = useLocalStorage<'1week' | '2weeks' | '1month'>('google-sync-timeframe', '1week');
 
   // Fetch Google events when connected
-  const handleSyncGoogle = () => {
-    const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
-    const weekEnd = endOfWeek(addDays(weekStart, 6), { weekStartsOn: 1 });
-    fetchGoogleEvents(weekStart, weekEnd);
+  const handleSyncGoogle = (timeframe?: '1week' | '2weeks' | '1month') => {
+    const selectedTimeframe = timeframe || syncTimeframe;
+    if (timeframe) {
+      setSyncTimeframe(timeframe);
+    }
+
+    const today = new Date();
+    const weekStart = startOfWeek(today, { weekStartsOn: 1 });
+    let endDate: Date;
+
+    switch (selectedTimeframe) {
+      case '2weeks':
+        endDate = endOfWeek(addWeeks(weekStart, 1), { weekStartsOn: 1 });
+        break;
+      case '1month':
+        endDate = addMonths(weekStart, 1);
+        break;
+      case '1week':
+      default:
+        endDate = endOfWeek(addDays(weekStart, 6), { weekStartsOn: 1 });
+        break;
+    }
+
+    fetchGoogleEvents(weekStart, endDate);
+  };
+
+  const getTimeframeLabel = (tf: string) => {
+    switch (tf) {
+      case '2weeks': return '2 Weeks';
+      case '1month': return '1 Month';
+      default: return '1 Week';
+    }
   };
 
   // Count uncategorized events
@@ -280,14 +315,29 @@ export default function TimeAuditPage() {
           <div className="flex items-center gap-2">
             {isGoogleConnected && (
               <>
-                <Button
-                  variant="outline"
-                  onClick={handleSyncGoogle}
-                  disabled={isLoadingGoogle}
-                >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${isLoadingGoogle ? 'animate-spin' : ''}`} />
-                  Sync Calendar
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      disabled={isLoadingGoogle}
+                    >
+                      <RefreshCw className={`h-4 w-4 mr-2 ${isLoadingGoogle ? 'animate-spin' : ''}`} />
+                      Sync {getTimeframeLabel(syncTimeframe)}
+                      <ChevronDown className="h-4 w-4 ml-2" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => handleSyncGoogle('1week')}>
+                      Sync 1 Week
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleSyncGoogle('2weeks')}>
+                      Sync 2 Weeks
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleSyncGoogle('1month')}>
+                      Sync 1 Month
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 {uncategorizedCount > 0 && (
                   <Button
                     variant="secondary"
