@@ -1,6 +1,10 @@
+'use client';
+
+import { useState } from 'react';
 import { PageHeader } from '@/components/layout/page-header';
 import { SmartGoalEditor } from '@/components/features/vision/smart-goal-editor';
 import { ThreeHundredPercentTracker } from '@/components/features/vision/three-hundred-percent-tracker';
+import { AIProjectPlanner } from '@/components/features/vision/ai-project-planner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -35,6 +39,36 @@ const mockPowerGoals = [
 export default function VisionPage() {
   const completedGoals = mockPowerGoals.filter(g => g.progress === 100).length;
 
+  const [visionData, setVisionData] = useState<{
+    title: string;
+    description: string;
+    specific: string;
+    measurable: string;
+    attainable: string;
+    realistic: string;
+    timeBound: Date | null;
+  }>({
+    title: mockVision.title,
+    description: mockVision.description,
+    specific: mockVision.specific,
+    measurable: mockVision.measurable,
+    attainable: mockVision.attainable,
+    realistic: mockVision.realistic,
+    timeBound: mockVision.timeBound,
+  });
+
+  const handleVisionSave = (data: {
+    title: string;
+    description: string;
+    specific: string;
+    measurable: string;
+    attainable: string;
+    realistic: string;
+    timeBound: Date | null;
+  }) => {
+    setVisionData(data);
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -45,7 +79,19 @@ export default function VisionPage() {
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Main Content - Vision Editor */}
         <div className="lg:col-span-2 space-y-6">
-          <SmartGoalEditor initialData={mockVision} />
+          <SmartGoalEditor initialData={mockVision} onSave={handleVisionSave} />
+
+          {/* AI Project Planner */}
+          <AIProjectPlanner
+            vision={visionData.title}
+            smartGoals={{
+              specific: visionData.specific,
+              measurable: visionData.measurable,
+              attainable: visionData.attainable,
+              realistic: visionData.realistic,
+            }}
+            targetDate={visionData.timeBound}
+          />
 
           {/* Power Goals Preview */}
           <Card>

@@ -4,28 +4,10 @@ import * as React from 'react';
 import { Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useTheme } from '@/lib/hooks/use-theme';
 
 export function ThemeToggle({ className }: { className?: string }) {
-  const [theme, setTheme] = React.useState<'light' | 'dark'>('light');
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-    // Check for saved theme or system preference
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    const initialTheme = savedTheme || systemTheme;
-
-    setTheme(initialTheme);
-    document.documentElement.classList.toggle('dark', initialTheme === 'dark');
-  }, []);
-
-  const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-    document.documentElement.classList.toggle('dark', newTheme === 'dark');
-  };
+  const { resolvedTheme, toggleTheme, mounted } = useTheme();
 
   // Prevent hydration mismatch
   if (!mounted) {
@@ -45,12 +27,12 @@ export function ThemeToggle({ className }: { className?: string }) {
         'h-9 w-9 relative overflow-hidden',
         className
       )}
-      aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+      aria-label={`Switch to ${resolvedTheme === 'light' ? 'dark' : 'light'} mode`}
     >
       <Sun
         className={cn(
           'h-4 w-4 absolute transition-all duration-300',
-          theme === 'light'
+          resolvedTheme === 'light'
             ? 'rotate-0 scale-100 opacity-100'
             : 'rotate-90 scale-0 opacity-0'
         )}
@@ -58,7 +40,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       <Moon
         className={cn(
           'h-4 w-4 absolute transition-all duration-300',
-          theme === 'dark'
+          resolvedTheme === 'dark'
             ? 'rotate-0 scale-100 opacity-100'
             : '-rotate-90 scale-0 opacity-0'
         )}

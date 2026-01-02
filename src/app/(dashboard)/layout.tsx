@@ -3,6 +3,11 @@ import { Header } from '@/components/layout/header';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 
+// Testing phase: Grant full access to these emails
+const TESTING_FULL_ACCESS_EMAILS = [
+  'joel@pe-se.com',
+];
+
 export default async function DashboardLayout({
   children,
 }: {
@@ -32,7 +37,9 @@ export default async function DashboardLayout({
     };
   }
 
-  const subscriptionTier = 'free' as const; // Will be fetched from profile
+  // Check if user has testing phase full access
+  const hasTestingAccess = TESTING_FULL_ACCESS_EMAILS.includes(userProfile.email.toLowerCase());
+  const subscriptionTier = hasTestingAccess ? 'premium' as const : 'free' as const;
 
   return (
     <div className="flex h-screen overflow-hidden">

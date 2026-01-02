@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { formatHour } from '@/lib/utils';
 import { useLocalStorage } from '@/lib/hooks/use-local-storage';
+import { useTheme } from '@/lib/hooks/use-theme';
 
 interface UserSettings {
   theme: 'light' | 'dark' | 'system';
@@ -59,6 +60,7 @@ const DEFAULT_SETTINGS: UserSettings = {
 function SettingsContent() {
   const searchParams = useSearchParams();
   const [settings, setSettings] = useLocalStorage<UserSettings>('user-settings', DEFAULT_SETTINGS);
+  const { theme: currentTheme, setTheme } = useTheme();
   const [isConnectingGoogle, setIsConnectingGoogle] = useState(false);
   const [googleConnected, setGoogleConnected] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -288,8 +290,11 @@ function SettingsContent() {
               <p className="text-sm text-muted-foreground">Choose your preferred color scheme</p>
             </div>
             <Select
-              value={settings.theme}
-              onValueChange={(v) => updateSetting('theme', v as UserSettings['theme'])}
+              value={currentTheme}
+              onValueChange={(v) => {
+                setTheme(v as 'light' | 'dark' | 'system');
+                updateSetting('theme', v as UserSettings['theme']);
+              }}
             >
               <SelectTrigger className="w-32">
                 <SelectValue />

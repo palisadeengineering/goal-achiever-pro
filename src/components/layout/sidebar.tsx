@@ -158,7 +158,7 @@ export function Sidebar({ userTier = 'free' }: SidebarProps) {
     <aside className="hidden md:flex h-screen w-64 flex-col border-r bg-background">
       {/* Logo */}
       <div className="flex h-16 items-center border-b px-6">
-        <Link href={ROUTES.dashboard} className="flex items-center gap-2 font-semibold">
+        <Link href={ROUTES.home} className="flex items-center gap-2 font-semibold">
           <Target className="h-6 w-6 text-primary" />
           <span>Goal Achiever Pro</span>
         </Link>
@@ -186,7 +186,7 @@ export function MobileSidebar({ userTier = 'free' }: SidebarProps) {
           {/* Logo */}
           <div className="flex h-16 items-center border-b px-6">
             <Link
-              href={ROUTES.dashboard}
+              href={ROUTES.home}
               className="flex items-center gap-2 font-semibold"
               onClick={() => setOpen(false)}
             >

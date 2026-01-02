@@ -9,9 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { CalendarIcon, CheckCircle2, Target, Eye, Pencil } from 'lucide-react';
+import { CalendarIcon, CheckCircle2, Target, Eye, Pencil, Sparkles, Loader2 } from 'lucide-react';
 
 interface SmartGoalData {
   title: string;
@@ -70,6 +70,8 @@ export function SmartGoalEditor({
   readonly = false,
 }: SmartGoalEditorProps) {
   const [isEditing, setIsEditing] = useState(!initialData?.title);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
   const [data, setData] = useState<SmartGoalData>({
     title: initialData?.title || '',
     description: initialData?.description || '',
@@ -87,6 +89,48 @@ export function SmartGoalEditor({
   const handleSave = () => {
     onSave?.(data);
     setIsEditing(false);
+  };
+
+  const generateWithAI = async () => {
+    if (!data.title) {
+      setAiError('Please enter your vision statement first');
+      return;
+    }
+
+    setIsGenerating(true);
+    setAiError(null);
+
+    try {
+      const response = await fetch('/api/ai/generate-smart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vision: data.title,
+          context: data.description,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate SMART goals');
+      }
+
+      const result = await response.json();
+
+      setData((prev) => ({
+        ...prev,
+        specific: result.specific || prev.specific,
+        measurable: result.measurable || prev.measurable,
+        attainable: result.attainable || prev.attainable,
+        realistic: result.realistic || prev.realistic,
+        timeBound: result.suggestedDeadline ? parseISO(result.suggestedDeadline) : prev.timeBound,
+      }));
+    } catch (error) {
+      console.error('AI Generation Error:', error);
+      setAiError(error instanceof Error ? error.message : 'Failed to generate SMART goals');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const isComplete = () => {
@@ -241,10 +285,38 @@ export function SmartGoalEditor({
 
         {/* SMART Fields */}
         <div className="space-y-4">
-          <h3 className="font-medium flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4" />
-            SMART Breakdown
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4" />
+              SMART Breakdown
+            </h3>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={generateWithAI}
+              disabled={isGenerating || !data.title}
+              className="gap-2"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4" />
+                  Generate with AI
+                </>
+              )}
+            </Button>
+          </div>
+
+          {aiError && (
+            <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
+              {aiError}
+            </div>
+          )}
 
           {SMART_FIELDS.map((field) => (
             <div key={field.key} className="space-y-2">

@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Menu, Bell, Settings, LogOut, User, Crown } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { MobileSidebar } from './mobile-sidebar';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { ROUTES } from '@/constants/routes';
 
 interface HeaderProps {
@@ -78,6 +79,9 @@ export function Header({ user, subscriptionTier = 'free', onSignOut }: HeaderPro
               </Badge>
             </Link>
           )}
+
+          {/* Theme Toggle */}
+          <ThemeToggle />
 
           {/* Notifications */}
           <Button variant="ghost" size="icon">
