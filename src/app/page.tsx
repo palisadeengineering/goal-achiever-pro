@@ -15,6 +15,8 @@ import {
   Zap,
   Brain,
   Trophy,
+  Play,
+  Mail,
 } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
 
@@ -22,38 +24,56 @@ const features = [
   {
     icon: Target,
     title: 'Vision & SMART Goals',
-    description: 'Define your north star with the SMART framework and track your 300% Rule (Clarity + Belief + Consistency).',
+    description: 'Define your north star with the SMART framework and track your 300% Rule.',
     href: ROUTES.vision,
+    accentColor: 'from-emerald-500/20 to-teal-500/10',
+    iconBg: 'bg-emerald-500/10',
+    iconColor: 'text-emerald-600',
   },
   {
     icon: Trophy,
     title: '12 Power Goals',
     description: 'Break your vision into 12 annual projects. Focus on the one with the biggest impact.',
     href: ROUTES.goals,
+    accentColor: 'from-amber-500/20 to-orange-500/10',
+    iconBg: 'bg-amber-500/10',
+    iconColor: 'text-amber-600',
   },
   {
     icon: Calendar,
     title: 'Time & Energy Audit',
-    description: 'Track your time in 15-minute blocks. Rate your energy. See where your hours really go.',
+    description: 'Track your time in 15-minute blocks. Rate your energy. See where your hours go.',
     href: ROUTES.timeAudit,
+    accentColor: 'from-blue-500/20 to-indigo-500/10',
+    iconBg: 'bg-blue-500/10',
+    iconColor: 'text-blue-600',
   },
   {
     icon: Grid3X3,
     title: 'DRIP Matrix',
-    description: 'Categorize activities by money potential and energy. Focus on Production, delegate the rest.',
+    description: 'Categorize activities by money potential and energy. Focus on Production.',
     href: ROUTES.drip,
+    accentColor: 'from-violet-500/20 to-purple-500/10',
+    iconBg: 'bg-violet-500/10',
+    iconColor: 'text-violet-600',
   },
   {
     icon: Timer,
     title: 'Pomodoro & Routines',
-    description: '25-minute focused sprints. Morning and evening routines. Build systems that work.',
+    description: '25-minute focused sprints. Morning and evening routines that work.',
     href: ROUTES.routines,
+    accentColor: 'from-rose-500/20 to-pink-500/10',
+    iconBg: 'bg-rose-500/10',
+    iconColor: 'text-rose-600',
   },
   {
     icon: Users,
     title: 'Network & Leverage',
-    description: 'Audit your relationships. Use the 4 C\'s (Code, Content, Capital, Collaboration) to multiply your impact.',
+    description: 'Use the 4 C\'s to multiply your impact: Code, Content, Capital, Collaboration.',
     href: ROUTES.leverage,
+    accentColor: 'from-cyan-500/20 to-sky-500/10',
+    iconBg: 'bg-cyan-500/10',
+    iconColor: 'text-cyan-600',
   },
 ];
 
@@ -61,60 +81,72 @@ const steps = [
   {
     number: '01',
     title: 'Define Direction',
-    description: 'Set your vision, 12 power goals, and identify your most important next steps (MINS).',
+    description: 'Set your vision, 12 power goals, and identify your most important next steps.',
     icon: Target,
   },
   {
     number: '02',
     title: 'Audit Your Time',
-    description: 'Track how you spend your time and energy. Identify what to delegate, automate, or focus on.',
+    description: 'Track how you spend your time and energy. Identify what to delegate or automate.',
     icon: Calendar,
   },
   {
     number: '03',
     title: 'Create Daily Systems',
-    description: 'Build morning routines, use Pomodoro sprints, and review your progress 3x daily.',
+    description: 'Build morning routines, use Pomodoro sprints, and review progress 3x daily.',
     icon: Brain,
   },
   {
     number: '04',
     title: 'Create Leverage',
-    description: 'Use the 4 C\'s to multiply your output: Code, Content, Capital, and Collaboration.',
+    description: 'Use the 4 C\'s to multiply your output and work smarter, not harder.',
     icon: Zap,
   },
   {
     number: '05',
     title: 'Curate Your Network',
-    description: 'Audit your relationships. Spend time with people who elevate you, set boundaries with the rest.',
+    description: 'Spend time with people who elevate you. Set boundaries with the rest.',
     icon: Users,
   },
   {
     number: '06',
     title: 'Stay on Track',
-    description: 'Track your north star metric, use weekly scorecards, and find an accountability partner.',
+    description: 'Track your north star metric, use weekly scorecards, find accountability.',
     icon: TrendingUp,
   },
+];
+
+const howItWorksSteps = [
+  { number: 1, title: 'Set Your Vision', desc: 'Define goals & break into 12 projects' },
+  { number: 2, title: 'Audit Your Time', desc: 'Track hours & categorize with DRIP' },
+  { number: 3, title: 'Build Systems', desc: 'Create routines & Pomodoro sprints' },
 ];
 
 export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Header */}
-      <header className="border-b">
+      <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md">
         <div className="container flex h-16 items-center justify-between px-4">
-          <Link href="/" className="flex items-center gap-2 font-semibold">
-            <Target className="h-6 w-6 text-primary" />
-            <span>Goal Achiever Pro</span>
+          <Link href="/" className="flex items-center gap-2.5 font-semibold group">
+            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center group-hover:scale-105 transition-transform">
+              <Target className="h-4.5 w-4.5 text-primary-foreground" />
+            </div>
+            <span className="font-display font-bold text-lg">Goal Achiever Pro</span>
           </Link>
-          <nav className="flex items-center gap-4">
-            <Link href={ROUTES.pricing} className="text-sm text-muted-foreground hover:text-foreground">
+          <nav className="flex items-center gap-2 sm:gap-4">
+            <Link href={ROUTES.pricing} className="text-sm text-muted-foreground hover:text-foreground transition-colors hidden sm:block">
               Pricing
             </Link>
             <Link href={ROUTES.login}>
-              <Button variant="ghost" size="sm">Sign in</Button>
+              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                Sign in
+              </Button>
             </Link>
             <Link href={ROUTES.signup}>
-              <Button size="sm">Get Started</Button>
+              <Button size="sm" className="btn-lift font-semibold">
+                Get Started
+              </Button>
             </Link>
           </nav>
         </div>
@@ -122,130 +154,234 @@ export default function HomePage() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="py-20 px-4 bg-gradient-to-b from-primary/5 to-background">
-          <div className="container max-w-4xl text-center">
-            <Badge className="mb-4" variant="secondary">
-              <Sparkles className="h-3 w-3 mr-1" />
-              Based on Dan Martell&apos;s Framework
-            </Badge>
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
-              Achieve Your Goals in 2026
-              <br />
-              <span className="text-primary">with Clarity</span>
-            </h1>
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Picture December 31st, 2026. You&apos;re looking back at the year and you finally stuck to your goals.
-              Your income is higher than ever. You&apos;re in the best shape of your life.
-              <strong className="text-foreground"> Make it happen.</strong>
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href={ROUTES.signup}>
-                <Button size="lg" className="gap-2">
-                  Start Free <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link href="#features">
-                <Button size="lg" variant="outline">
-                  See How It Works
-                </Button>
-              </Link>
+        <section className="relative py-20 md:py-28 px-4 overflow-hidden">
+          {/* Background patterns */}
+          <div className="absolute inset-0 bg-dot-pattern opacity-50" />
+          <div className="absolute inset-0 bg-hero-gradient" />
+
+          <div className="container max-w-6xl relative">
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              {/* Left: Content */}
+              <div className="text-center lg:text-left">
+                <Badge
+                  className="mb-6 animate-fade-in-up bg-primary/10 text-primary hover:bg-primary/15 border-0 px-4 py-1.5"
+                  variant="secondary"
+                >
+                  <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                  Based on Dan Martell&apos;s Framework
+                </Badge>
+
+                <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight mb-6 animate-fade-in-up delay-100">
+                  Achieve Your{' '}
+                  <span className="underline-scribble text-gradient-primary">Goals</span>
+                  <br className="hidden sm:block" />
+                  <span className="sm:hidden"> </span>
+                  in 2026
+                </h1>
+
+                <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-xl mx-auto lg:mx-0 animate-fade-in-up delay-200 leading-relaxed">
+                  Picture December 31st, 2026. You finally stuck to your goals.
+                  Your income is higher than ever. You&apos;re in the best shape of your life.
+                  <strong className="text-foreground font-semibold"> Make it happen.</strong>
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start animate-fade-in-up delay-300">
+                  <Link href={ROUTES.signup}>
+                    <Button size="lg" className="btn-lift gap-2 font-semibold text-base px-8 w-full sm:w-auto">
+                      Start Free <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <Link href="#how-it-works">
+                    <Button size="lg" variant="outline" className="gap-2 font-semibold text-base w-full sm:w-auto group">
+                      <Play className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                      See How It Works
+                    </Button>
+                  </Link>
+                </div>
+
+                {/* Trust Badges */}
+                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 mt-10 animate-fade-in-up delay-400">
+                  <div className="trust-badge">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <span>Free to start</span>
+                  </div>
+                  <div className="trust-badge">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <span>No credit card</span>
+                  </div>
+                  <div className="trust-badge">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <span>Cancel anytime</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Visual/Stats */}
+              <div className="hidden lg:block animate-fade-in delay-300">
+                <div className="relative">
+                  {/* Floating stats cards */}
+                  <div className="absolute -top-4 -left-4 animate-float">
+                    <Card className="shadow-lg border-2">
+                      <CardContent className="p-4 flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                          <TrendingUp className="h-5 w-5 text-emerald-600" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Goals Achieved</p>
+                          <p className="font-display font-bold text-xl number-display">12,847</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <div className="absolute -bottom-4 -right-4 animate-float delay-200">
+                    <Card className="shadow-lg border-2">
+                      <CardContent className="p-4 flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                          <Users className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Active Users</p>
+                          <p className="font-display font-bold text-xl number-display">2,340+</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Main visual card */}
+                  <Card className="shadow-2xl border-2 overflow-hidden">
+                    <div className="h-2 bg-gradient-to-r from-primary via-blue-500 to-violet-500" />
+                    <CardContent className="p-6">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span className="font-display font-bold text-lg">Your Progress</span>
+                          <Badge variant="secondary" className="bg-primary/10 text-primary">On Track</Badge>
+                        </div>
+
+                        {/* Progress bars */}
+                        <div className="space-y-3">
+                          <div>
+                            <div className="flex justify-between text-sm mb-1.5">
+                              <span className="text-muted-foreground">Vision Clarity</span>
+                              <span className="font-semibold number-display">92%</span>
+                            </div>
+                            <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                              <div className="h-full w-[92%] bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full" />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="flex justify-between text-sm mb-1.5">
+                              <span className="text-muted-foreground">Time Optimized</span>
+                              <span className="font-semibold number-display">78%</span>
+                            </div>
+                            <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                              <div className="h-full w-[78%] bg-gradient-to-r from-blue-500 to-blue-400 rounded-full" />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="flex justify-between text-sm mb-1.5">
+                              <span className="text-muted-foreground">Weekly Goals</span>
+                              <span className="font-semibold number-display">85%</span>
+                            </div>
+                            <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                              <div className="h-full w-[85%] bg-gradient-to-r from-violet-500 to-violet-400 rounded-full" />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Quick stats */}
+                        <div className="grid grid-cols-3 gap-4 pt-4 border-t">
+                          <div className="text-center">
+                            <p className="font-display font-bold text-2xl number-display text-primary">8</p>
+                            <p className="text-xs text-muted-foreground">Goals Set</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="font-display font-bold text-2xl number-display text-emerald-600">5</p>
+                            <p className="text-xs text-muted-foreground">Completed</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="font-display font-bold text-2xl number-display text-blue-600">12h</p>
+                            <p className="text-xs text-muted-foreground">Saved/Week</p>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* How It Works Section */}
+        <section id="how-it-works" className="py-20 px-4 border-t bg-muted/30">
+          <div className="container max-w-5xl">
+            <div className="text-center mb-14">
+              <Badge className="mb-4 bg-primary/10 text-primary border-0">Simple Process</Badge>
+              <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
+                How It Works
+              </h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Four simple steps to transform your productivity
+              </p>
             </div>
 
-            {/* Trust Badges */}
-            <div className="flex items-center justify-center gap-8 mt-12 text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
-                <span className="text-sm">Free to start</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
-                <span className="text-sm">No credit card required</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
-                <span className="text-sm">Cancel anytime</span>
+            {/* Desktop Timeline */}
+            <div className="hidden md:block">
+              <div className="relative">
+                {/* Connection line */}
+                <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-primary/20 via-primary to-primary/20 -translate-y-1/2" />
+
+                <div className="grid grid-cols-4 gap-6 relative">
+                  {howItWorksSteps.map((step, index) => (
+                    <div key={step.number} className="relative group">
+                      <div className="bg-background border-2 border-primary/20 rounded-xl p-5 text-center hover:border-primary/50 hover:shadow-lg transition-all duration-300 group-hover:-translate-y-1">
+                        <div className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-primary text-primary-foreground text-sm font-bold mb-3 group-hover:scale-110 transition-transform">
+                          {step.number}
+                        </div>
+                        <h4 className="font-display font-semibold mb-1.5">{step.title}</h4>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{step.desc}</p>
+                      </div>
+                      {index < 3 && (
+                        <ArrowRight className="absolute top-1/2 -right-3 h-5 w-5 text-primary -translate-y-1/2 hidden lg:block" />
+                      )}
+                    </div>
+                  ))}
+
+                  {/* Final Step - Highlighted */}
+                  <div className="relative group">
+                    <div className="bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-300 rounded-xl p-5 text-center shadow-lg hover:shadow-xl transition-all duration-300 group-hover:-translate-y-1">
+                      <div className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-emerald-600 text-white mb-3 group-hover:scale-110 transition-transform">
+                        <Trophy className="h-5 w-5" />
+                      </div>
+                      <h4 className="font-display font-semibold text-emerald-800 mb-1.5">Achieve Goals</h4>
+                      <p className="text-xs text-emerald-700 leading-relaxed">Track progress & celebrate wins</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* How It Works Flow Diagram */}
-            <div className="mt-16 pt-12 border-t w-full">
-              <h3 className="text-lg font-semibold text-muted-foreground mb-10 text-center">How It Works</h3>
-
-              {/* Desktop Flow - Horizontal boxes with arrows */}
-              <div className="hidden md:flex items-center justify-center gap-0">
-                {/* Step 1 */}
-                <div className="flex items-center">
-                  <div className="border-2 border-primary rounded-lg p-4 bg-background shadow-sm w-[180px] text-center">
-                    <div className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground text-sm font-bold mb-2">1</div>
-                    <h4 className="font-semibold text-sm mb-1">Set Your Vision</h4>
-                    <p className="text-xs text-muted-foreground">Define goals & break into 12 projects</p>
+            {/* Mobile Timeline */}
+            <div className="md:hidden space-y-4">
+              {howItWorksSteps.map((step) => (
+                <div key={step.number} className="flex items-start gap-4">
+                  <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
+                    {step.number}
                   </div>
-                  <ArrowRight className="h-6 w-6 text-primary mx-2 flex-shrink-0" />
-                </div>
-
-                {/* Step 2 */}
-                <div className="flex items-center">
-                  <div className="border-2 border-primary rounded-lg p-4 bg-background shadow-sm w-[180px] text-center">
-                    <div className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground text-sm font-bold mb-2">2</div>
-                    <h4 className="font-semibold text-sm mb-1">Audit Your Time</h4>
-                    <p className="text-xs text-muted-foreground">Track hours & categorize with DRIP</p>
+                  <div className="pt-1">
+                    <h4 className="font-display font-semibold mb-0.5">{step.title}</h4>
+                    <p className="text-sm text-muted-foreground">{step.desc}</p>
                   </div>
-                  <ArrowRight className="h-6 w-6 text-primary mx-2 flex-shrink-0" />
                 </div>
-
-                {/* Step 3 */}
-                <div className="flex items-center">
-                  <div className="border-2 border-primary rounded-lg p-4 bg-background shadow-sm w-[180px] text-center">
-                    <div className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground text-sm font-bold mb-2">3</div>
-                    <h4 className="font-semibold text-sm mb-1">Build Systems</h4>
-                    <p className="text-xs text-muted-foreground">Create routines & Pomodoro sprints</p>
-                  </div>
-                  <ArrowRight className="h-6 w-6 text-primary mx-2 flex-shrink-0" />
+              ))}
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 h-10 w-10 rounded-full bg-emerald-600 text-white flex items-center justify-center">
+                  <Trophy className="h-5 w-5" />
                 </div>
-
-                {/* Step 4 */}
-                <div className="border-2 border-green-600 rounded-lg p-4 bg-green-50 shadow-sm w-[180px] text-center">
-                  <div className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-green-600 text-white mb-2">
-                    <Trophy className="h-4 w-4" />
-                  </div>
-                  <h4 className="font-semibold text-sm mb-1 text-green-800">Achieve Goals</h4>
-                  <p className="text-xs text-green-700">Track progress & celebrate wins</p>
-                </div>
-              </div>
-
-              {/* Mobile Flow - Vertical boxes with arrows */}
-              <div className="md:hidden flex flex-col items-center gap-0">
-                {/* Step 1 */}
-                <div className="border-2 border-primary rounded-lg p-4 bg-background shadow-sm w-full max-w-[280px] text-center">
-                  <div className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground text-sm font-bold mb-2">1</div>
-                  <h4 className="font-semibold text-sm mb-1">Set Your Vision</h4>
-                  <p className="text-xs text-muted-foreground">Define goals & break into 12 projects</p>
-                </div>
-                <ArrowRight className="h-6 w-6 text-primary my-2 rotate-90" />
-
-                {/* Step 2 */}
-                <div className="border-2 border-primary rounded-lg p-4 bg-background shadow-sm w-full max-w-[280px] text-center">
-                  <div className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground text-sm font-bold mb-2">2</div>
-                  <h4 className="font-semibold text-sm mb-1">Audit Your Time</h4>
-                  <p className="text-xs text-muted-foreground">Track hours & categorize with DRIP</p>
-                </div>
-                <ArrowRight className="h-6 w-6 text-primary my-2 rotate-90" />
-
-                {/* Step 3 */}
-                <div className="border-2 border-primary rounded-lg p-4 bg-background shadow-sm w-full max-w-[280px] text-center">
-                  <div className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground text-sm font-bold mb-2">3</div>
-                  <h4 className="font-semibold text-sm mb-1">Build Systems</h4>
-                  <p className="text-xs text-muted-foreground">Create routines & Pomodoro sprints</p>
-                </div>
-                <ArrowRight className="h-6 w-6 text-primary my-2 rotate-90" />
-
-                {/* Step 4 */}
-                <div className="border-2 border-green-600 rounded-lg p-4 bg-green-50 shadow-sm w-full max-w-[280px] text-center">
-                  <div className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-green-600 text-white mb-2">
-                    <Trophy className="h-4 w-4" />
-                  </div>
-                  <h4 className="font-semibold text-sm mb-1 text-green-800">Achieve Goals</h4>
-                  <p className="text-xs text-green-700">Track progress & celebrate wins</p>
+                <div className="pt-1">
+                  <h4 className="font-display font-semibold text-emerald-800 mb-0.5">Achieve Goals</h4>
+                  <p className="text-sm text-emerald-700">Track progress & celebrate wins</p>
                 </div>
               </div>
             </div>
@@ -255,26 +391,32 @@ export default function HomePage() {
         {/* Features Section */}
         <section id="features" className="py-20 px-4">
           <div className="container">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4">
-                Everything You Need to Achieve Your Goals
+            <div className="text-center mb-14">
+              <Badge className="mb-4 bg-primary/10 text-primary border-0">Complete Toolkit</Badge>
+              <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
+                Everything You Need to Succeed
               </h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                A complete system based on Dan Martell&apos;s proven goal achievement framework,
-                including the DRIP Matrix for time management.
+                A complete system based on Dan Martell&apos;s proven goal achievement framework.
               </p>
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {features.map((feature) => (
+              {features.map((feature, index) => (
                 <Link key={feature.title} href={feature.href}>
-                  <Card className="border-2 hover:border-primary/50 hover:shadow-md transition-all cursor-pointer h-full">
-                    <CardContent className="pt-6">
-                      <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                        <feature.icon className="h-6 w-6 text-primary" />
+                  <Card className={`card-hover-lift border-2 cursor-pointer h-full group overflow-hidden`}>
+                    <div className={`absolute inset-0 bg-gradient-to-br ${feature.accentColor} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+                    <CardContent className="pt-6 relative">
+                      <div className={`h-12 w-12 rounded-xl ${feature.iconBg} flex items-center justify-center mb-4 group-hover:scale-105 transition-transform`}>
+                        <feature.icon className={`h-6 w-6 ${feature.iconColor}`} />
                       </div>
-                      <h3 className="font-semibold mb-2">{feature.title}</h3>
-                      <p className="text-sm text-muted-foreground">{feature.description}</p>
+                      <h3 className="font-display font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
+                        {feature.title}
+                      </h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
+                      <div className="flex items-center gap-1 mt-4 text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                        Learn more <ArrowRight className="h-3.5 w-3.5" />
+                      </div>
                     </CardContent>
                   </Card>
                 </Link>
@@ -286,9 +428,9 @@ export default function HomePage() {
         {/* 6-Step Framework Section */}
         <section className="py-20 px-4 bg-muted/30">
           <div className="container">
-            <div className="text-center mb-12">
-              <Badge className="mb-4">The 6-Step Framework</Badge>
-              <h2 className="text-3xl font-bold mb-4">
+            <div className="text-center mb-14">
+              <Badge className="mb-4" variant="outline">The 6-Step Framework</Badge>
+              <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
                 Your Blueprint for Success
               </h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -296,18 +438,18 @@ export default function HomePage() {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
               {steps.map((step) => (
-                <div key={step.number} className="relative">
-                  <div className="text-6xl font-bold text-primary/10 absolute -top-4 -left-2">
+                <div key={step.number} className="relative group">
+                  <div className="font-display text-7xl font-bold text-primary/5 absolute -top-6 -left-2 group-hover:text-primary/10 transition-colors">
                     {step.number}
                   </div>
                   <div className="relative pt-8 pl-4">
-                    <div className="h-10 w-10 rounded-lg bg-primary text-primary-foreground flex items-center justify-center mb-3">
+                    <div className="h-11 w-11 rounded-xl bg-primary text-primary-foreground flex items-center justify-center mb-4 group-hover:scale-105 transition-transform shadow-lg">
                       <step.icon className="h-5 w-5" />
                     </div>
-                    <h3 className="font-semibold mb-2">{step.title}</h3>
-                    <p className="text-sm text-muted-foreground">{step.description}</p>
+                    <h3 className="font-display font-semibold text-lg mb-2">{step.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
                   </div>
                 </div>
               ))}
@@ -320,59 +462,88 @@ export default function HomePage() {
           <div className="container max-w-4xl">
             <div className="text-center mb-12">
               <Badge className="mb-4" variant="outline">The DRIP Matrix</Badge>
-              <h2 className="text-3xl font-bold mb-4">
+              <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
                 Know Where to Spend Your Time
               </h2>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground max-w-xl mx-auto">
                 Categorize every activity by how much money it makes and how much it energizes you.
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <Card className="border-2 border-orange-300 bg-orange-50">
-                <CardContent className="pt-6">
-                  <h3 className="font-bold text-orange-800">Replacement</h3>
-                  <p className="text-sm text-orange-700">High $, Low Energy</p>
-                  <p className="text-xs text-orange-600 mt-2">Automate or systematize</p>
-                </CardContent>
-              </Card>
-              <Card className="border-2 border-green-300 bg-green-50">
-                <CardContent className="pt-6">
-                  <h3 className="font-bold text-green-800">Production</h3>
-                  <p className="text-sm text-green-700">High $, High Energy</p>
-                  <p className="text-xs text-green-600 mt-2">Your sweet spot! Focus here.</p>
-                </CardContent>
-              </Card>
-              <Card className="border-2 border-purple-300 bg-purple-50">
-                <CardContent className="pt-6">
-                  <h3 className="font-bold text-purple-800">Delegation</h3>
-                  <p className="text-sm text-purple-700">Low $, Low Energy</p>
-                  <p className="text-xs text-purple-600 mt-2">Delegate to others</p>
-                </CardContent>
-              </Card>
-              <Card className="border-2 border-blue-300 bg-blue-50">
-                <CardContent className="pt-6">
-                  <h3 className="font-bold text-blue-800">Investment</h3>
-                  <p className="text-sm text-blue-700">Low $, High Energy</p>
-                  <p className="text-xs text-blue-600 mt-2">Keep for long-term growth</p>
-                </CardContent>
-              </Card>
+            {/* Axis labels */}
+            <div className="relative">
+              <div className="absolute -left-8 top-1/2 -translate-y-1/2 -rotate-90 text-xs font-semibold text-muted-foreground tracking-wider hidden md:block">
+                MONEY POTENTIAL
+              </div>
+              <div className="absolute bottom-[-2rem] left-1/2 -translate-x-1/2 text-xs font-semibold text-muted-foreground tracking-wider hidden md:block">
+                ENERGY LEVEL
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 md:gap-4">
+                <Card className="drip-quadrant drip-replacement border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 group">
+                  <CardContent className="pt-6">
+                    <div className="h-10 w-10 rounded-lg bg-amber-100 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                      <Zap className="h-5 w-5 text-amber-600" />
+                    </div>
+                    <h3 className="font-display font-bold text-amber-800 text-lg">Replacement</h3>
+                    <p className="text-sm text-amber-700 font-medium">High $, Low Energy</p>
+                    <p className="text-xs text-amber-600 mt-2">Automate or systematize these tasks</p>
+                  </CardContent>
+                </Card>
+
+                <Card className="drip-quadrant drip-production border-2 border-emerald-300 bg-gradient-to-br from-emerald-50 to-green-50 ring-2 ring-emerald-400/30 ring-offset-2 group">
+                  <CardContent className="pt-6">
+                    <div className="h-10 w-10 rounded-lg bg-emerald-100 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                      <Trophy className="h-5 w-5 text-emerald-600" />
+                    </div>
+                    <h3 className="font-display font-bold text-emerald-800 text-lg">Production</h3>
+                    <p className="text-sm text-emerald-700 font-medium">High $, High Energy</p>
+                    <p className="text-xs text-emerald-600 mt-2">Your sweet spot! Focus here.</p>
+                    <Badge className="mt-3 bg-emerald-600 text-white text-xs">Priority Zone</Badge>
+                  </CardContent>
+                </Card>
+
+                <Card className="drip-quadrant drip-delegation border-2 border-violet-300 bg-gradient-to-br from-violet-50 to-purple-50 group">
+                  <CardContent className="pt-6">
+                    <div className="h-10 w-10 rounded-lg bg-violet-100 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                      <Users className="h-5 w-5 text-violet-600" />
+                    </div>
+                    <h3 className="font-display font-bold text-violet-800 text-lg">Delegation</h3>
+                    <p className="text-sm text-violet-700 font-medium">Low $, Low Energy</p>
+                    <p className="text-xs text-violet-600 mt-2">Delegate or eliminate these</p>
+                  </CardContent>
+                </Card>
+
+                <Card className="drip-quadrant drip-investment border-2 border-blue-300 bg-gradient-to-br from-blue-50 to-indigo-50 group">
+                  <CardContent className="pt-6">
+                    <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                      <TrendingUp className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <h3 className="font-display font-bold text-blue-800 text-lg">Investment</h3>
+                    <p className="text-sm text-blue-700 font-medium">Low $, High Energy</p>
+                    <p className="text-xs text-blue-600 mt-2">Keep for long-term growth</p>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 px-4 bg-primary text-primary-foreground">
-          <div className="container max-w-3xl text-center">
-            <h2 className="text-3xl font-bold mb-4">
+        <section className="py-20 px-4 bg-gradient-to-br from-primary to-primary/90 text-primary-foreground relative overflow-hidden">
+          {/* Background pattern */}
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-50" />
+
+          <div className="container max-w-3xl text-center relative">
+            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
               Ready to Make 2026 Your Best Year Ever?
             </h2>
-            <p className="text-primary-foreground/80 mb-8">
+            <p className="text-primary-foreground/80 mb-8 text-lg">
               Join thousands of goal achievers using this system to transform their lives.
               Start free, upgrade when you&apos;re ready.
             </p>
             <Link href={ROUTES.signup}>
-              <Button size="lg" variant="secondary" className="gap-2">
+              <Button size="lg" variant="secondary" className="btn-lift gap-2 font-semibold text-base px-8">
                 Get Started Free <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
@@ -381,20 +552,73 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t py-8">
+      <footer className="border-t py-12 bg-muted/30">
         <div className="container px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-primary" />
-              <span className="font-semibold">Goal Achiever Pro</span>
+          <div className="grid md:grid-cols-4 gap-8 mb-8">
+            {/* Brand */}
+            <div className="md:col-span-1">
+              <Link href="/" className="flex items-center gap-2.5 font-semibold mb-4">
+                <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+                  <Target className="h-4.5 w-4.5 text-primary-foreground" />
+                </div>
+                <span className="font-display font-bold">Goal Achiever Pro</span>
+              </Link>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Built for ambitious entrepreneurs who want to achieve their goals with clarity and focus.
+              </p>
             </div>
+
+            {/* Product */}
+            <div>
+              <h4 className="font-display font-semibold mb-4">Product</h4>
+              <ul className="space-y-2.5 text-sm text-muted-foreground">
+                <li><Link href="#features" className="hover:text-foreground transition-colors">Features</Link></li>
+                <li><Link href={ROUTES.pricing} className="hover:text-foreground transition-colors">Pricing</Link></li>
+                <li><Link href={ROUTES.login} className="hover:text-foreground transition-colors">Login</Link></li>
+                <li><Link href={ROUTES.signup} className="hover:text-foreground transition-colors">Sign Up</Link></li>
+              </ul>
+            </div>
+
+            {/* Resources */}
+            <div>
+              <h4 className="font-display font-semibold mb-4">Resources</h4>
+              <ul className="space-y-2.5 text-sm text-muted-foreground">
+                <li><Link href={ROUTES.guide} className="hover:text-foreground transition-colors">Getting Started</Link></li>
+                <li><Link href="#" className="hover:text-foreground transition-colors">Blog</Link></li>
+                <li><Link href="#" className="hover:text-foreground transition-colors">Support</Link></li>
+              </ul>
+            </div>
+
+            {/* Newsletter */}
+            <div>
+              <h4 className="font-display font-semibold mb-4">Stay Updated</h4>
+              <p className="text-sm text-muted-foreground mb-3">
+                Get productivity tips and updates.
+              </p>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="email"
+                    placeholder="you@email.com"
+                    className="w-full pl-9 pr-3 py-2 text-sm border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  />
+                </div>
+                <Button size="sm" className="flex-shrink-0">
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-muted-foreground">
               &copy; {new Date().getFullYear()} Goal Achiever Pro. All rights reserved.
             </p>
-            <nav className="flex gap-4 text-sm text-muted-foreground">
-              <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
-              <Link href="/terms" className="hover:text-foreground">Terms</Link>
-              <Link href="/contact" className="hover:text-foreground">Contact</Link>
+            <nav className="flex gap-6 text-sm text-muted-foreground">
+              <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+              <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+              <Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link>
             </nav>
           </div>
         </div>
