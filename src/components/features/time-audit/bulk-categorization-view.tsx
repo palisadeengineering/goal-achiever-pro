@@ -295,20 +295,45 @@ function GroupCard({ group, onApply }: GroupCardProps) {
         {/* Expanded event list */}
         {isExpanded && (
           <div className="p-2 rounded bg-muted/50 mb-3">
-            <div className="space-y-1 max-h-32 overflow-y-auto">
+            <div className="space-y-1 max-h-48 overflow-y-auto">
               {group.events.map((event) => {
                 const startTime = safeParseDate(event.start?.dateTime || event.startTime);
+                const endTime = safeParseDate(event.end?.dateTime || event.endTime);
+
+                // Calculate duration
+                let durationText = '';
+                if (startTime && endTime) {
+                  const durationMinutes = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60));
+                  const hours = Math.floor(durationMinutes / 60);
+                  const mins = durationMinutes % 60;
+                  if (hours > 0 && mins > 0) {
+                    durationText = `${hours}h ${mins}m`;
+                  } else if (hours > 0) {
+                    durationText = `${hours}h`;
+                  } else if (mins > 0) {
+                    durationText = `${mins}m`;
+                  }
+                }
+
                 return (
                   <div
                     key={event.id}
-                    className="text-sm flex items-center justify-between py-1"
+                    className="text-sm py-1.5 border-b border-border/50 last:border-0"
                   >
-                    <span className="truncate">{event.summary}</span>
-                    {startTime && (
-                      <span className="text-muted-foreground text-xs ml-2 shrink-0">
-                        {format(startTime, 'MMM d')}
-                      </span>
-                    )}
+                    <div className="flex items-center justify-between">
+                      <span className="truncate font-medium">{event.summary}</span>
+                    </div>
+                    <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
+                      {startTime && (
+                        <span>{format(startTime, 'MMM d, yyyy')}</span>
+                      )}
+                      {startTime && endTime && (
+                        <span>{format(startTime, 'h:mm a')} - {format(endTime, 'h:mm a')}</span>
+                      )}
+                      {durationText && (
+                        <span className="text-primary">({durationText})</span>
+                      )}
+                    </div>
                   </div>
                 );
               })}

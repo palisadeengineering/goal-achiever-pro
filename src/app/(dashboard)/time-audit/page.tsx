@@ -80,7 +80,7 @@ export default function TimeAuditPage() {
     fetchEvents: fetchGoogleEvents,
   } = useGoogleCalendar();
 
-  const { getUncategorizedEventIds } = useEventPatterns();
+  const { getUncategorizedEventIds, getCategorization } = useEventPatterns();
 
   const [showCategorizationDialog, setShowCategorizationDialog] = useState(false);
 
@@ -103,8 +103,11 @@ export default function TimeAuditPage() {
   }, [googleEvents, getUncategorizedEventIds]);
 
   // Transform time blocks for WeeklyCalendarView (grouped by date)
+  // Includes both manual time blocks AND categorized Google Calendar events
   const calendarTimeBlocks = useMemo(() => {
     const grouped: Record<string, CalendarTimeBlock[]> = {};
+
+    // Add manual time blocks
     timeBlocks.forEach((block) => {
       if (!grouped[block.date]) {
         grouped[block.date] = [];
@@ -118,8 +121,42 @@ export default function TimeAuditPage() {
         energyRating: block.energyRating,
       });
     });
+
+    // Merge categorized Google Calendar events
+    googleEvents.forEach((event) => {
+      const categorization = getCategorization(event.id);
+      if (categorization) {
+        // Extract date and times from Google event
+        const startDateTime = event.start?.dateTime || event.startTime;
+        const endDateTime = event.end?.dateTime || event.endTime;
+
+        if (startDateTime) {
+          try {
+            const startDate = new Date(startDateTime);
+            const endDate = endDateTime ? new Date(endDateTime) : startDate;
+            const dateKey = format(startDate, 'yyyy-MM-dd');
+
+            if (!grouped[dateKey]) {
+              grouped[dateKey] = [];
+            }
+
+            grouped[dateKey].push({
+              id: event.id,
+              startTime: format(startDate, 'HH:mm'),
+              endTime: format(endDate, 'HH:mm'),
+              activityName: event.summary,
+              dripQuadrant: categorization.dripQuadrant,
+              energyRating: categorization.energyRating,
+            });
+          } catch {
+            // Skip events with invalid dates
+          }
+        }
+      }
+    });
+
     return grouped;
-  }, [timeBlocks]);
+  }, [timeBlocks, googleEvents, getCategorization]);
 
   // Calculate stats from time blocks
   const stats = useMemo(() => {
