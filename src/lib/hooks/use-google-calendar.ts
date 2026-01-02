@@ -79,17 +79,20 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
 
       const data = await response.json();
       // Transform the response to match our GoogleCalendarEvent interface
-      const transformedEvents: GoogleCalendarEvent[] = (data.events || []).map((event: GoogleCalendarEvent & { activityName?: string }) => ({
-        id: event.id,
-        summary: event.activityName || event.summary || 'Untitled Event',
-        description: event.description,
-        start: event.start || { dateTime: event.startTime },
-        end: event.end || { dateTime: event.endTime },
-        date: event.date,
-        startTime: event.startTime,
-        endTime: event.endTime,
-        source: event.source || 'google_calendar',
-      }));
+      const rawEvents = data.events || [];
+      const transformedEvents: GoogleCalendarEvent[] = rawEvents
+        .filter((event: Record<string, unknown>) => event && event.id) // Filter out invalid events
+        .map((event: GoogleCalendarEvent & { activityName?: string }) => ({
+          id: event.id,
+          summary: event.activityName || event.summary || 'Untitled Event',
+          description: event.description || '',
+          start: event.start || { dateTime: event.startTime },
+          end: event.end || { dateTime: event.endTime },
+          date: event.date || '',
+          startTime: event.startTime || '',
+          endTime: event.endTime || '',
+          source: event.source || 'google_calendar',
+        }));
       setEvents(transformedEvents);
       setIsConnected(true);
     } catch (err) {

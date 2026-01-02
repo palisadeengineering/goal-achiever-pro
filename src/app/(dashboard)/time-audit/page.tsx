@@ -93,8 +93,13 @@ export default function TimeAuditPage() {
 
   // Count uncategorized events
   const uncategorizedCount = useMemo(() => {
-    const eventIds = googleEvents.map((e) => e.id);
-    return getUncategorizedEventIds(eventIds).length;
+    if (!googleEvents || googleEvents.length === 0) return 0;
+    try {
+      const eventIds = googleEvents.map((e) => e.id).filter(Boolean);
+      return getUncategorizedEventIds(eventIds).length;
+    } catch {
+      return 0;
+    }
   }, [googleEvents, getUncategorizedEventIds]);
 
   // Transform time blocks for WeeklyCalendarView (grouped by date)
