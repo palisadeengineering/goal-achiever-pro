@@ -168,7 +168,7 @@ export default function HomePage() {
             </div>
 
             {/* How It Works Flow Diagram */}
-            <div className="mt-16 pt-12 border-t mx-auto w-full max-w-3xl">
+            <div className="mt-16 pt-12 border-t w-full">
               <h3 className="text-lg font-semibold text-muted-foreground mb-10 text-center">How It Works</h3>
 
               {/* Desktop Flow - Horizontal boxes with arrows */}
