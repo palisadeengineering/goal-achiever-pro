@@ -168,67 +168,84 @@ export default function HomePage() {
             </div>
 
             {/* How It Works Flow Diagram */}
-            <div className="mt-16 pt-12 border-t">
-              <h3 className="text-lg font-semibold text-muted-foreground mb-8">How It Works</h3>
-              <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-0">
-                {/* Step 1 */}
-                <div className="flex flex-col items-center text-center max-w-[160px]">
-                  <div className="h-14 w-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center mb-3 text-xl font-bold">
-                    1
-                  </div>
-                  <h4 className="font-semibold text-sm mb-1">Set Your Vision</h4>
-                  <p className="text-xs text-muted-foreground">Define your 2026 goals & break into 12 projects</p>
-                </div>
+            <div className="mt-16 pt-12 border-t mx-auto w-full max-w-3xl">
+              <h3 className="text-lg font-semibold text-muted-foreground mb-10 text-center">How It Works</h3>
 
-                {/* Arrow */}
-                <div className="hidden md:flex items-center px-4">
-                  <ArrowRight className="h-6 w-6 text-primary/40" />
-                </div>
-                <div className="md:hidden py-2">
-                  <ArrowRight className="h-6 w-6 text-primary/40 rotate-90" />
+              {/* Desktop Flow - Horizontal boxes with arrows */}
+              <div className="hidden md:flex items-center justify-center gap-0">
+                {/* Step 1 */}
+                <div className="flex items-center">
+                  <div className="border-2 border-primary rounded-lg p-4 bg-background shadow-sm w-[180px] text-center">
+                    <div className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground text-sm font-bold mb-2">1</div>
+                    <h4 className="font-semibold text-sm mb-1">Set Your Vision</h4>
+                    <p className="text-xs text-muted-foreground">Define goals & break into 12 projects</p>
+                  </div>
+                  <ArrowRight className="h-6 w-6 text-primary mx-2 flex-shrink-0" />
                 </div>
 
                 {/* Step 2 */}
-                <div className="flex flex-col items-center text-center max-w-[160px]">
-                  <div className="h-14 w-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center mb-3 text-xl font-bold">
-                    2
+                <div className="flex items-center">
+                  <div className="border-2 border-primary rounded-lg p-4 bg-background shadow-sm w-[180px] text-center">
+                    <div className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground text-sm font-bold mb-2">2</div>
+                    <h4 className="font-semibold text-sm mb-1">Audit Your Time</h4>
+                    <p className="text-xs text-muted-foreground">Track hours & categorize with DRIP</p>
                   </div>
-                  <h4 className="font-semibold text-sm mb-1">Audit Your Time</h4>
-                  <p className="text-xs text-muted-foreground">Track every hour & categorize with DRIP</p>
-                </div>
-
-                {/* Arrow */}
-                <div className="hidden md:flex items-center px-4">
-                  <ArrowRight className="h-6 w-6 text-primary/40" />
-                </div>
-                <div className="md:hidden py-2">
-                  <ArrowRight className="h-6 w-6 text-primary/40 rotate-90" />
+                  <ArrowRight className="h-6 w-6 text-primary mx-2 flex-shrink-0" />
                 </div>
 
                 {/* Step 3 */}
-                <div className="flex flex-col items-center text-center max-w-[160px]">
-                  <div className="h-14 w-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center mb-3 text-xl font-bold">
-                    3
+                <div className="flex items-center">
+                  <div className="border-2 border-primary rounded-lg p-4 bg-background shadow-sm w-[180px] text-center">
+                    <div className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground text-sm font-bold mb-2">3</div>
+                    <h4 className="font-semibold text-sm mb-1">Build Systems</h4>
+                    <p className="text-xs text-muted-foreground">Create routines & Pomodoro sprints</p>
                   </div>
-                  <h4 className="font-semibold text-sm mb-1">Build Systems</h4>
-                  <p className="text-xs text-muted-foreground">Create routines & use Pomodoro sprints</p>
-                </div>
-
-                {/* Arrow */}
-                <div className="hidden md:flex items-center px-4">
-                  <ArrowRight className="h-6 w-6 text-primary/40" />
-                </div>
-                <div className="md:hidden py-2">
-                  <ArrowRight className="h-6 w-6 text-primary/40 rotate-90" />
+                  <ArrowRight className="h-6 w-6 text-primary mx-2 flex-shrink-0" />
                 </div>
 
                 {/* Step 4 */}
-                <div className="flex flex-col items-center text-center max-w-[160px]">
-                  <div className="h-14 w-14 rounded-full bg-green-600 text-white flex items-center justify-center mb-3">
-                    <Trophy className="h-6 w-6" />
+                <div className="border-2 border-green-600 rounded-lg p-4 bg-green-50 shadow-sm w-[180px] text-center">
+                  <div className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-green-600 text-white mb-2">
+                    <Trophy className="h-4 w-4" />
                   </div>
-                  <h4 className="font-semibold text-sm mb-1">Achieve Goals</h4>
-                  <p className="text-xs text-muted-foreground">Track progress & celebrate your wins</p>
+                  <h4 className="font-semibold text-sm mb-1 text-green-800">Achieve Goals</h4>
+                  <p className="text-xs text-green-700">Track progress & celebrate wins</p>
+                </div>
+              </div>
+
+              {/* Mobile Flow - Vertical boxes with arrows */}
+              <div className="md:hidden flex flex-col items-center gap-0">
+                {/* Step 1 */}
+                <div className="border-2 border-primary rounded-lg p-4 bg-background shadow-sm w-full max-w-[280px] text-center">
+                  <div className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground text-sm font-bold mb-2">1</div>
+                  <h4 className="font-semibold text-sm mb-1">Set Your Vision</h4>
+                  <p className="text-xs text-muted-foreground">Define goals & break into 12 projects</p>
+                </div>
+                <ArrowRight className="h-6 w-6 text-primary my-2 rotate-90" />
+
+                {/* Step 2 */}
+                <div className="border-2 border-primary rounded-lg p-4 bg-background shadow-sm w-full max-w-[280px] text-center">
+                  <div className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground text-sm font-bold mb-2">2</div>
+                  <h4 className="font-semibold text-sm mb-1">Audit Your Time</h4>
+                  <p className="text-xs text-muted-foreground">Track hours & categorize with DRIP</p>
+                </div>
+                <ArrowRight className="h-6 w-6 text-primary my-2 rotate-90" />
+
+                {/* Step 3 */}
+                <div className="border-2 border-primary rounded-lg p-4 bg-background shadow-sm w-full max-w-[280px] text-center">
+                  <div className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground text-sm font-bold mb-2">3</div>
+                  <h4 className="font-semibold text-sm mb-1">Build Systems</h4>
+                  <p className="text-xs text-muted-foreground">Create routines & Pomodoro sprints</p>
+                </div>
+                <ArrowRight className="h-6 w-6 text-primary my-2 rotate-90" />
+
+                {/* Step 4 */}
+                <div className="border-2 border-green-600 rounded-lg p-4 bg-green-50 shadow-sm w-full max-w-[280px] text-center">
+                  <div className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-green-600 text-white mb-2">
+                    <Trophy className="h-4 w-4" />
+                  </div>
+                  <h4 className="font-semibold text-sm mb-1 text-green-800">Achieve Goals</h4>
+                  <p className="text-xs text-green-700">Track progress & celebrate wins</p>
                 </div>
               </div>
             </div>
