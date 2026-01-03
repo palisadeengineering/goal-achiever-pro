@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { format } from 'date-fns';
 import { PageHeader } from '@/components/layout/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Calendar, CalendarDays, CalendarRange, Lock, RefreshCw, ChevronDown } from 'lucide-react';
+import { Plus, Calendar, CalendarDays, CalendarRange, Lock, RefreshCw, ChevronDown, Upload, ArrowUpRight } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,11 +20,14 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { WeeklyCalendarView } from '@/components/features/time-audit/weekly-calendar-view';
 import { BulkCategorizationView } from '@/components/features/time-audit/bulk-categorization-view';
 import { useGoogleCalendar } from '@/lib/hooks/use-google-calendar';
 import { useEventPatterns } from '@/lib/hooks/use-event-patterns';
+import { useTimeBlocks, TimeBlock as DbTimeBlock } from '@/lib/hooks/use-time-blocks';
 import { startOfWeek, endOfWeek, addDays, addWeeks, addMonths } from 'date-fns';
 import { BiweeklyCalendarView } from '@/components/features/time-audit/biweekly-calendar-view';
 import { MonthlyCalendarView } from '@/components/features/time-audit/monthly-calendar-view';
@@ -65,18 +68,80 @@ function calculateDuration(startTime: string, endTime: string): number {
 
 export default function TimeAuditPage() {
   // In real app, check user subscription tier from database
-  const userTier: SubscriptionTier = 'free';
+  const userTier: SubscriptionTier = 'premium'; // Temporarily set to premium for testing
   const hasProAccess = checkProAccess(userTier);
   const hasPremiumAccess = checkPremiumAccess(userTier);
 
-  // State for time blocks (persisted to localStorage)
-  const [timeBlocks, setTimeBlocks] = useLocalStorage<TimeBlock[]>('time-blocks', []);
+  // Get current week date range for initial fetch
+  const today = new Date();
+  const weekStart = startOfWeek(today, { weekStartsOn: 1 });
+  const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
+
+  // Database time blocks
+  const {
+    timeBlocks: dbTimeBlocks,
+    isLoading: isLoadingDb,
+    createTimeBlock,
+    updateTimeBlock,
+    deleteTimeBlock,
+    importTimeBlocks,
+    fetchTimeBlocks,
+  } = useTimeBlocks(
+    format(weekStart, 'yyyy-MM-dd'),
+    format(addMonths(weekEnd, 1), 'yyyy-MM-dd')
+  );
+
+  // Local storage for backwards compatibility (will migrate to DB)
+  const [localTimeBlocks, setLocalTimeBlocks] = useLocalStorage<TimeBlock[]>('time-blocks', []);
+
+  // Combine database and local time blocks (prefer database)
+  const timeBlocks = useMemo(() => {
+    // Create a set of external event IDs from database
+    const dbExternalIds = new Set(
+      dbTimeBlocks.filter(b => b.externalEventId).map(b => b.externalEventId)
+    );
+    const dbLocalIds = new Set(dbTimeBlocks.map(b => b.id));
+
+    // Filter local blocks that aren't already in database
+    const uniqueLocalBlocks = localTimeBlocks.filter(
+      b => !dbLocalIds.has(b.id) && (!b.externalEventId || !dbExternalIds.has(b.externalEventId))
+    );
+
+    // Merge and sort by date/time
+    const merged = [...dbTimeBlocks.map(b => ({
+      id: b.id,
+      date: b.date,
+      startTime: b.startTime,
+      endTime: b.endTime,
+      activityName: b.activityName,
+      dripQuadrant: b.dripQuadrant as DripQuadrant,
+      energyRating: b.energyRating as EnergyRating,
+      source: b.source,
+      externalEventId: b.externalEventId,
+      createdAt: b.createdAt || new Date().toISOString(),
+    })), ...uniqueLocalBlocks];
+
+    return merged.sort((a, b) => {
+      const dateCompare = a.date.localeCompare(b.date);
+      if (dateCompare !== 0) return dateCompare;
+      return a.startTime.localeCompare(b.startTime);
+    });
+  }, [dbTimeBlocks, localTimeBlocks]);
 
   // State for the form modal
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingBlock, setEditingBlock] = useState<TimeBlock | undefined>();
   const [initialDate, setInitialDate] = useState<string>();
   const [initialTime, setInitialTime] = useState<string>();
+
+  // Push to Google Calendar dialog
+  const [showPushDialog, setShowPushDialog] = useState(false);
+  const [pushingToCalendar, setPushingToCalendar] = useState(false);
+  const [blockToPush, setBlockToPush] = useState<TimeBlock | null>(null);
+
+  // Import progress
+  const [isImporting, setIsImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ imported: number; skipped: number } | null>(null);
 
   // Google Calendar integration
   const {
@@ -86,7 +151,7 @@ export default function TimeAuditPage() {
     fetchEvents: fetchGoogleEvents,
   } = useGoogleCalendar();
 
-  const { getUncategorizedEventIds, getCategorization } = useEventPatterns();
+  const { getUncategorizedEventIds, getCategorization, categorizations } = useEventPatterns();
 
   const [showCategorizationDialog, setShowCategorizationDialog] = useState(false);
   const [syncTimeframe, setSyncTimeframe] = useLocalStorage<'1week' | '2weeks' | '1month'>('google-sync-timeframe', '1week');
@@ -193,7 +258,66 @@ export default function TimeAuditPage() {
     return grouped;
   }, [timeBlocks, googleEvents, getCategorization]);
 
-  // Calculate stats from time blocks
+  // Get all data sources for stats: time blocks + categorized Google events
+  const allTimeData = useMemo(() => {
+    const allBlocks: Array<{
+      startTime: string;
+      endTime: string;
+      dripQuadrant: DripQuadrant;
+      energyRating: EnergyRating;
+      source: string;
+    }> = [];
+
+    // Add time blocks (from database and local)
+    timeBlocks.forEach((block) => {
+      allBlocks.push({
+        startTime: block.startTime,
+        endTime: block.endTime,
+        dripQuadrant: block.dripQuadrant,
+        energyRating: block.energyRating,
+        source: block.source || 'manual',
+      });
+    });
+
+    // Add categorized Google Calendar events that aren't already imported
+    const importedExternalIds = new Set(
+      timeBlocks.filter(b => b.externalEventId).map(b => b.externalEventId)
+    );
+
+    googleEvents.forEach((event) => {
+      // Skip if already imported as a time block
+      if (importedExternalIds.has(event.id) || importedExternalIds.has(`gcal_${event.id}`)) {
+        return;
+      }
+
+      const categorization = getCategorization(event.id);
+      if (categorization) {
+        const startDateTime = event.start?.dateTime || event.startTime;
+        const endDateTime = event.end?.dateTime || event.endTime;
+
+        if (startDateTime && endDateTime) {
+          try {
+            const startDate = new Date(startDateTime);
+            const endDate = new Date(endDateTime);
+
+            allBlocks.push({
+              startTime: format(startDate, 'HH:mm'),
+              endTime: format(endDate, 'HH:mm'),
+              dripQuadrant: categorization.dripQuadrant,
+              energyRating: categorization.energyRating,
+              source: 'google_calendar',
+            });
+          } catch {
+            // Skip invalid dates
+          }
+        }
+      }
+    });
+
+    return allBlocks;
+  }, [timeBlocks, googleEvents, getCategorization]);
+
+  // Calculate stats from ALL time data (time blocks + categorized Google events)
   const stats = useMemo(() => {
     let totalMinutes = 0;
     let productionMinutes = 0;
@@ -201,8 +325,10 @@ export default function TimeAuditPage() {
     let energizingMinutes = 0;
     let drainingMinutes = 0;
 
-    timeBlocks.forEach((block) => {
+    allTimeData.forEach((block) => {
       const duration = calculateDuration(block.startTime, block.endTime);
+      if (duration <= 0) return; // Skip invalid durations
+
       totalMinutes += duration;
 
       if (block.dripQuadrant === 'production') {
@@ -230,33 +356,47 @@ export default function TimeAuditPage() {
       delegationCandidates: delegationCount,
       energyBalance,
     };
-  }, [timeBlocks]);
+  }, [allTimeData]);
 
-  // Calculate DRIP distribution
+  // Calculate DRIP distribution from ALL time data
   const dripData = useMemo(() => {
     const data = { delegation: 0, replacement: 0, investment: 0, production: 0 };
-    timeBlocks.forEach((block) => {
+    allTimeData.forEach((block) => {
       const duration = calculateDuration(block.startTime, block.endTime);
-      data[block.dripQuadrant] += duration;
+      if (duration > 0) {
+        data[block.dripQuadrant] += duration;
+      }
     });
     return data;
-  }, [timeBlocks]);
+  }, [allTimeData]);
 
-  // Calculate energy distribution
+  // Calculate energy distribution from ALL time data
   const energyData = useMemo(() => {
     const data = { green: 0, yellow: 0, red: 0 };
-    timeBlocks.forEach((block) => {
+    allTimeData.forEach((block) => {
       const duration = calculateDuration(block.startTime, block.endTime);
-      data[block.energyRating] += duration;
+      if (duration > 0) {
+        data[block.energyRating] += duration;
+      }
     });
     return data;
-  }, [timeBlocks]);
+  }, [allTimeData]);
 
-  // Handle saving a new or edited time block
-  const handleSaveBlock = (blockData: Omit<TimeBlock, 'id' | 'createdAt'>) => {
+  // Handle saving a new or edited time block (saves to database)
+  const handleSaveBlock = async (blockData: Omit<TimeBlock, 'id' | 'createdAt'>) => {
     if (editingBlock) {
-      // Update existing block
-      setTimeBlocks(blocks =>
+      // Update existing block in database
+      await updateTimeBlock(editingBlock.id, {
+        date: blockData.date,
+        startTime: blockData.startTime,
+        endTime: blockData.endTime,
+        activityName: blockData.activityName,
+        dripQuadrant: blockData.dripQuadrant,
+        energyRating: blockData.energyRating,
+      });
+
+      // Also update local storage for backwards compatibility
+      setLocalTimeBlocks(blocks =>
         blocks.map(b =>
           b.id === editingBlock.id
             ? { ...b, ...blockData }
@@ -264,18 +404,138 @@ export default function TimeAuditPage() {
         )
       );
     } else {
-      // Create new block
+      // Create new block in database
+      await createTimeBlock({
+        date: blockData.date,
+        startTime: blockData.startTime,
+        endTime: blockData.endTime,
+        activityName: blockData.activityName,
+        dripQuadrant: blockData.dripQuadrant,
+        energyRating: blockData.energyRating,
+        source: 'manual',
+      });
+
+      // Also save to local storage for backwards compatibility
       const newBlock: TimeBlock = {
         ...blockData,
         id: crypto.randomUUID(),
         createdAt: new Date().toISOString(),
       };
-      setTimeBlocks(blocks => [...blocks, newBlock]);
+      setLocalTimeBlocks(blocks => [...blocks, newBlock]);
     }
     setEditingBlock(undefined);
     setInitialDate(undefined);
     setInitialTime(undefined);
   };
+
+  // Import categorized Google Calendar events to database
+  const handleImportCategorized = useCallback(async () => {
+    setIsImporting(true);
+    setImportResult(null);
+
+    try {
+      // Get all categorized Google events that aren't already imported
+      const importedExternalIds = new Set(
+        timeBlocks.filter(b => b.externalEventId).map(b => b.externalEventId)
+      );
+
+      const eventsToImport = googleEvents
+        .filter(event => {
+          // Skip if already imported
+          if (importedExternalIds.has(event.id) || importedExternalIds.has(`gcal_${event.id}`)) {
+            return false;
+          }
+          // Only import categorized events
+          return getCategorization(event.id) !== null;
+        })
+        .map(event => {
+          const categorization = getCategorization(event.id)!;
+          const startDateTime = event.start?.dateTime || event.startTime;
+          const endDateTime = event.end?.dateTime || event.endTime;
+
+          const startDate = new Date(startDateTime!);
+          const endDate = new Date(endDateTime!);
+
+          return {
+            date: format(startDate, 'yyyy-MM-dd'),
+            startTime: format(startDate, 'HH:mm'),
+            endTime: format(endDate, 'HH:mm'),
+            activityName: event.summary || 'Untitled Event',
+            dripQuadrant: categorization.dripQuadrant,
+            energyRating: categorization.energyRating,
+            source: 'calendar_sync',
+            externalEventId: event.id,
+          };
+        });
+
+      if (eventsToImport.length === 0) {
+        setImportResult({ imported: 0, skipped: 0 });
+        return;
+      }
+
+      const result = await importTimeBlocks(eventsToImport);
+      setImportResult(result);
+
+      // Refresh data after import
+      await fetchTimeBlocks();
+    } catch (error) {
+      console.error('Import error:', error);
+      setImportResult({ imported: 0, skipped: 0 });
+    } finally {
+      setIsImporting(false);
+    }
+  }, [googleEvents, timeBlocks, getCategorization, importTimeBlocks, fetchTimeBlocks]);
+
+  // Push a time block to Google Calendar
+  const handlePushToCalendar = useCallback(async (block: TimeBlock) => {
+    if (!isGoogleConnected) return;
+
+    setPushingToCalendar(true);
+
+    try {
+      const startDateTime = new Date(`${block.date}T${block.startTime}:00`);
+      const endDateTime = new Date(`${block.date}T${block.endTime}:00`);
+
+      const response = await fetch('/api/calendar/google/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          summary: block.activityName,
+          description: `DRIP: ${block.dripQuadrant} | Energy: ${block.energyRating}`,
+          start: startDateTime.toISOString(),
+          end: endDateTime.toISOString(),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create calendar event');
+      }
+
+      setShowPushDialog(false);
+      setBlockToPush(null);
+
+      // Refresh Google events
+      handleSyncGoogle();
+    } catch (error) {
+      console.error('Push to calendar error:', error);
+    } finally {
+      setPushingToCalendar(false);
+    }
+  }, [isGoogleConnected, handleSyncGoogle]);
+
+  // Count categorized events ready for import
+  const categorizedNotImportedCount = useMemo(() => {
+    const importedExternalIds = new Set(
+      timeBlocks.filter(b => b.externalEventId).map(b => b.externalEventId)
+    );
+
+    return googleEvents.filter(event => {
+      if (importedExternalIds.has(event.id) || importedExternalIds.has(`gcal_${event.id}`)) {
+        return false;
+      }
+      return getCategorization(event.id) !== null;
+    }).length;
+  }, [googleEvents, timeBlocks, getCategorization]);
 
   // Handle clicking on the calendar to add a block (receives Date object from WeeklyCalendarView)
   const handleAddBlock = (date: Date, time: string) => {
@@ -302,8 +562,8 @@ export default function TimeAuditPage() {
     setIsFormOpen(true);
   };
 
-  // Check if we have data (for showing different states)
-  const hasData = timeBlocks.length > 0;
+  // Check if we have data (for showing different states) - includes all data sources
+  const hasData = allTimeData.length > 0;
   const totalHours = stats.totalMinutes > 0 ? stats.totalMinutes : 0;
 
   return (
@@ -312,7 +572,7 @@ export default function TimeAuditPage() {
         title="Time & Energy Audit"
         description="Track how you spend your time and energy across DRIP quadrants"
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {isGoogleConnected && (
               <>
                 <DropdownMenu>
@@ -347,6 +607,16 @@ export default function TimeAuditPage() {
                       {uncategorizedCount}
                     </Badge>
                     Categorize Events
+                  </Button>
+                )}
+                {categorizedNotImportedCount > 0 && (
+                  <Button
+                    variant="default"
+                    onClick={handleImportCategorized}
+                    disabled={isImporting}
+                  >
+                    <Upload className={`h-4 w-4 mr-2 ${isImporting ? 'animate-pulse' : ''}`} />
+                    Import {categorizedNotImportedCount} to Database
                   </Button>
                 )}
               </>
@@ -570,6 +840,24 @@ export default function TimeAuditPage() {
                   View DRIP Matrix
                 </Link>
               </Button>
+              {isGoogleConnected && (
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => {
+                    // Select the most recent block to push
+                    const recentBlock = timeBlocks[timeBlocks.length - 1];
+                    if (recentBlock && !recentBlock.externalEventId) {
+                      setBlockToPush(recentBlock);
+                      setShowPushDialog(true);
+                    }
+                  }}
+                  disabled={timeBlocks.length === 0}
+                >
+                  <ArrowUpRight className="h-4 w-4 mr-2" />
+                  Push to Google Calendar
+                </Button>
+              )}
               <Button variant="outline" className="w-full justify-start">
                 Export Report
                 {!hasProAccess && (
@@ -581,8 +869,86 @@ export default function TimeAuditPage() {
               </Button>
             </CardContent>
           </Card>
+
+          {/* Import Result Notification */}
+          {importResult && (
+            <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+              <CardContent className="py-3">
+                <p className="text-sm text-green-800 dark:text-green-200">
+                  Imported {importResult.imported} events
+                  {importResult.skipped > 0 && ` (${importResult.skipped} skipped)`}
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
+
+      {/* Push to Google Calendar Dialog */}
+      <Dialog open={showPushDialog} onOpenChange={setShowPushDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Push to Google Calendar</DialogTitle>
+            <DialogDescription>
+              Create this time block as an event in your Google Calendar.
+            </DialogDescription>
+          </DialogHeader>
+          {blockToPush && (
+            <div className="space-y-4">
+              <div className="p-4 rounded-lg bg-muted">
+                <h4 className="font-medium">{blockToPush.activityName}</h4>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {blockToPush.date} &bull; {blockToPush.startTime} - {blockToPush.endTime}
+                </p>
+                <div className="flex gap-2 mt-2">
+                  <Badge variant="outline" className="capitalize">
+                    {blockToPush.dripQuadrant}
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className={
+                      blockToPush.energyRating === 'green'
+                        ? 'text-green-600 border-green-300'
+                        : blockToPush.energyRating === 'red'
+                        ? 'text-red-600 border-red-300'
+                        : 'text-yellow-600 border-yellow-300'
+                    }
+                  >
+                    {blockToPush.energyRating}
+                  </Badge>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowPushDialog(false);
+                    setBlockToPush(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => handlePushToCalendar(blockToPush)}
+                  disabled={pushingToCalendar}
+                >
+                  {pushingToCalendar ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <ArrowUpRight className="h-4 w-4 mr-2" />
+                      Create Event
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

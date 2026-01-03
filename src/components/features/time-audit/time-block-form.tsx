@@ -32,6 +32,8 @@ export interface TimeBlock {
   description?: string;
   dripQuadrant: DripQuadrant;
   energyRating: EnergyRating;
+  source?: string;
+  externalEventId?: string;
   createdAt: string;
 }
 
