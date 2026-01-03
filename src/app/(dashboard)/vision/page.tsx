@@ -246,6 +246,7 @@ export default function VisionPage() {
             initialData={visionForEditor}
             onSave={handleVisionSave}
             isSaving={isSaving}
+            visionId={activeVision?.id}
           />
 
           {/* KPI Accountability System - only show if vision exists */}

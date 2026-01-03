@@ -11,7 +11,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format, parseISO, parse, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { CalendarIcon, CheckCircle2, Target, Eye, Pencil, Sparkles, Loader2, Lightbulb } from 'lucide-react';
+import { CalendarIcon, CheckCircle2, Target, Eye, Pencil, Sparkles, Loader2, Lightbulb, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface SmartGoalData {
@@ -24,9 +24,19 @@ interface SmartGoalData {
   timeBound: Date | null;
 }
 
+interface GeneratedPowerGoal {
+  title: string;
+  description: string;
+  quarter: number;
+  category: string;
+  metrics: string[];
+}
+
 interface SmartGoalEditorProps {
   initialData?: Partial<SmartGoalData>;
   onSave?: (data: SmartGoalData) => void;
+  onPowerGoalsGenerated?: (powerGoals: GeneratedPowerGoal[]) => void;
+  visionId?: string;
   readonly?: boolean;
   isSaving?: boolean;
 }
@@ -69,12 +79,17 @@ const SMART_FIELDS = [
 export function SmartGoalEditor({
   initialData,
   onSave,
+  onPowerGoalsGenerated,
+  visionId,
   readonly = false,
   isSaving = false,
 }: SmartGoalEditorProps) {
   const [isEditing, setIsEditing] = useState(!initialData?.title);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGeneratingVision, setIsGeneratingVision] = useState(false);
+  const [isGeneratingPowerGoals, setIsGeneratingPowerGoals] = useState(false);
+  const [isSavingPowerGoals, setIsSavingPowerGoals] = useState(false);
+  const [generatedPowerGoals, setGeneratedPowerGoals] = useState<GeneratedPowerGoal[] | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
   const [dateInputValue, setDateInputValue] = useState('');
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -212,6 +227,88 @@ export function SmartGoalEditor({
       setAiError(error instanceof Error ? error.message : 'Failed to generate SMART goals');
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const generatePowerGoals = async () => {
+    if (!data.title) {
+      setAiError('Please enter your vision statement first');
+      return;
+    }
+
+    if (!data.specific && !data.measurable) {
+      setAiError('Please fill in at least the Specific and Measurable fields first');
+      return;
+    }
+
+    setIsGeneratingPowerGoals(true);
+    setAiError(null);
+
+    try {
+      const response = await fetch('/api/ai/generate-power-goals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vision: data.title,
+          smartGoals: {
+            specific: data.specific,
+            measurable: data.measurable,
+            attainable: data.attainable,
+            realistic: data.realistic,
+          },
+          targetDate: data.timeBound?.toISOString(),
+          count: 4,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate Power Goals');
+      }
+
+      const result = await response.json();
+      setGeneratedPowerGoals(result.powerGoals);
+      onPowerGoalsGenerated?.(result.powerGoals);
+      toast.success('Power Goals generated! Review them below.');
+    } catch (error) {
+      console.error('Power Goals Generation Error:', error);
+      setAiError(error instanceof Error ? error.message : 'Failed to generate Power Goals');
+    } finally {
+      setIsGeneratingPowerGoals(false);
+    }
+  };
+
+  const savePowerGoals = async () => {
+    if (!generatedPowerGoals?.length || !visionId) return;
+
+    setIsSavingPowerGoals(true);
+    try {
+      const response = await fetch('/api/power-goals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          visionId,
+          powerGoals: generatedPowerGoals.map((goal) => ({
+            title: goal.title,
+            description: goal.description,
+            quarter: goal.quarter,
+            category: goal.category,
+          })),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save Power Goals');
+      }
+
+      const result = await response.json();
+      toast.success(`Saved ${result.saved} Power Goals!`);
+      setGeneratedPowerGoals(null);
+    } catch (error) {
+      console.error('Save Power Goals Error:', error);
+      toast.error('Failed to save Power Goals. Please try again.');
+    } finally {
+      setIsSavingPowerGoals(false);
     }
   };
 
@@ -479,6 +576,93 @@ export function SmartGoalEditor({
               When do you want to achieve this goal by? Type a date or use the calendar.
             </p>
           </div>
+        </div>
+
+        {/* Generate Power Goals Section */}
+        <div className="space-y-4 pt-4 border-t">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-medium flex items-center gap-2">
+                <Zap className="h-4 w-4 text-yellow-500" />
+                Power Goals
+              </h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                Generate quarterly Power Goals based on your SMART breakdown
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={generatePowerGoals}
+              disabled={isGeneratingPowerGoals || !data.title || (!data.specific && !data.measurable)}
+              className="gap-2"
+            >
+              {isGeneratingPowerGoals ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Zap className="h-4 w-4" />
+                  Generate Power Goals
+                </>
+              )}
+            </Button>
+          </div>
+
+          {/* Generated Power Goals Display */}
+          {generatedPowerGoals && generatedPowerGoals.length > 0 && (
+            <div className="space-y-3">
+              <div className="grid gap-3 md:grid-cols-2">
+                {generatedPowerGoals.map((goal, idx) => (
+                  <div
+                    key={idx}
+                    className="p-4 border rounded-lg bg-muted/20 space-y-2"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <h4 className="font-medium text-sm">{goal.title}</h4>
+                      <Badge variant="outline" className="text-xs shrink-0">
+                        Q{goal.quarter}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {goal.description}
+                    </p>
+                    {goal.metrics && goal.metrics.length > 0 && (
+                      <div className="flex flex-wrap gap-1 pt-1">
+                        {goal.metrics.map((metric, mIdx) => (
+                          <Badge key={mIdx} variant="secondary" className="text-xs">
+                            {metric}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {visionId && (
+                <Button
+                  onClick={savePowerGoals}
+                  disabled={isSavingPowerGoals}
+                  className="w-full gap-2"
+                >
+                  {isSavingPowerGoals ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-4 w-4" />
+                      Save {generatedPowerGoals.length} Power Goals
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Actions */}
