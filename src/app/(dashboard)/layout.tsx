@@ -15,6 +15,9 @@ export default async function DashboardLayout({
 }) {
   const supabase = await createClient();
 
+  // Demo mode: skip auth in development or when DEMO_MODE is enabled
+  const isDemoMode = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+
   // If Supabase is not configured, use demo mode with mock user
   let userProfile = {
     email: 'demo@example.com',
@@ -25,16 +28,18 @@ export default async function DashboardLayout({
   if (supabase) {
     const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) {
+    if (!user && !isDemoMode) {
       redirect('/login');
     }
 
-    // Use actual user data
-    userProfile = {
-      email: user.email || '',
-      fullName: user.user_metadata?.full_name || user.email?.split('@')[0],
-      avatarUrl: user.user_metadata?.avatar_url,
-    };
+    if (user) {
+      // Use actual user data
+      userProfile = {
+        email: user.email || '',
+        fullName: user.user_metadata?.full_name || user.email?.split('@')[0],
+        avatarUrl: user.user_metadata?.avatar_url,
+      };
+    }
   }
 
   // Check if user has testing phase full access

@@ -12,9 +12,9 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
-  // DEVELOPMENT MODE: Skip auth for testing (remove in production)
-  const isDevelopment = process.env.NODE_ENV === 'development';
-  if (isDevelopment) {
+  // Demo mode: Skip auth in development or when DEMO_MODE is enabled
+  const isDemoMode = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+  if (isDemoMode) {
     return NextResponse.next({ request });
   }
 
