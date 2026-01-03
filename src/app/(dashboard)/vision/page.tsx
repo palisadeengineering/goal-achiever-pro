@@ -5,10 +5,12 @@ import { PageHeader } from '@/components/layout/page-header';
 import { SmartGoalEditor } from '@/components/features/vision/smart-goal-editor';
 import { ThreeHundredPercentTracker } from '@/components/features/vision/three-hundred-percent-tracker';
 import { AIProjectPlanner } from '@/components/features/vision/ai-project-planner';
+import { KPIAccountabilitySystem } from '@/components/features/vision/kpi-accountability-system';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Target, Trophy, Clock, Loader2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowRight, Target, Trophy, Clock, Loader2, Plus, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { ROUTES } from '@/constants/routes';
 import { toast } from 'sonner';
@@ -170,12 +172,72 @@ export default function VisionPage() {
     );
   }
 
+  const handleCreateNewVision = () => {
+    setActiveVision(null);
+  };
+
+  const handleSelectVision = (visionId: string) => {
+    if (visionId === 'new') {
+      handleCreateNewVision();
+    } else {
+      const selected = visions.find((v) => v.id === visionId);
+      if (selected) {
+        setActiveVision(selected);
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Vision"
-        description="Your north star - the big picture goal that guides everything"
-      />
+      <div className="flex items-start justify-between">
+        <PageHeader
+          title="Vision"
+          description="Your north star - the big picture goal that guides everything"
+        />
+        {visions.length > 0 && (
+          <div className="flex items-center gap-2">
+            <Select
+              value={activeVision?.id || 'new'}
+              onValueChange={handleSelectVision}
+            >
+              <SelectTrigger className="w-[250px]">
+                <SelectValue placeholder="Select a vision">
+                  {activeVision ? (
+                    <div className="flex items-center gap-2">
+                      <Eye className="h-4 w-4" />
+                      <span className="truncate">{activeVision.title}</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Plus className="h-4 w-4" />
+                      <span>New Vision</span>
+                    </div>
+                  )}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="new">
+                  <div className="flex items-center gap-2">
+                    <Plus className="h-4 w-4" />
+                    Create New Vision
+                  </div>
+                </SelectItem>
+                {visions.map((vision) => (
+                  <SelectItem key={vision.id} value={vision.id}>
+                    <div className="flex items-center gap-2">
+                      <Eye className="h-4 w-4" />
+                      <span className="truncate max-w-[200px]">{vision.title}</span>
+                      {vision.is_active && (
+                        <Badge variant="secondary" className="text-xs ml-1">Active</Badge>
+                      )}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Main Content - Vision Editor */}
@@ -185,6 +247,25 @@ export default function VisionPage() {
             onSave={handleVisionSave}
             isSaving={isSaving}
           />
+
+          {/* KPI Accountability System - only show if vision exists */}
+          {activeVision && (
+            <KPIAccountabilitySystem
+              vision={activeVision.title}
+              smartGoals={{
+                specific: activeVision.specific || '',
+                measurable: activeVision.measurable || '',
+                attainable: activeVision.attainable || '',
+                realistic: activeVision.realistic || '',
+              }}
+              targetDate={activeVision.time_bound ? new Date(activeVision.time_bound) : null}
+              onAddToCalendar={(kpis) => {
+                // TODO: Implement calendar integration
+                console.log('Add to calendar:', kpis);
+                toast.success('KPIs will be synced to your calendar soon!');
+              }}
+            />
+          )}
 
           {/* AI Project Planner - only show if vision exists */}
           {activeVision && (
