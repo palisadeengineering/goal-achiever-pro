@@ -79,7 +79,13 @@ export default function VisionPage() {
     attainable: string;
     realistic: string;
     timeBound: Date | null;
-  }) => {
+  }, powerGoals?: Array<{
+    title: string;
+    description: string;
+    quarter: number;
+    category: string;
+    metrics: string[];
+  }>) => {
     setIsSaving(true);
 
     try {
@@ -110,14 +116,44 @@ export default function VisionPage() {
       }
 
       const result = await response.json();
+      const savedVisionId = result.vision.id;
+
+      // Save power goals if they were generated
+      if (powerGoals && powerGoals.length > 0 && savedVisionId) {
+        try {
+          const powerGoalsResponse = await fetch('/api/power-goals', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              visionId: savedVisionId,
+              powerGoals: powerGoals.map((goal) => ({
+                title: goal.title,
+                description: goal.description,
+                quarter: goal.quarter,
+                category: goal.category,
+              })),
+            }),
+          });
+
+          if (powerGoalsResponse.ok) {
+            const pgResult = await powerGoalsResponse.json();
+            toast.success(`Vision saved with ${pgResult.saved} Power Goals!`);
+          } else {
+            toast.success('Vision saved! (Power Goals failed to save)');
+          }
+        } catch (pgError) {
+          console.error('Error saving power goals:', pgError);
+          toast.success('Vision saved! (Power Goals failed to save)');
+        }
+      } else {
+        toast.success('Your vision has been saved successfully.');
+      }
 
       // Update local state
       setActiveVision(result.vision);
 
       // Refresh visions list
       await fetchVisions();
-
-      toast.success('Your vision has been saved successfully.');
     } catch (error) {
       console.error('Error saving vision:', error);
       toast.error('Failed to save your vision. Please try again.');

@@ -34,7 +34,7 @@ interface GeneratedPowerGoal {
 
 interface SmartGoalEditorProps {
   initialData?: Partial<SmartGoalData>;
-  onSave?: (data: SmartGoalData) => void;
+  onSave?: (data: SmartGoalData, powerGoals?: GeneratedPowerGoal[]) => void;
   onPowerGoalsGenerated?: (powerGoals: GeneratedPowerGoal[]) => void;
   visionId?: string;
   readonly?: boolean;
@@ -147,8 +147,12 @@ export function SmartGoalEditor({
   };
 
   const handleSave = () => {
-    onSave?.(data);
+    onSave?.(data, generatedPowerGoals || undefined);
     setIsEditing(false);
+    // Clear generated power goals after save since they'll be saved with vision
+    if (generatedPowerGoals) {
+      setGeneratedPowerGoals(null);
+    }
   };
 
   const generateVisionWithAI = async () => {
