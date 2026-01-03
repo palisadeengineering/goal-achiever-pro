@@ -21,6 +21,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { TagSelector } from './tag-selector';
+import { TagManager } from './tag-manager';
+import { useTags, type Tag } from '@/lib/hooks/use-tags';
 import type { DripQuadrant, EnergyRating } from '@/types/database';
 
 export interface TimeBlock {
@@ -34,6 +37,7 @@ export interface TimeBlock {
   energyRating: EnergyRating;
   source?: string;
   externalEventId?: string;
+  tagIds?: string[];
   createdAt: string;
 }
 
@@ -48,9 +52,9 @@ interface TimeBlockFormProps {
 
 const DRIP_OPTIONS = [
   { value: 'production', label: 'Production', description: 'High $ + High Energy (Your sweet spot!)', color: 'bg-green-500' },
-  { value: 'investment', label: 'Investment', description: 'Low $ + High Energy (Long-term growth)', color: 'bg-blue-500' },
-  { value: 'replacement', label: 'Replacement', description: 'High $ + Low Energy (Automate this)', color: 'bg-orange-500' },
-  { value: 'delegation', label: 'Delegation', description: 'Low $ + Low Energy (Delegate this)', color: 'bg-purple-500' },
+  { value: 'investment', label: 'Investment', description: 'Low $ + High Energy (Long-term growth)', color: 'bg-purple-500' },
+  { value: 'replacement', label: 'Replacement', description: 'High $ + Low Energy (Automate this)', color: 'bg-yellow-500' },
+  { value: 'delegation', label: 'Delegation', description: 'Low $ + Low Energy (Delegate this)', color: 'bg-red-500' },
 ];
 
 const ENERGY_OPTIONS = [
@@ -76,6 +80,10 @@ export function TimeBlockForm({
   const [description, setDescription] = useState('');
   const [dripQuadrant, setDripQuadrant] = useState<DripQuadrant>('production');
   const [energyRating, setEnergyRating] = useState<EnergyRating>('yellow');
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [showTagManager, setShowTagManager] = useState(false);
+
+  const { tags, createTag, updateTag, deleteTag } = useTags();
 
   // Reset form when dialog opens/closes or edit block changes
   useEffect(() => {
@@ -88,6 +96,7 @@ export function TimeBlockForm({
         setDescription(editBlock.description || '');
         setDripQuadrant(editBlock.dripQuadrant);
         setEnergyRating(editBlock.energyRating);
+        setSelectedTagIds(editBlock.tagIds || []);
       } else {
         setDate(initialDate || today);
         setStartTime(initialTime || '09:00');
@@ -96,6 +105,7 @@ export function TimeBlockForm({
         setDescription('');
         setDripQuadrant('production');
         setEnergyRating('yellow');
+        setSelectedTagIds([]);
       }
     }
   }, [open, editBlock, initialDate, initialTime, today]);
@@ -110,11 +120,13 @@ export function TimeBlockForm({
       description: description || undefined,
       dripQuadrant,
       energyRating,
+      tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
     });
     onOpenChange(false);
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -227,6 +239,17 @@ export function TimeBlockForm({
             </RadioGroup>
           </div>
 
+          {/* Tags */}
+          <div className="space-y-2">
+            <Label>Tags</Label>
+            <TagSelector
+              tags={tags}
+              selectedTagIds={selectedTagIds}
+              onChange={setSelectedTagIds}
+              onManageTags={() => setShowTagManager(true)}
+            />
+          </div>
+
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
@@ -238,6 +261,17 @@ export function TimeBlockForm({
         </form>
       </DialogContent>
     </Dialog>
+
+    {/* Tag Manager Dialog */}
+    <TagManager
+      open={showTagManager}
+      onOpenChange={setShowTagManager}
+      tags={tags}
+      onCreateTag={createTag}
+      onUpdateTag={updateTag}
+      onDeleteTag={deleteTag}
+    />
+    </>
   );
 }
 

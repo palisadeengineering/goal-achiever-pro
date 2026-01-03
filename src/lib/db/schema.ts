@@ -293,6 +293,34 @@ export const activityCategories = pgTable('activity_categories', {
 });
 
 // =============================================
+// TIME BLOCK TAGS (Custom user tags for projects/categories)
+// =============================================
+export const timeBlockTags = pgTable('time_block_tags', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  color: text('color').notNull().default('#6366f1'),
+  description: text('description'),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  userNameIdx: uniqueIndex('time_block_tags_user_name_idx').on(table.userId, table.name),
+}));
+
+// =============================================
+// TIME BLOCK TAG ASSIGNMENTS (Junction table)
+// =============================================
+export const timeBlockTagAssignments = pgTable('time_block_tag_assignments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  timeBlockId: uuid('time_block_id').notNull().references(() => timeBlocks.id, { onDelete: 'cascade' }),
+  tagId: uuid('tag_id').notNull().references(() => timeBlockTags.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+  blockTagIdx: uniqueIndex('time_block_tag_assignments_block_tag_idx').on(table.timeBlockId, table.tagId),
+}));
+
+// =============================================
 // AUDIT SNAPSHOTS (Weekly aggregations)
 // =============================================
 export const auditSnapshots = pgTable('audit_snapshots', {

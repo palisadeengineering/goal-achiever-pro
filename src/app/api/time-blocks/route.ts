@@ -53,6 +53,25 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Fetch tag assignments for all time blocks
+    const blockIds = (timeBlocks || []).map(b => b.id);
+    let tagAssignments: { time_block_id: string; tag_id: string }[] = [];
+
+    if (blockIds.length > 0) {
+      const { data: assignments } = await supabase
+        .from('time_block_tag_assignments')
+        .select('time_block_id, tag_id')
+        .in('time_block_id', blockIds);
+      tagAssignments = assignments || [];
+    }
+
+    // Group tag IDs by time block
+    const tagsByBlock = tagAssignments.reduce((acc, a) => {
+      if (!acc[a.time_block_id]) acc[a.time_block_id] = [];
+      acc[a.time_block_id].push(a.tag_id);
+      return acc;
+    }, {} as Record<string, string[]>);
+
     // Transform to camelCase for frontend
     const transformed = (timeBlocks || []).map(block => ({
       id: block.id,
@@ -72,6 +91,7 @@ export async function GET(request: NextRequest) {
       lightsUpScore: block.lights_up_score,
       source: block.source,
       externalEventId: block.external_event_id,
+      tagIds: tagsByBlock[block.id] || [],
       createdAt: block.created_at,
       updatedAt: block.updated_at,
     }));
@@ -113,6 +133,7 @@ export async function POST(request: NextRequest) {
       source,
       externalEventId,
       minId,
+      tagIds,
     } = body;
 
     if (!date || !startTime || !endTime || !activityName) {
@@ -155,6 +176,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Create tag assignments if tagIds provided
+    let assignedTagIds: string[] = [];
+    if (tagIds && Array.isArray(tagIds) && tagIds.length > 0) {
+      const tagAssignments = tagIds.map((tagId: string) => ({
+        time_block_id: timeBlock.id,
+        tag_id: tagId,
+      }));
+
+      const { error: tagError } = await supabase
+        .from('time_block_tag_assignments')
+        .insert(tagAssignments);
+
+      if (tagError) {
+        console.error('Error creating tag assignments:', tagError);
+      } else {
+        assignedTagIds = tagIds;
+      }
+    }
+
     // Transform to camelCase
     const transformed = {
       id: timeBlock.id,
@@ -170,6 +210,7 @@ export async function POST(request: NextRequest) {
       dripQuadrant: timeBlock.drip_quadrant,
       source: timeBlock.source,
       externalEventId: timeBlock.external_event_id,
+      tagIds: assignedTagIds,
       createdAt: timeBlock.created_at,
     };
 
@@ -208,6 +249,7 @@ export async function PUT(request: NextRequest) {
       notes,
       energyRating,
       dripQuadrant,
+      tagIds,
     } = body;
 
     if (!id) {
@@ -255,6 +297,41 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    // Update tag assignments if tagIds provided
+    let updatedTagIds: string[] = [];
+    if (tagIds !== undefined && Array.isArray(tagIds)) {
+      // Delete existing tag assignments
+      await supabase
+        .from('time_block_tag_assignments')
+        .delete()
+        .eq('time_block_id', id);
+
+      // Create new tag assignments
+      if (tagIds.length > 0) {
+        const tagAssignments = tagIds.map((tagId: string) => ({
+          time_block_id: id,
+          tag_id: tagId,
+        }));
+
+        const { error: tagError } = await supabase
+          .from('time_block_tag_assignments')
+          .insert(tagAssignments);
+
+        if (tagError) {
+          console.error('Error updating tag assignments:', tagError);
+        } else {
+          updatedTagIds = tagIds;
+        }
+      }
+    } else {
+      // Fetch existing tag assignments if not updating
+      const { data: existingAssignments } = await supabase
+        .from('time_block_tag_assignments')
+        .select('tag_id')
+        .eq('time_block_id', id);
+      updatedTagIds = (existingAssignments || []).map(a => a.tag_id);
+    }
+
     // Transform to camelCase
     const transformed = {
       id: timeBlock.id,
@@ -270,6 +347,7 @@ export async function PUT(request: NextRequest) {
       dripQuadrant: timeBlock.drip_quadrant,
       source: timeBlock.source,
       externalEventId: timeBlock.external_event_id,
+      tagIds: updatedTagIds,
       createdAt: timeBlock.created_at,
       updatedAt: timeBlock.updated_at,
     };

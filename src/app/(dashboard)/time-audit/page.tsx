@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Calendar, CalendarDays, CalendarRange, Lock, RefreshCw, ChevronDown, Upload, ArrowUpRight } from 'lucide-react';
+import { Plus, Calendar, CalendarDays, CalendarRange, Lock, RefreshCw, ChevronDown, Upload, ArrowUpRight, BarChart3 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,7 +35,9 @@ import { DripPieChart } from '@/components/features/time-audit/drip-pie-chart';
 import { EnergyPieChart } from '@/components/features/time-audit/energy-pie-chart';
 import { TimeSummaryStats } from '@/components/features/time-audit/time-summary-stats';
 import { TimeBlockForm, TimeBlock } from '@/components/features/time-audit/time-block-form';
+import { InsightsView } from '@/components/features/time-audit/insights-view';
 import { useLocalStorage } from '@/lib/hooks/use-local-storage';
+import { useTags } from '@/lib/hooks/use-tags';
 import { ROUTES } from '@/constants/routes';
 import type { DripQuadrant, EnergyRating } from '@/types/database';
 
@@ -151,9 +153,12 @@ export default function TimeAuditPage() {
     fetchEvents: fetchGoogleEvents,
   } = useGoogleCalendar();
 
-  const { getUncategorizedEventIds, getCategorization, categorizations } = useEventPatterns();
+  const { getUncategorizedEventIds, getCategorization, saveCategorization, categorizations } = useEventPatterns();
+
+  const { tags } = useTags();
 
   const [showCategorizationDialog, setShowCategorizationDialog] = useState(false);
+  const [mainTab, setMainTab] = useState<'calendar' | 'insights'>('calendar');
   const [syncTimeframe, setSyncTimeframe] = useLocalStorage<'1week' | '2weeks' | '1month'>('google-sync-timeframe', '1week');
 
   // Fetch Google events when connected
@@ -385,24 +390,53 @@ export default function TimeAuditPage() {
   // Handle saving a new or edited time block (saves to database)
   const handleSaveBlock = async (blockData: Omit<TimeBlock, 'id' | 'createdAt'>) => {
     if (editingBlock) {
-      // Update existing block in database
-      await updateTimeBlock(editingBlock.id, {
-        date: blockData.date,
-        startTime: blockData.startTime,
-        endTime: blockData.endTime,
-        activityName: blockData.activityName,
-        dripQuadrant: blockData.dripQuadrant,
-        energyRating: blockData.energyRating,
-      });
+      // Check if this is a Google Calendar event being saved for the first time
+      const isGoogleEvent = editingBlock.source === 'google_calendar' && editingBlock.externalEventId;
+      const existsInDb = dbTimeBlocks.some(b => b.id === editingBlock.id);
 
-      // Also update local storage for backwards compatibility
-      setLocalTimeBlocks(blocks =>
-        blocks.map(b =>
-          b.id === editingBlock.id
-            ? { ...b, ...blockData }
-            : b
-        )
-      );
+      if (isGoogleEvent && !existsInDb) {
+        // Save Google Calendar event to database for the first time
+        await createTimeBlock({
+          date: blockData.date,
+          startTime: blockData.startTime,
+          endTime: blockData.endTime,
+          activityName: blockData.activityName,
+          dripQuadrant: blockData.dripQuadrant,
+          energyRating: blockData.energyRating,
+          source: 'calendar_sync',
+          externalEventId: editingBlock.externalEventId,
+        });
+
+        // Also save/update the categorization in localStorage for pattern learning
+        saveCategorization(
+          editingBlock.externalEventId!,
+          blockData.activityName,
+          blockData.dripQuadrant,
+          blockData.energyRating
+        );
+
+        // Refresh time blocks from database
+        await fetchTimeBlocks();
+      } else {
+        // Update existing block in database
+        await updateTimeBlock(editingBlock.id, {
+          date: blockData.date,
+          startTime: blockData.startTime,
+          endTime: blockData.endTime,
+          activityName: blockData.activityName,
+          dripQuadrant: blockData.dripQuadrant,
+          energyRating: blockData.energyRating,
+        });
+
+        // Also update local storage for backwards compatibility
+        setLocalTimeBlocks(blocks =>
+          blocks.map(b =>
+            b.id === editingBlock.id
+              ? { ...b, ...blockData }
+              : b
+          )
+        );
+      }
     } else {
       // Create new block in database
       await createTimeBlock({
@@ -547,9 +581,35 @@ export default function TimeAuditPage() {
 
   // Handle clicking on an existing block (receives block object from WeeklyCalendarView)
   const handleBlockClick = (block: CalendarTimeBlock) => {
+    // First check if it's a database/local time block
     const fullBlock = timeBlocks.find(b => b.id === block.id);
     if (fullBlock) {
       setEditingBlock(fullBlock);
+      setIsFormOpen(true);
+      return;
+    }
+
+    // Check if it's a Google Calendar event
+    const googleEvent = googleEvents.find(e => e.id === block.id);
+    if (googleEvent) {
+      const categorization = getCategorization(googleEvent.id);
+      const startDateTime = googleEvent.start?.dateTime || googleEvent.startTime;
+      const endDateTime = googleEvent.end?.dateTime || googleEvent.endTime;
+
+      // Create a pseudo-block for editing Google Calendar events
+      const pseudoBlock: TimeBlock = {
+        id: googleEvent.id,
+        date: startDateTime ? format(new Date(startDateTime), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
+        startTime: startDateTime ? format(new Date(startDateTime), 'HH:mm') : '09:00',
+        endTime: endDateTime ? format(new Date(endDateTime), 'HH:mm') : '09:30',
+        activityName: googleEvent.summary || 'Untitled Event',
+        dripQuadrant: categorization?.dripQuadrant || 'production',
+        energyRating: categorization?.energyRating || 'yellow',
+        source: 'google_calendar',
+        externalEventId: googleEvent.id,
+        createdAt: new Date().toISOString(),
+      };
+      setEditingBlock(pseudoBlock);
       setIsFormOpen(true);
     }
   };
@@ -660,11 +720,24 @@ export default function TimeAuditPage() {
         energyBalance={stats.energyBalance}
       />
 
-      {/* Main Content - Tabs + Charts */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Calendar Views - Takes 2 columns */}
-        <div className="lg:col-span-2">
-          <Tabs defaultValue="weekly" className="space-y-4">
+      {/* Main Content - Top Level Tabs */}
+      <Tabs value={mainTab} onValueChange={(v) => setMainTab(v as 'calendar' | 'insights')} className="space-y-4">
+        <TabsList className="w-fit">
+          <TabsTrigger value="calendar" className="gap-2">
+            <Calendar className="h-4 w-4" />
+            Calendar
+          </TabsTrigger>
+          <TabsTrigger value="insights" className="gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Insights
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="calendar" className="mt-4">
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* Calendar Views - Takes 2 columns */}
+            <div className="lg:col-span-2">
+              <Tabs defaultValue="weekly" className="space-y-4">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="weekly" className="gap-2">
                 <Calendar className="h-4 w-4" />
@@ -883,6 +956,25 @@ export default function TimeAuditPage() {
           )}
         </div>
       </div>
+        </TabsContent>
+
+        <TabsContent value="insights" className="mt-4">
+          <InsightsView
+            timeBlocks={timeBlocks.map(block => ({
+              id: block.id,
+              date: block.date,
+              startTime: block.startTime,
+              endTime: block.endTime,
+              activityName: block.activityName,
+              dripQuadrant: block.dripQuadrant,
+              energyRating: block.energyRating,
+              tagIds: 'tagIds' in block ? (block.tagIds as string[]) : undefined,
+              durationMinutes: calculateDuration(block.startTime, block.endTime),
+            }))}
+            tags={tags}
+          />
+        </TabsContent>
+      </Tabs>
 
       {/* Push to Google Calendar Dialog */}
       <Dialog open={showPushDialog} onOpenChange={setShowPushDialog}>

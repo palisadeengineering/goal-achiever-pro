@@ -16,6 +16,12 @@ export interface GoogleCalendarEvent {
   source?: string;
 }
 
+interface GoogleEventsCache {
+  events: GoogleCalendarEvent[];
+  cachedAt: string;
+  dateRange: { start: string; end: string };
+}
+
 interface UseGoogleCalendarReturn {
   events: GoogleCalendarEvent[];
   isLoading: boolean;
@@ -26,7 +32,11 @@ interface UseGoogleCalendarReturn {
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   checkConnection: () => Promise<void>;
+  clearCache: () => void;
 }
+
+const GOOGLE_EVENTS_CACHE_KEY = 'google-calendar-events-cache';
+const CACHE_DURATION_MS = 30 * 60 * 1000; // 30 minutes
 
 export function useGoogleCalendar(): UseGoogleCalendarReturn {
   const [events, setEvents] = useState<GoogleCalendarEvent[]>([]);
@@ -34,6 +44,24 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
   const [error, setError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isCheckingConnection, setIsCheckingConnection] = useState(true);
+
+  // Restore events from cache on mount
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem(GOOGLE_EVENTS_CACHE_KEY);
+      if (cached) {
+        const { events: cachedEvents, cachedAt } = JSON.parse(cached) as GoogleEventsCache;
+        const cacheAge = Date.now() - new Date(cachedAt).getTime();
+        const isFresh = cacheAge < CACHE_DURATION_MS;
+
+        if (isFresh && cachedEvents && cachedEvents.length > 0) {
+          setEvents(cachedEvents);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to restore events from cache:', err);
+    }
+  }, []);
 
   // Check connection status via API
   const checkConnection = useCallback(async () => {
@@ -53,6 +81,16 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
   useEffect(() => {
     checkConnection();
   }, [checkConnection]);
+
+  // Clear cache helper
+  const clearCache = useCallback(() => {
+    try {
+      localStorage.removeItem(GOOGLE_EVENTS_CACHE_KEY);
+      setEvents([]);
+    } catch (err) {
+      console.error('Failed to clear cache:', err);
+    }
+  }, []);
 
   const fetchEvents = useCallback(async (startDate: Date, endDate: Date) => {
     setIsLoading(true);
@@ -95,6 +133,21 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
         }));
       setEvents(transformedEvents);
       setIsConnected(true);
+
+      // Cache events in localStorage for persistence
+      try {
+        const cache: GoogleEventsCache = {
+          events: transformedEvents,
+          cachedAt: new Date().toISOString(),
+          dateRange: {
+            start: startDate.toISOString(),
+            end: endDate.toISOString(),
+          },
+        };
+        localStorage.setItem(GOOGLE_EVENTS_CACHE_KEY, JSON.stringify(cache));
+      } catch (err) {
+        console.error('Failed to cache events:', err);
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch events';
       setError(message);
@@ -128,6 +181,8 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
       setIsConnected(false);
       setEvents([]);
       setError(null);
+      // Clear cache on disconnect
+      localStorage.removeItem(GOOGLE_EVENTS_CACHE_KEY);
     } catch (err) {
       console.error('Failed to disconnect Google Calendar:', err);
       setError('Failed to disconnect Google Calendar');
@@ -144,5 +199,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
     connect,
     disconnect,
     checkConnection,
+    clearCache,
   };
 }
