@@ -17,8 +17,8 @@ export const DRIP_QUADRANTS: Record<DripQuadrant, {
     description: 'Low earning, low energy tasks',
     action: 'Delegate to others',
     color: '#9333ea', // Purple
-    bgColor: 'bg-purple-100',
-    borderColor: 'border-purple-500',
+    bgColor: 'bg-purple-100 dark:bg-purple-900/30',
+    borderColor: 'border-purple-500 dark:border-purple-400',
     moneyLevel: 'low',
     energyLevel: 'low',
   },
@@ -27,8 +27,8 @@ export const DRIP_QUADRANTS: Record<DripQuadrant, {
     description: 'High earning, low energy tasks',
     action: 'Automate or replace with systems',
     color: '#f97316', // Orange
-    bgColor: 'bg-orange-100',
-    borderColor: 'border-orange-500',
+    bgColor: 'bg-orange-100 dark:bg-orange-900/30',
+    borderColor: 'border-orange-500 dark:border-orange-400',
     moneyLevel: 'high',
     energyLevel: 'low',
   },
@@ -37,8 +37,8 @@ export const DRIP_QUADRANTS: Record<DripQuadrant, {
     description: 'Low earning, high energy tasks',
     action: 'Keep for long-term growth',
     color: '#3b82f6', // Blue
-    bgColor: 'bg-blue-100',
-    borderColor: 'border-blue-500',
+    bgColor: 'bg-blue-100 dark:bg-blue-900/30',
+    borderColor: 'border-blue-500 dark:border-blue-400',
     moneyLevel: 'low',
     energyLevel: 'high',
   },
@@ -47,8 +47,8 @@ export const DRIP_QUADRANTS: Record<DripQuadrant, {
     description: 'High earning, high energy tasks',
     action: 'Focus here! Your sweet spot',
     color: '#22c55e', // Green
-    bgColor: 'bg-green-100',
-    borderColor: 'border-green-500',
+    bgColor: 'bg-green-100 dark:bg-green-900/30',
+    borderColor: 'border-green-500 dark:border-green-400',
     moneyLevel: 'high',
     energyLevel: 'high',
   },

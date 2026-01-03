@@ -34,7 +34,7 @@ const SMART_FIELDS = [
     key: 'specific' as const,
     label: 'Specific',
     letter: 'S',
-    color: 'bg-blue-100 text-blue-800 border-blue-300',
+    color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-300 dark:border-blue-700',
     placeholder: 'What exactly do you want to achieve? Be precise.',
     hint: 'Define exactly what you want to accomplish. The more specific, the clearer your path.',
   },
@@ -42,7 +42,7 @@ const SMART_FIELDS = [
     key: 'measurable' as const,
     label: 'Measurable',
     letter: 'M',
-    color: 'bg-green-100 text-green-800 border-green-300',
+    color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-300 dark:border-green-700',
     placeholder: 'How will you measure progress and success?',
     hint: 'What metrics will you track? How will you know when you\'ve achieved it?',
   },
@@ -50,7 +50,7 @@ const SMART_FIELDS = [
     key: 'attainable' as const,
     label: 'Attainable',
     letter: 'A',
-    color: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+    color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 border-yellow-300 dark:border-yellow-700',
     placeholder: 'What skills or resources do you need?',
     hint: 'Is this goal achievable? What do you need to make it happen?',
   },
@@ -58,7 +58,7 @@ const SMART_FIELDS = [
     key: 'realistic' as const,
     label: 'Realistic',
     letter: 'R',
-    color: 'bg-orange-100 text-orange-800 border-orange-300',
+    color: 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 border-orange-300 dark:border-orange-700',
     placeholder: 'Why is this goal important to you right now?',
     hint: 'Does this align with your other goals and priorities?',
   },
@@ -213,9 +213,9 @@ export function SmartGoalEditor({
             ))}
 
             {/* Time-bound */}
-            <div className="p-4 rounded-lg border-2 bg-purple-100 text-purple-800 border-purple-300">
+            <div className="p-4 rounded-lg border-2 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 border-purple-300 dark:border-purple-700">
               <div className="flex items-center gap-2 mb-2">
-                <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-300">
+                <Badge variant="outline" className="bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 border-purple-300 dark:border-purple-700">
                   T
                 </Badge>
                 <span className="font-medium">Time-bound</span>
@@ -313,7 +313,7 @@ export function SmartGoalEditor({
           </div>
 
           {aiError && (
-            <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
+            <div className="p-3 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
               {aiError}
             </div>
           )}
@@ -340,7 +340,7 @@ export function SmartGoalEditor({
           {/* Time-bound */}
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
-              <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-300">
+              <Badge variant="outline" className="bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 border-purple-300 dark:border-purple-700">
                 T
               </Badge>
               Time-bound

@@ -14,9 +14,11 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // Full calendar access for two-way sync (read/write events)
+  // Note: Users who previously connected with readonly scopes will need to re-authenticate
   const scopes = [
-    'https://www.googleapis.com/auth/calendar.readonly',
-    'https://www.googleapis.com/auth/calendar.events.readonly',
+    'https://www.googleapis.com/auth/calendar',
+    'https://www.googleapis.com/auth/calendar.events',
   ].join(' ');
 
   const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');

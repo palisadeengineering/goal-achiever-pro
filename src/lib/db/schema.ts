@@ -83,6 +83,74 @@ export const powerGoals = pgTable('power_goals', {
 }));
 
 // =============================================
+// MONTHLY TARGETS (Links to Power Goals)
+// =============================================
+export const monthlyTargets = pgTable('monthly_targets', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  powerGoalId: uuid('power_goal_id').notNull().references(() => powerGoals.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  description: text('description'),
+  targetMonth: integer('target_month').notNull(), // 1-12
+  targetYear: integer('target_year').notNull(),
+  keyMetric: text('key_metric'),
+  targetValue: decimal('target_value', { precision: 15, scale: 2 }),
+  currentValue: decimal('current_value', { precision: 15, scale: 2 }).default('0'),
+  status: text('status').default('pending'), // pending, in_progress, completed
+  sortOrder: integer('sort_order').default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  userMonthIdx: index('monthly_targets_user_month_idx').on(table.userId, table.targetYear, table.targetMonth),
+}));
+
+// =============================================
+// WEEKLY TARGETS (Links to Monthly Targets)
+// =============================================
+export const weeklyTargets = pgTable('weekly_targets', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  monthlyTargetId: uuid('monthly_target_id').notNull().references(() => monthlyTargets.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  description: text('description'),
+  weekNumber: integer('week_number').notNull(), // 1-5 within month
+  weekStartDate: date('week_start_date').notNull(),
+  weekEndDate: date('week_end_date').notNull(),
+  keyMetric: text('key_metric'),
+  targetValue: decimal('target_value', { precision: 15, scale: 2 }),
+  currentValue: decimal('current_value', { precision: 15, scale: 2 }).default('0'),
+  status: text('status').default('pending'),
+  sortOrder: integer('sort_order').default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  userWeekIdx: index('weekly_targets_user_week_idx').on(table.userId, table.weekStartDate),
+}));
+
+// =============================================
+// DAILY ACTIONS (Links to Weekly Targets)
+// =============================================
+export const dailyActions = pgTable('daily_actions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  weeklyTargetId: uuid('weekly_target_id').notNull().references(() => weeklyTargets.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  description: text('description'),
+  actionDate: date('action_date').notNull(),
+  estimatedMinutes: integer('estimated_minutes').default(30),
+  keyMetric: text('key_metric'),
+  targetValue: decimal('target_value', { precision: 15, scale: 2 }),
+  currentValue: decimal('current_value', { precision: 15, scale: 2 }).default('0'),
+  status: text('status').default('pending'),
+  completedAt: timestamp('completed_at'),
+  sortOrder: integer('sort_order').default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  userDateIdx: index('daily_actions_user_date_idx').on(table.userId, table.actionDate),
+}));
+
+// =============================================
 // MINS (Most Important Next Steps)
 // =============================================
 export const mins = pgTable('mins', {
@@ -427,6 +495,24 @@ export const powerGoalsRelations = relations(powerGoals, ({ one, many }) => ({
   vision: one(visions, { fields: [powerGoals.visionId], references: [visions.id] }),
   mins: many(mins),
   leverageItems: many(leverageItems),
+  monthlyTargets: many(monthlyTargets),
+}));
+
+export const monthlyTargetsRelations = relations(monthlyTargets, ({ one, many }) => ({
+  user: one(profiles, { fields: [monthlyTargets.userId], references: [profiles.id] }),
+  powerGoal: one(powerGoals, { fields: [monthlyTargets.powerGoalId], references: [powerGoals.id] }),
+  weeklyTargets: many(weeklyTargets),
+}));
+
+export const weeklyTargetsRelations = relations(weeklyTargets, ({ one, many }) => ({
+  user: one(profiles, { fields: [weeklyTargets.userId], references: [profiles.id] }),
+  monthlyTarget: one(monthlyTargets, { fields: [weeklyTargets.monthlyTargetId], references: [monthlyTargets.id] }),
+  dailyActions: many(dailyActions),
+}));
+
+export const dailyActionsRelations = relations(dailyActions, ({ one }) => ({
+  user: one(profiles, { fields: [dailyActions.userId], references: [profiles.id] }),
+  weeklyTarget: one(weeklyTargets, { fields: [dailyActions.weeklyTargetId], references: [weeklyTargets.id] }),
 }));
 
 export const minsRelations = relations(mins, ({ one, many }) => ({

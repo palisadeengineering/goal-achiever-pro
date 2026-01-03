@@ -1,11 +1,22 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { format, startOfWeek, addDays, isSameDay } from 'date-fns';
+import {
+  DndContext,
+  DragOverlay,
+  useDraggable,
+  useDroppable,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragStartEvent,
+} from '@dnd-kit/core';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Loader2 } from 'lucide-react';
 import { cn, formatHour } from '@/lib/utils';
 import { DRIP_QUADRANTS } from '@/constants/drip';
 import { useLocalStorage } from '@/lib/hooks/use-local-storage';
@@ -18,6 +29,8 @@ interface TimeBlock {
   activityName: string;
   dripQuadrant: DripQuadrant;
   energyRating: EnergyRating;
+  date?: string;
+  syncStatus?: 'synced' | 'pending' | 'error';
 }
 
 interface UserSettings {
@@ -38,6 +51,8 @@ interface WeeklyCalendarViewProps {
   timeBlocks?: Record<string, TimeBlock[]>; // keyed by date string
   onAddBlock?: (date: Date, time: string) => void;
   onBlockClick?: (block: TimeBlock) => void;
+  onBlockMove?: (blockId: string, newDate: string, newStartTime: string, newEndTime: string) => Promise<boolean>;
+  isLoading?: boolean;
 }
 
 // Generate time slots for given hour range in 15-min increments
@@ -51,17 +66,120 @@ const generateTimeSlots = (startHour: number, endHour: number): string[] => {
   return slots;
 };
 
+// Draggable event block component
+function DraggableBlock({
+  block,
+  durationSlots,
+  onBlockClick,
+  getBlockColor,
+}: {
+  block: TimeBlock;
+  durationSlots: number;
+  onBlockClick?: (block: TimeBlock) => void;
+  getBlockColor: (quadrant: DripQuadrant) => string;
+}) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: block.id,
+    data: { block },
+  });
+
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        zIndex: isDragging ? 1000 : 1,
+      }
+    : undefined;
+
+  return (
+    <button
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      onClick={(e) => {
+        if (!isDragging) {
+          e.stopPropagation();
+          onBlockClick?.(block);
+        }
+      }}
+      className={cn(
+        'relative text-left p-1 rounded-sm mx-0.5 text-white text-[10px] overflow-hidden transition-all cursor-grab active:cursor-grabbing',
+        isDragging && 'opacity-50 shadow-lg',
+        block.syncStatus === 'pending' && 'animate-pulse',
+        block.syncStatus === 'error' && 'ring-2 ring-red-500'
+      )}
+      style={{
+        backgroundColor: getBlockColor(block.dripQuadrant),
+        gridRow: `span ${durationSlots}`,
+        ...style,
+      }}
+    >
+      <span className="line-clamp-2">{block.activityName}</span>
+      {block.syncStatus === 'pending' && (
+        <Loader2 className="absolute top-0.5 right-0.5 h-2 w-2 animate-spin" />
+      )}
+    </button>
+  );
+}
+
+// Droppable time slot component
+function DroppableSlot({
+  id,
+  date,
+  time,
+  onAddBlock,
+  children,
+}: {
+  id: string;
+  date: Date;
+  time: string;
+  onAddBlock?: (date: Date, time: string) => void;
+  children?: React.ReactNode;
+}) {
+  const { setNodeRef, isOver } = useDroppable({
+    id,
+    data: { date: format(date, 'yyyy-MM-dd'), time },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      onClick={() => !children && onAddBlock?.(date, time)}
+      className={cn(
+        'h-3 transition-colors border-b border-dashed border-muted/30 last:border-b-0 group',
+        !children && 'hover:bg-muted/50 cursor-pointer',
+        isOver && 'bg-primary/20 ring-1 ring-primary'
+      )}
+    >
+      {children || (
+        <Plus className="h-2 w-2 mx-auto opacity-0 group-hover:opacity-50" />
+      )}
+    </div>
+  );
+}
+
 export function WeeklyCalendarView({
   timeBlocks = {},
   onAddBlock,
   onBlockClick,
+  onBlockMove,
+  isLoading = false,
 }: WeeklyCalendarViewProps) {
   const [settings] = useLocalStorage<UserSettings>('user-settings', DEFAULT_SETTINGS);
+  const [activeBlock, setActiveBlock] = useState<TimeBlock | null>(null);
 
   const weekStartsOn = settings.weekStartsOn === 'monday' ? 1 : 0;
 
   const [currentWeekStart, setCurrentWeekStart] = useState(() =>
     startOfWeek(new Date(), { weekStartsOn })
+  );
+
+  // Configure drag sensor with activation constraints
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // 8px movement required before drag starts
+      },
+    })
   );
 
   // Generate time slots based on user settings
@@ -100,31 +218,87 @@ export function WeeklyCalendarView({
     });
   };
 
-  const getBlockColor = (quadrant: DripQuadrant) => {
+  const getBlockColor = useCallback((quadrant: DripQuadrant) => {
     return DRIP_QUADRANTS[quadrant].color;
+  }, []);
+
+  // Calculate block duration in minutes
+  const getBlockDuration = (block: TimeBlock): number => {
+    const startParts = block.startTime.split(':');
+    const endParts = block.endTime.split(':');
+    const startMins = parseInt(startParts[0]) * 60 + parseInt(startParts[1]);
+    const endMins = parseInt(endParts[0]) * 60 + parseInt(endParts[1]);
+    return endMins - startMins;
+  };
+
+  // Handle drag start
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    const block = active.data.current?.block as TimeBlock;
+    if (block) {
+      setActiveBlock(block);
+    }
+  };
+
+  // Handle drag end
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveBlock(null);
+
+    if (!over || !onBlockMove) return;
+
+    const block = active.data.current?.block as TimeBlock;
+    const dropData = over.data.current as { date: string; time: string } | undefined;
+
+    if (!block || !dropData) return;
+
+    // Calculate new end time based on block duration
+    const duration = getBlockDuration(block);
+    const [startHour, startMin] = dropData.time.split(':').map(Number);
+    const startTotalMins = startHour * 60 + startMin;
+    const endTotalMins = startTotalMins + duration;
+    const endHour = Math.floor(endTotalMins / 60);
+    const endMin = endTotalMins % 60;
+    const newEndTime = `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`;
+
+    // Only move if position changed
+    const currentDate = block.date || format(new Date(), 'yyyy-MM-dd');
+    if (currentDate === dropData.date && block.startTime === dropData.time) {
+      return;
+    }
+
+    await onBlockMove(block.id, dropData.date, dropData.time, newEndTime);
   };
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">Weekly View</CardTitle>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={goToToday}>
-              Today
-            </Button>
-            <Button variant="outline" size="icon" onClick={goToPreviousWeek}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-sm font-medium min-w-[180px] text-center">
-              {format(currentWeekStart, 'MMM d')} - {format(addDays(currentWeekStart, 6), 'MMM d, yyyy')}
-            </span>
-            <Button variant="outline" size="icon" onClick={goToNextWeek}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg flex items-center gap-2">
+              Weekly View
+              {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={goToToday}>
+                Today
+              </Button>
+              <Button variant="outline" size="icon" onClick={goToPreviousWeek}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm font-medium min-w-[180px] text-center">
+                {format(currentWeekStart, 'MMM d')} - {format(addDays(currentWeekStart, 6), 'MMM d, yyyy')}
+              </span>
+              <Button variant="outline" size="icon" onClick={goToNextWeek}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-        </div>
-      </CardHeader>
+        </CardHeader>
       <CardContent className="p-0">
         <div className="overflow-x-auto">
           <div className="min-w-[800px]">
@@ -182,8 +356,10 @@ export function WeeklyCalendarView({
                       >
                         <div className="grid grid-rows-4 h-full">
                           {quarterSlots.map((time) => {
+                            const dateKey = format(day, 'yyyy-MM-dd');
                             const block = getBlocksForDateAndTime(day, time);
                             const isBlockStart = block?.startTime === time;
+                            const slotId = `${dateKey}-${time}`;
 
                             if (block && isBlockStart) {
                               // Calculate block height based on duration
@@ -194,33 +370,29 @@ export function WeeklyCalendarView({
                               const durationSlots = (endMins - startMins) / 15;
 
                               return (
-                                <button
+                                <DraggableBlock
                                   key={time}
-                                  onClick={() => onBlockClick?.(block)}
-                                  className="relative text-left p-1 rounded-sm mx-0.5 text-white text-[10px] overflow-hidden hover:opacity-90 transition-opacity"
-                                  style={{
-                                    backgroundColor: getBlockColor(block.dripQuadrant),
-                                    gridRow: `span ${durationSlots}`,
-                                  }}
-                                >
-                                  <span className="line-clamp-2">{block.activityName}</span>
-                                </button>
+                                  block={{ ...block, date: dateKey }}
+                                  durationSlots={durationSlots}
+                                  onBlockClick={onBlockClick}
+                                  getBlockColor={getBlockColor}
+                                />
                               );
                             }
 
                             if (block) {
-                              // Part of existing block, don't render
-                              return null;
+                              // Part of existing block, don't render droppable
+                              return <div key={time} className="h-3" />;
                             }
 
                             return (
-                              <button
+                              <DroppableSlot
                                 key={time}
-                                onClick={() => onAddBlock?.(day, time)}
-                                className="h-3 hover:bg-muted/50 transition-colors border-b border-dashed border-muted/30 last:border-b-0 group"
-                              >
-                                <Plus className="h-2 w-2 mx-auto opacity-0 group-hover:opacity-50" />
-                              </button>
+                                id={slotId}
+                                date={day}
+                                time={time}
+                                onAddBlock={onAddBlock}
+                              />
                             );
                           })}
                         </div>
@@ -252,5 +424,21 @@ export function WeeklyCalendarView({
         </div>
       </CardContent>
     </Card>
+
+    {/* Drag overlay - shows a preview of the dragged item */}
+    <DragOverlay>
+      {activeBlock && (
+        <div
+          className="p-1 rounded-sm text-white text-[10px] shadow-lg opacity-90"
+          style={{
+            backgroundColor: getBlockColor(activeBlock.dripQuadrant),
+            minWidth: '80px',
+          }}
+        >
+          <span className="line-clamp-1">{activeBlock.activityName}</span>
+        </div>
+      )}
+    </DragOverlay>
+    </DndContext>
   );
 }

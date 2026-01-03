@@ -32,17 +32,17 @@ export function ThreeHundredPercentTracker({
   const percentage = Math.round((totalScore / 300) * 100);
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-yellow-600';
-    if (score >= 40) return 'text-orange-600';
-    return 'text-red-600';
+    if (score >= 80) return 'text-green-600 dark:text-green-400';
+    if (score >= 60) return 'text-yellow-600 dark:text-yellow-400';
+    if (score >= 40) return 'text-orange-600 dark:text-orange-400';
+    return 'text-red-600 dark:text-red-400';
   };
 
   const getTotalColor = () => {
-    if (totalScore >= 240) return 'text-green-600 bg-green-50';
-    if (totalScore >= 180) return 'text-yellow-600 bg-yellow-50';
-    if (totalScore >= 120) return 'text-orange-600 bg-orange-50';
-    return 'text-red-600 bg-red-50';
+    if (totalScore >= 240) return 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20';
+    if (totalScore >= 180) return 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20';
+    if (totalScore >= 120) return 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20';
+    return 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20';
   };
 
   const handleSave = () => {
@@ -101,7 +101,7 @@ export function ThreeHundredPercentTracker({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Target className="h-4 w-4 text-blue-600" />
+                <Target className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 <span className="font-medium">Clarity</span>
               </div>
               <span className={cn('font-bold', getScoreColor(clarity))}>
@@ -128,7 +128,7 @@ export function ThreeHundredPercentTracker({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Brain className="h-4 w-4 text-purple-600" />
+                <Brain className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                 <span className="font-medium">Belief</span>
               </div>
               <span className={cn('font-bold', getScoreColor(belief))}>
@@ -155,7 +155,7 @@ export function ThreeHundredPercentTracker({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Flame className="h-4 w-4 text-orange-600" />
+                <Flame className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                 <span className="font-medium">Consistency</span>
               </div>
               <span className={cn('font-bold', getScoreColor(consistency))}>

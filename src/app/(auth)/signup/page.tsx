@@ -42,13 +42,21 @@ export default function SignupPage() {
       });
 
       if (error) {
-        setError(error.message);
+        // Map Supabase errors to user-friendly messages
+        const errorMessages: Record<string, string> = {
+          'User already registered': 'An account with this email already exists. Try signing in instead.',
+          'Password should be at least 6 characters': 'Password must be at least 8 characters long.',
+          'Invalid email': 'Please enter a valid email address.',
+          'Signup is disabled': 'New registrations are currently disabled. Please try again later.',
+          'Email rate limit exceeded': 'Too many sign-up attempts. Please wait a moment and try again.',
+        };
+        setError(errorMessages[error.message] || error.message);
         return;
       }
 
       setSuccess(true);
     } catch {
-      setError('An unexpected error occurred');
+      setError('Unable to create account. Please check your internet connection and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -67,11 +75,16 @@ export default function SignupPage() {
       });
 
       if (error) {
-        setError(error.message);
+        // Detect specific OAuth configuration errors
+        if (error.message.includes('provider') || error.message.includes('OAuth') || error.message.includes('not enabled')) {
+          setError('Google sign-up is not yet configured. Please use email/password to create an account, or contact support.');
+        } else {
+          setError(error.message);
+        }
         setIsGoogleLoading(false);
       }
     } catch {
-      setError('An unexpected error occurred');
+      setError('Unable to connect to Google. Please check your internet connection or use email/password instead.');
       setIsGoogleLoading(false);
     }
   };
@@ -81,8 +94,8 @@ export default function SignupPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="p-3 rounded-full bg-green-100">
-              <CheckCircle2 className="h-8 w-8 text-green-600" />
+            <div className="p-3 rounded-full bg-green-100 dark:bg-green-900/30">
+              <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
             </div>
           </div>
           <CardTitle className="text-2xl">Check your email</CardTitle>
@@ -204,7 +217,7 @@ export default function SignupPage() {
           </div>
 
           {error && (
-            <div className="p-3 text-sm text-red-500 bg-red-50 rounded-lg">
+            <div className="p-3 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
               {error}
             </div>
           )}

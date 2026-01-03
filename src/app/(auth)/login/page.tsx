@@ -36,14 +36,20 @@ function LoginForm() {
       });
 
       if (error) {
-        setError(error.message);
+        // Map Supabase errors to user-friendly messages
+        const errorMessages: Record<string, string> = {
+          'Invalid login credentials': 'Invalid email or password. Please try again.',
+          'Email not confirmed': 'Please verify your email address before signing in.',
+          'Too many requests': 'Too many sign-in attempts. Please wait a moment and try again.',
+        };
+        setError(errorMessages[error.message] || error.message);
         return;
       }
 
       router.push(redirectTo);
       router.refresh();
     } catch {
-      setError('An unexpected error occurred');
+      setError('Unable to sign in. Please check your internet connection and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -62,11 +68,16 @@ function LoginForm() {
       });
 
       if (error) {
-        setError(error.message);
+        // Detect specific OAuth configuration errors
+        if (error.message.includes('provider') || error.message.includes('OAuth') || error.message.includes('not enabled')) {
+          setError('Google sign-in is not yet configured. Please use email/password to sign in, or contact support.');
+        } else {
+          setError(error.message);
+        }
         setIsGoogleLoading(false);
       }
     } catch {
-      setError('An unexpected error occurred');
+      setError('Unable to connect to Google sign-in. Please check your internet connection or use email/password instead.');
       setIsGoogleLoading(false);
     }
   };
@@ -166,7 +177,7 @@ function LoginForm() {
           </div>
 
           {error && (
-            <div className="p-3 text-sm text-red-500 bg-red-50 rounded-lg">
+            <div className="p-3 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
               {error}
             </div>
           )}

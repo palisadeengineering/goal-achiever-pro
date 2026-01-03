@@ -74,6 +74,65 @@ export interface PowerGoal {
   updatedAt: Date;
 }
 
+// Target Status
+export type TargetStatus = 'pending' | 'in_progress' | 'completed';
+
+// Monthly Target (Links to Power Goals)
+export interface MonthlyTarget {
+  id: string;
+  userId: string;
+  powerGoalId: string;
+  title: string;
+  description: string | null;
+  targetMonth: number; // 1-12
+  targetYear: number;
+  keyMetric: string | null;
+  targetValue: number | null;
+  currentValue: number;
+  status: TargetStatus;
+  sortOrder: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Weekly Target (Links to Monthly Targets)
+export interface WeeklyTarget {
+  id: string;
+  userId: string;
+  monthlyTargetId: string;
+  title: string;
+  description: string | null;
+  weekNumber: number; // 1-5 within month
+  weekStartDate: Date;
+  weekEndDate: Date;
+  keyMetric: string | null;
+  targetValue: number | null;
+  currentValue: number;
+  status: TargetStatus;
+  sortOrder: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Daily Action (Links to Weekly Targets)
+export interface DailyAction {
+  id: string;
+  userId: string;
+  weeklyTargetId: string;
+  title: string;
+  description: string | null;
+  actionDate: Date;
+  estimatedMinutes: number;
+  keyMetric: string | null;
+  targetValue: number | null;
+  currentValue: number;
+  status: TargetStatus;
+  completedAt: Date | null;
+  sortOrder: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // MINS (Most Important Next Steps)
 export interface Min {
   id: string;

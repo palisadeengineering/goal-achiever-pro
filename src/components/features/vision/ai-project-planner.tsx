@@ -4,8 +4,10 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, Loader2, ChevronDown, ChevronUp, Calendar, Target, CheckCircle2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sparkles, Loader2, ChevronDown, ChevronUp, Calendar, Target, CheckCircle2, ListTodo } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { TargetGenerationWizard } from '@/components/features/targets';
 
 interface Project {
   title: string;
@@ -35,12 +37,12 @@ interface AIProjectPlannerProps {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  health: 'bg-green-100 text-green-800 border-green-300',
-  wealth: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-  relationships: 'bg-pink-100 text-pink-800 border-pink-300',
-  career: 'bg-blue-100 text-blue-800 border-blue-300',
-  business: 'bg-purple-100 text-purple-800 border-purple-300',
-  personal: 'bg-orange-100 text-orange-800 border-orange-300',
+  health: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-300 dark:border-green-700',
+  wealth: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 border-yellow-300 dark:border-yellow-700',
+  relationships: 'bg-pink-100 dark:bg-pink-900/30 text-pink-800 dark:text-pink-200 border-pink-300 dark:border-pink-700',
+  career: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-300 dark:border-blue-700',
+  business: 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 border-purple-300 dark:border-purple-700',
+  personal: 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 border-orange-300 dark:border-orange-700',
 };
 
 const QUARTER_LABELS = ['Q1', 'Q2', 'Q3', 'Q4'];
@@ -55,6 +57,18 @@ export function AIProjectPlanner({
   const [error, setError] = useState<string | null>(null);
   const [plan, setPlan] = useState<ProjectPlan | null>(null);
   const [expandedQuarters, setExpandedQuarters] = useState<number[]>([1, 2, 3, 4]);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
+
+  const handleGenerateTargets = (project: Project) => {
+    setSelectedProject(project);
+    setIsWizardOpen(true);
+  };
+
+  const handleWizardClose = () => {
+    setIsWizardOpen(false);
+    setSelectedProject(null);
+  };
 
   const toggleQuarter = (quarter: number) => {
     setExpandedQuarters((prev) =>
@@ -129,7 +143,7 @@ export function AIProjectPlanner({
             </div>
 
             {error && (
-              <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
+              <div className="p-3 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                 {error}
               </div>
             )}
@@ -253,6 +267,17 @@ export function AIProjectPlanner({
                           </ul>
                         </div>
                       )}
+                      <div className="pt-2 border-t mt-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleGenerateTargets(project)}
+                          className="w-full gap-2"
+                        >
+                          <ListTodo className="h-4 w-4" />
+                          Generate Detailed Plan
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -268,6 +293,37 @@ export function AIProjectPlanner({
           </Button>
         </div>
       </CardContent>
+
+      {/* Target Generation Wizard Dialog */}
+      <Dialog open={isWizardOpen} onOpenChange={setIsWizardOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ListTodo className="h-5 w-5 text-primary" />
+              Generate Detailed Plan
+            </DialogTitle>
+          </DialogHeader>
+          {selectedProject && (
+            <TargetGenerationWizard
+              powerGoal={{
+                id: `temp-${selectedProject.title.toLowerCase().replace(/\s+/g, '-')}`,
+                title: selectedProject.title,
+                description: selectedProject.description,
+                quarter: selectedProject.quarter,
+                category: selectedProject.category,
+                keyMilestones: selectedProject.keyMilestones,
+              }}
+              vision={vision}
+              smartGoals={smartGoals}
+              targetDate={targetDate}
+              onCancel={handleWizardClose}
+              onSave={() => {
+                handleWizardClose();
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
