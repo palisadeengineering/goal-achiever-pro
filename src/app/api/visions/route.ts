@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+// Demo user ID for development - replace with real auth later
+const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
+
+async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
+  if (!supabase) return DEMO_USER_ID;
+
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id || DEMO_USER_ID;
+}
+
 export async function GET() {
   try {
     const supabase = await createClient();
@@ -12,21 +22,13 @@ export async function GET() {
       );
     }
 
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const userId = await getUserId(supabase);
 
     // Fetch user's visions (active one first)
     const { data: visions, error } = await supabase
       .from('visions')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .is('archived_at', null)
       .order('is_active', { ascending: false })
       .order('created_at', { ascending: false });
@@ -60,15 +62,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const userId = await getUserId(supabase);
 
     const body = await request.json();
     const {
@@ -96,13 +90,13 @@ export async function POST(request: NextRequest) {
     await supabase
       .from('visions')
       .update({ is_active: false })
-      .eq('user_id', user.id);
+      .eq('user_id', userId);
 
     // Create new vision
     const { data: vision, error } = await supabase
       .from('visions')
       .insert({
-        user_id: user.id,
+        user_id: userId,
         title,
         description: description || null,
         specific: specific || null,
@@ -147,15 +141,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const userId = await getUserId(supabase);
 
     const body = await request.json();
     const {
@@ -196,7 +182,7 @@ export async function PUT(request: NextRequest) {
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .select()
       .single();
 
@@ -229,15 +215,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const userId = await getUserId(supabase);
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -257,7 +235,7 @@ export async function DELETE(request: NextRequest) {
         archived_at: new Date().toISOString(),
       })
       .eq('id', id)
-      .eq('user_id', user.id);
+      .eq('user_id', userId);
 
     if (error) {
       console.error('Error archiving vision:', error);

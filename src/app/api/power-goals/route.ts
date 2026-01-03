@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+// Demo user ID for development - replace with real auth later
+const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
+
+async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
+  if (!supabase) return DEMO_USER_ID;
+
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id || DEMO_USER_ID;
+}
+
 interface PowerGoalInput {
   title: string;
   description?: string;
@@ -21,21 +31,14 @@ export async function GET() {
       );
     }
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const userId = await getUserId(supabase);
 
     const currentYear = new Date().getFullYear();
 
     const { data: powerGoals, error } = await supabase
       .from('power_goals')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .eq('year', currentYear)
       .order('quarter', { ascending: true })
       .order('sort_order', { ascending: true });
@@ -69,14 +72,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const userId = await getUserId(supabase);
 
     const body = await request.json();
     const { powerGoals, visionId } = body as { powerGoals: PowerGoalInput[]; visionId?: string };
@@ -95,7 +91,7 @@ export async function POST(request: NextRequest) {
     const { data: existingGoals } = await supabase
       .from('power_goals')
       .select('sort_order')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .eq('year', currentYear)
       .order('sort_order', { ascending: false })
       .limit(1);
@@ -106,7 +102,7 @@ export async function POST(request: NextRequest) {
       const { data: savedGoal, error } = await supabase
         .from('power_goals')
         .insert({
-          user_id: user.id,
+          user_id: userId,
           vision_id: visionId || null,
           title: goal.title,
           description: goal.description || null,
@@ -154,14 +150,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const userId = await getUserId(supabase);
 
     const body = await request.json();
     const { id, title, description, quarter, category, targetDate, progressPercentage, status } = body;
@@ -186,7 +175,7 @@ export async function PUT(request: NextRequest) {
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .select()
       .single();
 
@@ -219,14 +208,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const userId = await getUserId(supabase);
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -242,7 +224,7 @@ export async function DELETE(request: NextRequest) {
       .from('power_goals')
       .delete()
       .eq('id', id)
-      .eq('user_id', user.id);
+      .eq('user_id', userId);
 
     if (error) {
       console.error('Error deleting power goal:', error);

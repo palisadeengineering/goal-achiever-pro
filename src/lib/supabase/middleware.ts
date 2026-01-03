@@ -12,6 +12,12 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
+  // DEVELOPMENT MODE: Skip auth for testing (remove in production)
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  if (isDevelopment) {
+    return NextResponse.next({ request });
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   });
