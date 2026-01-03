@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,9 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, parse, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { CalendarIcon, CheckCircle2, Target, Eye, Pencil, Sparkles, Loader2 } from 'lucide-react';
+import { CalendarIcon, CheckCircle2, Target, Eye, Pencil, Sparkles, Loader2, Lightbulb } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface SmartGoalData {
   title: string;
@@ -73,7 +74,10 @@ export function SmartGoalEditor({
 }: SmartGoalEditorProps) {
   const [isEditing, setIsEditing] = useState(!initialData?.title);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isGeneratingVision, setIsGeneratingVision] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [dateInputValue, setDateInputValue] = useState('');
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [data, setData] = useState<SmartGoalData>({
     title: initialData?.title || '',
     description: initialData?.description || '',
@@ -84,13 +88,87 @@ export function SmartGoalEditor({
     timeBound: initialData?.timeBound || null,
   });
 
+  // Sync with prop changes
+  useEffect(() => {
+    if (initialData) {
+      setData({
+        title: initialData.title || '',
+        description: initialData.description || '',
+        specific: initialData.specific || '',
+        measurable: initialData.measurable || '',
+        attainable: initialData.attainable || '',
+        realistic: initialData.realistic || '',
+        timeBound: initialData.timeBound || null,
+      });
+      if (initialData.timeBound) {
+        setDateInputValue(format(initialData.timeBound, 'MM/dd/yyyy'));
+      }
+    }
+  }, [initialData]);
+
+  // Update date input when timeBound changes
+  useEffect(() => {
+    if (data.timeBound) {
+      setDateInputValue(format(data.timeBound, 'MM/dd/yyyy'));
+    }
+  }, [data.timeBound]);
+
   const handleChange = (field: keyof SmartGoalData, value: string | Date | null) => {
     setData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleDateInputChange = (value: string) => {
+    setDateInputValue(value);
+
+    // Try to parse the date
+    const formats = ['MM/dd/yyyy', 'M/d/yyyy', 'yyyy-MM-dd', 'MM-dd-yyyy'];
+    for (const fmt of formats) {
+      const parsed = parse(value, fmt, new Date());
+      if (isValid(parsed) && parsed.getFullYear() > 2000) {
+        handleChange('timeBound', parsed);
+        return;
+      }
+    }
   };
 
   const handleSave = () => {
     onSave?.(data);
     setIsEditing(false);
+  };
+
+  const generateVisionWithAI = async () => {
+    setIsGeneratingVision(true);
+    setAiError(null);
+
+    try {
+      const response = await fetch('/api/ai/suggest-vision', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          context: data.description || 'Help me create an inspiring vision for my life and business goals.',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate vision suggestion');
+      }
+
+      const result = await response.json();
+
+      setData((prev) => ({
+        ...prev,
+        title: result.vision || prev.title,
+        description: result.description || prev.description,
+      }));
+
+      toast.success('Vision suggestion generated! Feel free to customize it.');
+    } catch (error) {
+      console.error('AI Vision Generation Error:', error);
+      setAiError(error instanceof Error ? error.message : 'Failed to generate vision suggestion');
+    } finally {
+      setIsGeneratingVision(false);
+    }
   };
 
   const generateWithAI = async () => {
@@ -127,6 +205,8 @@ export function SmartGoalEditor({
         realistic: result.realistic || prev.realistic,
         timeBound: result.suggestedDeadline ? parseISO(result.suggestedDeadline) : prev.timeBound,
       }));
+
+      toast.success('SMART goals generated!');
     } catch (error) {
       console.error('AI Generation Error:', error);
       setAiError(error instanceof Error ? error.message : 'Failed to generate SMART goals');
@@ -258,9 +338,31 @@ export function SmartGoalEditor({
       <CardContent className="space-y-6">
         {/* Vision Title */}
         <div className="space-y-2">
-          <Label htmlFor="title" className="text-base font-medium">
-            Vision Statement
-          </Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="title" className="text-base font-medium">
+              Vision Statement
+            </Label>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={generateVisionWithAI}
+              disabled={isGeneratingVision}
+              className="gap-2 text-muted-foreground hover:text-primary"
+            >
+              {isGeneratingVision ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Suggesting...
+                </>
+              ) : (
+                <>
+                  <Lightbulb className="h-4 w-4" />
+                  Suggest Vision
+                </>
+              )}
+            </Button>
+          </div>
           <Input
             id="title"
             placeholder="e.g., Build a $1M business while working 4 days a week"
@@ -278,7 +380,7 @@ export function SmartGoalEditor({
           <Label htmlFor="description">Description (Optional)</Label>
           <Textarea
             id="description"
-            placeholder="Add more context about your vision..."
+            placeholder="Add more context about your vision... What industry are you in? What's your current situation?"
             value={data.description}
             onChange={(e) => handleChange('description', e.target.value)}
             rows={3}
@@ -339,7 +441,7 @@ export function SmartGoalEditor({
             </div>
           ))}
 
-          {/* Time-bound */}
+          {/* Time-bound with both input and calendar */}
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
               <Badge variant="outline" className="bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 border-purple-300 dark:border-purple-700">
@@ -347,34 +449,34 @@ export function SmartGoalEditor({
               </Badge>
               Time-bound
             </Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    'w-full justify-start text-left font-normal',
-                    !data.timeBound && 'text-muted-foreground'
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {data.timeBound ? (
-                    format(data.timeBound, 'PPP')
-                  ) : (
-                    <span>Pick a target date</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={data.timeBound || undefined}
-                  onSelect={(date) => handleChange('timeBound', date || null)}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+            <div className="flex gap-2">
+              <Input
+                placeholder="MM/DD/YYYY"
+                value={dateInputValue}
+                onChange={(e) => handleDateInputChange(e.target.value)}
+                className="flex-1"
+              />
+              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="icon" className="shrink-0">
+                    <CalendarIcon className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end" side="bottom" sideOffset={4}>
+                  <Calendar
+                    mode="single"
+                    selected={data.timeBound || undefined}
+                    onSelect={(date) => {
+                      handleChange('timeBound', date || null);
+                      setIsCalendarOpen(false);
+                    }}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
             <p className="text-xs text-muted-foreground">
-              When do you want to achieve this goal by?
+              When do you want to achieve this goal by? Type a date or use the calendar.
             </p>
           </div>
         </div>
