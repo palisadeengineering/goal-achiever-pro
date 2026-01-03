@@ -27,6 +27,7 @@ interface SmartGoalEditorProps {
   initialData?: Partial<SmartGoalData>;
   onSave?: (data: SmartGoalData) => void;
   readonly?: boolean;
+  isSaving?: boolean;
 }
 
 const SMART_FIELDS = [
@@ -68,6 +69,7 @@ export function SmartGoalEditor({
   initialData,
   onSave,
   readonly = false,
+  isSaving = false,
 }: SmartGoalEditorProps) {
   const [isEditing, setIsEditing] = useState(!initialData?.title);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -379,11 +381,18 @@ export function SmartGoalEditor({
 
         {/* Actions */}
         <div className="flex gap-2 pt-4">
-          <Button onClick={handleSave} className="flex-1" disabled={!data.title}>
-            {data.title ? 'Save Vision' : 'Create Vision'}
+          <Button onClick={handleSave} className="flex-1" disabled={!data.title || isSaving}>
+            {isSaving ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              data.title ? 'Save Vision' : 'Create Vision'
+            )}
           </Button>
           {initialData?.title && (
-            <Button variant="outline" onClick={() => setIsEditing(false)}>
+            <Button variant="outline" onClick={() => setIsEditing(false)} disabled={isSaving}>
               Cancel
             </Button>
           )}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { PageHeader } from '@/components/layout/page-header';
 import { SmartGoalEditor } from '@/components/features/vision/smart-goal-editor';
 import { ThreeHundredPercentTracker } from '@/components/features/vision/three-hundred-percent-tracker';
@@ -8,27 +8,27 @@ import { AIProjectPlanner } from '@/components/features/vision/ai-project-planne
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Target, Trophy, Clock } from 'lucide-react';
+import { ArrowRight, Target, Trophy, Clock, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { ROUTES } from '@/constants/routes';
+import { toast } from 'sonner';
 
-// Mock data - will be replaced with actual data fetching
-const mockVision = {
-  title: 'Build a location-independent $500K/year business by December 2026',
-  description: 'Create a business that allows me to work from anywhere while generating consistent revenue through digital products and coaching.',
-  specific: 'Launch and scale an online coaching business with digital courses, generating $500K annual revenue while maintaining freedom to travel.',
-  measurable: 'Track monthly revenue (target: $41,666/month), number of coaching clients (target: 20 active), course sales (target: 100/month).',
-  attainable: 'I have 10 years of industry expertise, a growing audience of 50K, and proven coaching skills from beta clients.',
-  realistic: 'This aligns with my desire for freedom and impact. I\'m willing to dedicate 40 focused hours/week to make this happen.',
-  timeBound: new Date('2026-12-31'),
-};
+interface Vision {
+  id: string;
+  title: string;
+  description: string | null;
+  specific: string | null;
+  measurable: string | null;
+  attainable: string | null;
+  realistic: string | null;
+  time_bound: string | null;
+  clarity_score: number;
+  belief_score: number;
+  consistency_score: number;
+  is_active: boolean;
+}
 
-const mock300Percent = {
-  clarity: 85,
-  belief: 72,
-  consistency: 68,
-};
-
+// Mock power goals - will be replaced with actual data
 const mockPowerGoals = [
   { id: '1', title: 'Launch flagship course', progress: 65, quarter: 'Q1' },
   { id: '2', title: 'Build email list to 10K', progress: 45, quarter: 'Q1' },
@@ -37,27 +37,39 @@ const mockPowerGoals = [
 ];
 
 export default function VisionPage() {
+  const [visions, setVisions] = useState<Vision[]>([]);
+  const [activeVision, setActiveVision] = useState<Vision | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
   const completedGoals = mockPowerGoals.filter(g => g.progress === 100).length;
 
-  const [visionData, setVisionData] = useState<{
-    title: string;
-    description: string;
-    specific: string;
-    measurable: string;
-    attainable: string;
-    realistic: string;
-    timeBound: Date | null;
-  }>({
-    title: mockVision.title,
-    description: mockVision.description,
-    specific: mockVision.specific,
-    measurable: mockVision.measurable,
-    attainable: mockVision.attainable,
-    realistic: mockVision.realistic,
-    timeBound: mockVision.timeBound,
-  });
+  // Fetch visions on mount
+  const fetchVisions = useCallback(async () => {
+    try {
+      const response = await fetch('/api/visions');
+      if (!response.ok) {
+        throw new Error('Failed to fetch visions');
+      }
+      const data = await response.json();
+      setVisions(data.visions || []);
 
-  const handleVisionSave = (data: {
+      // Set active vision (first one is active due to sort order)
+      const active = data.visions?.find((v: Vision) => v.is_active) || data.visions?.[0] || null;
+      setActiveVision(active);
+    } catch (error) {
+      console.error('Error fetching visions:', error);
+      toast.error('Failed to load your vision. Please refresh the page.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchVisions();
+  }, [fetchVisions]);
+
+  const handleVisionSave = async (data: {
     title: string;
     description: string;
     specific: string;
@@ -66,8 +78,97 @@ export default function VisionPage() {
     realistic: string;
     timeBound: Date | null;
   }) => {
-    setVisionData(data);
+    setIsSaving(true);
+
+    try {
+      const isUpdate = activeVision?.id;
+      const endpoint = '/api/visions';
+      const method = isUpdate ? 'PUT' : 'POST';
+
+      const response = await fetch(endpoint, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: activeVision?.id,
+          title: data.title,
+          description: data.description,
+          specific: data.specific,
+          measurable: data.measurable,
+          attainable: data.attainable,
+          realistic: data.realistic,
+          timeBound: data.timeBound?.toISOString().split('T')[0],
+          clarityScore: activeVision?.clarity_score || 0,
+          beliefScore: activeVision?.belief_score || 0,
+          consistencyScore: activeVision?.consistency_score || 0,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save vision');
+      }
+
+      const result = await response.json();
+
+      // Update local state
+      setActiveVision(result.vision);
+
+      // Refresh visions list
+      await fetchVisions();
+
+      toast.success('Your vision has been saved successfully.');
+    } catch (error) {
+      console.error('Error saving vision:', error);
+      toast.error('Failed to save your vision. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  const handle300PercentUpdate = async (scores: { clarity: number; belief: number; consistency: number }) => {
+    if (!activeVision?.id) return;
+
+    try {
+      const response = await fetch('/api/visions', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: activeVision.id,
+          title: activeVision.title,
+          clarityScore: scores.clarity,
+          beliefScore: scores.belief,
+          consistencyScore: scores.consistency,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update scores');
+      }
+
+      const result = await response.json();
+      setActiveVision(result.vision);
+    } catch (error) {
+      console.error('Error updating 300% scores:', error);
+    }
+  };
+
+  // Convert DB vision to editor format
+  const visionForEditor = activeVision ? {
+    title: activeVision.title,
+    description: activeVision.description || '',
+    specific: activeVision.specific || '',
+    measurable: activeVision.measurable || '',
+    attainable: activeVision.attainable || '',
+    realistic: activeVision.realistic || '',
+    timeBound: activeVision.time_bound ? new Date(activeVision.time_bound) : null,
+  } : undefined;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -79,19 +180,26 @@ export default function VisionPage() {
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Main Content - Vision Editor */}
         <div className="lg:col-span-2 space-y-6">
-          <SmartGoalEditor initialData={mockVision} onSave={handleVisionSave} />
-
-          {/* AI Project Planner */}
-          <AIProjectPlanner
-            vision={visionData.title}
-            smartGoals={{
-              specific: visionData.specific,
-              measurable: visionData.measurable,
-              attainable: visionData.attainable,
-              realistic: visionData.realistic,
-            }}
-            targetDate={visionData.timeBound}
+          <SmartGoalEditor
+            initialData={visionForEditor}
+            onSave={handleVisionSave}
+            isSaving={isSaving}
           />
+
+          {/* AI Project Planner - only show if vision exists */}
+          {activeVision && (
+            <AIProjectPlanner
+              vision={activeVision.title}
+              visionId={activeVision.id}
+              smartGoals={{
+                specific: activeVision.specific || '',
+                measurable: activeVision.measurable || '',
+                attainable: activeVision.attainable || '',
+                realistic: activeVision.realistic || '',
+              }}
+              targetDate={activeVision.time_bound ? new Date(activeVision.time_bound) : null}
+            />
+          )}
 
           {/* Power Goals Preview */}
           <Card>
@@ -159,7 +267,12 @@ export default function VisionPage() {
 
         {/* Sidebar - 300% Tracker & Tips */}
         <div className="space-y-6">
-          <ThreeHundredPercentTracker {...mock300Percent} />
+          <ThreeHundredPercentTracker
+            clarity={activeVision?.clarity_score || 0}
+            belief={activeVision?.belief_score || 0}
+            consistency={activeVision?.consistency_score || 0}
+            onUpdate={handle300PercentUpdate}
+          />
 
           {/* Daily Actions */}
           <Card>

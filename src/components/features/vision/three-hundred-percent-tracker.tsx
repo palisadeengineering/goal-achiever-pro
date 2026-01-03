@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Progress } from '@/components/ui/progress';
@@ -27,6 +27,13 @@ export function ThreeHundredPercentTracker({
   const [belief, setBelief] = useState(initialBelief);
   const [consistency, setConsistency] = useState(initialConsistency);
   const [isEditing, setIsEditing] = useState(false);
+
+  // Sync with prop changes (e.g., when data loads from DB)
+  useEffect(() => {
+    setClarity(initialClarity);
+    setBelief(initialBelief);
+    setConsistency(initialConsistency);
+  }, [initialClarity, initialBelief, initialConsistency]);
 
   const totalScore = clarity + belief + consistency;
   const percentage = Math.round((totalScore / 300) * 100);

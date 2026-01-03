@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Sparkles, Loader2, ChevronDown, ChevronUp, Calendar, Target, CheckCircle2, ListTodo } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TargetGenerationWizard } from '@/components/features/targets';
+import { toast } from 'sonner';
 
 interface Project {
   title: string;
@@ -26,6 +27,7 @@ interface ProjectPlan {
 
 interface AIProjectPlannerProps {
   vision: string;
+  visionId?: string;
   smartGoals?: {
     specific?: string;
     measurable?: string;
@@ -34,6 +36,7 @@ interface AIProjectPlannerProps {
   };
   targetDate?: Date | null;
   onProjectsGenerated?: (projects: Project[]) => void;
+  onPowerGoalsSaved?: () => void;
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -49,11 +52,14 @@ const QUARTER_LABELS = ['Q1', 'Q2', 'Q3', 'Q4'];
 
 export function AIProjectPlanner({
   vision,
+  visionId,
   smartGoals,
   targetDate,
   onProjectsGenerated,
+  onPowerGoalsSaved,
 }: AIProjectPlannerProps) {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [plan, setPlan] = useState<ProjectPlan | null>(null);
   const [expandedQuarters, setExpandedQuarters] = useState<number[]>([1, 2, 3, 4]);
@@ -68,6 +74,40 @@ export function AIProjectPlanner({
   const handleWizardClose = () => {
     setIsWizardOpen(false);
     setSelectedProject(null);
+  };
+
+  const handleSaveAsPowerGoals = async () => {
+    if (!plan?.projects?.length) return;
+
+    setIsSaving(true);
+    try {
+      const response = await fetch('/api/power-goals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          visionId,
+          powerGoals: plan.projects.map((project) => ({
+            title: project.title,
+            description: project.description,
+            quarter: project.quarter,
+            category: project.category,
+          })),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save power goals');
+      }
+
+      const result = await response.json();
+      toast.success(`Saved ${result.saved} Power Goals successfully!`);
+      onPowerGoalsSaved?.();
+    } catch (err) {
+      console.error('Save power goals error:', err);
+      toast.error('Failed to save Power Goals. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const toggleQuarter = (quarter: number) => {
@@ -287,9 +327,22 @@ export function AIProjectPlanner({
         })}
 
         <div className="pt-4 flex justify-end">
-          <Button className="gap-2">
-            <CheckCircle2 className="h-4 w-4" />
-            Save as Power Goals
+          <Button
+            className="gap-2"
+            onClick={handleSaveAsPowerGoals}
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="h-4 w-4" />
+                Save as Power Goals
+              </>
+            )}
           </Button>
         </div>
       </CardContent>
