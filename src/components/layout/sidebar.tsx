@@ -22,6 +22,8 @@ import {
   Trophy,
   Menu,
   HelpCircle,
+  CalendarCheck,
+  GitBranch,
 } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
 
@@ -35,7 +37,9 @@ interface NavItem {
 
 const mainNavItems: NavItem[] = [
   { title: 'Dashboard', href: ROUTES.dashboard, icon: Home },
+  { title: 'Today', href: ROUTES.today, icon: CalendarCheck },
   { title: 'Vision', href: ROUTES.vision, icon: Eye },
+  { title: 'Backtrack Plans', href: ROUTES.backtrack, icon: GitBranch },
   { title: 'Power Goals', href: ROUTES.goals, icon: Trophy },
   { title: 'MINS', href: ROUTES.mins, icon: ListTodo },
 ];

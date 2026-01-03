@@ -21,6 +21,12 @@ export const ROUTES = {
 
   // Dashboard
   dashboard: '/dashboard',
+  today: '/today',
+
+  // Backtrack Planning
+  backtrack: '/backtrack',
+  backtrackNew: '/backtrack/new',
+  backtrackDetail: (id: string) => `/backtrack/${id}`,
 
   // Vision & Goals
   vision: '/vision',
@@ -81,6 +87,8 @@ export const ROUTES = {
 // Routes that require authentication
 export const PROTECTED_ROUTES = [
   '/dashboard',
+  '/today',
+  '/backtrack',
   '/vision',
   '/goals',
   '/mins',

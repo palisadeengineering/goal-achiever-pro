@@ -53,6 +53,9 @@ export const visions = pgTable('visions', {
   clarityScore: integer('clarity_score').default(0),
   beliefScore: integer('belief_score').default(0),
   consistencyScore: integer('consistency_score').default(0),
+  // Multi-vision support
+  priority: integer('priority').default(1),
+  color: text('color').default('#6366f1'),
   // Status
   isActive: boolean('is_active').default(true),
   archivedAt: timestamp('archived_at'),
@@ -61,18 +64,75 @@ export const visions = pgTable('visions', {
 });
 
 // =============================================
+// BACKTRACK PLANS (Time-based planning)
+// =============================================
+export const backtrackPlans = pgTable('backtrack_plans', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  visionId: uuid('vision_id').notNull().references(() => visions.id, { onDelete: 'cascade' }),
+  // Time constraints
+  availableHoursPerWeek: decimal('available_hours_per_week', { precision: 5, scale: 2 }).notNull(),
+  startDate: date('start_date').notNull(),
+  endDate: date('end_date').notNull(),
+  // Plan status
+  status: text('status').default('draft'), // draft, active, paused, completed
+  // AI generation metadata
+  aiGeneratedAt: timestamp('ai_generated_at'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  userIdx: index('backtrack_plans_user_idx').on(table.userId),
+  visionIdx: index('backtrack_plans_vision_idx').on(table.visionId),
+}));
+
+// =============================================
+// QUARTERLY TARGETS (Links Vision to Power Goals)
+// =============================================
+export const quarterlyTargets = pgTable('quarterly_targets', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  visionId: uuid('vision_id').notNull().references(() => visions.id, { onDelete: 'cascade' }),
+  backtrackPlanId: uuid('backtrack_plan_id').references(() => backtrackPlans.id, { onDelete: 'cascade' }),
+  quarter: integer('quarter').notNull(), // 1-4
+  year: integer('year').notNull(),
+  title: text('title').notNull(),
+  description: text('description'),
+  // Key metrics
+  keyMetric: text('key_metric'),
+  targetValue: decimal('target_value', { precision: 15, scale: 2 }),
+  currentValue: decimal('current_value', { precision: 15, scale: 2 }).default('0'),
+  // Progress tracking
+  status: text('status').default('pending'), // pending, in_progress, completed
+  progressPercentage: integer('progress_percentage').default(0),
+  // Time allocation
+  estimatedHoursTotal: integer('estimated_hours_total'),
+  hoursPerWeek: decimal('hours_per_week', { precision: 5, scale: 2 }),
+  // Timestamps
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  userYearIdx: index('quarterly_targets_user_year_idx').on(table.userId, table.year),
+  visionQuarterIdx: index('quarterly_targets_vision_quarter_idx').on(table.visionId, table.quarter, table.year),
+}));
+
+// =============================================
 // POWER GOALS (12 Annual Projects)
 // =============================================
 export const powerGoals = pgTable('power_goals', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
   visionId: uuid('vision_id').references(() => visions.id, { onDelete: 'set null' }),
+  // Backtrack planning connections
+  quarterlyTargetId: uuid('quarterly_target_id').references(() => quarterlyTargets.id, { onDelete: 'set null' }),
+  backtrackPlanId: uuid('backtrack_plan_id').references(() => backtrackPlans.id, { onDelete: 'set null' }),
   title: text('title').notNull(),
   description: text('description'),
   targetDate: date('target_date'),
   year: integer('year').notNull(),
   quarter: integer('quarter'),
   category: text('category'),
+  // Time estimation
+  estimatedHours: integer('estimated_hours'),
   progressPercentage: integer('progress_percentage').default(0),
   status: text('status').default('active'),
   sortOrder: integer('sort_order').default(0),
@@ -89,6 +149,8 @@ export const monthlyTargets = pgTable('monthly_targets', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
   powerGoalId: uuid('power_goal_id').notNull().references(() => powerGoals.id, { onDelete: 'cascade' }),
+  // Backtrack planning connection
+  quarterlyTargetId: uuid('quarterly_target_id').references(() => quarterlyTargets.id, { onDelete: 'set null' }),
   title: text('title').notNull(),
   description: text('description'),
   targetMonth: integer('target_month').notNull(), // 1-12
@@ -473,6 +535,8 @@ export const accountabilityPartners = pgTable('accountability_partners', {
 // =============================================
 export const profilesRelations = relations(profiles, ({ many }) => ({
   visions: many(visions),
+  backtrackPlans: many(backtrackPlans),
+  quarterlyTargets: many(quarterlyTargets),
   powerGoals: many(powerGoals),
   mins: many(mins),
   timeBlocks: many(timeBlocks),
@@ -486,13 +550,32 @@ export const profilesRelations = relations(profiles, ({ many }) => ({
 
 export const visionsRelations = relations(visions, ({ one, many }) => ({
   user: one(profiles, { fields: [visions.userId], references: [profiles.id] }),
+  backtrackPlans: many(backtrackPlans),
+  quarterlyTargets: many(quarterlyTargets),
   powerGoals: many(powerGoals),
   northStarMetrics: many(northStarMetrics),
+}));
+
+export const backtrackPlansRelations = relations(backtrackPlans, ({ one, many }) => ({
+  user: one(profiles, { fields: [backtrackPlans.userId], references: [profiles.id] }),
+  vision: one(visions, { fields: [backtrackPlans.visionId], references: [visions.id] }),
+  quarterlyTargets: many(quarterlyTargets),
+  powerGoals: many(powerGoals),
+}));
+
+export const quarterlyTargetsRelations = relations(quarterlyTargets, ({ one, many }) => ({
+  user: one(profiles, { fields: [quarterlyTargets.userId], references: [profiles.id] }),
+  vision: one(visions, { fields: [quarterlyTargets.visionId], references: [visions.id] }),
+  backtrackPlan: one(backtrackPlans, { fields: [quarterlyTargets.backtrackPlanId], references: [backtrackPlans.id] }),
+  powerGoals: many(powerGoals),
+  monthlyTargets: many(monthlyTargets),
 }));
 
 export const powerGoalsRelations = relations(powerGoals, ({ one, many }) => ({
   user: one(profiles, { fields: [powerGoals.userId], references: [profiles.id] }),
   vision: one(visions, { fields: [powerGoals.visionId], references: [visions.id] }),
+  quarterlyTarget: one(quarterlyTargets, { fields: [powerGoals.quarterlyTargetId], references: [quarterlyTargets.id] }),
+  backtrackPlan: one(backtrackPlans, { fields: [powerGoals.backtrackPlanId], references: [backtrackPlans.id] }),
   mins: many(mins),
   leverageItems: many(leverageItems),
   monthlyTargets: many(monthlyTargets),
@@ -501,6 +584,7 @@ export const powerGoalsRelations = relations(powerGoals, ({ one, many }) => ({
 export const monthlyTargetsRelations = relations(monthlyTargets, ({ one, many }) => ({
   user: one(profiles, { fields: [monthlyTargets.userId], references: [profiles.id] }),
   powerGoal: one(powerGoals, { fields: [monthlyTargets.powerGoalId], references: [powerGoals.id] }),
+  quarterlyTarget: one(quarterlyTargets, { fields: [monthlyTargets.quarterlyTargetId], references: [quarterlyTargets.id] }),
   weeklyTargets: many(weeklyTargets),
 }));
 

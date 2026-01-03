@@ -11,6 +11,7 @@ interface PageHeaderProps {
   backHref?: string;
   actions?: ReactNode;
   children?: ReactNode;
+  icon?: ReactNode;
 }
 
 export function PageHeader({
@@ -19,6 +20,7 @@ export function PageHeader({
   backHref,
   actions,
   children,
+  icon,
 }: PageHeaderProps) {
   const router = useRouter();
 
@@ -35,6 +37,7 @@ export function PageHeader({
               <ArrowLeft className="h-4 w-4" />
             </Button>
           )}
+          {icon && <div className="text-primary">{icon}</div>}
           <div>
             <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
             {description && (
