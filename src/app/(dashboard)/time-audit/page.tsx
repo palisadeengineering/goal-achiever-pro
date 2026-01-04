@@ -38,6 +38,8 @@ import { TimeBlockForm, TimeBlock } from '@/components/features/time-audit/time-
 import { InsightsView } from '@/components/features/time-audit/insights-view';
 import { useLocalStorage } from '@/lib/hooks/use-local-storage';
 import { useTags } from '@/lib/hooks/use-tags';
+import { useEditPatterns } from '@/lib/hooks/use-edit-patterns';
+import { EditSuggestionBanner } from '@/components/features/time-audit/edit-suggestion-banner';
 import { ROUTES } from '@/constants/routes';
 import type { DripQuadrant, EnergyRating } from '@/types/database';
 
@@ -135,6 +137,7 @@ export default function TimeAuditPage() {
   const [editingBlock, setEditingBlock] = useState<TimeBlock | undefined>();
   const [initialDate, setInitialDate] = useState<string>();
   const [initialTime, setInitialTime] = useState<string>();
+  const [initialEndTime, setInitialEndTime] = useState<string>();
 
   // Push to Google Calendar dialog
   const [showPushDialog, setShowPushDialog] = useState(false);
@@ -156,6 +159,9 @@ export default function TimeAuditPage() {
   const { getUncategorizedEventIds, getCategorization, saveCategorization, categorizations } = useEventPatterns();
 
   const { tags } = useTags();
+
+  // Edit pattern detection
+  const { trackEdit, getPatternSuggestion, dismissPattern } = useEditPatterns();
 
   const [showCategorizationDialog, setShowCategorizationDialog] = useState(false);
   const [mainTab, setMainTab] = useState<'calendar' | 'insights'>('calendar');
@@ -387,9 +393,33 @@ export default function TimeAuditPage() {
     return data;
   }, [allTimeData]);
 
+  // Get edit pattern suggestion
+  const patternSuggestion = useMemo(() => {
+    const blockInfos = timeBlocks.map(b => ({
+      id: b.id,
+      activityName: b.activityName,
+      dripQuadrant: b.dripQuadrant,
+      energyRating: b.energyRating,
+    }));
+    return getPatternSuggestion(blockInfos);
+  }, [timeBlocks, getPatternSuggestion]);
+
   // Handle saving a new or edited time block (saves to database)
   const handleSaveBlock = async (blockData: Omit<TimeBlock, 'id' | 'createdAt'>) => {
     if (editingBlock) {
+      // Track the edit for pattern detection
+      if (editingBlock.dripQuadrant !== blockData.dripQuadrant ||
+          editingBlock.energyRating !== blockData.energyRating) {
+        trackEdit(
+          editingBlock.id,
+          editingBlock.activityName,
+          editingBlock.dripQuadrant,
+          blockData.dripQuadrant,
+          editingBlock.energyRating,
+          blockData.energyRating
+        );
+      }
+
       // Check if this is a Google Calendar event being saved for the first time
       const isGoogleEvent = editingBlock.source === 'google_calendar' && editingBlock.externalEventId;
       const existsInDb = dbTimeBlocks.some(b => b.id === editingBlock.id);
@@ -572,9 +602,11 @@ export default function TimeAuditPage() {
   }, [googleEvents, timeBlocks, getCategorization]);
 
   // Handle clicking on the calendar to add a block (receives Date object from WeeklyCalendarView)
-  const handleAddBlock = (date: Date, time: string) => {
+  // Supports optional endTime from drag-to-select
+  const handleAddBlock = (date: Date, startTime: string, endTime?: string) => {
     setInitialDate(format(date, 'yyyy-MM-dd'));
-    setInitialTime(time);
+    setInitialTime(startTime);
+    setInitialEndTime(endTime);
     setEditingBlock(undefined);
     setIsFormOpen(true);
   };
@@ -619,7 +651,48 @@ export default function TimeAuditPage() {
     setEditingBlock(undefined);
     setInitialDate(undefined);
     setInitialTime(undefined);
+    setInitialEndTime(undefined);
     setIsFormOpen(true);
+  };
+
+  // Handle applying pattern suggestion to all matching blocks
+  const handleApplyPattern = async () => {
+    if (!patternSuggestion) return;
+
+    const updates: { dripQuadrant?: DripQuadrant; energyRating?: EnergyRating } = {};
+    if (patternSuggestion.suggestedDrip) {
+      updates.dripQuadrant = patternSuggestion.suggestedDrip;
+    }
+    if (patternSuggestion.suggestedEnergy) {
+      updates.energyRating = patternSuggestion.suggestedEnergy;
+    }
+
+    try {
+      const response = await fetch('/api/time-blocks/bulk-update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          blockIds: patternSuggestion.matchingBlockIds,
+          updates,
+        }),
+      });
+
+      if (response.ok) {
+        // Dismiss the pattern after successful apply
+        dismissPattern(patternSuggestion.normalizedName);
+        // Refresh time blocks to show updated data
+        await fetchTimeBlocks();
+      }
+    } catch (error) {
+      console.error('Failed to apply pattern:', error);
+    }
+  };
+
+  // Handle dismissing pattern suggestion
+  const handleDismissPattern = () => {
+    if (patternSuggestion) {
+      dismissPattern(patternSuggestion.normalizedName);
+    }
   };
 
   // Check if we have data (for showing different states) - includes all data sources
@@ -696,6 +769,7 @@ export default function TimeAuditPage() {
         onSave={handleSaveBlock}
         initialDate={initialDate}
         initialTime={initialTime}
+        initialEndTime={initialEndTime}
         editBlock={editingBlock}
       />
 
@@ -719,6 +793,15 @@ export default function TimeAuditPage() {
         delegationCandidates={stats.delegationCandidates}
         energyBalance={stats.energyBalance}
       />
+
+      {/* Edit Pattern Suggestion Banner */}
+      {patternSuggestion && (
+        <EditSuggestionBanner
+          pattern={patternSuggestion}
+          onApply={handleApplyPattern}
+          onDismiss={handleDismissPattern}
+        />
+      )}
 
       {/* Main Content - Top Level Tabs */}
       <Tabs value={mainTab} onValueChange={(v) => setMainTab(v as 'calendar' | 'insights')} className="space-y-4">
@@ -755,12 +838,28 @@ export default function TimeAuditPage() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="weekly">
-              <WeeklyCalendarView
-                timeBlocks={calendarTimeBlocks}
-                onAddBlock={handleAddBlock}
-                onBlockClick={handleBlockClick}
-              />
+            <TabsContent value="weekly" className="space-y-6">
+              {/* DRIP Distribution Calendar */}
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-2">DRIP Distribution</h3>
+                <WeeklyCalendarView
+                  timeBlocks={calendarTimeBlocks}
+                  onAddBlock={handleAddBlock}
+                  onBlockClick={handleBlockClick}
+                  colorMode="drip"
+                />
+              </div>
+
+              {/* Energy Distribution Calendar */}
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-2">Energy Distribution</h3>
+                <WeeklyCalendarView
+                  timeBlocks={calendarTimeBlocks}
+                  onAddBlock={handleAddBlock}
+                  onBlockClick={handleBlockClick}
+                  colorMode="energy"
+                />
+              </div>
             </TabsContent>
 
             <TabsContent value="biweekly">

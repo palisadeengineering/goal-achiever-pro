@@ -49,10 +49,11 @@ const DEFAULT_SETTINGS: UserSettings = {
 
 interface WeeklyCalendarViewProps {
   timeBlocks?: Record<string, TimeBlock[]>; // keyed by date string
-  onAddBlock?: (date: Date, time: string) => void;
+  onAddBlock?: (date: Date, startTime: string, endTime?: string) => void;
   onBlockClick?: (block: TimeBlock) => void;
   onBlockMove?: (blockId: string, newDate: string, newStartTime: string, newEndTime: string) => Promise<boolean>;
   isLoading?: boolean;
+  colorMode?: 'drip' | 'energy'; // Which color scheme to use
 }
 
 // Generate time slots for given hour range in 15-min increments
@@ -123,33 +124,71 @@ function DraggableBlock({
   );
 }
 
-// Droppable time slot component
+// Energy color mapping
+const ENERGY_COLORS: Record<EnergyRating, string> = {
+  green: '#22c55e',
+  yellow: '#eab308',
+  red: '#ef4444',
+};
+
+// Droppable time slot component with drag-to-select support
 function DroppableSlot({
   id,
   date,
   time,
   onAddBlock,
   children,
+  isDragSelecting,
+  isInDragRange,
+  onDragSelectStart,
+  onDragSelectMove,
+  onDragSelectEnd,
 }: {
   id: string;
   date: Date;
   time: string;
-  onAddBlock?: (date: Date, time: string) => void;
+  onAddBlock?: (date: Date, startTime: string, endTime?: string) => void;
   children?: React.ReactNode;
+  isDragSelecting?: boolean;
+  isInDragRange?: boolean;
+  onDragSelectStart?: (date: Date, time: string) => void;
+  onDragSelectMove?: (date: Date, time: string) => void;
+  onDragSelectEnd?: () => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id,
     data: { date: format(date, 'yyyy-MM-dd'), time },
   });
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (children) return; // Don't start drag on existing blocks
+    e.preventDefault();
+    onDragSelectStart?.(date, time);
+  };
+
+  const handleMouseEnter = () => {
+    if (isDragSelecting && !children) {
+      onDragSelectMove?.(date, time);
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (isDragSelecting) {
+      onDragSelectEnd?.();
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
-      onClick={() => !children && onAddBlock?.(date, time)}
+      onMouseDown={handleMouseDown}
+      onMouseEnter={handleMouseEnter}
+      onMouseUp={handleMouseUp}
       className={cn(
-        'h-3 transition-all duration-150 border-b border-dashed border-muted/30 last:border-b-0 group',
+        'h-3 transition-all duration-150 border-b border-dashed border-muted/30 last:border-b-0 group select-none',
         !children && 'hover:bg-primary/10 cursor-pointer',
-        isOver && 'bg-primary/20 ring-1 ring-primary'
+        isOver && 'bg-primary/20 ring-1 ring-primary',
+        isInDragRange && 'bg-primary/30'
       )}
     >
       {children || (
@@ -165,10 +204,16 @@ export function WeeklyCalendarView({
   onBlockClick,
   onBlockMove,
   isLoading = false,
+  colorMode = 'drip',
 }: WeeklyCalendarViewProps) {
   const [settings] = useLocalStorage<UserSettings>('user-settings', DEFAULT_SETTINGS);
   const [activeBlock, setActiveBlock] = useState<TimeBlock | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Drag-to-select state
+  const [isDragSelecting, setIsDragSelecting] = useState(false);
+  const [dragStart, setDragStart] = useState<{ date: Date; time: string } | null>(null);
+  const [dragEnd, setDragEnd] = useState<{ date: Date; time: string } | null>(null);
 
   // Update current time every minute for the time indicator
   useEffect(() => {
@@ -268,9 +313,85 @@ export function WeeklyCalendarView({
     });
   };
 
-  const getBlockColor = useCallback((quadrant: DripQuadrant) => {
+  const getBlockColor = useCallback((quadrant: DripQuadrant, energyRating?: EnergyRating) => {
+    if (colorMode === 'energy' && energyRating) {
+      return ENERGY_COLORS[energyRating];
+    }
     return DRIP_QUADRANTS[quadrant].color;
+  }, [colorMode]);
+
+  // Drag selection handlers
+  const handleDragSelectStart = useCallback((date: Date, time: string) => {
+    setIsDragSelecting(true);
+    setDragStart({ date, time });
+    setDragEnd({ date, time });
   }, []);
+
+  const handleDragSelectMove = useCallback((date: Date, time: string) => {
+    if (isDragSelecting && dragStart) {
+      // Only allow dragging within the same day
+      if (format(date, 'yyyy-MM-dd') === format(dragStart.date, 'yyyy-MM-dd')) {
+        setDragEnd({ date, time });
+      }
+    }
+  }, [isDragSelecting, dragStart]);
+
+  const handleDragSelectEnd = useCallback(() => {
+    if (dragStart && dragEnd) {
+      // Calculate the time range
+      let startTime = dragStart.time;
+      let endTime = dragEnd.time;
+
+      // Ensure startTime <= endTime (swap if dragged upward)
+      if (startTime > endTime) {
+        [startTime, endTime] = [endTime, startTime];
+      }
+
+      // Add 15 minutes to end time (since we're selecting the slot, not the end point)
+      const [endHour, endMin] = endTime.split(':').map(Number);
+      const totalMins = endHour * 60 + endMin + 15;
+      const newEndHour = Math.floor(totalMins / 60);
+      const newEndMin = totalMins % 60;
+      endTime = `${newEndHour.toString().padStart(2, '0')}:${newEndMin.toString().padStart(2, '0')}`;
+
+      onAddBlock?.(dragStart.date, startTime, endTime);
+    }
+
+    setIsDragSelecting(false);
+    setDragStart(null);
+    setDragEnd(null);
+  }, [dragStart, dragEnd, onAddBlock]);
+
+  // Check if a time slot is in the current drag selection range
+  const isSlotInDragRange = useCallback((date: Date, time: string): boolean => {
+    if (!isDragSelecting || !dragStart || !dragEnd) return false;
+
+    const dateKey = format(date, 'yyyy-MM-dd');
+    const startDateKey = format(dragStart.date, 'yyyy-MM-dd');
+
+    if (dateKey !== startDateKey) return false;
+
+    let rangeStart = dragStart.time;
+    let rangeEnd = dragEnd.time;
+
+    if (rangeStart > rangeEnd) {
+      [rangeStart, rangeEnd] = [rangeEnd, rangeStart];
+    }
+
+    return time >= rangeStart && time <= rangeEnd;
+  }, [isDragSelecting, dragStart, dragEnd]);
+
+  // Handle mouseup on window to end drag if user releases outside calendar
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      if (isDragSelecting) {
+        handleDragSelectEnd();
+      }
+    };
+
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
+  }, [isDragSelecting, handleDragSelectEnd]);
 
   // Check if current week contains today
   const isCurrentWeekVisible = useMemo(() => {
@@ -399,7 +520,7 @@ export function WeeklyCalendarView({
             </div>
 
             {/* Time Grid */}
-            <div className="max-h-[500px] overflow-y-auto relative">
+            <div className="max-h-[650px] overflow-y-auto relative">
               {/* Current Time Indicator */}
               {isCurrentWeekVisible && getCurrentTimePosition() !== null && (
                 <div
@@ -471,7 +592,7 @@ export function WeeklyCalendarView({
                                   block={{ ...block, date: dateKey }}
                                   durationSlots={durationSlots}
                                   onBlockClick={onBlockClick}
-                                  getBlockColor={getBlockColor}
+                                  getBlockColor={(q) => getBlockColor(q, block.energyRating)}
                                 />
                               );
                             }
@@ -488,6 +609,11 @@ export function WeeklyCalendarView({
                                 date={day}
                                 time={time}
                                 onAddBlock={onAddBlock}
+                                isDragSelecting={isDragSelecting}
+                                isInDragRange={isSlotInDragRange(day, time)}
+                                onDragSelectStart={handleDragSelectStart}
+                                onDragSelectMove={handleDragSelectMove}
+                                onDragSelectEnd={handleDragSelectEnd}
                               />
                             );
                           })}
@@ -505,25 +631,43 @@ export function WeeklyCalendarView({
         {/* Legend */}
         <div className="p-4 border-t flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap gap-3">
-            {Object.entries(DRIP_QUADRANTS).map(([key, quadrant]) => (
-              <Badge
-                key={key}
-                variant="outline"
-                className="gap-1"
-                style={{ borderColor: quadrant.color }}
-              >
-                <span
-                  className="h-2 w-2 rounded-full"
-                  style={{ backgroundColor: quadrant.color }}
-                />
-                {quadrant.name}
-              </Badge>
-            ))}
+            {colorMode === 'drip' ? (
+              Object.entries(DRIP_QUADRANTS).map(([key, quadrant]) => (
+                <Badge
+                  key={key}
+                  variant="outline"
+                  className="gap-1"
+                  style={{ borderColor: quadrant.color }}
+                >
+                  <span
+                    className="h-2 w-2 rounded-full"
+                    style={{ backgroundColor: quadrant.color }}
+                  />
+                  {quadrant.name}
+                </Badge>
+              ))
+            ) : (
+              <>
+                <Badge variant="outline" className="gap-1" style={{ borderColor: ENERGY_COLORS.green }}>
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: ENERGY_COLORS.green }} />
+                  Energizing
+                </Badge>
+                <Badge variant="outline" className="gap-1" style={{ borderColor: ENERGY_COLORS.yellow }}>
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: ENERGY_COLORS.yellow }} />
+                  Neutral
+                </Badge>
+                <Badge variant="outline" className="gap-1" style={{ borderColor: ENERGY_COLORS.red }}>
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: ENERGY_COLORS.red }} />
+                  Draining
+                </Badge>
+              </>
+            )}
           </div>
           <div className="text-xs text-muted-foreground flex gap-3">
             <span><kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">Alt</kbd>+<kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">←/→</kbd> Navigate</span>
             <span><kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">Alt</kbd>+<kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">T</kbd> Today</span>
             <span><kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">Alt</kbd>+<kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">N</kbd> New</span>
+            <span className="text-muted-foreground/70">Drag to select</span>
           </div>
         </div>
       </CardContent>

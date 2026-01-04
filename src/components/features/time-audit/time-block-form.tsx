@@ -50,6 +50,7 @@ interface TimeBlockFormProps {
   onSave: (block: Omit<TimeBlock, 'id' | 'createdAt'>) => void;
   initialDate?: string;
   initialTime?: string;
+  initialEndTime?: string;
   editBlock?: TimeBlock;
 }
 
@@ -73,6 +74,7 @@ export function TimeBlockForm({
   onSave,
   initialDate,
   initialTime,
+  initialEndTime,
   editBlock,
 }: TimeBlockFormProps) {
   const today = new Date().toISOString().split('T')[0];
@@ -111,7 +113,8 @@ export function TimeBlockForm({
       } else {
         setDate(initialDate || today);
         setStartTime(initialTime || '09:00');
-        setEndTime(initialTime ? addMinutes(initialTime, 30) : '09:30');
+        // Use initialEndTime if provided (from drag selection), otherwise default
+        setEndTime(initialEndTime || (initialTime ? addMinutes(initialTime, 30) : '09:30'));
         setActivityName('');
         setDescription('');
         setDripQuadrant('production');
@@ -123,7 +126,7 @@ export function TimeBlockForm({
       setShowSuggestion(false);
       setSuggestionSource(null);
     }
-  }, [open, editBlock, initialDate, initialTime, today]);
+  }, [open, editBlock, initialDate, initialTime, initialEndTime, today]);
 
   // Check for pattern-based tag suggestions when activity name changes
   useEffect(() => {
