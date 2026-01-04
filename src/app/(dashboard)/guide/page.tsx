@@ -1111,19 +1111,6 @@ export default function GuidePage() {
                   </p>
                 </a>
               </div>
-
-              <div className="mt-4 p-4 bg-yellow-500/10 rounded-lg">
-                <div className="flex items-start gap-2">
-                  <Lightbulb className="h-5 w-5 text-yellow-500 mt-0.5" />
-                  <div>
-                    <p className="font-medium">Free Masterclass</p>
-                    <p className="text-sm text-muted-foreground">
-                      Dan offers a free &quot;Buyback Blueprint&quot; masterclass - a 1-hour deep dive on how to
-                      buy back time from your calendar and delegate with ease. Check his website for access.
-                    </p>
-                  </div>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </TabsContent>
