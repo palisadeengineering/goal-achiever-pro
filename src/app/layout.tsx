@@ -63,13 +63,31 @@ export const metadata: Metadata = {
   },
 };
 
+// Inline script to prevent flash of wrong theme on page load
+// This runs before React hydrates to apply the correct theme immediately
+const themeScript = `
+  (function() {
+    try {
+      var theme = localStorage.getItem('theme');
+      var isDark = theme === 'dark' ||
+        (theme === 'system' || !theme) && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+      }
+    } catch (e) {}
+  })();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body
         className={`${outfit.variable} ${plusJakartaSans.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
