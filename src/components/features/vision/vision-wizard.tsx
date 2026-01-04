@@ -7,7 +7,6 @@ import { Progress } from '@/components/ui/progress';
 import { ChevronLeft, ChevronRight, Check, X } from 'lucide-react';
 import { VisionStep } from './wizard-steps/vision-step';
 import { SmartGoalStep } from './wizard-steps/smart-goal-step';
-import { NonNegotiablesStep } from './wizard-steps/non-negotiables-step';
 import { RemindersStep } from './wizard-steps/reminders-step';
 import { VisionBoardStep } from './wizard-steps/vision-board-step';
 import { AffirmationsStep } from './wizard-steps/affirmations-step';
@@ -41,6 +40,8 @@ export interface VisionWizardData {
     showOnLogin: boolean;
     morningReminder: boolean;
     morningTime: string;
+    middayReminder: boolean;
+    middayTime: string;
     eveningReminder: boolean;
     eveningTime: string;
   };
@@ -78,6 +79,8 @@ const INITIAL_DATA: VisionWizardData = {
     showOnLogin: true,
     morningReminder: true,
     morningTime: '06:00',
+    middayReminder: false,
+    middayTime: '12:00',
     eveningReminder: false,
     eveningTime: '20:00',
   },
@@ -91,7 +94,6 @@ const INITIAL_DATA: VisionWizardData = {
 const STEPS = [
   { id: 'vision', title: 'Vision', description: 'Define your vision statement' },
   { id: 'smart', title: 'SMART Goals', description: 'Break down your vision' },
-  { id: 'non-negotiables', title: 'Rules', description: 'Daily non-negotiable behaviors' },
   { id: 'reminders', title: 'Reminders', description: 'Review reminder settings' },
   { id: 'vision-board', title: 'Vision Board', description: 'Add inspiring images' },
   { id: 'affirmations', title: 'Affirmations', description: 'Daily affirmation text' },
@@ -156,8 +158,6 @@ export function VisionWizard({
         return <VisionStep data={data} updateData={updateData} />;
       case 'smart':
         return <SmartGoalStep data={data} updateData={updateData} />;
-      case 'non-negotiables':
-        return <NonNegotiablesStep data={data} updateData={updateData} />;
       case 'reminders':
         return <RemindersStep data={data} updateData={updateData} />;
       case 'vision-board':
