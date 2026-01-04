@@ -1,8 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { createClient } from '@/lib/supabase/server';
+import { logAIUsage } from '@/lib/utils/ai-usage';
+
+// Demo user ID for development
+const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
+
+async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
+  if (!supabase) return DEMO_USER_ID;
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id || DEMO_USER_ID;
+}
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  let userId = DEMO_USER_ID;
+
   try {
+    const supabase = await createClient();
+    userId = await getUserId(supabase);
+
     const { vision, context } = await request.json();
 
     if (!vision) {
@@ -68,6 +85,19 @@ Respond ONLY with valid JSON in this exact format:
     });
 
     const responseText = completion.choices[0]?.message?.content;
+    const responseTimeMs = Date.now() - startTime;
+
+    // Log AI usage
+    logAIUsage({
+      userId,
+      endpoint: '/api/ai/generate-smart',
+      model: 'gpt-4o-mini',
+      promptTokens: completion.usage?.prompt_tokens || 0,
+      completionTokens: completion.usage?.completion_tokens || 0,
+      requestType: 'generate-smart',
+      success: true,
+      responseTimeMs,
+    });
 
     if (!responseText) {
       return NextResponse.json(
@@ -82,6 +112,20 @@ Respond ONLY with valid JSON in this exact format:
     return NextResponse.json(smartGoals);
   } catch (error) {
     console.error('AI Generation Error:', error);
+    const responseTimeMs = Date.now() - startTime;
+
+    // Log the failure
+    logAIUsage({
+      userId,
+      endpoint: '/api/ai/generate-smart',
+      model: 'gpt-4o-mini',
+      promptTokens: 0,
+      completionTokens: 0,
+      requestType: 'generate-smart',
+      success: false,
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      responseTimeMs,
+    });
 
     if (error instanceof SyntaxError) {
       return NextResponse.json(

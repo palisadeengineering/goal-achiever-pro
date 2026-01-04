@@ -31,6 +31,7 @@ export const profiles = pgTable('profiles', {
   stripeSubscriptionId: text('stripe_subscription_id').unique(),
   trialEndsAt: timestamp('trial_ends_at'),
   onboardingCompleted: boolean('onboarding_completed').default(false),
+  isAdmin: boolean('is_admin').default(false),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
@@ -691,6 +692,8 @@ export const profilesRelations = relations(profiles, ({ many, one }) => ({
   calendarSyncSettings: one(calendarSyncSettings),
   calendarSyncRecords: many(calendarSyncRecords),
   calendarWebhookChannels: many(calendarWebhookChannels),
+  // AI usage tracking
+  aiUsageLogs: many(aiUsageLogs),
 }));
 
 export const visionsRelations = relations(visions, ({ one, many }) => ({
@@ -975,4 +978,38 @@ export const calendarSyncRecordsRelations = relations(calendarSyncRecords, ({ on
 
 export const calendarWebhookChannelsRelations = relations(calendarWebhookChannels, ({ one }) => ({
   user: one(profiles, { fields: [calendarWebhookChannels.userId], references: [profiles.id] }),
+}));
+
+// =============================================
+// AI USAGE LOGS (Track AI API calls for billing)
+// =============================================
+export const aiUsageLogs = pgTable('ai_usage_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  // API endpoint that was called
+  endpoint: text('endpoint').notNull(),
+  // AI model used
+  model: text('model').notNull(),
+  // Token usage
+  promptTokens: integer('prompt_tokens').default(0),
+  completionTokens: integer('completion_tokens').default(0),
+  totalTokens: integer('total_tokens').default(0),
+  // Cost calculation (in cents for precision)
+  estimatedCostCents: decimal('estimated_cost_cents', { precision: 10, scale: 4 }).default('0'),
+  // Request metadata
+  requestType: text('request_type'), // 'generate-smart', 'generate-power-goals', 'generate-kpis', etc.
+  success: boolean('success').default(true),
+  errorMessage: text('error_message'),
+  // Response time in milliseconds
+  responseTimeMs: integer('response_time_ms'),
+  // Timestamps
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+  userIdx: index('ai_usage_logs_user_idx').on(table.userId),
+  createdAtIdx: index('ai_usage_logs_created_at_idx').on(table.createdAt),
+  endpointIdx: index('ai_usage_logs_endpoint_idx').on(table.endpoint),
+}));
+
+export const aiUsageLogsRelations = relations(aiUsageLogs, ({ one }) => ({
+  user: one(profiles, { fields: [aiUsageLogs.userId], references: [profiles.id] }),
 }));
