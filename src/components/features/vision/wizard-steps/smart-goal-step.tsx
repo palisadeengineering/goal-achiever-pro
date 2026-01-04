@@ -26,8 +26,8 @@ export function SmartGoalStep({ data, updateData }: SmartGoalStepProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          visionTitle: data.title,
-          visionDescription: data.description,
+          vision: data.title,
+          context: data.description,
         }),
       });
 

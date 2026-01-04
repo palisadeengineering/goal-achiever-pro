@@ -28,6 +28,7 @@ import {
   X,
   ExternalLink,
   Clock,
+  Sparkles,
 } from 'lucide-react';
 import { formatHour } from '@/lib/utils';
 import { useLocalStorage } from '@/lib/hooks/use-local-storage';
@@ -43,6 +44,7 @@ interface UserSettings {
   pomodoroBreakMinutes: number;
   calendarStartHour: number;
   calendarEndHour: number;
+  aiProvider: 'openai' | 'anthropic';
 }
 
 const DEFAULT_SETTINGS: UserSettings = {
@@ -55,6 +57,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   pomodoroBreakMinutes: 5,
   calendarStartHour: 5,
   calendarEndHour: 23,
+  aiProvider: 'openai',
 };
 
 function SettingsContent() {
@@ -306,6 +309,55 @@ function SettingsContent() {
               </SelectContent>
             </Select>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* AI Preferences */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5" />
+            AI Preferences
+          </CardTitle>
+          <CardDescription>Configure your AI assistant settings</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>AI Provider</Label>
+              <p className="text-sm text-muted-foreground">Choose which AI model to use for suggestions</p>
+            </div>
+            <Select
+              value={settings.aiProvider}
+              onValueChange={(v) => updateSetting('aiProvider', v as UserSettings['aiProvider'])}
+            >
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="openai">
+                  <div className="flex items-center gap-2">
+                    <span>OpenAI</span>
+                    <Badge variant="secondary" className="text-xs">GPT-4o</Badge>
+                  </div>
+                </SelectItem>
+                <SelectItem value="anthropic">
+                  <div className="flex items-center gap-2">
+                    <span>Anthropic</span>
+                    <Badge variant="secondary" className="text-xs">Claude</Badge>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <p className="text-xs text-muted-foreground border-t pt-3">
+            AI is used for generating vision suggestions, SMART goals, affirmations, and more.
+            {settings.aiProvider === 'anthropic' && (
+              <span className="block mt-1 text-amber-600 dark:text-amber-400">
+                Note: Some features may use OpenAI as a fallback if Anthropic is unavailable.
+              </span>
+            )}
+          </p>
         </CardContent>
       </Card>
 

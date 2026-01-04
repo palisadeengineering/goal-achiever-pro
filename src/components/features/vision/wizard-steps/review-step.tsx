@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Circle, Image, Bell, Quote, Target, ListChecks } from 'lucide-react';
+import { CheckCircle, Circle, Image, Bell, Quote, Target } from 'lucide-react';
 import type { VisionWizardData } from '../vision-wizard';
 
 interface ReviewStepProps {
@@ -14,8 +14,7 @@ export function ReviewStep({ data }: ReviewStepProps) {
     const checks = [
       { label: 'Vision Title', complete: !!data.title.trim() },
       { label: 'SMART Goals', complete: !!(data.specific || data.measurable || data.attainable || data.realistic || data.timeBound) },
-      { label: 'Non-Negotiables', complete: data.nonNegotiables.length > 0 },
-      { label: 'Reminders', complete: data.reminders.showOnLogin || data.reminders.morningReminder || data.reminders.eveningReminder },
+      { label: 'Reminders', complete: data.reminders.showOnLogin || data.reminders.morningReminder || data.reminders.middayReminder || data.reminders.eveningReminder },
       { label: 'Vision Board', complete: data.boardImages.length > 0 },
       { label: 'Affirmation', complete: !!data.affirmationText.trim() },
     ];
@@ -25,7 +24,6 @@ export function ReviewStep({ data }: ReviewStepProps) {
   };
 
   const status = getCompletionStatus();
-  const threeHundredPercent = data.clarityScore + data.beliefScore + data.consistencyScore;
 
   return (
     <div className="space-y-6">
@@ -84,31 +82,6 @@ export function ReviewStep({ data }: ReviewStepProps) {
               <strong>Target Date:</strong> {new Date(data.targetDate).toLocaleDateString()}
             </p>
           )}
-
-          {/* 300% Score */}
-          <div className="pt-3 border-t">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium">300% Score</span>
-              <span className={`font-bold ${
-                threeHundredPercent >= 240 ? 'text-green-600' :
-                threeHundredPercent >= 180 ? 'text-yellow-600' :
-                'text-red-600'
-              }`}>
-                {threeHundredPercent}%
-              </span>
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-sm">
-              <div>
-                <span className="text-muted-foreground">Clarity:</span> {data.clarityScore}%
-              </div>
-              <div>
-                <span className="text-muted-foreground">Belief:</span> {data.beliefScore}%
-              </div>
-              <div>
-                <span className="text-muted-foreground">Consistency:</span> {data.consistencyScore}%
-              </div>
-            </div>
-          </div>
         </CardContent>
       </Card>
 
@@ -140,38 +113,6 @@ export function ReviewStep({ data }: ReviewStepProps) {
         </CardContent>
       </Card>
 
-      {/* Non-Negotiables Summary */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <ListChecks className="h-5 w-5" />
-            Non-Negotiables ({data.nonNegotiables.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {data.nonNegotiables.length > 0 ? (
-            <div className="space-y-2">
-              {data.nonNegotiables.map((nn, index) => (
-                <div key={index} className="flex items-center gap-2 text-sm">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span>{nn.title}</span>
-                  <Badge variant="outline" className="text-xs">
-                    {nn.frequency}
-                  </Badge>
-                  {nn.targetCount > 1 && (
-                    <Badge variant="secondary" className="text-xs">
-                      {nn.targetCount}x/day
-                    </Badge>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">No non-negotiables defined</p>
-          )}
-        </CardContent>
-      </Card>
-
       {/* Reminders & Vision Board & Affirmation Summary */}
       <div className="grid md:grid-cols-3 gap-4">
         <Card>
@@ -184,8 +125,9 @@ export function ReviewStep({ data }: ReviewStepProps) {
           <CardContent className="text-sm space-y-1">
             {data.reminders.showOnLogin && <div>Show on login</div>}
             {data.reminders.morningReminder && <div>Morning ({data.reminders.morningTime})</div>}
+            {data.reminders.middayReminder && <div>Midday ({data.reminders.middayTime})</div>}
             {data.reminders.eveningReminder && <div>Evening ({data.reminders.eveningTime})</div>}
-            {!data.reminders.showOnLogin && !data.reminders.morningReminder && !data.reminders.eveningReminder && (
+            {!data.reminders.showOnLogin && !data.reminders.morningReminder && !data.reminders.middayReminder && !data.reminders.eveningReminder && (
               <span className="text-muted-foreground">None set</span>
             )}
           </CardContent>

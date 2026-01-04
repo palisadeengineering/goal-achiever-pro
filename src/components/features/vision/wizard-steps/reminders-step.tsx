@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent } from '@/components/ui/card';
-import { Bell, Sun, Moon, LogIn } from 'lucide-react';
+import { Bell, Sun, Moon, LogIn, Clock } from 'lucide-react';
 import type { VisionWizardData } from '../vision-wizard';
 
 interface RemindersStepProps {
@@ -81,6 +81,38 @@ export function RemindersStep({ data, updateData }: RemindersStepProps) {
                 <Switch
                   checked={data.reminders.morningReminder}
                   onCheckedChange={(checked) => updateReminder('morningReminder', checked)}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Midday Reminder */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-orange-100 rounded-lg">
+                  <Clock className="h-5 w-5 text-orange-600" />
+                </div>
+                <div>
+                  <Label className="font-medium">Midday Check-in</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Realign your focus midday
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Input
+                  type="time"
+                  value={data.reminders.middayTime}
+                  onChange={(e) => updateReminder('middayTime', e.target.value)}
+                  disabled={!data.reminders.middayReminder}
+                  className="w-32"
+                />
+                <Switch
+                  checked={data.reminders.middayReminder}
+                  onCheckedChange={(checked) => updateReminder('middayReminder', checked)}
                 />
               </div>
             </div>

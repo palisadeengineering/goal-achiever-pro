@@ -25,6 +25,7 @@ import {
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { useGoogleCalendar } from '@/lib/hooks/use-google-calendar';
+import { Daily300Checkin } from '@/components/features/reviews/daily-300-checkin';
 
 interface DailyAction {
   id: string;
@@ -481,6 +482,9 @@ export default function TodayPage() {
 
         {/* Sidebar */}
         <div className="space-y-4">
+          {/* 300% Daily Check-in */}
+          <Daily300Checkin />
+
           {/* Upcoming Deadlines */}
           {data.upcomingDeadlines.length > 0 && (
             <Card>

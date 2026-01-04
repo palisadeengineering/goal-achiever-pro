@@ -48,7 +48,7 @@ export async function GET(
     // Fetch board images for this vision
     const { data: boardImages, error: imagesError } = await supabase
       .from('vision_board_images')
-      .select('id, image_url, caption, is_cover, created_at')
+      .select('id, file_path, caption, is_cover, created_at')
       .eq('vision_id', id)
       .order('is_cover', { ascending: false })
       .order('created_at', { ascending: true });
@@ -57,13 +57,22 @@ export async function GET(
       console.error('Error fetching board images:', imagesError);
     }
 
-    // Transform board images
-    const transformedImages = (boardImages || []).map((img) => ({
-      id: img.id,
-      url: img.image_url,
-      caption: img.caption,
-      is_cover: img.is_cover,
-    }));
+    // Transform board images with signed URLs
+    const transformedImages = await Promise.all(
+      (boardImages || []).map(async (img) => {
+        // Get signed URL from storage
+        const { data: signedUrlData } = await supabase.storage
+          .from('vision-boards')
+          .createSignedUrl(img.file_path, 3600); // 1 hour expiry
+
+        return {
+          id: img.id,
+          url: signedUrlData?.signedUrl || '',
+          caption: img.caption,
+          is_cover: img.is_cover,
+        };
+      })
+    );
 
     return NextResponse.json({
       vision,

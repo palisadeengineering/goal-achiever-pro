@@ -5,8 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Sparkles, Loader2, ChevronDown, ChevronUp, CalendarIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { addMonths, addYears, format, parseISO } from 'date-fns';
+import { cn } from '@/lib/utils';
 import type { VisionWizardData } from '../vision-wizard';
 
 const COLOR_OPTIONS = [
@@ -22,6 +26,13 @@ const COLOR_OPTIONS = [
   { value: '#6b7280', label: 'Gray' },
 ];
 
+const DATE_PRESETS = [
+  { label: '3 months', getValue: () => addMonths(new Date(), 3) },
+  { label: '6 months', getValue: () => addMonths(new Date(), 6) },
+  { label: '1 year', getValue: () => addYears(new Date(), 1) },
+  { label: '2 years', getValue: () => addYears(new Date(), 2) },
+];
+
 interface VisionStepProps {
   data: VisionWizardData;
   updateData: (updates: Partial<VisionWizardData>) => void;
@@ -31,6 +42,21 @@ export function VisionStep({ data, updateData }: VisionStepProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showAIOptions, setShowAIOptions] = useState(false);
   const [aiContext, setAiContext] = useState('');
+  const [calendarOpen, setCalendarOpen] = useState(false);
+
+  const handleDatePreset = (getValue: () => Date) => {
+    const date = getValue();
+    updateData({ targetDate: format(date, 'yyyy-MM-dd') });
+  };
+
+  const handleCalendarSelect = (date: Date | undefined) => {
+    if (date) {
+      updateData({ targetDate: format(date, 'yyyy-MM-dd') });
+      setCalendarOpen(false);
+    }
+  };
+
+  const selectedDate = data.targetDate ? parseISO(data.targetDate) : undefined;
 
   const generateVisionWithAI = async () => {
     setIsGenerating(true);
@@ -157,13 +183,59 @@ export function VisionStep({ data, updateData }: VisionStepProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="targetDate">Target Date</Label>
-        <Input
-          id="targetDate"
-          type="date"
-          value={data.targetDate}
-          onChange={(e) => updateData({ targetDate: e.target.value })}
-        />
+        <Label>Target Date</Label>
+        <div className="space-y-3">
+          {/* Preset buttons */}
+          <div className="flex flex-wrap gap-2">
+            {DATE_PRESETS.map((preset) => {
+              const presetDate = format(preset.getValue(), 'yyyy-MM-dd');
+              const isSelected = data.targetDate === presetDate;
+              return (
+                <Button
+                  key={preset.label}
+                  type="button"
+                  variant={isSelected ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => handleDatePreset(preset.getValue)}
+                >
+                  {preset.label}
+                </Button>
+              );
+            })}
+            {/* Custom date picker */}
+            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant={selectedDate && !DATE_PRESETS.some(p => format(p.getValue(), 'yyyy-MM-dd') === data.targetDate) ? 'default' : 'outline'}
+                  size="sm"
+                  className="gap-2"
+                >
+                  <CalendarIcon className="h-4 w-4" />
+                  Custom
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={handleCalendarSelect}
+                  disabled={(date) => date < new Date()}
+                  defaultMonth={selectedDate || new Date()}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          {/* Display selected date */}
+          {selectedDate && (
+            <div className={cn(
+              "flex items-center gap-2 text-sm p-2 rounded-md bg-muted"
+            )}>
+              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+              <span>Target: <strong>{format(selectedDate, 'MMMM d, yyyy')}</strong></span>
+            </div>
+          )}
+        </div>
         <p className="text-sm text-muted-foreground">
           When do you want to achieve this vision?
         </p>
@@ -190,67 +262,6 @@ export function VisionStep({ data, updateData }: VisionStepProps) {
         <p className="text-sm text-muted-foreground">
           Choose a color to identify this vision
         </p>
-      </div>
-
-      {/* 300% Rule Scores */}
-      <div className="space-y-4 pt-4 border-t">
-        <h3 className="font-medium">300% Rule Scores</h3>
-        <p className="text-sm text-muted-foreground">
-          Rate your current clarity, belief, and consistency for this vision
-        </p>
-
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <Label>Clarity ({data.clarityScore}%)</Label>
-            </div>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={data.clarityScore}
-              onChange={(e) => updateData({ clarityScore: parseInt(e.target.value) })}
-              className="w-full"
-            />
-            <p className="text-xs text-muted-foreground">
-              How clear is your vision? Can you describe it in detail?
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <Label>Belief ({data.beliefScore}%)</Label>
-            </div>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={data.beliefScore}
-              onChange={(e) => updateData({ beliefScore: parseInt(e.target.value) })}
-              className="w-full"
-            />
-            <p className="text-xs text-muted-foreground">
-              How strongly do you believe this is achievable?
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <Label>Consistency ({data.consistencyScore}%)</Label>
-            </div>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={data.consistencyScore}
-              onChange={(e) => updateData({ consistencyScore: parseInt(e.target.value) })}
-              className="w-full"
-            />
-            <p className="text-xs text-muted-foreground">
-              How consistently do you focus on this vision?
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );
