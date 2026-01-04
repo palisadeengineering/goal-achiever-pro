@@ -1,0 +1,246 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+
+// Demo user ID for development
+const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
+
+async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
+  if (!supabase) return DEMO_USER_ID;
+
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id || DEMO_USER_ID;
+}
+
+interface DayActivity {
+  date: string;
+  score: number;
+  affirmations: number;
+  nonNegotiables: number;
+  kpiLogs: number;
+  reviews: number;
+  clarity?: number;
+  belief?: number;
+  consistency?: number;
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Database connection failed' },
+        { status: 500 }
+      );
+    }
+
+    const userId = await getUserId(supabase);
+    const { searchParams } = new URL(request.url);
+    const visionId = searchParams.get('visionId');
+
+    // Calculate date range (last 365 days)
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 364);
+
+    const startDateStr = startDate.toISOString().split('T')[0];
+    const endDateStr = endDate.toISOString().split('T')[0];
+
+    // Fetch all activity data in parallel
+    const [
+      affirmationsResult,
+      nonNegotiablesResult,
+      kpiLogsResult,
+      reviewsResult
+    ] = await Promise.all([
+      // Daily affirmation completions
+      supabase
+        .from('daily_affirmation_completions')
+        .select('completion_date, vision_id')
+        .eq('user_id', userId)
+        .gte('completion_date', startDateStr)
+        .lte('completion_date', endDateStr)
+        .then(res => {
+          if (visionId && res.data) {
+            return { ...res, data: res.data.filter(d => d.vision_id === visionId) };
+          }
+          return res;
+        }),
+
+      // Non-negotiable completions (need to join with non_negotiables to filter by vision)
+      visionId
+        ? supabase
+            .from('non_negotiable_completions')
+            .select(`
+              completion_date,
+              completion_count,
+              non_negotiables!inner(vision_id)
+            `)
+            .eq('user_id', userId)
+            .eq('non_negotiables.vision_id', visionId)
+            .gte('completion_date', startDateStr)
+            .lte('completion_date', endDateStr)
+        : supabase
+            .from('non_negotiable_completions')
+            .select('completion_date, completion_count')
+            .eq('user_id', userId)
+            .gte('completion_date', startDateStr)
+            .lte('completion_date', endDateStr),
+
+      // KPI logs (need to join with vision_kpis to filter by vision)
+      visionId
+        ? supabase
+            .from('kpi_logs')
+            .select(`
+              log_date,
+              is_completed,
+              completion_count,
+              vision_kpis!inner(vision_id)
+            `)
+            .eq('user_id', userId)
+            .eq('vision_kpis.vision_id', visionId)
+            .gte('log_date', startDateStr)
+            .lte('log_date', endDateStr)
+        : supabase
+            .from('kpi_logs')
+            .select('log_date, is_completed, completion_count')
+            .eq('user_id', userId)
+            .gte('log_date', startDateStr)
+            .lte('log_date', endDateStr),
+
+      // Daily reviews with 300% scores
+      supabase
+        .from('daily_reviews')
+        .select('review_date, clarity_today, belief_today, consistency_today')
+        .eq('user_id', userId)
+        .gte('review_date', startDateStr)
+        .lte('review_date', endDateStr)
+    ]);
+
+    // Build activity map by date
+    const activityMap = new Map<string, DayActivity>();
+
+    // Initialize all dates with zero values
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      const dateStr = d.toISOString().split('T')[0];
+      activityMap.set(dateStr, {
+        date: dateStr,
+        score: 0,
+        affirmations: 0,
+        nonNegotiables: 0,
+        kpiLogs: 0,
+        reviews: 0
+      });
+    }
+
+    // Process affirmation completions
+    if (affirmationsResult.data) {
+      for (const item of affirmationsResult.data) {
+        const entry = activityMap.get(item.completion_date);
+        if (entry) {
+          entry.affirmations++;
+        }
+      }
+    }
+
+    // Process non-negotiable completions
+    if (nonNegotiablesResult.data) {
+      for (const item of nonNegotiablesResult.data) {
+        const entry = activityMap.get(item.completion_date);
+        if (entry) {
+          entry.nonNegotiables += item.completion_count || 1;
+        }
+      }
+    }
+
+    // Process KPI logs
+    if (kpiLogsResult.data) {
+      for (const item of kpiLogsResult.data) {
+        const entry = activityMap.get(item.log_date);
+        if (entry) {
+          if (item.is_completed || (item.completion_count && item.completion_count > 0)) {
+            entry.kpiLogs++;
+          }
+        }
+      }
+    }
+
+    // Process daily reviews and 300% scores
+    if (reviewsResult.data) {
+      // Group reviews by date (might have morning, midday, evening)
+      const reviewsByDate = new Map<string, { count: number; clarity: number[]; belief: number[]; consistency: number[] }>();
+
+      for (const item of reviewsResult.data) {
+        if (!reviewsByDate.has(item.review_date)) {
+          reviewsByDate.set(item.review_date, { count: 0, clarity: [], belief: [], consistency: [] });
+        }
+        const dateData = reviewsByDate.get(item.review_date)!;
+        dateData.count++;
+        if (item.clarity_today != null) dateData.clarity.push(item.clarity_today);
+        if (item.belief_today != null) dateData.belief.push(item.belief_today);
+        if (item.consistency_today != null) dateData.consistency.push(item.consistency_today);
+      }
+
+      for (const [date, data] of reviewsByDate) {
+        const entry = activityMap.get(date);
+        if (entry) {
+          entry.reviews = data.count;
+          if (data.clarity.length > 0) {
+            entry.clarity = Math.round(data.clarity.reduce((a, b) => a + b, 0) / data.clarity.length);
+          }
+          if (data.belief.length > 0) {
+            entry.belief = Math.round(data.belief.reduce((a, b) => a + b, 0) / data.belief.length);
+          }
+          if (data.consistency.length > 0) {
+            entry.consistency = Math.round(data.consistency.reduce((a, b) => a + b, 0) / data.consistency.length);
+          }
+        }
+      }
+    }
+
+    // Calculate composite score for each day (0-100)
+    // Weighted scoring:
+    // - Affirmations: 25 points each (max 25)
+    // - Non-negotiables: 15 points each (max 45)
+    // - KPI logs: 20 points each (max 20)
+    // - Reviews: 10 points each (max 30, for 3 reviews)
+    // - 300% score average: 0-100 bonus if available, scaled to max 30
+    for (const [, entry] of activityMap) {
+      let score = 0;
+
+      // Affirmations (max 25)
+      score += Math.min(entry.affirmations * 25, 25);
+
+      // Non-negotiables (max 45)
+      score += Math.min(entry.nonNegotiables * 15, 45);
+
+      // KPI logs (max 20)
+      score += Math.min(entry.kpiLogs * 20, 20);
+
+      // Reviews (max 30)
+      score += Math.min(entry.reviews * 10, 30);
+
+      // 300% score bonus (if available, scale to 0-30)
+      if (entry.clarity !== undefined && entry.belief !== undefined && entry.consistency !== undefined) {
+        const avg300 = (entry.clarity + entry.belief + entry.consistency) / 3;
+        score += Math.round((avg300 / 100) * 30);
+      }
+
+      // Normalize to 0-100
+      entry.score = Math.min(Math.round(score * 100 / 150), 100);
+    }
+
+    // Convert to array and sort by date
+    const activity = Array.from(activityMap.values()).sort((a, b) =>
+      a.date.localeCompare(b.date)
+    );
+
+    return NextResponse.json({ activity });
+  } catch (error) {
+    console.error('Get vision activity error:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch vision activity' },
+      { status: 500 }
+    );
+  }
+}

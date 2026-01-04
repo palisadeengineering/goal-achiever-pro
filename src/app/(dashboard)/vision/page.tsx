@@ -6,6 +6,7 @@ import { VisionWizard, type VisionWizardData } from '@/components/features/visio
 import { VisionPageHeader } from '@/components/features/vision/vision-page-header';
 import { VisionGridView } from '@/components/features/vision/vision-grid-view';
 import { VisionKanbanView } from '@/components/features/vision/vision-kanban-view';
+import { VisionActivityHeatmap } from '@/components/features/vision/vision-activity-heatmap';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Target } from 'lucide-react';
 import { toast } from 'sonner';
@@ -109,6 +110,8 @@ export default function VisionPage() {
         showOnLogin: true,
         morningReminder: true,
         morningTime: '06:00',
+        middayReminder: false,
+        middayTime: '12:00',
         eveningReminder: false,
         eveningTime: '20:00',
       },
@@ -278,6 +281,11 @@ export default function VisionPage() {
         onViewModeChange={setVisionViewMode}
         onCreateNew={handleCreateNew}
       />
+
+      {/* Activity Heat Map */}
+      {visions.length > 0 && (
+        <VisionActivityHeatmap />
+      )}
 
       {visionViewMode === 'grid' ? (
         <VisionGridView
