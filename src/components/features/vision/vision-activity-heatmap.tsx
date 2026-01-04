@@ -56,14 +56,14 @@ function getIntensityLevel(score: number): number {
   return 4;
 }
 
-// Get CSS class for intensity level
+// Get CSS class for intensity level - uses app's primary color
 function getIntensityClass(level: number): string {
   switch (level) {
     case 0: return 'bg-muted/50 dark:bg-muted/30';
-    case 1: return 'bg-emerald-200 dark:bg-emerald-900/60';
-    case 2: return 'bg-emerald-400 dark:bg-emerald-700';
-    case 3: return 'bg-emerald-500 dark:bg-emerald-500';
-    case 4: return 'bg-emerald-600 dark:bg-emerald-400';
+    case 1: return 'bg-primary/20 dark:bg-primary/20';
+    case 2: return 'bg-primary/40 dark:bg-primary/40';
+    case 3: return 'bg-primary/70 dark:bg-primary/70';
+    case 4: return 'bg-primary dark:bg-primary';
     default: return 'bg-muted/50';
   }
 }
@@ -235,7 +235,7 @@ export function VisionActivityHeatmap({ visionId, className }: VisionActivityHea
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-emerald-500" />
+            <TrendingUp className="h-4 w-4 text-primary" />
             Your Progress
           </CardTitle>
           <div className="flex items-center gap-4 text-sm">
