@@ -10,10 +10,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowRight, Target, Trophy, Clock, Loader2, Plus, Eye } from 'lucide-react';
+import { ArrowRight, Target, Trophy, Clock, Loader2, Plus, Eye, GitBranch, CalendarCheck, Play } from 'lucide-react';
 import Link from 'next/link';
 import { ROUTES } from '@/constants/routes';
 import { toast } from 'sonner';
+import { Progress } from '@/components/ui/progress';
+
+interface BacktrackPlan {
+  id: string;
+  vision_id: string;
+  available_hours_per_week: number;
+  start_date: string;
+  end_date: string;
+  status: string;
+  ai_generated_at: string | null;
+}
 
 interface Vision {
   id: string;
@@ -41,10 +52,29 @@ const mockPowerGoals = [
 export default function VisionPage() {
   const [visions, setVisions] = useState<Vision[]>([]);
   const [activeVision, setActiveVision] = useState<Vision | null>(null);
+  const [backtrackPlans, setBacktrackPlans] = useState<BacktrackPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
   const completedGoals = mockPowerGoals.filter(g => g.progress === 100).length;
+
+  // Get backtrack plan for active vision
+  const activeBacktrackPlan = backtrackPlans.find(
+    (p) => p.vision_id === activeVision?.id && p.status === 'active'
+  );
+
+  // Fetch backtrack plans
+  const fetchBacktrackPlans = useCallback(async () => {
+    try {
+      const response = await fetch('/api/backtrack');
+      if (response.ok) {
+        const data = await response.json();
+        setBacktrackPlans(data.plans || []);
+      }
+    } catch (error) {
+      console.error('Error fetching backtrack plans:', error);
+    }
+  }, []);
 
   // Fetch visions on mount
   const fetchVisions = useCallback(async () => {
@@ -69,7 +99,8 @@ export default function VisionPage() {
 
   useEffect(() => {
     fetchVisions();
-  }, [fetchVisions]);
+    fetchBacktrackPlans();
+  }, [fetchVisions, fetchBacktrackPlans]);
 
   const handleVisionSave = async (data: {
     title: string;
@@ -391,6 +422,85 @@ export default function VisionPage() {
             consistency={activeVision?.consistency_score || 0}
             onUpdate={handle300PercentUpdate}
           />
+
+          {/* Backtrack Plan Section */}
+          {activeVision && (
+            <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <GitBranch className="h-4 w-4 text-primary" />
+                  Backtrack Plan
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {activeBacktrackPlan ? (
+                  <>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Status</span>
+                        <Badge variant={activeBacktrackPlan.status === 'active' ? 'default' : 'secondary'}>
+                          {activeBacktrackPlan.status}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Hours/Week</span>
+                        <span className="font-medium">{activeBacktrackPlan.available_hours_per_week}h</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Timeline</span>
+                        <span className="font-medium text-xs">
+                          {new Date(activeBacktrackPlan.start_date).toLocaleDateString()} - {new Date(activeBacktrackPlan.end_date).toLocaleDateString()}
+                        </span>
+                      </div>
+                      {(() => {
+                        const start = new Date(activeBacktrackPlan.start_date);
+                        const end = new Date(activeBacktrackPlan.end_date);
+                        const now = new Date();
+                        const total = end.getTime() - start.getTime();
+                        const elapsed = Math.max(0, now.getTime() - start.getTime());
+                        const progress = Math.min(100, Math.round((elapsed / total) * 100));
+                        return (
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">Progress</span>
+                              <span className="font-medium">{progress}%</span>
+                            </div>
+                            <Progress value={progress} className="h-2" />
+                          </div>
+                        );
+                      })()}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="default" size="sm" className="flex-1" asChild>
+                        <Link href={`/backtrack/${activeBacktrackPlan.id}`}>
+                          <Play className="h-3 w-3 mr-1" />
+                          View Plan
+                        </Link>
+                      </Button>
+                      <Button variant="outline" size="sm" className="flex-1" asChild>
+                        <Link href="/today">
+                          <CalendarCheck className="h-3 w-3 mr-1" />
+                          Today
+                        </Link>
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm text-muted-foreground">
+                      Create a backtrack plan to break down your vision into quarterly, monthly, weekly, and daily actions.
+                    </p>
+                    <Button className="w-full" asChild>
+                      <Link href="/backtrack">
+                        <GitBranch className="h-4 w-4 mr-2" />
+                        Create Backtrack Plan
+                      </Link>
+                    </Button>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Daily Actions */}
           <Card>

@@ -37,9 +37,12 @@ interface NavItem {
 
 const mainNavItems: NavItem[] = [
   { title: 'Dashboard', href: ROUTES.dashboard, icon: Home },
-  { title: 'Today', href: ROUTES.today, icon: CalendarCheck },
+  { title: 'Today', href: ROUTES.today, icon: CalendarCheck, badge: 'New' },
+];
+
+const visionPlanningItems: NavItem[] = [
   { title: 'Vision', href: ROUTES.vision, icon: Eye },
-  { title: 'Backtrack Plans', href: ROUTES.backtrack, icon: GitBranch },
+  { title: 'Backtrack Plans', href: ROUTES.backtrack, icon: GitBranch, badge: 'New' },
   { title: 'Power Goals', href: ROUTES.goals, icon: Trophy },
   { title: 'MINS', href: ROUTES.mins, icon: ListTodo },
 ];
@@ -101,6 +104,11 @@ function SidebarContent({
       >
         <item.icon className="h-4 w-4" />
         <span className="flex-1">{item.title}</span>
+        {item.badge && (
+          <span className="text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-medium">
+            {item.badge}
+          </span>
+        )}
         {item.tier && !accessible && (
           <span className="text-xs uppercase bg-muted px-1.5 py-0.5 rounded">
             {item.tier}
@@ -121,7 +129,19 @@ function SidebarContent({
           ))}
         </div>
 
-        {/* Systems Section */}
+        {/* Vision & Planning Section */}
+        <div className="pt-4">
+          <h3 className="mb-2 px-3 text-xs font-semibold uppercase text-muted-foreground">
+            Vision & Planning
+          </h3>
+          <div className="space-y-1">
+            {visionPlanningItems.map((item) => (
+              <NavLink key={item.href} item={item} />
+            ))}
+          </div>
+        </div>
+
+        {/* Daily Systems Section */}
         <div className="pt-4">
           <h3 className="mb-2 px-3 text-xs font-semibold uppercase text-muted-foreground">
             Daily Systems

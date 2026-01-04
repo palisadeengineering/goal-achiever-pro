@@ -11,6 +11,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import {
   CalendarCheck,
+  Calendar,
   Clock,
   Target,
   AlertCircle,
@@ -23,6 +24,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { useGoogleCalendar } from '@/lib/hooks/use-google-calendar';
 
 interface DailyAction {
   id: string;
@@ -96,6 +98,38 @@ export default function TodayPage() {
   const [error, setError] = useState<string | null>(null);
   const [completingIds, setCompletingIds] = useState<Set<string>>(new Set());
   const [expandedVisions, setExpandedVisions] = useState<Set<string>>(new Set());
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const { isConnected, connect } = useGoogleCalendar();
+
+  const handleSyncToCalendar = async () => {
+    if (!isConnected) {
+      connect();
+      return;
+    }
+
+    setIsSyncing(true);
+    try {
+      const response = await fetch('/api/calendar/sync-actions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: data?.date }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to sync');
+      }
+
+      toast.success(result.message || `Synced ${result.synced} actions to calendar`);
+    } catch (err) {
+      console.error('Calendar sync error:', err);
+      toast.error('Failed to sync actions to calendar');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   useEffect(() => {
     fetchTodayData();
@@ -268,10 +302,25 @@ export default function TodayPage() {
         description={format(new Date(), 'EEEE, MMMM d, yyyy')}
         icon={<CalendarCheck className="h-6 w-6" />}
         actions={
-          <Button variant="outline" onClick={fetchTodayData} size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={handleSyncToCalendar}
+              size="sm"
+              disabled={isSyncing}
+            >
+              {isSyncing ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Calendar className="h-4 w-4 mr-2" />
+              )}
+              {isConnected ? 'Sync to Calendar' : 'Connect Calendar'}
+            </Button>
+            <Button variant="outline" onClick={fetchTodayData} size="sm">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
         }
       />
 
