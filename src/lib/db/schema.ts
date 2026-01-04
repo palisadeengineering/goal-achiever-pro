@@ -667,7 +667,7 @@ export const visionReviewReminders = pgTable('vision_review_reminders', {
 // =============================================
 // RELATIONS
 // =============================================
-export const profilesRelations = relations(profiles, ({ many }) => ({
+export const profilesRelations = relations(profiles, ({ many, one }) => ({
   visions: many(visions),
   backtrackPlans: many(backtrackPlans),
   quarterlyTargets: many(quarterlyTargets),
@@ -685,6 +685,12 @@ export const profilesRelations = relations(profiles, ({ many }) => ({
   nonNegotiables: many(nonNegotiables),
   nonNegotiableCompletions: many(nonNegotiableCompletions),
   visionReviewReminders: many(visionReviewReminders),
+  // New KPI and calendar sync relations
+  visionKpis: many(visionKpis),
+  kpiLogs: many(kpiLogs),
+  calendarSyncSettings: one(calendarSyncSettings),
+  calendarSyncRecords: many(calendarSyncRecords),
+  calendarWebhookChannels: many(calendarWebhookChannels),
 }));
 
 export const visionsRelations = relations(visions, ({ one, many }) => ({
@@ -697,6 +703,7 @@ export const visionsRelations = relations(visions, ({ one, many }) => ({
   dailyAffirmationCompletions: many(dailyAffirmationCompletions),
   nonNegotiables: many(nonNegotiables),
   visionReviewReminders: many(visionReviewReminders),
+  visionKpis: many(visionKpis),
 }));
 
 export const backtrackPlansRelations = relations(backtrackPlans, ({ one, many }) => ({
@@ -787,4 +794,185 @@ export const nonNegotiableCompletionsRelations = relations(nonNegotiableCompleti
 export const visionReviewRemindersRelations = relations(visionReviewReminders, ({ one }) => ({
   user: one(profiles, { fields: [visionReviewReminders.userId], references: [profiles.id] }),
   vision: one(visions, { fields: [visionReviewReminders.visionId], references: [visions.id] }),
+}));
+
+// =============================================
+// VISION KPIs (AI-Generated Hierarchical KPIs)
+// =============================================
+export const visionKpis = pgTable('vision_kpis', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  visionId: uuid('vision_id').notNull().references(() => visions.id, { onDelete: 'cascade' }),
+  // KPI hierarchy level
+  level: text('level').notNull(), // 'quarterly', 'monthly', 'weekly', 'daily'
+  // KPI details
+  title: text('title').notNull(),
+  description: text('description'),
+  targetValue: text('target_value'), // e.g., "$10,000", "5 per week"
+  unit: text('unit'), // e.g., "dollars", "count", "hours"
+  numericTarget: decimal('numeric_target', { precision: 15, scale: 2 }),
+  // Hierarchical organization - self-reference handled via relations
+  parentKpiId: uuid('parent_kpi_id'),
+  quarter: integer('quarter'), // 1-4 for quarterly
+  month: integer('month'), // 1-12 for monthly
+  // Additional metadata from AI generation
+  category: text('category'), // 'Activity' or 'Output' for weekly KPIs
+  trackingMethod: text('tracking_method'),
+  leadsTo: text('leads_to'), // what this KPI drives
+  bestTime: text('best_time'), // for daily habits: 'Morning', 'Afternoon', 'Evening'
+  timeRequired: text('time_required'), // for daily habits: '30 minutes'
+  whyItMatters: text('why_it_matters'),
+  // AI generation metadata
+  successFormula: text('success_formula'), // narrative explaining the system
+  // Status
+  isActive: boolean('is_active').default(true),
+  sortOrder: integer('sort_order').default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  userVisionIdx: index('vision_kpis_user_vision_idx').on(table.userId, table.visionId),
+  levelIdx: index('vision_kpis_level_idx').on(table.visionId, table.level),
+}));
+
+// =============================================
+// KPI LOGS (Check-offs and Value Entries)
+// =============================================
+export const kpiLogs = pgTable('kpi_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  kpiId: uuid('kpi_id').notNull().references(() => visionKpis.id, { onDelete: 'cascade' }),
+  // Log details
+  logDate: date('log_date').notNull(),
+  value: decimal('value', { precision: 15, scale: 2 }),
+  isCompleted: boolean('is_completed').default(false),
+  completionCount: integer('completion_count').default(0),
+  // Notes and context
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+  kpiDateIdx: uniqueIndex('kpi_logs_kpi_date_idx').on(table.kpiId, table.logDate),
+  userDateIdx: index('kpi_logs_user_date_idx').on(table.userId, table.logDate),
+}));
+
+// =============================================
+// KPI STREAKS (Cached Streak Calculations)
+// =============================================
+export const kpiStreaks = pgTable('kpi_streaks', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  kpiId: uuid('kpi_id').notNull().references(() => visionKpis.id, { onDelete: 'cascade' }).unique(),
+  currentStreak: integer('current_streak').default(0),
+  longestStreak: integer('longest_streak').default(0),
+  lastCompletedDate: date('last_completed_date'),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// =============================================
+// CALENDAR SYNC SETTINGS (User Preferences)
+// =============================================
+export const calendarSyncSettings = pgTable('calendar_sync_settings', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }).unique(),
+  // Sync preferences per goal level
+  syncQuarterlyTargets: boolean('sync_quarterly_targets').default(true),
+  syncMonthlyTargets: boolean('sync_monthly_targets').default(true),
+  syncWeeklyTargets: boolean('sync_weekly_targets').default(true),
+  syncDailyActions: boolean('sync_daily_actions').default(true),
+  // Event appearance (Google Calendar color IDs)
+  quarterlyColorId: text('quarterly_color_id').default('11'),
+  monthlyColorId: text('monthly_color_id').default('10'),
+  weeklyColorId: text('weekly_color_id').default('9'),
+  dailyColorId: text('daily_color_id').default('1'),
+  // Sync settings
+  autoSyncEnabled: boolean('auto_sync_enabled').default(true),
+  syncIntervalMinutes: integer('sync_interval_minutes').default(15),
+  // Two-way sync settings
+  twoWaySyncEnabled: boolean('two_way_sync_enabled').default(true),
+  conflictResolution: text('conflict_resolution').default('app_wins'), // 'app_wins', 'calendar_wins', 'ask'
+  // Timestamps
+  lastSyncedAt: timestamp('last_synced_at'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// =============================================
+// CALENDAR SYNC RECORDS (Event Tracking)
+// =============================================
+export const calendarSyncRecords = pgTable('calendar_sync_records', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  // Entity reference (polymorphic)
+  entityType: text('entity_type').notNull(), // 'quarterly_target', 'monthly_target', 'weekly_target', 'daily_action'
+  entityId: uuid('entity_id').notNull(),
+  // Google Calendar reference
+  googleEventId: text('google_event_id').notNull(),
+  googleCalendarId: text('google_calendar_id').default('primary'),
+  // Sync metadata
+  syncStatus: text('sync_status').default('synced'), // 'synced', 'pending_push', 'pending_pull', 'conflict', 'error'
+  lastSyncedAt: timestamp('last_synced_at'),
+  localModifiedAt: timestamp('local_modified_at'),
+  remoteModifiedAt: timestamp('remote_modified_at'),
+  etag: text('etag'), // Google Calendar ETag for optimistic concurrency
+  // Error tracking
+  errorMessage: text('error_message'),
+  retryCount: integer('retry_count').default(0),
+  nextRetryAt: timestamp('next_retry_at'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  entityIdx: uniqueIndex('calendar_sync_entity_idx').on(table.entityType, table.entityId),
+  userStatusIdx: index('calendar_sync_user_status_idx').on(table.userId, table.syncStatus),
+  googleEventIdx: index('calendar_sync_google_event_idx').on(table.googleEventId),
+}));
+
+// =============================================
+// CALENDAR WEBHOOK CHANNELS (Push Notifications)
+// =============================================
+export const calendarWebhookChannels = pgTable('calendar_webhook_channels', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  channelId: text('channel_id').notNull().unique(), // Our UUID for the channel
+  resourceId: text('resource_id').notNull(), // Google's resource ID
+  expiration: timestamp('expiration').notNull(),
+  token: text('token'), // Verification token
+  calendarId: text('calendar_id').default('primary'),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+  userIdx: index('calendar_webhook_user_idx').on(table.userId),
+}));
+
+// =============================================
+// KPI RELATIONS
+// =============================================
+export const visionKpisRelations = relations(visionKpis, ({ one, many }) => ({
+  user: one(profiles, { fields: [visionKpis.userId], references: [profiles.id] }),
+  vision: one(visions, { fields: [visionKpis.visionId], references: [visions.id] }),
+  parentKpi: one(visionKpis, { fields: [visionKpis.parentKpiId], references: [visionKpis.id], relationName: 'parentChild' }),
+  childKpis: many(visionKpis, { relationName: 'parentChild' }),
+  logs: many(kpiLogs),
+  streak: one(kpiStreaks),
+}));
+
+export const kpiLogsRelations = relations(kpiLogs, ({ one }) => ({
+  user: one(profiles, { fields: [kpiLogs.userId], references: [profiles.id] }),
+  kpi: one(visionKpis, { fields: [kpiLogs.kpiId], references: [visionKpis.id] }),
+}));
+
+export const kpiStreaksRelations = relations(kpiStreaks, ({ one }) => ({
+  kpi: one(visionKpis, { fields: [kpiStreaks.kpiId], references: [visionKpis.id] }),
+}));
+
+// =============================================
+// CALENDAR SYNC RELATIONS
+// =============================================
+export const calendarSyncSettingsRelations = relations(calendarSyncSettings, ({ one }) => ({
+  user: one(profiles, { fields: [calendarSyncSettings.userId], references: [profiles.id] }),
+}));
+
+export const calendarSyncRecordsRelations = relations(calendarSyncRecords, ({ one }) => ({
+  user: one(profiles, { fields: [calendarSyncRecords.userId], references: [profiles.id] }),
+}));
+
+export const calendarWebhookChannelsRelations = relations(calendarWebhookChannels, ({ one }) => ({
+  user: one(profiles, { fields: [calendarWebhookChannels.userId], references: [profiles.id] }),
 }));

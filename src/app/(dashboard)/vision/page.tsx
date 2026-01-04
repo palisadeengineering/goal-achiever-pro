@@ -1,19 +1,20 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { PageHeader } from '@/components/layout/page-header';
+import { useRouter } from 'next/navigation';
 import { VisionWizard, type VisionWizardData } from '@/components/features/vision/vision-wizard';
-import { ThreeHundredPercentTracker } from '@/components/features/vision/three-hundred-percent-tracker';
+import { VisionPageHeader } from '@/components/features/vision/vision-page-header';
+import { VisionGridView } from '@/components/features/vision/vision-grid-view';
+import { VisionKanbanView } from '@/components/features/vision/vision-kanban-view';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import {
-  Loader2, Plus, Eye, GitBranch, Edit, ArrowRight, Target,
-  ListChecks, Image, Quote, Sparkles
-} from 'lucide-react';
-import Link from 'next/link';
+import { Loader2, Target } from 'lucide-react';
 import { toast } from 'sonner';
-import { Progress } from '@/components/ui/progress';
+import { useUIStore } from '@/lib/stores/ui-store';
+import {
+  saveAllWithErrorHandling,
+  formatSaveFailures,
+  type SaveResult,
+} from '@/lib/utils/save-with-retry';
 
 interface Vision {
   id: string;
@@ -39,6 +40,8 @@ interface BacktrackPlan {
 }
 
 export default function VisionPage() {
+  const router = useRouter();
+  const { visionViewMode, setVisionViewMode } = useUIStore();
   const [visions, setVisions] = useState<Vision[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [mode, setMode] = useState<'list' | 'wizard'>('list');
@@ -145,46 +148,75 @@ export default function VisionPage() {
       const result = await response.json();
       const savedVisionId = result.vision.id;
 
-      // Save non-negotiables if any
+      // Track all secondary save operations
+      const saveFailures: SaveResult[] = [];
+
+      // Save non-negotiables if any (with error tracking)
       if (data.nonNegotiables.length > 0) {
-        for (const nn of data.nonNegotiables) {
-          if (!nn.id) {
-            await fetch('/api/non-negotiables', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                visionId: savedVisionId,
-                title: nn.title,
-                description: nn.description,
-                frequency: nn.frequency,
-                targetCount: nn.targetCount,
+        const newNonNegotiables = data.nonNegotiables.filter(nn => !nn.id);
+
+        if (newNonNegotiables.length > 0) {
+          const { failures } = await saveAllWithErrorHandling(
+            newNonNegotiables.map(nn => ({
+              operation: () => fetch('/api/non-negotiables', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  visionId: savedVisionId,
+                  title: nn.title,
+                  description: nn.description,
+                  frequency: nn.frequency,
+                  targetCount: nn.targetCount,
+                }),
               }),
-            });
-          }
+              resourceName: `Non-negotiable: ${nn.title}`,
+            }))
+          );
+          saveFailures.push(...failures);
         }
       }
 
-      // Save vision board images to Supabase Storage
+      // Save vision board images to Supabase Storage (with error tracking)
       if (data.boardImages.length > 0) {
-        for (const image of data.boardImages) {
-          // Only upload if it's a new file (has a File object)
-          if (image.file) {
-            const formData = new FormData();
-            formData.append('file', image.file);
-            if (image.caption) formData.append('caption', image.caption);
-            formData.append('isCover', (image.isCover || false).toString());
+        const newImages = data.boardImages.filter(img => img.file);
 
-            await fetch(`/api/visions/${savedVisionId}/board`, {
-              method: 'POST',
-              body: formData,
-            });
-          }
+        if (newImages.length > 0) {
+          const { failures } = await saveAllWithErrorHandling(
+            newImages.map((image, index) => ({
+              operation: () => {
+                const formData = new FormData();
+                formData.append('file', image.file!);
+                if (image.caption) formData.append('caption', image.caption);
+                formData.append('isCover', (image.isCover || false).toString());
+
+                return fetch(`/api/visions/${savedVisionId}/board`, {
+                  method: 'POST',
+                  body: formData,
+                });
+              },
+              resourceName: `Image ${index + 1}`,
+              options: { maxRetries: 1 }, // Retry once for image uploads
+            }))
+          );
+          saveFailures.push(...failures);
         }
       }
 
       // TODO: Save review reminders
 
-      toast.success(isUpdate ? 'Vision updated!' : 'Vision created!');
+      // Show appropriate success/warning message
+      if (saveFailures.length === 0) {
+        toast.success(isUpdate ? 'Vision updated!' : 'Vision created!');
+      } else {
+        // Vision saved but some items failed
+        toast.warning(
+          isUpdate ? 'Vision updated with some issues' : 'Vision created with some issues',
+          {
+            description: formatSaveFailures(saveFailures),
+            duration: 6000,
+          }
+        );
+      }
 
       // Reset and refresh
       setMode('list');
@@ -212,8 +244,8 @@ export default function VisionPage() {
     setEditingVisionId(null);
   };
 
-  const getVisionBacktrackPlan = (visionId: string) => {
-    return backtrackPlans.find(p => p.vision_id === visionId && p.status === 'active');
+  const handleViewDetails = (visionId: string) => {
+    router.push(`/vision/${visionId}`);
   };
 
   if (isLoading) {
@@ -241,165 +273,27 @@ export default function VisionPage() {
   // List Mode
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
-        <PageHeader
-          title="Vision"
-          description="Define your north star - the big picture goals that guide everything"
+      <VisionPageHeader
+        viewMode={visionViewMode}
+        onViewModeChange={setVisionViewMode}
+        onCreateNew={handleCreateNew}
+      />
+
+      {visionViewMode === 'grid' ? (
+        <VisionGridView
+          visions={visions}
+          backtrackPlans={backtrackPlans}
+          onEditVision={handleEditVision}
+          onCreateNew={handleCreateNew}
         />
-        <Button onClick={handleCreateNew}>
-          <Plus className="h-4 w-4 mr-2" />
-          Create Vision
-        </Button>
-      </div>
-
-      {visions.length === 0 ? (
-        // Empty State
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <div className="p-4 bg-primary/10 rounded-full mb-4">
-              <Sparkles className="h-8 w-8 text-primary" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Create Your First Vision</h3>
-            <p className="text-muted-foreground text-center max-w-md mb-6">
-              Define a clear, inspiring vision for your future. Our wizard will guide you
-              through setting SMART goals, daily non-negotiables, and more.
-            </p>
-            <Button onClick={handleCreateNew} size="lg">
-              <Plus className="h-5 w-5 mr-2" />
-              Start Vision Wizard
-            </Button>
-          </CardContent>
-        </Card>
       ) : (
-        // Vision Cards Grid
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {visions.map((vision) => {
-            const threeHundredPercent = vision.clarity_score + vision.belief_score + vision.consistency_score;
-            const backtrackPlan = getVisionBacktrackPlan(vision.id);
-
-            return (
-              <Card
-                key={vision.id}
-                className="hover:shadow-md transition-shadow cursor-pointer group"
-                onClick={() => handleEditVision(vision.id)}
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-3 h-10 rounded-full"
-                        style={{ backgroundColor: vision.color || '#6366f1' }}
-                      />
-                      <div>
-                        <CardTitle className="text-lg line-clamp-1">{vision.title}</CardTitle>
-                        {vision.description && (
-                          <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                            {vision.description}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditVision(vision.id);
-                      }}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* 300% Score */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-muted-foreground">300% Score</span>
-                      <span className={`text-sm font-semibold ${
-                        threeHundredPercent >= 240 ? 'text-green-600' :
-                        threeHundredPercent >= 180 ? 'text-yellow-600' :
-                        'text-red-600'
-                      }`}>
-                        {threeHundredPercent}%
-                      </span>
-                    </div>
-                    <Progress
-                      value={threeHundredPercent / 3}
-                      className="h-2"
-                    />
-                  </div>
-
-                  {/* Quick Stats */}
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    {vision.specific && (
-                      <div className="flex items-center gap-1">
-                        <Target className="h-3 w-3" />
-                        SMART
-                      </div>
-                    )}
-                    {vision.affirmation_text && (
-                      <div className="flex items-center gap-1">
-                        <Quote className="h-3 w-3" />
-                        Affirmation
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Backtrack Plan Status */}
-                  <div className="pt-3 border-t">
-                    {backtrackPlan ? (
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-sm">
-                          <GitBranch className="h-4 w-4 text-primary" />
-                          <span>Backtrack Plan Active</span>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          asChild
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Link href={`/backtrack/${backtrackPlan.id}`}>
-                            View
-                            <ArrowRight className="h-3 w-3 ml-1" />
-                          </Link>
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        asChild
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Link href="/backtrack">
-                          <GitBranch className="h-4 w-4 mr-2" />
-                          Create Backtrack Plan
-                        </Link>
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-
-          {/* Add New Card */}
-          <Card
-            className="border-dashed hover:border-primary/50 transition-colors cursor-pointer flex items-center justify-center min-h-[280px]"
-            onClick={handleCreateNew}
-          >
-            <CardContent className="flex flex-col items-center gap-3 text-muted-foreground">
-              <div className="p-3 bg-muted rounded-full">
-                <Plus className="h-6 w-6" />
-              </div>
-              <span className="font-medium">Add Another Vision</span>
-            </CardContent>
-          </Card>
-        </div>
+        <VisionKanbanView
+          visions={visions}
+          backtrackPlans={backtrackPlans}
+          onEditVision={handleEditVision}
+          onViewDetails={handleViewDetails}
+          onCreateNew={handleCreateNew}
+        />
       )}
 
       {/* Quick Tips Section */}

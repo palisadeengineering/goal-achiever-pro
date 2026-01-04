@@ -1,8 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Sparkles, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { toast } from 'sonner';
 import type { VisionWizardData } from '../vision-wizard';
 
 const COLOR_OPTIONS = [
@@ -24,8 +28,107 @@ interface VisionStepProps {
 }
 
 export function VisionStep({ data, updateData }: VisionStepProps) {
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [showAIOptions, setShowAIOptions] = useState(false);
+  const [aiContext, setAiContext] = useState('');
+
+  const generateVisionWithAI = async () => {
+    setIsGenerating(true);
+    try {
+      const response = await fetch('/api/ai/suggest-vision', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ context: aiContext || undefined }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate vision');
+      }
+
+      const result = await response.json();
+
+      if (result.vision && result.description) {
+        updateData({
+          title: result.vision,
+          description: result.description,
+        });
+        toast.success('Vision generated! Feel free to customize it.');
+        setShowAIOptions(false);
+        setAiContext('');
+      } else {
+        throw new Error('Invalid response from AI');
+      }
+    } catch (error) {
+      console.error('AI generation error:', error);
+      toast.error('Failed to generate vision. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* AI Generation Section */}
+      <div className="rounded-lg border bg-gradient-to-r from-violet-500/10 to-purple-500/10 p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-violet-500" />
+            <span className="font-medium">AI Vision Generator</span>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setShowAIOptions(!showAIOptions)}
+          >
+            {showAIOptions ? (
+              <>Hide Options <ChevronUp className="ml-1 h-4 w-4" /></>
+            ) : (
+              <>Generate with AI <ChevronDown className="ml-1 h-4 w-4" /></>
+            )}
+          </Button>
+        </div>
+
+        {showAIOptions && (
+          <div className="mt-4 space-y-3">
+            <div>
+              <Label htmlFor="aiContext" className="text-sm">
+                Context (optional)
+              </Label>
+              <Textarea
+                id="aiContext"
+                placeholder="Tell AI about your situation: your industry, goals, current stage, what excites you... (e.g., 'I run a small marketing agency and want to scale while having more freedom')"
+                value={aiContext}
+                onChange={(e) => setAiContext(e.target.value)}
+                rows={3}
+                className="mt-1"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                More context = more personalized vision
+              </p>
+            </div>
+            <Button
+              type="button"
+              onClick={generateVisionWithAI}
+              disabled={isGenerating}
+              className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Generate Vision
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="title">Vision Title *</Label>
         <Input
