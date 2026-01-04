@@ -6,6 +6,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { CascadingPlanView } from '@/components/features/backtrack/cascading-plan-view';
 import { KpiTrackingPanel } from '@/components/features/kpi/kpi-tracking-panel';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -30,6 +41,7 @@ import {
   CheckCircle2,
   CheckSquare,
   GitBranch,
+  Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -168,6 +180,30 @@ export default function VisionDetailPage({ params }: { params: Promise<{ id: str
   const [streakData, setStreakData] = useState<StreakData[]>([]);
   const [completionStatus, setCompletionStatus] = useState<CompletionStatus>({});
   const [loadingCompletions, setLoadingCompletions] = useState<Set<string>>(new Set());
+
+  // Delete state
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Handle delete vision
+  const handleDeleteVision = async () => {
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/visions/${id}?hard=true`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete vision');
+      }
+
+      toast.success('Vision deleted successfully');
+      router.push('/vision');
+    } catch (err) {
+      console.error('Error deleting vision:', err);
+      toast.error('Failed to delete vision');
+      setIsDeleting(false);
+    }
+  };
 
   // Fetch vision data
   const fetchVision = useCallback(async () => {
@@ -392,6 +428,55 @@ export default function VisionDetailPage({ params }: { params: Promise<{ id: str
                 Edit
               </Button>
             </Link>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Vision?</AlertDialogTitle>
+                  <AlertDialogDescription className="space-y-2">
+                    <p>
+                      This will permanently delete <strong>"{vision.title}"</strong> and all associated data:
+                    </p>
+                    <ul className="list-disc pl-5 text-sm space-y-1">
+                      <li>Backtrack plans, quarterly targets, monthly/weekly targets</li>
+                      <li>Daily actions and calendar events</li>
+                      <li>KPIs and tracking history</li>
+                      <li>Non-negotiables and streaks</li>
+                      <li>Vision board images</li>
+                      <li>Affirmations and reminders</li>
+                    </ul>
+                    <p className="font-medium text-destructive">
+                      This action cannot be undone.
+                    </p>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDeleteVision}
+                    disabled={isDeleting}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {isDeleting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Deleting...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete Vision
+                      </>
+                    )}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         }
       />

@@ -167,6 +167,9 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const hardDelete = searchParams.get('hard') === 'true';
+
     const supabase = await createClient();
 
     if (!supabase) {
@@ -178,29 +181,70 @@ export async function DELETE(
 
     const userId = await getUserId(supabase);
 
-    // Archive the vision instead of hard delete
-    const { error } = await supabase
-      .from('visions')
-      .update({
-        is_active: false,
-        archived_at: new Date().toISOString(),
-      })
-      .eq('id', id)
-      .eq('user_id', userId);
+    if (hardDelete) {
+      // Hard delete - cascades to all related data via foreign keys
+      // First delete vision board images from storage
+      const { data: boardImages } = await supabase
+        .from('vision_board_images')
+        .select('file_path')
+        .eq('vision_id', id)
+        .eq('user_id', userId);
 
-    if (error) {
-      console.error('Error archiving vision:', error);
-      return NextResponse.json(
-        { error: 'Failed to archive vision' },
-        { status: 500 }
-      );
+      if (boardImages && boardImages.length > 0) {
+        const filePaths = boardImages.map((img) => img.file_path);
+        await supabase.storage.from('vision-boards').remove(filePaths);
+      }
+
+      // Delete calendar events for this vision's items
+      await supabase
+        .from('calendar_events')
+        .delete()
+        .eq('user_id', userId)
+        .eq('entity_type', 'vision')
+        .eq('entity_id', id);
+
+      // Delete the vision (cascades to backtrack_plans, quarterly_targets,
+      // non_negotiables, vision_reminders, vision_kpis, etc.)
+      const { error } = await supabase
+        .from('visions')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('Error deleting vision:', error);
+        return NextResponse.json(
+          { error: 'Failed to delete vision' },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({ success: true, deleted: true });
+    } else {
+      // Soft delete - archive the vision
+      const { error } = await supabase
+        .from('visions')
+        .update({
+          is_active: false,
+          archived_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('Error archiving vision:', error);
+        return NextResponse.json(
+          { error: 'Failed to archive vision' },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({ success: true, archived: true });
     }
-
-    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Archive vision error:', error);
+    console.error('Delete vision error:', error);
     return NextResponse.json(
-      { error: 'Failed to archive vision' },
+      { error: 'Failed to delete vision' },
       { status: 500 }
     );
   }
