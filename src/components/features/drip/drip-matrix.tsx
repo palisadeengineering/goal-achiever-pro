@@ -23,7 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { DRIP_QUADRANTS } from '@/constants/drip';
-import { Users, Cog, TrendingUp, Zap, GripVertical } from 'lucide-react';
+import { Users, Cog, TrendingUp, Zap, GripVertical, MinusCircle } from 'lucide-react';
 import type { DripQuadrant } from '@/types/database';
 
 interface DripItem {
@@ -40,11 +40,12 @@ interface DripMatrixProps {
   readonly?: boolean;
 }
 
-const QUADRANT_ICONS = {
+const QUADRANT_ICONS: Record<DripQuadrant, typeof Users> = {
   delegation: Users,
   replacement: Cog,
   investment: TrendingUp,
   production: Zap,
+  na: MinusCircle,
 };
 
 function SortableItem({ item, readonly }: { item: DripItem; readonly?: boolean }) {

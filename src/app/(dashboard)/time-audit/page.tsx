@@ -365,7 +365,7 @@ export default function TimeAuditPage() {
 
   // Calculate DRIP distribution from ALL time data
   const dripData = useMemo(() => {
-    const data = { delegation: 0, replacement: 0, investment: 0, production: 0 };
+    const data = { delegation: 0, replacement: 0, investment: 0, production: 0, na: 0 };
     allTimeData.forEach((block) => {
       const duration = calculateDuration(block.startTime, block.endTime);
       if (duration > 0) {

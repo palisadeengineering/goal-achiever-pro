@@ -9,6 +9,7 @@ interface DripPieChartProps {
     replacement: number;
     investment: number;
     production: number;
+    na?: number;
   };
   showLegend?: boolean;
   size?: 'sm' | 'md' | 'lg';
@@ -20,6 +21,7 @@ export function DripPieChart({ data, showLegend = true, size = 'md' }: DripPieCh
     { name: 'Investment', value: data.investment, color: DRIP_QUADRANTS.investment.color },
     { name: 'Replacement', value: data.replacement, color: DRIP_QUADRANTS.replacement.color },
     { name: 'Delegation', value: data.delegation, color: DRIP_QUADRANTS.delegation.color },
+    ...(data.na ? [{ name: 'N/A', value: data.na, color: DRIP_QUADRANTS.na.color }] : []),
   ].filter(item => item.value > 0);
 
   const total = Object.values(data).reduce((sum, val) => sum + val, 0);

@@ -69,6 +69,7 @@ const DRIP_COLORS: Record<DripQuadrant, string> = {
   investment: '#9333ea',
   replacement: '#eab308',
   delegation: '#ef4444',
+  na: '#94a3b8',
 };
 
 const DRIP_LABELS: Record<DripQuadrant, string> = {
@@ -76,6 +77,7 @@ const DRIP_LABELS: Record<DripQuadrant, string> = {
   investment: 'Investment',
   replacement: 'Replacement',
   delegation: 'Delegation',
+  na: 'N/A',
 };
 
 const ENERGY_COLORS: Record<EnergyRating, string> = {
@@ -191,6 +193,7 @@ export function useInsightsData({
       investment: 0,
       replacement: 0,
       delegation: 0,
+      na: 0,
     };
 
     blocksWithDuration.forEach(block => {
@@ -200,7 +203,7 @@ export function useInsightsData({
 
     const total = Object.values(totals).reduce((sum, v) => sum + v, 0);
 
-    return (['production', 'investment', 'replacement', 'delegation'] as DripQuadrant[]).map(quadrant => ({
+    return (['production', 'investment', 'replacement', 'delegation', 'na'] as DripQuadrant[]).map(quadrant => ({
       label: DRIP_LABELS[quadrant],
       value: Math.round(totals[quadrant] * 10) / 10,
       color: DRIP_COLORS[quadrant],

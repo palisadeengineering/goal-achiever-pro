@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -24,6 +25,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { TagSelector } from './tag-selector';
 import { TagManager } from './tag-manager';
 import { useTags, type Tag } from '@/lib/hooks/use-tags';
+import { useTagPatterns } from '@/lib/hooks/use-tag-patterns';
+import { Sparkles, Check, X, Loader2 } from 'lucide-react';
 import type { DripQuadrant, EnergyRating } from '@/types/database';
 
 export interface TimeBlock {
@@ -55,6 +58,7 @@ const DRIP_OPTIONS = [
   { value: 'investment', label: 'Investment', description: 'Low $ + High Energy (Long-term growth)', color: 'bg-purple-500' },
   { value: 'replacement', label: 'Replacement', description: 'High $ + Low Energy (Automate this)', color: 'bg-yellow-500' },
   { value: 'delegation', label: 'Delegation', description: 'Low $ + Low Energy (Delegate this)', color: 'bg-red-500' },
+  { value: 'na', label: 'N/A', description: 'Not applicable or uncategorized', color: 'bg-slate-400' },
 ];
 
 const ENERGY_OPTIONS = [
@@ -83,7 +87,14 @@ export function TimeBlockForm({
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [showTagManager, setShowTagManager] = useState(false);
 
+  // Smart tag suggestion states
+  const [suggestedTagIds, setSuggestedTagIds] = useState<string[]>([]);
+  const [showSuggestion, setShowSuggestion] = useState(false);
+  const [isLoadingAISuggestion, setIsLoadingAISuggestion] = useState(false);
+  const [suggestionSource, setSuggestionSource] = useState<'pattern' | 'ai' | null>(null);
+
   const { tags, createTag, updateTag, deleteTag } = useTags();
+  const { getSuggestion, shouldAutoApply, learnPattern } = useTagPatterns();
 
   // Reset form when dialog opens/closes or edit block changes
   useEffect(() => {
@@ -107,11 +118,96 @@ export function TimeBlockForm({
         setEnergyRating('yellow');
         setSelectedTagIds([]);
       }
+      // Reset suggestion state
+      setSuggestedTagIds([]);
+      setShowSuggestion(false);
+      setSuggestionSource(null);
     }
   }, [open, editBlock, initialDate, initialTime, today]);
 
+  // Check for pattern-based tag suggestions when activity name changes
+  useEffect(() => {
+    if (!activityName || activityName.length < 3 || !open) {
+      setSuggestedTagIds([]);
+      setShowSuggestion(false);
+      return;
+    }
+
+    // Check for high-confidence auto-apply (>=80%)
+    const autoApply = shouldAutoApply(activityName);
+    if (autoApply && selectedTagIds.length === 0) {
+      // Filter to only include tags that still exist
+      const validTagIds = autoApply.tagIds.filter(id => tags.some(t => t.id === id));
+      if (validTagIds.length > 0) {
+        setSelectedTagIds(validTagIds);
+        return;
+      }
+    }
+
+    // Check for suggestions to show (>=30% confidence)
+    const suggestion = getSuggestion(activityName);
+    if (suggestion && suggestion.confidence >= 0.3) {
+      const validTagIds = suggestion.tagIds.filter(id => tags.some(t => t.id === id));
+      if (validTagIds.length > 0 && selectedTagIds.length === 0) {
+        setSuggestedTagIds(validTagIds);
+        setShowSuggestion(true);
+        setSuggestionSource('pattern');
+      }
+    }
+  }, [activityName, tags, getSuggestion, shouldAutoApply, selectedTagIds.length, open]);
+
+  // Handle AI tag suggestion
+  const handleAISuggest = useCallback(async () => {
+    if (!activityName || isLoadingAISuggestion) return;
+
+    setIsLoadingAISuggestion(true);
+    try {
+      const response = await fetch('/api/ai/suggest-tags', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          activityName,
+          description,
+          existingTags: tags.map(t => ({ id: t.id, name: t.name, color: t.color })),
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.suggestedTagIds && result.suggestedTagIds.length > 0) {
+          setSuggestedTagIds(result.suggestedTagIds);
+          setShowSuggestion(true);
+          setSuggestionSource('ai');
+        }
+      }
+    } catch (error) {
+      console.error('AI suggestion error:', error);
+    } finally {
+      setIsLoadingAISuggestion(false);
+    }
+  }, [activityName, description, tags, isLoadingAISuggestion]);
+
+  // Accept suggested tags
+  const acceptSuggestions = useCallback(() => {
+    setSelectedTagIds(prev => [...new Set([...prev, ...suggestedTagIds])]);
+    setShowSuggestion(false);
+    setSuggestedTagIds([]);
+  }, [suggestedTagIds]);
+
+  // Dismiss suggestions
+  const dismissSuggestions = useCallback(() => {
+    setShowSuggestion(false);
+    setSuggestedTagIds([]);
+  }, []);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Learn the pattern for future suggestions
+    if (selectedTagIds.length > 0 && activityName.length >= 3) {
+      learnPattern(activityName, selectedTagIds);
+    }
+
     onSave({
       date,
       startTime,
@@ -241,13 +337,74 @@ export function TimeBlockForm({
 
           {/* Tags */}
           <div className="space-y-2">
-            <Label>Tags</Label>
+            <div className="flex items-center justify-between">
+              <Label>Tags</Label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleAISuggest}
+                disabled={isLoadingAISuggestion || !activityName || activityName.length < 3}
+                className="h-7 text-xs"
+              >
+                {isLoadingAISuggestion ? (
+                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                ) : (
+                  <Sparkles className="h-3 w-3 mr-1" />
+                )}
+                AI Suggest
+              </Button>
+            </div>
             <TagSelector
               tags={tags}
               selectedTagIds={selectedTagIds}
               onChange={setSelectedTagIds}
               onManageTags={() => setShowTagManager(true)}
             />
+
+            {/* Tag Suggestions */}
+            {showSuggestion && suggestedTagIds.length > 0 && (
+              <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-md text-sm animate-in fade-in slide-in-from-top-1">
+                <span className="text-xs text-muted-foreground shrink-0">
+                  {suggestionSource === 'ai' ? 'AI suggests:' : 'Suggested:'}
+                </span>
+                <div className="flex flex-wrap gap-1 flex-1">
+                  {suggestedTagIds.map(id => {
+                    const tag = tags.find(t => t.id === id);
+                    return tag ? (
+                      <Badge
+                        key={id}
+                        variant="secondary"
+                        className="text-xs"
+                        style={{ backgroundColor: tag.color + '20', borderColor: tag.color }}
+                      >
+                        {tag.name}
+                      </Badge>
+                    ) : null;
+                  })}
+                </div>
+                <div className="flex gap-1 shrink-0">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={acceptSuggestions}
+                    className="h-6 w-6 p-0 hover:bg-green-500/20"
+                  >
+                    <Check className="h-3 w-3 text-green-600" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={dismissSuggestions}
+                    className="h-6 w-6 p-0 hover:bg-red-500/20"
+                  >
+                    <X className="h-3 w-3 text-red-600" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
 
           <DialogFooter>

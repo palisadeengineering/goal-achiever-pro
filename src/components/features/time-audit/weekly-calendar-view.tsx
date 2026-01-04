@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
-import { format, startOfWeek, addDays, isSameDay } from 'date-fns';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { format, startOfWeek, addDays, isSameDay, isWithinInterval } from 'date-fns';
 import {
   DndContext,
   DragOverlay,
@@ -102,8 +102,10 @@ function DraggableBlock({
         }
       }}
       className={cn(
-        'relative text-left p-1 rounded-sm mx-0.5 text-white text-[10px] overflow-hidden transition-all cursor-grab active:cursor-grabbing',
-        isDragging && 'opacity-50 shadow-lg',
+        'relative text-left p-1 rounded-sm mx-0.5 text-white text-[10px] overflow-hidden',
+        'transition-all duration-200 cursor-grab active:cursor-grabbing',
+        'shadow-sm hover:shadow-md hover:brightness-110 hover:scale-[1.02]',
+        isDragging && 'opacity-50 shadow-lg scale-105',
         block.syncStatus === 'pending' && 'animate-pulse',
         block.syncStatus === 'error' && 'ring-2 ring-red-500'
       )}
@@ -145,13 +147,13 @@ function DroppableSlot({
       ref={setNodeRef}
       onClick={() => !children && onAddBlock?.(date, time)}
       className={cn(
-        'h-3 transition-colors border-b border-dashed border-muted/30 last:border-b-0 group',
-        !children && 'hover:bg-muted/50 cursor-pointer',
+        'h-3 transition-all duration-150 border-b border-dashed border-muted/30 last:border-b-0 group',
+        !children && 'hover:bg-primary/10 cursor-pointer',
         isOver && 'bg-primary/20 ring-1 ring-primary'
       )}
     >
       {children || (
-        <Plus className="h-2 w-2 mx-auto opacity-0 group-hover:opacity-50" />
+        <Plus className="h-2 w-2 mx-auto opacity-0 group-hover:opacity-40 transition-opacity" />
       )}
     </div>
   );
@@ -166,6 +168,54 @@ export function WeeklyCalendarView({
 }: WeeklyCalendarViewProps) {
   const [settings] = useLocalStorage<UserSettings>('user-settings', DEFAULT_SETTINGS);
   const [activeBlock, setActiveBlock] = useState<TimeBlock | null>(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update current time every minute for the time indicator
+  useEffect(() => {
+    const interval = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger shortcuts when typing in input fields
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      if (e.altKey) {
+        switch (e.key) {
+          case 'ArrowLeft':
+            e.preventDefault();
+            setCurrentWeekStart(prev => addDays(prev, -7));
+            break;
+          case 'ArrowRight':
+            e.preventDefault();
+            setCurrentWeekStart(prev => addDays(prev, 7));
+            break;
+          case 't':
+          case 'T':
+            e.preventDefault();
+            setCurrentWeekStart(startOfWeek(new Date(), { weekStartsOn: settings.weekStartsOn === 'monday' ? 1 : 0 }));
+            break;
+          case 'n':
+          case 'N':
+            e.preventDefault();
+            // Open new block form for current time
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinute = Math.floor(now.getMinutes() / 15) * 15;
+            const timeStr = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
+            onAddBlock?.(now, timeStr);
+            break;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [settings.weekStartsOn, onAddBlock]);
 
   const weekStartsOn = settings.weekStartsOn === 'monday' ? 1 : 0;
 
@@ -221,6 +271,28 @@ export function WeeklyCalendarView({
   const getBlockColor = useCallback((quadrant: DripQuadrant) => {
     return DRIP_QUADRANTS[quadrant].color;
   }, []);
+
+  // Check if current week contains today
+  const isCurrentWeekVisible = useMemo(() => {
+    const weekEnd = addDays(currentWeekStart, 6);
+    return isWithinInterval(new Date(), { start: currentWeekStart, end: weekEnd });
+  }, [currentWeekStart]);
+
+  // Calculate current time indicator position (percentage within the time grid)
+  const getCurrentTimePosition = useCallback(() => {
+    const hours = currentTime.getHours();
+    const minutes = currentTime.getMinutes();
+
+    // Check if current time is within calendar display hours
+    if (hours < settings.calendarStartHour || hours > settings.calendarEndHour) {
+      return null;
+    }
+
+    // Calculate position as percentage of total grid height
+    const totalMinutes = (hours - settings.calendarStartHour) * 60 + minutes;
+    const totalGridMinutes = (settings.calendarEndHour - settings.calendarStartHour + 1) * 60;
+    return (totalMinutes / totalGridMinutes) * 100;
+  }, [currentTime, settings.calendarStartHour, settings.calendarEndHour]);
 
   // Calculate block duration in minutes
   const getBlockDuration = (block: TimeBlock): number => {
@@ -327,18 +399,42 @@ export function WeeklyCalendarView({
             </div>
 
             {/* Time Grid */}
-            <div className="max-h-[500px] overflow-y-auto">
-              {hourLabels.map((hourSlot: string) => (
-                <div key={hourSlot} className="grid grid-cols-8 border-b">
+            <div className="max-h-[500px] overflow-y-auto relative">
+              {/* Current Time Indicator */}
+              {isCurrentWeekVisible && getCurrentTimePosition() !== null && (
+                <div
+                  className="absolute left-0 right-0 z-20 pointer-events-none"
+                  style={{ top: `${getCurrentTimePosition()}%` }}
+                >
+                  <div className="grid grid-cols-8">
+                    <div className="col-span-1" /> {/* Time column spacer */}
+                    {weekDays.map((day, index) => (
+                      <div key={index} className="relative">
+                        {isSameDay(day, new Date()) && (
+                          <>
+                            <div className="absolute -left-1 -top-1.5 w-3 h-3 bg-red-500 rounded-full" />
+                            <div className="absolute left-0 right-0 border-t-2 border-red-500" />
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {hourLabels.map((hourSlot: string, hourIndex: number) => {
+                const hourNum = parseInt(hourSlot.split(':')[0]);
+                const isEvenHour = hourNum % 2 === 0;
+
+                return (
+                <div key={hourSlot} className={cn('grid grid-cols-8 border-b', isEvenHour && 'bg-muted/20')}>
                   {/* Time Label */}
                   <div className="p-1 text-xs text-muted-foreground border-r flex items-start justify-end pr-2">
-                    {formatHour(parseInt(hourSlot.split(':')[0]), settings.timeFormat)}
+                    {formatHour(hourNum, settings.timeFormat)}
                   </div>
 
                   {/* Day Columns */}
                   {weekDays.map((day, dayIndex) => {
                     // Get the 4 quarter-hour slots for this hour
-                    const hourNum = parseInt(hourSlot.split(':')[0]);
                     const quarterSlots = [
                       `${hourSlot}`,
                       `${hourNum.toString().padStart(2, '0')}:15`,
@@ -400,27 +496,35 @@ export function WeeklyCalendarView({
                     );
                   })}
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
 
         {/* Legend */}
-        <div className="p-4 border-t flex flex-wrap gap-3">
-          {Object.entries(DRIP_QUADRANTS).map(([key, quadrant]) => (
-            <Badge
-              key={key}
-              variant="outline"
-              className="gap-1"
-              style={{ borderColor: quadrant.color }}
-            >
-              <span
-                className="h-2 w-2 rounded-full"
-                style={{ backgroundColor: quadrant.color }}
-              />
-              {quadrant.name}
-            </Badge>
-          ))}
+        <div className="p-4 border-t flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap gap-3">
+            {Object.entries(DRIP_QUADRANTS).map(([key, quadrant]) => (
+              <Badge
+                key={key}
+                variant="outline"
+                className="gap-1"
+                style={{ borderColor: quadrant.color }}
+              >
+                <span
+                  className="h-2 w-2 rounded-full"
+                  style={{ backgroundColor: quadrant.color }}
+                />
+                {quadrant.name}
+              </Badge>
+            ))}
+          </div>
+          <div className="text-xs text-muted-foreground flex gap-3">
+            <span><kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">Alt</kbd>+<kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">←/→</kbd> Navigate</span>
+            <span><kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">Alt</kbd>+<kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">T</kbd> Today</span>
+            <span><kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">Alt</kbd>+<kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">N</kbd> New</span>
+          </div>
         </div>
       </CardContent>
     </Card>

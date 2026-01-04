@@ -32,6 +32,7 @@ interface DripBreakdown {
   replacement: number;
   investment: number;
   production: number;
+  na: number;
 }
 
 interface EnergyBreakdown {
@@ -101,7 +102,7 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
 
   // DRIP Breakdown
   const dripBreakdown = useMemo((): DripBreakdown => {
-    const breakdown: DripBreakdown = { delegation: 0, replacement: 0, investment: 0, production: 0 };
+    const breakdown: DripBreakdown = { delegation: 0, replacement: 0, investment: 0, production: 0, na: 0 };
 
     filteredBlocks.forEach((block) => {
       const duration = calculateDuration(block.startTime, block.endTime);
@@ -158,7 +159,7 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
         return isWithinInterval(blockDate, { start: weekStart, end: weekEnd });
       });
 
-      const drip: DripBreakdown = { delegation: 0, replacement: 0, investment: 0, production: 0 };
+      const drip: DripBreakdown = { delegation: 0, replacement: 0, investment: 0, production: 0, na: 0 };
       let greenMins = 0;
       let redMins = 0;
 
@@ -200,7 +201,7 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
         grid.set(`${day}-${hour}`, {
           totalMins: 0,
           energy: { green: 0, yellow: 0, red: 0 },
-          drip: { delegation: 0, replacement: 0, investment: 0, production: 0 },
+          drip: { delegation: 0, replacement: 0, investment: 0, production: 0, na: 0 },
         });
       }
     }
@@ -270,7 +271,7 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
       const dateStr = format(day, 'yyyy-MM-dd');
       const dayBlocks = filteredBlocks.filter((b) => b.date === dateStr);
 
-      const drip: DripBreakdown = { delegation: 0, replacement: 0, investment: 0, production: 0 };
+      const drip: DripBreakdown = { delegation: 0, replacement: 0, investment: 0, production: 0, na: 0 };
       const energy: EnergyBreakdown = { green: 0, yellow: 0, red: 0 };
 
       dayBlocks.forEach((block) => {

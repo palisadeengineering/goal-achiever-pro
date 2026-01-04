@@ -3,7 +3,7 @@
 export type SubscriptionTier = 'free' | 'pro' | 'premium';
 export type SubscriptionStatus = 'active' | 'canceled' | 'past_due' | 'trialing';
 
-export type DripQuadrant = 'delegation' | 'replacement' | 'investment' | 'production';
+export type DripQuadrant = 'delegation' | 'replacement' | 'investment' | 'production' | 'na';
 export type EnergyRating = 'green' | 'yellow' | 'red';
 
 export type GoalStatus = 'active' | 'completed' | 'abandoned' | 'archived';

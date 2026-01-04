@@ -9,8 +9,8 @@ export const DRIP_QUADRANTS: Record<DripQuadrant, {
   color: string;
   bgColor: string;
   borderColor: string;
-  moneyLevel: 'low' | 'high';
-  energyLevel: 'low' | 'high';
+  moneyLevel: 'low' | 'high' | null;
+  energyLevel: 'low' | 'high' | null;
 }> = {
   delegation: {
     name: 'Delegation',
@@ -51,6 +51,16 @@ export const DRIP_QUADRANTS: Record<DripQuadrant, {
     borderColor: 'border-green-500 dark:border-green-400',
     moneyLevel: 'high',
     energyLevel: 'high',
+  },
+  na: {
+    name: 'N/A',
+    description: 'Not applicable or uncategorized',
+    action: 'Review later',
+    color: '#94a3b8', // Slate gray
+    bgColor: 'bg-slate-100 dark:bg-slate-800/50',
+    borderColor: 'border-slate-400 dark:border-slate-500',
+    moneyLevel: null,
+    energyLevel: null,
   },
 };
 
@@ -104,4 +114,5 @@ export const DRIP_ICONS: Record<DripQuadrant, string> = {
   replacement: 'Cog',
   investment: 'TrendingUp',
   production: 'Zap',
+  na: 'MinusCircle',
 };

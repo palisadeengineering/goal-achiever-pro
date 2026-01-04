@@ -50,6 +50,7 @@ const DRIP_COLORS: Record<string, string> = {
   investment: '#9333ea',
   replacement: '#eab308',
   delegation: '#ef4444',
+  na: '#94a3b8',
 };
 
 const ENERGY_COLORS: Record<string, string> = {
@@ -112,7 +113,7 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
 
     switch (groupBy) {
       case 'drip':
-        keys = ['production', 'investment', 'replacement', 'delegation'];
+        keys = ['production', 'investment', 'replacement', 'delegation', 'na'];
         colors = DRIP_COLORS;
         break;
       case 'energy':
@@ -293,7 +294,7 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
           {/* DRIP Filters */}
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm text-muted-foreground w-16">DRIP:</span>
-            {(['production', 'investment', 'replacement', 'delegation'] as DripQuadrant[]).map(quadrant => (
+            {(['production', 'investment', 'replacement', 'delegation', 'na'] as DripQuadrant[]).map(quadrant => (
               <Badge
                 key={quadrant}
                 variant={selectedDrip.includes(quadrant) ? 'default' : 'outline'}
@@ -301,7 +302,7 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
                 style={selectedDrip.includes(quadrant) ? { backgroundColor: DRIP_COLORS[quadrant] } : {}}
                 onClick={() => toggleDripFilter(quadrant)}
               >
-                {quadrant}
+                {quadrant === 'na' ? 'N/A' : quadrant}
               </Badge>
             ))}
           </div>
