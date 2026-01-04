@@ -1,18 +1,70 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Check, X, Target, ArrowLeft, ArrowRight, Sparkles, Zap } from 'lucide-react';
+import { Check, X, Target, ArrowLeft, ArrowRight, Sparkles, Zap, Loader2 } from 'lucide-react';
 import { PRICING_TIERS, FEATURE_COMPARISON } from '@/lib/stripe/config';
 import { ROUTES } from '@/constants/routes';
+import { createClient } from '@/lib/supabase/client';
 
 export default function PricingPage() {
+  const router = useRouter();
   const [isYearly, setIsYearly] = useState(false);
+  const [user, setUser] = useState<{ id: string; email: string } | null>(null);
+  const [loadingTier, setLoadingTier] = useState<string | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) {
+        setUser({ id: data.user.id, email: data.user.email || '' });
+      }
+    });
+  }, []);
+
+  const handleSubscribe = async (tierId: string) => {
+    // Free tier - just go to signup/dashboard
+    if (tierId === 'free') {
+      router.push(user ? ROUTES.dashboard : ROUTES.signup);
+      return;
+    }
+
+    // Not logged in - redirect to signup first
+    if (!user) {
+      router.push(`${ROUTES.signup}?redirect=/pricing&tier=${tierId}`);
+      return;
+    }
+
+    // Logged in - create checkout session
+    setLoadingTier(tierId);
+    try {
+      const response = await fetch('/api/stripe/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tier: tierId,
+          interval: isYearly ? 'yearly' : 'monthly',
+          userId: user.id,
+          email: user.email,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        console.error('Checkout error:', data.error);
+        setLoadingTier(null);
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      setLoadingTier(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -129,16 +181,25 @@ export default function PricingPage() {
                 </ul>
               </CardContent>
               <CardFooter className="pt-0">
-                <Link href={ROUTES.signup} className="w-full">
-                  <Button
-                    className={`w-full btn-lift font-semibold ${tier.highlighted ? '' : ''}`}
-                    variant={tier.highlighted ? 'default' : 'outline'}
-                    size="lg"
-                  >
-                    {tier.cta}
-                    <ArrowRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </Link>
+                <Button
+                  className={`w-full btn-lift font-semibold ${tier.highlighted ? '' : ''}`}
+                  variant={tier.highlighted ? 'default' : 'outline'}
+                  size="lg"
+                  onClick={() => handleSubscribe(tier.id)}
+                  disabled={loadingTier === tier.id}
+                >
+                  {loadingTier === tier.id ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      {tier.cta}
+                      <ArrowRight className="h-4 w-4 ml-1" />
+                    </>
+                  )}
+                </Button>
               </CardFooter>
             </Card>
           ))}

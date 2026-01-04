@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/layout/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -60,13 +60,23 @@ const DEFAULT_SETTINGS: UserSettings = {
   aiProvider: 'openai',
 };
 
+interface SubscriptionInfo {
+  tier: 'free' | 'pro' | 'premium';
+  status: string;
+  stripeCustomerId: string | null;
+}
+
 function SettingsContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [settings, setSettings] = useLocalStorage<UserSettings>('user-settings', DEFAULT_SETTINGS);
   const { theme: currentTheme, setTheme } = useTheme();
   const [isConnectingGoogle, setIsConnectingGoogle] = useState(false);
   const [googleConnected, setGoogleConnected] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [subscription, setSubscription] = useState<SubscriptionInfo>({ tier: 'free', status: 'active', stripeCustomerId: null });
+  const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
+  const [isManagingSubscription, setIsManagingSubscription] = useState(false);
 
   // Check for OAuth callback results
   useEffect(() => {
@@ -102,6 +112,54 @@ function SettingsContent() {
     };
     checkGoogleConnection();
   }, []);
+
+  // Fetch subscription status
+  useEffect(() => {
+    const fetchSubscription = async () => {
+      try {
+        const response = await fetch('/api/user/subscription');
+        if (response.ok) {
+          const data = await response.json();
+          setSubscription({
+            tier: data.tier || 'free',
+            status: data.status || 'active',
+            stripeCustomerId: data.stripeCustomerId || null,
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch subscription:', error);
+      } finally {
+        setIsLoadingSubscription(false);
+      }
+    };
+    fetchSubscription();
+  }, []);
+
+  const manageSubscription = async () => {
+    if (!subscription.stripeCustomerId) {
+      router.push('/pricing');
+      return;
+    }
+
+    setIsManagingSubscription(true);
+    try {
+      const response = await fetch('/api/stripe/create-portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customerId: subscription.stripeCustomerId }),
+      });
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setStatusMessage({ type: 'error', message: 'Failed to open billing portal' });
+        setIsManagingSubscription(false);
+      }
+    } catch (error) {
+      setStatusMessage({ type: 'error', message: 'Failed to open billing portal' });
+      setIsManagingSubscription(false);
+    }
+  };
 
   const connectGoogleCalendar = async () => {
     setIsConnectingGoogle(true);
@@ -179,23 +237,70 @@ function SettingsContent() {
               </CardTitle>
               <CardDescription>Manage your subscription plan</CardDescription>
             </div>
-            <Badge variant="outline">Free Plan</Badge>
+            {isLoadingSubscription ? (
+              <Badge variant="outline">
+                <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                Loading...
+              </Badge>
+            ) : (
+              <Badge variant={subscription.tier === 'free' ? 'outline' : 'default'}>
+                {subscription.tier.charAt(0).toUpperCase() + subscription.tier.slice(1)} Plan
+                {subscription.status === 'past_due' && ' (Past Due)'}
+                {subscription.status === 'canceled' && ' (Canceled)'}
+              </Badge>
+            )}
           </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Upgrade to unlock premium features like Google Calendar sync, advanced analytics, and more.
-            </p>
-            <div className="flex gap-2">
-              <Button>
-                Upgrade to Pro
-                <ExternalLink className="h-4 w-4 ml-2" />
-              </Button>
-              <Button variant="outline">
-                View Plans
-              </Button>
-            </div>
+            {subscription.tier === 'free' ? (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  Upgrade to unlock premium features like Google Calendar sync, advanced analytics, and more.
+                </p>
+                <div className="flex gap-2">
+                  <Button onClick={() => router.push('/pricing')}>
+                    Upgrade to Pro
+                    <ExternalLink className="h-4 w-4 ml-2" />
+                  </Button>
+                  <Button variant="outline" onClick={() => router.push('/pricing')}>
+                    View Plans
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  {subscription.status === 'active' && `You're on the ${subscription.tier.charAt(0).toUpperCase() + subscription.tier.slice(1)} plan. Thank you for your support!`}
+                  {subscription.status === 'past_due' && 'Your payment is past due. Please update your payment method.'}
+                  {subscription.status === 'canceled' && 'Your subscription has been canceled. You can resubscribe anytime.'}
+                  {subscription.status === 'trialing' && `You're on a free trial of the ${subscription.tier.charAt(0).toUpperCase() + subscription.tier.slice(1)} plan.`}
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={manageSubscription}
+                    disabled={isManagingSubscription}
+                  >
+                    {isManagingSubscription ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Opening...
+                      </>
+                    ) : (
+                      <>
+                        Manage Subscription
+                        <ExternalLink className="h-4 w-4 ml-2" />
+                      </>
+                    )}
+                  </Button>
+                  {subscription.tier === 'pro' && (
+                    <Button variant="outline" onClick={() => router.push('/pricing')}>
+                      Upgrade to Premium
+                    </Button>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </CardContent>
       </Card>

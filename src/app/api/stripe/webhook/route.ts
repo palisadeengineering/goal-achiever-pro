@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe/client';
+import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+// Create admin Supabase client for webhook (server-side only)
+function getSupabaseAdmin() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Supabase environment variables not configured');
+  }
+
+  return createClient(supabaseUrl, supabaseServiceKey);
+}
 
 export async function POST(request: NextRequest) {
   if (!stripe || !webhookSecret) {
@@ -35,19 +48,31 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const supabase = getSupabaseAdmin();
+
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         const { userId, tier } = session.metadata || {};
 
         if (userId && tier) {
-          // Update user's subscription in database
           console.log(`Subscription created for user ${userId}: ${tier}`);
-          // TODO: Update profile with:
-          // - subscriptionTier: tier
-          // - stripeCustomerId: session.customer
-          // - stripeSubscriptionId: session.subscription
-          // - subscriptionStatus: 'active'
+
+          const { error } = await supabase
+            .from('profiles')
+            .update({
+              subscription_tier: tier,
+              stripe_customer_id: session.customer as string,
+              stripe_subscription_id: session.subscription as string,
+              subscription_status: 'active',
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', userId);
+
+          if (error) {
+            console.error('Error updating profile after checkout:', error);
+            throw error;
+          }
         }
         break;
       }
@@ -58,9 +83,26 @@ export async function POST(request: NextRequest) {
 
         if (userId) {
           console.log(`Subscription updated for user ${userId}: ${subscription.status}`);
-          // TODO: Update profile with:
-          // - subscriptionStatus: subscription.status
-          // - subscriptionTier: tier (if changed)
+
+          const updateData: Record<string, string> = {
+            subscription_status: subscription.status,
+            updated_at: new Date().toISOString(),
+          };
+
+          // Update tier if it changed
+          if (tier) {
+            updateData.subscription_tier = tier;
+          }
+
+          const { error } = await supabase
+            .from('profiles')
+            .update(updateData)
+            .eq('id', userId);
+
+          if (error) {
+            console.error('Error updating profile subscription status:', error);
+            throw error;
+          }
         }
         break;
       }
@@ -71,24 +113,71 @@ export async function POST(request: NextRequest) {
 
         if (userId) {
           console.log(`Subscription canceled for user ${userId}`);
-          // TODO: Update profile with:
-          // - subscriptionTier: 'free'
-          // - subscriptionStatus: 'canceled'
+
+          const { error } = await supabase
+            .from('profiles')
+            .update({
+              subscription_tier: 'free',
+              subscription_status: 'canceled',
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', userId);
+
+          if (error) {
+            console.error('Error updating profile after cancellation:', error);
+            throw error;
+          }
         }
         break;
       }
 
       case 'invoice.payment_succeeded': {
-        const invoice = event.data.object as Stripe.Invoice;
+        const invoice = event.data.object as Stripe.Invoice & { subscription?: string | Stripe.Subscription | null };
         console.log(`Payment succeeded for invoice ${invoice.id}`);
+
+        // Ensure subscription is active after successful payment
+        if (invoice.subscription) {
+          const subscriptionId = typeof invoice.subscription === 'string'
+            ? invoice.subscription
+            : invoice.subscription.id;
+
+          const { error } = await supabase
+            .from('profiles')
+            .update({
+              subscription_status: 'active',
+              updated_at: new Date().toISOString(),
+            })
+            .eq('stripe_subscription_id', subscriptionId);
+
+          if (error) {
+            console.error('Error updating profile after payment success:', error);
+          }
+        }
         break;
       }
 
       case 'invoice.payment_failed': {
-        const invoice = event.data.object as Stripe.Invoice;
+        const invoice = event.data.object as Stripe.Invoice & { subscription?: string | Stripe.Subscription | null };
         console.log(`Payment failed for invoice ${invoice.id}`);
-        // TODO: Update profile subscriptionStatus to 'past_due'
-        // TODO: Send email notification to user
+
+        // Mark subscription as past_due
+        if (invoice.subscription) {
+          const subscriptionId = typeof invoice.subscription === 'string'
+            ? invoice.subscription
+            : invoice.subscription.id;
+
+          const { error } = await supabase
+            .from('profiles')
+            .update({
+              subscription_status: 'past_due',
+              updated_at: new Date().toISOString(),
+            })
+            .eq('stripe_subscription_id', subscriptionId);
+
+          if (error) {
+            console.error('Error updating profile after payment failure:', error);
+          }
+        }
         break;
       }
 
