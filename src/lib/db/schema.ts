@@ -56,6 +56,9 @@ export const visions = pgTable('visions', {
   // Multi-vision support
   priority: integer('priority').default(1),
   color: text('color').default('#6366f1'),
+  // Vision board
+  coverImageId: uuid('cover_image_id'),
+  affirmationText: text('affirmation_text'),
   // Status
   isActive: boolean('is_active').default(true),
   archivedAt: timestamp('archived_at'),
@@ -559,6 +562,109 @@ export const accountabilityPartners = pgTable('accountability_partners', {
 });
 
 // =============================================
+// VISION BOARD IMAGES
+// =============================================
+export const visionBoardImages = pgTable('vision_board_images', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  visionId: uuid('vision_id').references(() => visions.id, { onDelete: 'set null' }),
+  filePath: text('file_path').notNull(),
+  fileName: text('file_name').notNull(),
+  fileSize: integer('file_size'),
+  mimeType: text('mime_type'),
+  width: integer('width'),
+  height: integer('height'),
+  sortOrder: integer('sort_order').default(0),
+  caption: text('caption'),
+  isCover: boolean('is_cover').default(false),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  userIdx: index('vision_board_images_user_idx').on(table.userId),
+  visionIdx: index('vision_board_images_vision_idx').on(table.visionId),
+}));
+
+// =============================================
+// PRO TIPS (Rotating motivational content)
+// =============================================
+export const proTips = pgTable('pro_tips', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  category: text('category').notNull(), // 'quote', 'actionable', 'dan_martell'
+  content: text('content').notNull(),
+  source: text('source'), // attribution
+  timeOfDay: text('time_of_day').array(), // ['morning', 'afternoon', 'evening'] or null for all
+  isActive: boolean('is_active').default(true),
+  displayCount: integer('display_count').default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// =============================================
+// DAILY AFFIRMATION COMPLETIONS
+// =============================================
+export const dailyAffirmationCompletions = pgTable('daily_affirmation_completions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  visionId: uuid('vision_id').notNull().references(() => visions.id, { onDelete: 'cascade' }),
+  completionDate: date('completion_date').notNull(),
+  completedAt: timestamp('completed_at').defaultNow(),
+}, (table) => ({
+  userVisionDateIdx: uniqueIndex('affirmation_user_vision_date_idx').on(table.userId, table.visionId, table.completionDate),
+}));
+
+// =============================================
+// NON-NEGOTIABLES (Daily Behaviors/Rules)
+// =============================================
+export const nonNegotiables = pgTable('non_negotiables', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  visionId: uuid('vision_id').notNull().references(() => visions.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  description: text('description'),
+  frequency: text('frequency').default('daily'), // 'daily', 'weekdays', 'weekends'
+  targetCount: integer('target_count').default(1), // times per day
+  isActive: boolean('is_active').default(true),
+  sortOrder: integer('sort_order').default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  userIdx: index('non_negotiables_user_idx').on(table.userId),
+  visionIdx: index('non_negotiables_vision_idx').on(table.visionId),
+}));
+
+// =============================================
+// NON-NEGOTIABLE COMPLETIONS (Streak Tracking)
+// =============================================
+export const nonNegotiableCompletions = pgTable('non_negotiable_completions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  nonNegotiableId: uuid('non_negotiable_id').notNull().references(() => nonNegotiables.id, { onDelete: 'cascade' }),
+  completionDate: date('completion_date').notNull(),
+  completionCount: integer('completion_count').default(1),
+  notes: text('notes'),
+  completedAt: timestamp('completed_at').defaultNow(),
+}, (table) => ({
+  uniqueIdx: uniqueIndex('nn_completion_unique_idx').on(table.nonNegotiableId, table.completionDate),
+  userIdx: index('nn_completions_user_idx').on(table.userId),
+}));
+
+// =============================================
+// VISION REVIEW REMINDERS
+// =============================================
+export const visionReviewReminders = pgTable('vision_review_reminders', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  visionId: uuid('vision_id').notNull().references(() => visions.id, { onDelete: 'cascade' }),
+  reminderType: text('reminder_type').notNull(), // 'daily', 'weekly', 'on_login'
+  reminderTime: text('reminder_time'), // for daily reminders, e.g., '06:00'
+  dayOfWeek: integer('day_of_week'), // 0-6 for weekly
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+  userIdx: index('vision_reminders_user_idx').on(table.userId),
+  visionIdx: index('vision_reminders_vision_idx').on(table.visionId),
+}));
+
+// =============================================
 // RELATIONS
 // =============================================
 export const profilesRelations = relations(profiles, ({ many }) => ({
@@ -574,6 +680,11 @@ export const profilesRelations = relations(profiles, ({ many }) => ({
   friendInventory: many(friendInventory),
   northStarMetrics: many(northStarMetrics),
   weeklyScorecards: many(weeklyScorecards),
+  visionBoardImages: many(visionBoardImages),
+  dailyAffirmationCompletions: many(dailyAffirmationCompletions),
+  nonNegotiables: many(nonNegotiables),
+  nonNegotiableCompletions: many(nonNegotiableCompletions),
+  visionReviewReminders: many(visionReviewReminders),
 }));
 
 export const visionsRelations = relations(visions, ({ one, many }) => ({
@@ -582,6 +693,10 @@ export const visionsRelations = relations(visions, ({ one, many }) => ({
   quarterlyTargets: many(quarterlyTargets),
   powerGoals: many(powerGoals),
   northStarMetrics: many(northStarMetrics),
+  visionBoardImages: many(visionBoardImages),
+  dailyAffirmationCompletions: many(dailyAffirmationCompletions),
+  nonNegotiables: many(nonNegotiables),
+  visionReviewReminders: many(visionReviewReminders),
 }));
 
 export const backtrackPlansRelations = relations(backtrackPlans, ({ one, many }) => ({
@@ -646,4 +761,30 @@ export const routinesRelations = relations(routines, ({ one, many }) => ({
 
 export const routineStepsRelations = relations(routineSteps, ({ one }) => ({
   routine: one(routines, { fields: [routineSteps.routineId], references: [routines.id] }),
+}));
+
+export const visionBoardImagesRelations = relations(visionBoardImages, ({ one }) => ({
+  user: one(profiles, { fields: [visionBoardImages.userId], references: [profiles.id] }),
+  vision: one(visions, { fields: [visionBoardImages.visionId], references: [visions.id] }),
+}));
+
+export const dailyAffirmationCompletionsRelations = relations(dailyAffirmationCompletions, ({ one }) => ({
+  user: one(profiles, { fields: [dailyAffirmationCompletions.userId], references: [profiles.id] }),
+  vision: one(visions, { fields: [dailyAffirmationCompletions.visionId], references: [visions.id] }),
+}));
+
+export const nonNegotiablesRelations = relations(nonNegotiables, ({ one, many }) => ({
+  user: one(profiles, { fields: [nonNegotiables.userId], references: [profiles.id] }),
+  vision: one(visions, { fields: [nonNegotiables.visionId], references: [visions.id] }),
+  completions: many(nonNegotiableCompletions),
+}));
+
+export const nonNegotiableCompletionsRelations = relations(nonNegotiableCompletions, ({ one }) => ({
+  user: one(profiles, { fields: [nonNegotiableCompletions.userId], references: [profiles.id] }),
+  nonNegotiable: one(nonNegotiables, { fields: [nonNegotiableCompletions.nonNegotiableId], references: [nonNegotiables.id] }),
+}));
+
+export const visionReviewRemindersRelations = relations(visionReviewReminders, ({ one }) => ({
+  user: one(profiles, { fields: [visionReviewReminders.userId], references: [profiles.id] }),
+  vision: one(visions, { fields: [visionReviewReminders.visionId], references: [visions.id] }),
 }));

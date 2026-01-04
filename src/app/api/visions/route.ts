@@ -76,6 +76,8 @@ export async function POST(request: NextRequest) {
       clarityScore,
       beliefScore,
       consistencyScore,
+      color,
+      affirmationText,
     } = body;
 
     if (!title) {
@@ -107,6 +109,8 @@ export async function POST(request: NextRequest) {
         clarity_score: clarityScore || 0,
         belief_score: beliefScore || 0,
         consistency_score: consistencyScore || 0,
+        color: color || '#6366f1',
+        affirmation_text: affirmationText || null,
         is_active: true,
       })
       .select()
@@ -156,6 +160,8 @@ export async function PUT(request: NextRequest) {
       clarityScore,
       beliefScore,
       consistencyScore,
+      color,
+      affirmationText,
     } = body;
 
     if (!id) {
@@ -179,6 +185,8 @@ export async function PUT(request: NextRequest) {
         clarity_score: clarityScore ?? undefined,
         belief_score: beliefScore ?? undefined,
         consistency_score: consistencyScore ?? undefined,
+        color: color ?? undefined,
+        affirmation_text: affirmationText ?? undefined,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
