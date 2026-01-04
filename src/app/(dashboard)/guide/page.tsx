@@ -23,6 +23,7 @@ import {
   Youtube,
   ExternalLink,
   Play,
+  Search,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -926,6 +927,137 @@ export default function GuidePage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Topic Search Sections */}
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* DRIP Framework & Buyback */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Target className="h-4 w-4 text-primary" />
+                  DRIP Framework & Buyback
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {[
+                    { topic: 'The Buyback Principle', query: 'Dan Martell buyback principle' },
+                    { topic: 'DRIP Matrix Explained', query: 'Dan Martell DRIP matrix' },
+                    { topic: 'Calculate Your Buyback Rate', query: 'Dan Martell buyback rate calculate' },
+                    { topic: '$1000/Hour Activities', query: 'Dan Martell 1000 dollar hour' },
+                  ].map((item, i) => (
+                    <a
+                      key={i}
+                      href={`https://www.youtube.com/results?search_query=${encodeURIComponent(item.query)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors group text-sm"
+                    >
+                      <Search className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="flex-1 group-hover:text-primary transition-colors">{item.topic}</span>
+                      <span className="text-xs text-muted-foreground">YouTube Search</span>
+                    </a>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Delegation & Hiring */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Users className="h-4 w-4 text-purple-500" />
+                  Delegation & Hiring
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {[
+                    { topic: 'The Replacement Ladder', query: 'Dan Martell replacement ladder hiring' },
+                    { topic: 'Camcorder Method for SOPs', query: 'Dan Martell camcorder method SOP' },
+                    { topic: 'How to Hire Your First VA', query: 'Dan Martell hire virtual assistant' },
+                    { topic: '10-80-10 Rule', query: 'Dan Martell 10 80 10 rule delegation' },
+                  ].map((item, i) => (
+                    <a
+                      key={i}
+                      href={`https://www.youtube.com/results?search_query=${encodeURIComponent(item.query)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors group text-sm"
+                    >
+                      <Search className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="flex-1 group-hover:text-primary transition-colors">{item.topic}</span>
+                      <span className="text-xs text-muted-foreground">YouTube Search</span>
+                    </a>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Time & Energy */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Clock className="h-4 w-4 text-blue-500" />
+                  Time & Energy Management
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {[
+                    { topic: 'Perfect Week Planning', query: 'Dan Martell perfect week' },
+                    { topic: 'Time Audit How-To', query: 'Dan Martell time audit' },
+                    { topic: 'Energy Management', query: 'Dan Martell energy management entrepreneur' },
+                    { topic: 'Morning Routines', query: 'Dan Martell morning routine' },
+                  ].map((item, i) => (
+                    <a
+                      key={i}
+                      href={`https://www.youtube.com/results?search_query=${encodeURIComponent(item.query)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors group text-sm"
+                    >
+                      <Search className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="flex-1 group-hover:text-primary transition-colors">{item.topic}</span>
+                      <span className="text-xs text-muted-foreground">YouTube Search</span>
+                    </a>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Business Growth */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <TrendingUp className="h-4 w-4 text-green-500" />
+                  Business Growth & Scaling
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {[
+                    { topic: 'Scaling Your Business', query: 'Dan Martell scale business' },
+                    { topic: 'SaaS Growth Strategies', query: 'Dan Martell SaaS growth' },
+                    { topic: 'Building Systems', query: 'Dan Martell systems business' },
+                    { topic: 'Founder Mindset', query: 'Dan Martell founder mindset entrepreneur' },
+                  ].map((item, i) => (
+                    <a
+                      key={i}
+                      href={`https://www.youtube.com/results?search_query=${encodeURIComponent(item.query)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors group text-sm"
+                    >
+                      <Search className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="flex-1 group-hover:text-primary transition-colors">{item.topic}</span>
+                      <span className="text-xs text-muted-foreground">YouTube Search</span>
+                    </a>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Book & Additional Resources */}
           <Card>
