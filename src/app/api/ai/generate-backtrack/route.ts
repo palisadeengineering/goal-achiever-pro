@@ -270,15 +270,28 @@ IMPORTANT RULES:
     // Parse the JSON response
     let plan: BacktrackPlanResponse;
     try {
-      // Try to extract JSON if wrapped in code blocks
       let jsonText = responseText;
+
+      // Try to extract JSON if wrapped in code blocks
       const jsonMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
       if (jsonMatch) {
         jsonText = jsonMatch[1];
+      } else {
+        // Try to find JSON object by looking for first { and last }
+        const firstBrace = responseText.indexOf('{');
+        const lastBrace = responseText.lastIndexOf('}');
+        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+          jsonText = responseText.substring(firstBrace, lastBrace + 1);
+        }
       }
+
+      // Clean up any potential issues
+      jsonText = jsonText.trim();
+
       plan = JSON.parse(jsonText);
-    } catch {
-      console.error('Failed to parse AI response:', responseText);
+    } catch (parseError) {
+      console.error('Failed to parse AI response:', responseText.substring(0, 500));
+      console.error('Parse error:', parseError);
       return NextResponse.json(
         { error: 'Failed to parse AI response' },
         { status: 500 }
