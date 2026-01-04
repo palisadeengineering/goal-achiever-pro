@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Loader2 } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
 import type { VisionWizardData } from '../vision-wizard';
 
 interface SmartGoalStepProps {
@@ -14,6 +15,22 @@ interface SmartGoalStepProps {
 
 export function SmartGoalStep({ data, updateData }: SmartGoalStepProps) {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [wasAutoFilled, setWasAutoFilled] = useState(false);
+  const previousTargetDate = useRef(data.targetDate);
+
+  // Auto-populate Time-Bound from target date in Step 1
+  useEffect(() => {
+    if (data.targetDate && data.targetDate !== previousTargetDate.current) {
+      previousTargetDate.current = data.targetDate;
+
+      // Only auto-fill if timeBound is empty or was previously auto-filled
+      if (!data.timeBound || wasAutoFilled) {
+        const formattedDate = format(parseISO(data.targetDate), 'MMMM d, yyyy');
+        updateData({ timeBound: `Achieve by ${formattedDate}` });
+        setWasAutoFilled(true);
+      }
+    }
+  }, [data.targetDate, data.timeBound, wasAutoFilled, updateData]);
 
   const handleGenerateSmart = async () => {
     if (!data.title && !data.description) {
@@ -76,7 +93,9 @@ export function SmartGoalStep({ data, updateData }: SmartGoalStepProps) {
     {
       key: 'timeBound' as const,
       label: 'Time-Bound',
-      description: 'What is your deadline and key milestones?',
+      description: wasAutoFilled && data.timeBound?.startsWith('Achieve by')
+        ? 'Pre-filled from your target date. Add milestones and details!'
+        : 'What is your deadline and key milestones?',
       placeholder: 'MVP in 3 months, first 100 customers in 6 months, $10M ARR in 3 years...',
     },
   ];

@@ -4,7 +4,19 @@ import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { ChevronLeft, ChevronRight, Check, X } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { ChevronLeft, ChevronRight, Check, X, Trash2, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { VisionStep } from './wizard-steps/vision-step';
 import { SmartGoalStep } from './wizard-steps/smart-goal-step';
 import { RemindersStep } from './wizard-steps/reminders-step';
@@ -105,6 +117,7 @@ interface VisionWizardProps {
   initialData?: Partial<VisionWizardData>;
   onComplete: (data: VisionWizardData, visionId?: string) => Promise<void>;
   onCancel: () => void;
+  onDelete?: () => void;
 }
 
 export function VisionWizard({
@@ -112,6 +125,7 @@ export function VisionWizard({
   initialData,
   onComplete,
   onCancel,
+  onDelete,
 }: VisionWizardProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [data, setData] = useState<VisionWizardData>({
@@ -119,6 +133,31 @@ export function VisionWizard({
     ...initialData,
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = useCallback(async () => {
+    if (!visionId) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/visions/${visionId}?hard=true`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete vision');
+      }
+
+      toast.success('Vision deleted successfully');
+      onDelete?.();
+      onCancel();
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast.error('Failed to delete vision');
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [visionId, onDelete, onCancel]);
 
   const updateData = useCallback((updates: Partial<VisionWizardData>) => {
     setData(prev => ({ ...prev, ...updates }));
@@ -182,9 +221,56 @@ export function VisionWizard({
               Step {currentStep + 1} of {STEPS.length}: {currentStepInfo.title}
             </p>
           </div>
-          <Button variant="ghost" size="icon" onClick={onCancel}>
-            <X className="h-5 w-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            {/* Delete button - only show in edit mode */}
+            {visionId && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                    <Trash2 className="h-5 w-5" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Vision?</AlertDialogTitle>
+                    <AlertDialogDescription className="space-y-2">
+                      <p>This will permanently delete <strong>&quot;{data.title || 'this vision'}&quot;</strong> and all associated data:</p>
+                      <ul className="list-disc pl-5 text-sm space-y-1">
+                        <li>Backtrack plans and quarterly targets</li>
+                        <li>Power goals and monthly/weekly targets</li>
+                        <li>Daily actions and calendar events</li>
+                        <li>KPIs and tracking history</li>
+                        <li>Non-negotiables and streaks</li>
+                        <li>Vision board images</li>
+                        <li>Affirmations and reminders</li>
+                      </ul>
+                      <p className="font-medium text-destructive">This action cannot be undone.</p>
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDelete}
+                      disabled={isDeleting}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {isDeleting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Deleting...
+                        </>
+                      ) : (
+                        'Delete Vision'
+                      )}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+            <Button variant="ghost" size="icon" onClick={onCancel}>
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
 
         <Progress value={progress} className="h-2" />

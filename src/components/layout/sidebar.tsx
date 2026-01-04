@@ -23,7 +23,6 @@ import {
   Menu,
   HelpCircle,
   CalendarCheck,
-  GitBranch,
 } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
 
@@ -42,7 +41,6 @@ const mainNavItems: NavItem[] = [
 
 const visionPlanningItems: NavItem[] = [
   { title: 'Vision', href: ROUTES.vision, icon: Eye },
-  { title: 'Backtrack Plans', href: ROUTES.backtrack, icon: GitBranch, badge: 'New' },
   { title: 'Power Goals', href: ROUTES.goals, icon: Trophy },
   { title: 'MINS', href: ROUTES.mins, icon: ListTodo },
 ];

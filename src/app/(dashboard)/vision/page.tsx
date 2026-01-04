@@ -268,6 +268,7 @@ export default function VisionPage() {
           initialData={getInitialWizardData()}
           onComplete={handleWizardComplete}
           onCancel={handleCancelWizard}
+          onDelete={fetchVisions}
         />
       </div>
     );

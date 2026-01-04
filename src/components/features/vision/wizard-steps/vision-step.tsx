@@ -226,18 +226,38 @@ export function VisionStep({ data, updateData }: VisionStepProps) {
               </PopoverContent>
             </Popover>
           </div>
-          {/* Display selected date */}
-          {selectedDate && (
-            <div className={cn(
-              "flex items-center gap-2 text-sm p-2 rounded-md bg-muted"
-            )}>
-              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-              <span>Target: <strong>{format(selectedDate, 'MMMM d, yyyy')}</strong></span>
-            </div>
-          )}
+          {/* Manual date input */}
+          <div className="flex items-center gap-2">
+            <Input
+              type="date"
+              value={data.targetDate}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value) {
+                  const selectedDate = new Date(value);
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  if (selectedDate >= today) {
+                    updateData({ targetDate: value });
+                  } else {
+                    toast.error('Please select a future date');
+                  }
+                } else {
+                  updateData({ targetDate: '' });
+                }
+              }}
+              min={format(new Date(), 'yyyy-MM-dd')}
+              className="w-[180px]"
+            />
+            {selectedDate && (
+              <span className="text-sm text-muted-foreground">
+                ({format(selectedDate, 'MMMM d, yyyy')})
+              </span>
+            )}
+          </div>
         </div>
         <p className="text-sm text-muted-foreground">
-          When do you want to achieve this vision?
+          When do you want to achieve this vision? Use presets, calendar, or type directly.
         </p>
       </div>
 

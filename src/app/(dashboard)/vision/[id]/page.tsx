@@ -18,6 +18,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { CascadingPlanView } from '@/components/features/backtrack/cascading-plan-view';
+import { BacktrackPlanningWizard } from '@/components/features/backtrack/backtrack-planning-wizard';
 import { KpiTrackingPanel } from '@/components/features/kpi/kpi-tracking-panel';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
@@ -183,6 +184,9 @@ export default function VisionDetailPage({ params }: { params: Promise<{ id: str
 
   // Delete state
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Backtrack wizard state
+  const [showBacktrackWizard, setShowBacktrackWizard] = useState(false);
 
   // Handle delete vision
   const handleDeleteVision = async () => {
@@ -728,20 +732,33 @@ export default function VisionDetailPage({ params }: { params: Promise<{ id: str
                 </CardContent>
               </Card>
             </>
+          ) : showBacktrackWizard ? (
+            <Card>
+              <CardContent className="pt-6">
+                <BacktrackPlanningWizard
+                  preselectedVisionId={id}
+                  onComplete={async (planId) => {
+                    setShowBacktrackWizard(false);
+                    await fetchBacktrackPlan();
+                    toast.success('Backtrack plan created successfully!');
+                  }}
+                  onCancel={() => setShowBacktrackWizard(false)}
+                />
+              </CardContent>
+            </Card>
           ) : (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <GitBranch className="h-12 w-12 text-muted-foreground/50 mb-4" />
                 <h3 className="font-semibold mb-2">No Backtrack Plan Yet</h3>
-                <p className="text-muted-foreground text-center mb-4">
-                  Create a backtrack plan to break down your vision into actionable steps.
+                <p className="text-muted-foreground text-center mb-4 max-w-md">
+                  Create a backtrack plan to break down your vision into quarterly targets,
+                  monthly goals, weekly tasks, and daily actions.
                 </p>
-                <Link href="/backtrack">
-                  <Button>
-                    <GitBranch className="h-4 w-4 mr-2" />
-                    Create Backtrack Plan
-                  </Button>
-                </Link>
+                <Button onClick={() => setShowBacktrackWizard(true)}>
+                  <GitBranch className="h-4 w-4 mr-2" />
+                  Create Backtrack Plan
+                </Button>
               </CardContent>
             </Card>
           )}

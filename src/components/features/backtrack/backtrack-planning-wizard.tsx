@@ -121,7 +121,10 @@ export function BacktrackPlanningWizard({
   onCancel,
   preselectedVisionId,
 }: BacktrackPlanningWizardProps) {
-  const [currentStep, setCurrentStep] = useState<WizardStep>('vision');
+  // Skip to 'time' step if vision is already preselected
+  const [currentStep, setCurrentStep] = useState<WizardStep>(
+    preselectedVisionId ? 'time' : 'vision'
+  );
   const [visions, setVisions] = useState<Vision[]>([]);
   const [selectedVisionId, setSelectedVisionId] = useState<string | null>(preselectedVisionId || null);
   const [isLoadingVisions, setIsLoadingVisions] = useState(true);
@@ -323,9 +326,14 @@ export function BacktrackPlanningWizard({
     }
   };
 
-  const getStepIndex = (step: WizardStep) => STEPS.findIndex((s) => s.id === step);
+  // Filter out vision step when preselected
+  const displayedSteps = preselectedVisionId
+    ? STEPS.filter((s) => s.id !== 'vision')
+    : STEPS;
+
+  const getStepIndex = (step: WizardStep) => displayedSteps.findIndex((s) => s.id === step);
   const currentStepIndex = getStepIndex(currentStep);
-  const progress = ((currentStepIndex + 1) / STEPS.length) * 100;
+  const progress = ((currentStepIndex + 1) / displayedSteps.length) * 100;
 
   const canProceed = () => {
     switch (currentStep) {
@@ -393,7 +401,7 @@ export function BacktrackPlanningWizard({
         <div className="space-y-2">
           <Progress value={progress} className="h-2" />
           <div className="flex justify-between text-xs">
-            {STEPS.map((step, idx) => (
+            {displayedSteps.map((step, idx) => (
               <div
                 key={step.id}
                 className={cn(
@@ -438,8 +446,8 @@ export function BacktrackPlanningWizard({
       {/* Step Content */}
       <Card>
         <CardHeader>
-          <CardTitle>{STEPS[currentStepIndex].title}</CardTitle>
-          <CardDescription>{STEPS[currentStepIndex].description}</CardDescription>
+          <CardTitle>{displayedSteps[currentStepIndex].title}</CardTitle>
+          <CardDescription>{displayedSteps[currentStepIndex].description}</CardDescription>
         </CardHeader>
         <CardContent>
           {/* Step 1: Vision Selection */}
