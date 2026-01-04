@@ -829,7 +829,7 @@ export default function GuidePage() {
                 Dan Martell Video Resources
               </CardTitle>
               <CardDescription>
-                Learn directly from Dan Martell&apos;s YouTube channel - the largest channel for SaaS entrepreneurs
+                Learn directly from Dan Martell - author of &quot;Buy Back Your Time&quot;
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -855,56 +855,57 @@ export default function GuidePage() {
                   </a>
                 </div>
               </div>
-
-              <p className="text-muted-foreground mb-4">
-                These curated videos cover the key concepts used in Goal Achiever Pro. Watch them
-                to deepen your understanding of the DRIP framework and Buy Back Your Time methodology.
-              </p>
             </CardContent>
           </Card>
 
-          {/* DRIP Framework & Buyback Videos */}
+          {/* Verified YouTube Videos */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
-                <Target className="h-5 w-5 text-primary" />
-                DRIP Framework & Buyback Principle
+                <Play className="h-5 w-5 text-red-500" />
+                Featured Videos
               </CardTitle>
               <CardDescription>
-                Core concepts for understanding where your time goes
+                Curated videos covering key Buy Back Your Time concepts
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 {[
                   {
-                    title: 'The Buyback Principle Explained',
-                    description: 'Learn why you should hire to buy back time, not just to grow your business',
-                    searchQuery: 'Dan Martell buyback principle explained',
-                    duration: '~15 min',
+                    title: 'How To Buy Back Your Time & Increase Profit',
+                    description: 'Dan introduces the Buyback Principle and how to reclaim your time to grow your business',
+                    url: 'https://www.youtube.com/watch?v=0n77p5b-Wu4',
+                    topic: 'Buyback Principle',
                   },
                   {
-                    title: 'The DRIP Matrix: 4 Quadrants of Time',
-                    description: 'Deep dive into Delegation, Replacement, Investment, and Production quadrants',
-                    searchQuery: 'Dan Martell DRIP matrix quadrants',
-                    duration: '~12 min',
+                    title: 'How I Manage My Time (as an Entrepreneur)',
+                    description: 'A deep dive into Dan\'s personal time management system and daily routines',
+                    url: 'https://www.youtube.com/watch?v=AECP5NsWRkE',
+                    topic: 'Time Management',
                   },
                   {
-                    title: 'How to Calculate Your Buyback Rate',
-                    description: 'Find your hourly rate and know when to delegate vs do it yourself',
-                    searchQuery: 'Dan Martell calculate buyback rate',
-                    duration: '~10 min',
+                    title: '7 Things I Quit to Go From Broke to Millionaire',
+                    description: 'The habits and behaviors Dan eliminated to transform his productivity and wealth',
+                    url: 'https://www.youtube.com/watch?v=bbaf3eAfyd4',
+                    topic: 'Productivity',
                   },
                   {
-                    title: 'The $1000/Hour Activities',
-                    description: 'Identify which tasks are worth your time and which are not',
-                    searchQuery: 'Dan Martell 1000 dollar hour activities',
-                    duration: '~8 min',
+                    title: '27 Years of Business Advice in 27 Minutes',
+                    description: 'Condensed wisdom from Dan\'s entrepreneurial journey - delegation, hiring, and scaling',
+                    url: 'https://www.youtube.com/watch?v=aOQndPlfNhU',
+                    topic: 'Business Growth',
+                  },
+                  {
+                    title: 'Find Your Life\'s Purpose By Doing These 3 Things',
+                    description: 'How to discover what energizes you and align your work with your purpose',
+                    url: 'https://www.youtube.com/watch?v=CugrVcvcaso',
+                    topic: 'Energy & Purpose',
                   },
                 ].map((video, i) => (
                   <a
                     key={i}
-                    href={`https://www.youtube.com/results?search_query=${encodeURIComponent(video.searchQuery)}`}
+                    href={video.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors group"
@@ -916,210 +917,9 @@ export default function GuidePage() {
                       <p className="font-medium group-hover:text-primary transition-colors">{video.title}</p>
                       <p className="text-sm text-muted-foreground">{video.description}</p>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>{video.duration}</span>
-                      <ExternalLink className="h-3.5 w-3.5" />
-                    </div>
-                  </a>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Delegation & Hiring Videos */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Users className="h-5 w-5 text-purple-500" />
-                Delegation & Hiring
-              </CardTitle>
-              <CardDescription>
-                Master the art of delegation and building your team
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {[
-                  {
-                    title: 'How to Hire Your First Executive Assistant',
-                    description: 'Step-by-step guide to finding and onboarding your first EA',
-                    searchQuery: 'Dan Martell hire executive assistant',
-                    duration: '~20 min',
-                  },
-                  {
-                    title: 'The Replacement Ladder',
-                    description: 'The correct order to hire: Admin → Delivery → Marketing → Sales → Leadership',
-                    searchQuery: 'Dan Martell replacement ladder hiring',
-                    duration: '~15 min',
-                  },
-                  {
-                    title: 'The Camcorder Method',
-                    description: 'Record yourself doing tasks to create instant training materials',
-                    searchQuery: 'Dan Martell camcorder method delegation',
-                    duration: '~8 min',
-                  },
-                  {
-                    title: 'The 10-80-10 Rule for Delegation',
-                    description: 'Spend 10% defining, let others do 80%, review the final 10%',
-                    searchQuery: 'Dan Martell 10 80 10 rule delegation',
-                    duration: '~10 min',
-                  },
-                  {
-                    title: '4 Things to Delegate to a Virtual Assistant',
-                    description: 'Critical tasks your VA should handle from day one',
-                    searchQuery: 'Dan Martell delegate virtual assistant tasks',
-                    duration: '~12 min',
-                  },
-                ].map((video, i) => (
-                  <a
-                    key={i}
-                    href={`https://www.youtube.com/results?search_query=${encodeURIComponent(video.searchQuery)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors group"
-                  >
-                    <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
-                      <Play className="h-5 w-5 text-purple-500" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium group-hover:text-primary transition-colors">{video.title}</p>
-                      <p className="text-sm text-muted-foreground">{video.description}</p>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>{video.duration}</span>
-                      <ExternalLink className="h-3.5 w-3.5" />
-                    </div>
-                  </a>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Time Management & Productivity Videos */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Clock className="h-5 w-5 text-blue-500" />
-                Time Management & Productivity
-              </CardTitle>
-              <CardDescription>
-                Optimize your schedule and maximize your output
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {[
-                  {
-                    title: 'How to Do a Time Audit',
-                    description: 'Track every 15 minutes and discover where your time really goes',
-                    searchQuery: 'Dan Martell time audit how to',
-                    duration: '~12 min',
-                  },
-                  {
-                    title: 'Design Your Perfect Week',
-                    description: 'Create an ideal weekly schedule and protect your Production time',
-                    searchQuery: 'Dan Martell perfect week schedule',
-                    duration: '~15 min',
-                  },
-                  {
-                    title: 'My 4AM Morning Routine',
-                    description: 'Dan&apos;s personal morning routine as a multi-millionaire entrepreneur',
-                    searchQuery: 'Dan Martell morning routine 4am',
-                    duration: '~18 min',
-                  },
-                  {
-                    title: 'The 5 Time Assassins',
-                    description: 'Common behaviors that kill your productivity: Staller, Speed Demon, Supervisor, Saver, Self-Medicator',
-                    searchQuery: 'Dan Martell 5 time assassins productivity',
-                    duration: '~14 min',
-                  },
-                  {
-                    title: '15 Productivity Principles',
-                    description: 'From ADHD mess to hyperproductive $100M CEO',
-                    searchQuery: 'Dan Martell productivity principles tips',
-                    duration: '~20 min',
-                  },
-                ].map((video, i) => (
-                  <a
-                    key={i}
-                    href={`https://www.youtube.com/results?search_query=${encodeURIComponent(video.searchQuery)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors group"
-                  >
-                    <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
-                      <Play className="h-5 w-5 text-blue-500" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium group-hover:text-primary transition-colors">{video.title}</p>
-                      <p className="text-sm text-muted-foreground">{video.description}</p>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>{video.duration}</span>
-                      <ExternalLink className="h-3.5 w-3.5" />
-                    </div>
-                  </a>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Energy & Mindset Videos */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Battery className="h-5 w-5 text-green-500" />
-                Energy & Mindset
-              </CardTitle>
-              <CardDescription>
-                Manage your energy for sustainable high performance
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {[
-                  {
-                    title: 'Energy Management for Entrepreneurs',
-                    description: 'Why managing energy matters more than managing time',
-                    searchQuery: 'Dan Martell energy management entrepreneurs',
-                    duration: '~12 min',
-                  },
-                  {
-                    title: 'How to Avoid Burnout',
-                    description: 'Recognize the warning signs and protect your wellbeing',
-                    searchQuery: 'Dan Martell avoid burnout entrepreneur',
-                    duration: '~15 min',
-                  },
-                  {
-                    title: 'The 1-3-1 Rule for Problem Solving',
-                    description: 'Train your team to bring solutions, not just problems',
-                    searchQuery: 'Dan Martell 1 3 1 rule problem solving',
-                    duration: '~8 min',
-                  },
-                  {
-                    title: 'Building Systems That Scale',
-                    description: 'Create processes that run without you',
-                    searchQuery: 'Dan Martell systems scale business',
-                    duration: '~18 min',
-                  },
-                ].map((video, i) => (
-                  <a
-                    key={i}
-                    href={`https://www.youtube.com/results?search_query=${encodeURIComponent(video.searchQuery)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors group"
-                  >
-                    <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center group-hover:bg-green-500/20 transition-colors">
-                      <Play className="h-5 w-5 text-green-500" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium group-hover:text-primary transition-colors">{video.title}</p>
-                      <p className="text-sm text-muted-foreground">{video.description}</p>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>{video.duration}</span>
-                      <ExternalLink className="h-3.5 w-3.5" />
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs bg-muted px-2 py-1 rounded">{video.topic}</span>
+                      <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
                     </div>
                   </a>
                 ))}
