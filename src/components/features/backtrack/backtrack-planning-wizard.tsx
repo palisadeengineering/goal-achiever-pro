@@ -349,7 +349,12 @@ export function BacktrackPlanningWizard({
     if (stepIndex < STEPS.length - 1) {
       const nextStep = STEPS[stepIndex + 1].id;
       if (nextStep === 'generate' && !generatedPlan) {
-        handleGeneratePlan();
+        // Move to generate step first to show loading UI, then start generation
+        setCurrentStep('generate');
+        // Use setTimeout to ensure state update happens before API call
+        setTimeout(() => {
+          handleGeneratePlan();
+        }, 100);
       } else {
         setCurrentStep(nextStep);
       }
