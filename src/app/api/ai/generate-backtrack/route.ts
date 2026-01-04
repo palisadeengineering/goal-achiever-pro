@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
 
 const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
@@ -103,9 +103,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!process.env.ANTHROPIC_API_KEY) {
       return NextResponse.json(
-        { error: 'OpenAI API key not configured' },
+        { error: 'Anthropic API key not configured' },
         { status: 500 }
       );
     }
@@ -117,72 +117,100 @@ export async function POST(request: NextRequest) {
     const totalHours = totalWeeks * availableHoursPerWeek;
     const totalMonths = Math.ceil(totalWeeks / 4);
     const totalQuarters = Math.ceil(totalMonths / 3);
+    const numQuarters = Math.min(totalQuarters, 4);
+    const hoursPerQuarter = Math.round(totalHours / numQuarters);
+    const hoursPerPowerGoal = Math.round(totalHours / Math.min(numQuarters * 3, 12));
+    const dailyMinutes = Math.round(availableHoursPerWeek / 5 * 60);
+    const targetDailyActions = Math.min(totalWeeks * 3, 50);
 
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+    const anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
     });
 
-    const prompt = `You are an expert goal-setting and accountability coach using Dan Martell's "Buy Back Your Time" methodology and backtracking planning technique.
+    const prompt = `You are an expert goal-setting and accountability coach using Dan Martell's "Buy Back Your Time" methodology. Create a comprehensive BACKTRACK PLAN.
 
-BACKTRACKING PLANNING: Start with the end vision, then work backwards to determine what must be accomplished quarterly, monthly, weekly, and daily to achieve it.
+## BACKTRACKING PLANNING METHOD
+Start with the END VISION, then work BACKWARDS to determine what must be accomplished at each level:
+Vision → Quarterly Targets → Power Goals → Monthly Targets → Weekly Targets → Daily Actions
 
-VISION: "${vision}"
+## INPUT DATA
 
-SMART GOALS:
-- Specific: ${smartGoals?.specific || 'Not provided'}
-- Measurable: ${smartGoals?.measurable || 'Not provided'}
-- Attainable: ${smartGoals?.attainable || 'Not provided'}
-- Realistic: ${smartGoals?.realistic || 'Not provided'}
+**VISION:** "${vision}"
 
-TIME CONSTRAINTS:
+**SMART GOALS:**
+- Specific: ${smartGoals?.specific || 'Not specified'}
+- Measurable: ${smartGoals?.measurable || 'Not specified'}
+- Attainable: ${smartGoals?.attainable || 'Not specified'}
+- Realistic: ${smartGoals?.realistic || 'Not specified'}
+
+**TIME CONSTRAINTS:**
 - Start Date: ${startDate}
 - Target Date: ${targetDate}
-- Total Weeks: ${totalWeeks}
-- Available Hours Per Week: ${availableHoursPerWeek}
-- Total Available Hours: ${totalHours}
-- Total Months: ${totalMonths}
-- Total Quarters: ${Math.min(totalQuarters, 4)}
+- Total Weeks Available: ${totalWeeks}
+- Hours Per Week: ${availableHoursPerWeek}
+- Total Hours: ${totalHours}
+- Number of Quarters: ${numQuarters}
 
-REQUIREMENTS:
-1. Generate a COMPLETE backtrack plan that cascades from Vision → Quarterly → Monthly → Weekly → Daily
-2. Make every task SPECIFIC and ACTIONABLE (e.g., "Write 500 words for blog post" not "Work on content")
-3. Ensure hours allocated match the available time budget
-4. Each daily action should take 15-60 minutes and be completable in one sitting
-5. Focus on the 20% of activities that drive 80% of results (Pareto principle)
-6. Include measurable metrics at each level
+## GENERATION REQUIREMENTS
 
-Generate ${Math.min(totalQuarters, 4)} quarterly targets, 3 power goals per quarter (max 12 total), monthly targets, weekly targets, and specific daily actions.
+1. **Quarterly Targets** (${numQuarters} targets):
+   - Each with clear theme, metric, and target value
+   - Estimated hours: ~${hoursPerQuarter} hours each
 
-Respond ONLY with valid JSON in this exact format:
+2. **Power Goals** (${Math.min(numQuarters * 3, 12)} goals, ~3 per quarter):
+   - Specific project-based goals
+   - Category: business, career, health, wealth, relationships, or personal
+   - Estimated hours: ~${hoursPerPowerGoal} hours each
+
+3. **Monthly Targets** (at least ${Math.min(totalMonths, 6)} targets):
+   - Link each to a power goal via powerGoalIndex (0-based)
+   - Clear monthly outcomes
+
+4. **Weekly Targets** (at least ${Math.min(totalWeeks, 8)} targets):
+   - Link each to a monthly target via monthlyTargetIndex (0-based)
+   - Specific weekly focus
+
+5. **Daily Actions** (at least ${targetDailyActions} actions for first ${Math.min(totalWeeks, 8)} weeks):
+   - CRITICAL: Make each action SPECIFIC and ACTIONABLE
+   - Good: "Write 500 words for blog post on productivity"
+   - Bad: "Work on content"
+   - dayOfWeek: 1=Monday through 5=Friday
+   - estimatedMinutes: 15-60 minutes each
+   - Link to weekly target via weeklyTargetIndex (0-based)
+   - Total daily minutes should be ~${dailyMinutes} per day
+
+## OUTPUT FORMAT
+
+Return ONLY valid JSON with this exact structure:
 {
-  "summary": "Brief overview of the plan strategy (2-3 sentences)",
-  "criticalPath": ["List of 3-5 must-achieve milestones in order"],
+  "summary": "2-3 sentence overview of the plan strategy",
+  "criticalPath": ["Milestone 1", "Milestone 2", "Milestone 3", "Milestone 4"],
   "quarterlyTargets": [
     {
       "quarter": 1,
-      "title": "Q1 Focus Theme",
-      "description": "What success looks like this quarter",
-      "keyMetric": "Primary metric to track",
+      "title": "Q1: [Theme]",
+      "description": "What success looks like",
+      "keyMetric": "Primary metric name",
       "targetValue": 100,
-      "estimatedHours": ${Math.round(totalHours / Math.min(totalQuarters, 4))}
+      "estimatedHours": ${hoursPerQuarter}
     }
   ],
   "powerGoals": [
     {
-      "title": "Specific Power Goal Title",
-      "description": "Clear description of what will be accomplished",
+      "title": "Specific Goal Title",
+      "description": "Clear deliverable",
       "quarter": 1,
-      "category": "business|career|health|wealth|relationships|personal",
-      "estimatedHours": ${Math.round(totalHours / 12)},
-      "milestones": ["Key milestone 1", "Key milestone 2"]
+      "category": "business",
+      "estimatedHours": ${hoursPerPowerGoal},
+      "milestones": ["Milestone 1", "Milestone 2"]
     }
   ],
   "monthlyTargets": [
     {
       "month": 1,
-      "title": "Month 1 Target Title",
-      "description": "Specific outcome for this month",
-      "keyMetric": "What to measure",
+      "title": "Month 1: [Focus]",
+      "description": "Monthly outcome",
+      "keyMetric": "Metric name",
       "targetValue": 25,
       "powerGoalIndex": 0
     }
@@ -191,8 +219,8 @@ Respond ONLY with valid JSON in this exact format:
     {
       "weekNumber": 1,
       "month": 1,
-      "title": "Week 1 Focus",
-      "description": "What must be done this week",
+      "title": "Week 1: [Focus]",
+      "description": "Weekly deliverable",
       "keyMetric": "Weekly metric",
       "targetValue": 5,
       "monthlyTargetIndex": 0
@@ -203,40 +231,34 @@ Respond ONLY with valid JSON in this exact format:
       "dayOfWeek": 1,
       "weekNumber": 1,
       "month": 1,
-      "title": "Specific action (e.g., 'Write 500 words for blog post')",
-      "description": "Brief context or instructions",
+      "title": "Specific action with measurable outcome",
+      "description": "Context or instructions",
       "estimatedMinutes": 45,
-      "keyMetric": "words_written",
-      "targetValue": 500,
+      "keyMetric": "action_metric",
+      "targetValue": 1,
       "weeklyTargetIndex": 0
     }
   ]
 }
 
-IMPORTANT:
-- dayOfWeek: 1=Monday through 5=Friday (no weekends unless explicitly needed)
-- Distribute daily actions evenly across the week
-- Each day should have 2-4 actions totaling roughly ${Math.round(availableHoursPerWeek / 5 * 60)} minutes
-- Generate at least ${Math.min(totalWeeks * 3, 50)} daily actions for the first ${Math.min(totalWeeks, 8)} weeks
-- Make actions SPECIFIC: "Call 5 potential clients" not "Do outreach"`;
+IMPORTANT RULES:
+- Index references (powerGoalIndex, monthlyTargetIndex, weeklyTargetIndex) must be valid 0-based indices
+- Distribute daily actions evenly across weekdays (Mon-Fri)
+- Make EVERY daily action specific and measurable
+- Total hours must fit within the ${totalHours} hour budget`;
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+    const message = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 8000,
       messages: [
-        {
-          role: 'system',
-          content: 'You are an expert goal-setting coach specializing in Dan Martell\'s "Buy Back Your Time" methodology. Create specific, actionable backtrack plans. Always respond with valid JSON only.',
-        },
         {
           role: 'user',
           content: prompt,
         },
       ],
-      temperature: 0.7,
-      max_tokens: 8000,
     });
 
-    const responseText = completion.choices[0]?.message?.content;
+    const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
 
     if (!responseText) {
       return NextResponse.json(
