@@ -1,21 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-const DEMO_USER_EMAIL = 'joel@pe-se.com';
+// Demo user ID for development
+const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
 
 async function getUserId(supabase: NonNullable<Awaited<ReturnType<typeof createClient>>>) {
   const { data: { user } } = await supabase.auth.getUser();
-
-  if (user) return user.id;
-
-  // Demo mode fallback
-  const { data: demoUser } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('email', DEMO_USER_EMAIL)
-    .single();
-
-  return demoUser?.id || null;
+  return user?.id || DEMO_USER_ID;
 }
 
 // GET /api/visions/[id]/board - Get all images for a vision board
