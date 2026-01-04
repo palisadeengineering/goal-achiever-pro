@@ -12,6 +12,7 @@ interface DayActivity {
   nonNegotiables: number;
   kpiLogs: number;
   reviews: number;
+  goalsCompleted: number;
   clarity?: number;
   belief?: number;
   consistency?: number;
@@ -313,6 +314,7 @@ export function VisionActivityHeatmap({ visionId, className }: VisionActivityHea
                       // Tooltip content
                       const tooltipParts = [];
                       if (activity) {
+                        if (activity.goalsCompleted > 0) tooltipParts.push(`${activity.goalsCompleted} goal${activity.goalsCompleted > 1 ? 's' : ''} completed`);
                         if (activity.affirmations > 0) tooltipParts.push(`${activity.affirmations} affirmation${activity.affirmations > 1 ? 's' : ''}`);
                         if (activity.nonNegotiables > 0) tooltipParts.push(`${activity.nonNegotiables} non-negotiable${activity.nonNegotiables > 1 ? 's' : ''}`);
                         if (activity.kpiLogs > 0) tooltipParts.push(`${activity.kpiLogs} KPI log${activity.kpiLogs > 1 ? 's' : ''}`);

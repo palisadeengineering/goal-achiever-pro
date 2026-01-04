@@ -18,6 +18,7 @@ interface DayActivity {
   nonNegotiables: number;
   kpiLogs: number;
   reviews: number;
+  goalsCompleted: number;
   clarity?: number;
   belief?: number;
   consistency?: number;
@@ -51,7 +52,8 @@ export async function GET(request: NextRequest) {
       affirmationsResult,
       nonNegotiablesResult,
       kpiLogsResult,
-      reviewsResult
+      reviewsResult,
+      dailyActionsResult
     ] = await Promise.all([
       // Daily affirmation completions
       supabase
@@ -114,7 +116,15 @@ export async function GET(request: NextRequest) {
         .select('review_date, clarity_today, belief_today, consistency_today')
         .eq('user_id', userId)
         .gte('review_date', startDateStr)
-        .lte('review_date', endDateStr)
+        .lte('review_date', endDateStr),
+
+      // Completed daily actions (goals) - use completed_at date for when it was actually done
+      supabase
+        .from('daily_actions')
+        .select('completed_at, action_date, status')
+        .eq('user_id', userId)
+        .eq('status', 'completed')
+        .not('completed_at', 'is', null)
     ]);
 
     // Build activity map by date
@@ -129,7 +139,8 @@ export async function GET(request: NextRequest) {
         affirmations: 0,
         nonNegotiables: 0,
         kpiLogs: 0,
-        reviews: 0
+        reviews: 0,
+        goalsCompleted: 0
       });
     }
 
@@ -198,36 +209,55 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Process completed daily actions (goals)
+    if (dailyActionsResult.data) {
+      for (const item of dailyActionsResult.data) {
+        // Use the completed_at date (when actually completed) or fall back to action_date
+        const completedDate = item.completed_at
+          ? new Date(item.completed_at).toISOString().split('T')[0]
+          : item.action_date;
+        const entry = activityMap.get(completedDate);
+        if (entry) {
+          entry.goalsCompleted++;
+        }
+      }
+    }
+
     // Calculate composite score for each day (0-100)
     // Weighted scoring:
-    // - Affirmations: 25 points each (max 25)
-    // - Non-negotiables: 15 points each (max 45)
-    // - KPI logs: 20 points each (max 20)
+    // - Goals completed: 20 points each (max 60)
+    // - Affirmations: 15 points each (max 15)
+    // - Non-negotiables: 10 points each (max 30)
+    // - KPI logs: 15 points each (max 15)
     // - Reviews: 10 points each (max 30, for 3 reviews)
-    // - 300% score average: 0-100 bonus if available, scaled to max 30
+    // - 300% score average: 0-100 bonus if available, scaled to max 20
+    // Total max: 170 points, normalized to 100
     for (const [, entry] of activityMap) {
       let score = 0;
 
-      // Affirmations (max 25)
-      score += Math.min(entry.affirmations * 25, 25);
+      // Goals completed (max 60) - highest weight for actual goal progress
+      score += Math.min(entry.goalsCompleted * 20, 60);
 
-      // Non-negotiables (max 45)
-      score += Math.min(entry.nonNegotiables * 15, 45);
+      // Affirmations (max 15)
+      score += Math.min(entry.affirmations * 15, 15);
 
-      // KPI logs (max 20)
-      score += Math.min(entry.kpiLogs * 20, 20);
+      // Non-negotiables (max 30)
+      score += Math.min(entry.nonNegotiables * 10, 30);
+
+      // KPI logs (max 15)
+      score += Math.min(entry.kpiLogs * 15, 15);
 
       // Reviews (max 30)
       score += Math.min(entry.reviews * 10, 30);
 
-      // 300% score bonus (if available, scale to 0-30)
+      // 300% score bonus (if available, scale to 0-20)
       if (entry.clarity !== undefined && entry.belief !== undefined && entry.consistency !== undefined) {
         const avg300 = (entry.clarity + entry.belief + entry.consistency) / 3;
-        score += Math.round((avg300 / 100) * 30);
+        score += Math.round((avg300 / 100) * 20);
       }
 
       // Normalize to 0-100
-      entry.score = Math.min(Math.round(score * 100 / 150), 100);
+      entry.score = Math.min(Math.round(score * 100 / 170), 100);
     }
 
     // Convert to array and sort by date
