@@ -55,7 +55,16 @@
       "Bash(src/app/api/user/ )",
       "Bash(scripts/)",
       "Bash(npm ls:*)",
-      "mcp__supabase__get_logs"
+      "mcp__supabase__get_logs",
+      "Bash(printf:*)",
+      "WebFetch(domain:checkout.stripe.com)",
+      "Bash(if [ -f \".env.local\" ])",
+      "Bash(then grep -E \"^STRIPE|^NEXT_PUBLIC_STRIPE\" .env.local)",
+      "Bash(else echo \".env.local not found\")",
+      "Bash(fi)",
+      "Bash(then grep -E \"^GOOGLE_\" .env.local)",
+      "mcp__supabase__get_publishable_keys",
+      "mcp__supabase__search_docs"
     ]
   }
 }

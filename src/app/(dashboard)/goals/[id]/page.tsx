@@ -355,8 +355,8 @@ export default function MilestoneDetailPage() {
   const handleUpdateProgress = async () => {
     setIsSaving(true);
     try {
-      const res = await fetch(`/api/power-goals/${milestoneId}`, {
-        method: 'PATCH',
+      const res = await fetch(`/api/milestones/${milestoneId}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ progressPercentage: progress }),
       });
@@ -396,7 +396,7 @@ export default function MilestoneDetailPage() {
 
   const handleUnlinkKpi = async (milestoneKpiId: string) => {
     try {
-      await fetch(`/api/milestone-kpis/${milestoneKpiId}`, { method: 'DELETE' });
+      await fetch(`/api/milestone-kpis?id=${milestoneKpiId}`, { method: 'DELETE' });
       setLinkedKpis((prev) => prev.filter((lk) => lk.id !== milestoneKpiId));
       toast.success('KPI unlinked');
     } catch (error) {

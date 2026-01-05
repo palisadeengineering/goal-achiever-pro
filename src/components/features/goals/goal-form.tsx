@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
+import { AssigneeSelect, type Assignee } from '@/components/features/assignee/assignee-select';
 
 export interface GoalFormData {
   title: string;
@@ -24,6 +25,7 @@ export interface GoalFormData {
   visionId: string | null;
   milestonePeriod: 'monthly' | 'quarterly';
   assigneeName: string | null;
+  assignee: Assignee | null;
 }
 
 interface GoalFormProps {
@@ -72,6 +74,7 @@ export function GoalForm({
     visionId: initialData?.visionId || null,
     milestonePeriod: initialData?.milestonePeriod || 'quarterly',
     assigneeName: initialData?.assigneeName || null,
+    assignee: initialData?.assignee || (initialData?.assigneeName ? { name: initialData.assigneeName } : null),
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -181,12 +184,14 @@ export function GoalForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="assigneeName">Assignee</Label>
-              <Input
-                id="assigneeName"
-                placeholder="Who is responsible? (Self if blank)"
-                value={formData.assigneeName || ''}
-                onChange={(e) => updateField('assigneeName', e.target.value || null)}
+              <Label htmlFor="assignee">Assignee</Label>
+              <AssigneeSelect
+                value={formData.assignee}
+                onChange={(assignee) => {
+                  updateField('assignee', assignee);
+                  updateField('assigneeName', assignee?.name || null);
+                }}
+                placeholder="Who is responsible?"
               />
             </div>
           </div>
