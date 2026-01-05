@@ -369,7 +369,7 @@ export default function HomePage() {
 
         {/* How It Works Section */}
         <section id="how-it-works" className="py-20 px-4 border-t bg-muted/30">
-          <div className="container max-w-5xl">
+          <div className="container max-w-5xl mx-auto">
             <ScrollReveal>
               <div className="text-center mb-14">
                 <Badge className="mb-4 bg-primary/10 text-primary border-0">Simple Process</Badge>
@@ -491,7 +491,7 @@ export default function HomePage() {
 
         {/* Social Proof Section */}
         <section className="py-20 px-4 bg-muted/30 border-y">
-          <div className="container max-w-5xl">
+          <div className="container max-w-5xl mx-auto">
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
               <ScrollReveal animation="fade-up" delay={0}>
@@ -602,7 +602,7 @@ export default function HomePage() {
 
         {/* DRIP Matrix Section */}
         <section className="py-20 px-4 bg-muted/30">
-          <div className="container max-w-4xl">
+          <div className="container max-w-4xl mx-auto">
             <ScrollReveal>
               <div className="text-center mb-12">
                 <Badge className="mb-4" variant="outline">The DRIP Matrix</Badge>
@@ -615,68 +615,113 @@ export default function HomePage() {
               </div>
             </ScrollReveal>
 
-            {/* Axis labels */}
-            <div className="relative">
-              <div className="absolute -left-8 top-1/2 -translate-y-1/2 -rotate-90 text-xs font-semibold text-muted-foreground tracking-wider hidden md:block">
-                MONEY POTENTIAL
-              </div>
-              <div className="absolute bottom-[-2rem] left-1/2 -translate-x-1/2 text-xs font-semibold text-muted-foreground tracking-wider hidden md:block">
-                ENERGY LEVEL
-              </div>
+            {/* Matrix with axis labels */}
+            <div className="flex justify-center">
+              <div className="flex items-center gap-4">
+                {/* Y-axis label */}
+                <div className="hidden md:flex flex-col items-center justify-center">
+                  <span className="text-xs font-semibold text-muted-foreground tracking-wider whitespace-nowrap -rotate-90">
+                    MONEY POTENTIAL
+                  </span>
+                </div>
 
-              <div className="grid grid-cols-2 gap-3 md:gap-4">
-                <ScrollReveal animation="fade-up" delay={0}>
-                  <Card className="drip-quadrant drip-replacement border-2 border-amber-300 dark:border-amber-700 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 group">
-                    <CardContent className="pt-6">
-                      <div className="h-10 w-10 rounded-lg bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-                        <Zap className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-                      </div>
-                      <h3 className="font-display font-bold text-amber-800 dark:text-amber-200 text-lg">Replacement</h3>
-                      <p className="text-sm text-amber-700 dark:text-amber-300 font-medium">High $, Low Energy</p>
-                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">Automate or systematize these tasks</p>
-                    </CardContent>
-                  </Card>
-                </ScrollReveal>
+                <div className="flex flex-col items-center">
+                  {/* High/Low labels for Y-axis */}
+                  <div className="hidden md:flex w-full max-w-2xl justify-between px-2 mb-1">
+                    <span className="text-[10px] text-muted-foreground">HIGH $</span>
+                    <span className="text-[10px] text-muted-foreground">HIGH $</span>
+                  </div>
 
-                <ScrollReveal animation="fade-up" delay={100}>
-                  <Card className="drip-quadrant drip-production border-2 border-emerald-300 dark:border-emerald-700 bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/30 dark:to-green-950/30 ring-2 ring-emerald-400/30 ring-offset-2 ring-offset-background group">
-                    <CardContent className="pt-6">
-                      <div className="h-10 w-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-                        <Trophy className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                      </div>
-                      <h3 className="font-display font-bold text-emerald-800 dark:text-emerald-200 text-lg">Production</h3>
-                      <p className="text-sm text-emerald-700 dark:text-emerald-300 font-medium">High $, High Energy</p>
-                      <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2">Your sweet spot! Focus here.</p>
-                      <Badge className="mt-3 bg-emerald-600 text-white text-xs">Priority Zone</Badge>
-                    </CardContent>
-                  </Card>
-                </ScrollReveal>
+                  {/* The 2x2 Grid with cross lines */}
+                  <div className="relative max-w-2xl">
+                    {/* Vertical line */}
+                    <div className="absolute top-0 bottom-0 left-1/2 w-0.5 bg-border -translate-x-1/2 z-10" />
+                    {/* Horizontal line */}
+                    <div className="absolute left-0 right-0 top-1/2 h-0.5 bg-border -translate-y-1/2 z-10" />
 
-                <ScrollReveal animation="fade-up" delay={200}>
-                  <Card className="drip-quadrant drip-delegation border-2 border-violet-300 dark:border-violet-700 bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 group">
-                    <CardContent className="pt-6">
-                      <div className="h-10 w-10 rounded-lg bg-violet-100 dark:bg-violet-900/50 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-                        <Users className="h-5 w-5 text-violet-600 dark:text-violet-400" />
-                      </div>
-                      <h3 className="font-display font-bold text-violet-800 dark:text-violet-200 text-lg">Delegation</h3>
-                      <p className="text-sm text-violet-700 dark:text-violet-300 font-medium">Low $, Low Energy</p>
-                      <p className="text-xs text-violet-600 dark:text-violet-400 mt-2">Delegate or eliminate these</p>
-                    </CardContent>
-                  </Card>
-                </ScrollReveal>
+                    <div className="grid grid-cols-2">
+                      {/* Top Left - Replacement */}
+                      <ScrollReveal animation="fade-up" delay={0}>
+                        <div className="p-1">
+                          <Card className="h-40 border-2 border-amber-300 dark:border-amber-700 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 group hover:shadow-lg transition-all">
+                            <CardContent className="p-4 h-full flex flex-col">
+                              <div className="h-8 w-8 rounded-lg bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
+                                <Zap className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                              </div>
+                              <h3 className="font-display font-bold text-amber-800 dark:text-amber-200 text-base">Replacement</h3>
+                              <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">High $, Low Energy</p>
+                              <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-auto">Automate or systematize</p>
+                            </CardContent>
+                          </Card>
+                        </div>
+                      </ScrollReveal>
 
-                <ScrollReveal animation="fade-up" delay={300}>
-                  <Card className="drip-quadrant drip-investment border-2 border-blue-300 dark:border-blue-700 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 group">
-                    <CardContent className="pt-6">
-                      <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-                        <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <h3 className="font-display font-bold text-blue-800 dark:text-blue-200 text-lg">Investment</h3>
-                      <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">Low $, High Energy</p>
-                      <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">Keep for long-term growth</p>
-                    </CardContent>
-                  </Card>
-                </ScrollReveal>
+                      {/* Top Right - Production */}
+                      <ScrollReveal animation="fade-up" delay={100}>
+                        <div className="p-1">
+                          <Card className="h-40 border-2 border-emerald-400 dark:border-emerald-600 bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/30 dark:to-green-950/30 shadow-md group hover:shadow-lg transition-all">
+                            <CardContent className="p-4 h-full flex flex-col">
+                              <div className="flex items-start justify-between">
+                                <div className="h-8 w-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
+                                  <Trophy className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                                </div>
+                                <Badge className="bg-emerald-600 text-white text-[10px] px-1.5 py-0">Focus</Badge>
+                              </div>
+                              <h3 className="font-display font-bold text-emerald-800 dark:text-emerald-200 text-base">Production</h3>
+                              <p className="text-xs text-emerald-700 dark:text-emerald-300 font-medium">High $, High Energy</p>
+                              <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-auto">Your sweet spot!</p>
+                            </CardContent>
+                          </Card>
+                        </div>
+                      </ScrollReveal>
+
+                      {/* Bottom Left - Delegation */}
+                      <ScrollReveal animation="fade-up" delay={200}>
+                        <div className="p-1">
+                          <Card className="h-40 border-2 border-violet-300 dark:border-violet-700 bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 group hover:shadow-lg transition-all">
+                            <CardContent className="p-4 h-full flex flex-col">
+                              <div className="h-8 w-8 rounded-lg bg-violet-100 dark:bg-violet-900/50 flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
+                                <Users className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+                              </div>
+                              <h3 className="font-display font-bold text-violet-800 dark:text-violet-200 text-base">Delegation</h3>
+                              <p className="text-xs text-violet-700 dark:text-violet-300 font-medium">Low $, Low Energy</p>
+                              <p className="text-[10px] text-violet-600 dark:text-violet-400 mt-auto">Delegate or eliminate</p>
+                            </CardContent>
+                          </Card>
+                        </div>
+                      </ScrollReveal>
+
+                      {/* Bottom Right - Investment */}
+                      <ScrollReveal animation="fade-up" delay={300}>
+                        <div className="p-1">
+                          <Card className="h-40 border-2 border-blue-300 dark:border-blue-700 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 group hover:shadow-lg transition-all">
+                            <CardContent className="p-4 h-full flex flex-col">
+                              <div className="h-8 w-8 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
+                                <TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                              </div>
+                              <h3 className="font-display font-bold text-blue-800 dark:text-blue-200 text-base">Investment</h3>
+                              <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">Low $, High Energy</p>
+                              <p className="text-[10px] text-blue-600 dark:text-blue-400 mt-auto">Keep for long-term growth</p>
+                            </CardContent>
+                          </Card>
+                        </div>
+                      </ScrollReveal>
+                    </div>
+                  </div>
+
+                  {/* Low/Low labels for Y-axis */}
+                  <div className="hidden md:flex w-full max-w-2xl justify-between px-2 mt-1">
+                    <span className="text-[10px] text-muted-foreground">LOW $</span>
+                    <span className="text-[10px] text-muted-foreground">LOW $</span>
+                  </div>
+
+                  {/* X-axis label */}
+                  <div className="flex items-center justify-center gap-8 mt-4">
+                    <span className="text-[10px] text-muted-foreground">LOW ENERGY</span>
+                    <span className="text-xs font-semibold text-muted-foreground tracking-wider">ENERGY LEVEL</span>
+                    <span className="text-[10px] text-muted-foreground">HIGH ENERGY</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
