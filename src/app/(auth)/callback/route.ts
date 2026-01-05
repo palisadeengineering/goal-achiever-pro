@@ -28,9 +28,10 @@ export async function GET(request: Request) {
           .eq('id', user.id)
           .single();
 
-        // If no profile or onboarding not completed, redirect to onboarding
+        // If no profile or onboarding not completed, redirect to dashboard
+        // (onboarding can be handled within the dashboard)
         if (!profile || !profile.onboarding_completed) {
-          return NextResponse.redirect(`${origin}/welcome`);
+          return NextResponse.redirect(`${origin}/dashboard`);
         }
       }
 
