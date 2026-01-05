@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { addMonths, addYears, format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { VisionWizardData } from '../vision-wizard';
+import { SmartQuestions } from '../smart-questions';
 
 const COLOR_OPTIONS = [
   { value: '#6366f1', label: 'Indigo' },
@@ -49,6 +50,7 @@ export function VisionStep({ data, updateData }: VisionStepProps) {
     timeframe: string;
     keyMilestones: string[];
   } | null>(null);
+  const [smartAnswers, setSmartAnswers] = useState<Record<string, string>>({});
 
   const handleDatePreset = (getValue: () => Date) => {
     const date = getValue();
@@ -228,6 +230,21 @@ export function VisionStep({ data, updateData }: VisionStepProps) {
           Paint a vivid picture of what achieving this vision means
         </p>
       </div>
+
+      {/* Smart Clarifying Questions - appears when metrics are detected */}
+      <SmartQuestions
+        vision={data.title}
+        description={data.description}
+        onAnswersChange={(answers) => {
+          setSmartAnswers(answers);
+          // Store answers in vision data for later use in KPI generation
+          updateData({
+            // @ts-expect-error - smartAnswers is an extension to the data model
+            smartAnswers: answers
+          });
+        }}
+        className="my-4"
+      />
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
