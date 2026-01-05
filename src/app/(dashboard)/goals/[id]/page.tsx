@@ -447,33 +447,61 @@ export default function MilestoneDetailPage() {
 
   const handleScheduleKpiToCalendar = async (kpi: VisionKpi) => {
     try {
-      await fetch('/api/calendar/google/events', {
+      // Parse the best time if available (e.g., "Morning", "Afternoon")
+      const now = new Date();
+      const startHour = kpi.bestTime?.toLowerCase().includes('morning') ? 9
+        : kpi.bestTime?.toLowerCase().includes('afternoon') ? 14
+        : kpi.bestTime?.toLowerCase().includes('evening') ? 18
+        : 9;
+
+      now.setHours(startHour, 0, 0, 0);
+
+      // Parse duration from timeRequired (e.g., "2 hours", "30 minutes")
+      let durationMs = 60 * 60 * 1000; // Default 1 hour
+      if (kpi.timeRequired) {
+        const hoursMatch = kpi.timeRequired.match(/(\d+)\s*hour/i);
+        const minsMatch = kpi.timeRequired.match(/(\d+)\s*min/i);
+        if (hoursMatch) durationMs = parseInt(hoursMatch[1]) * 60 * 60 * 1000;
+        else if (minsMatch) durationMs = parseInt(minsMatch[1]) * 60 * 1000;
+      }
+
+      const res = await fetch('/api/calendar/google/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           summary: kpi.title,
-          description: kpi.description || kpi.whyItMatters,
-          start: { dateTime: new Date().toISOString() },
-          end: { dateTime: new Date(Date.now() + 60 * 60 * 1000).toISOString() },
+          description: kpi.description || kpi.whyItMatters || `KPI: ${kpi.title}`,
+          start: now.toISOString(),
+          end: new Date(now.getTime() + durationMs).toISOString(),
         }),
       });
-      toast.success(`"${kpi.title}" has been added to calendar`);
+
+      if (res.ok) {
+        toast.success(`"${kpi.title}" has been added to calendar`);
+      } else {
+        const error = await res.json();
+        if (error.error === 'Not connected to Google Calendar') {
+          toast.error('Please connect your Google Calendar first in Settings');
+        } else {
+          toast.error('Failed to add to calendar');
+        }
+      }
     } catch (error) {
-      toast.success(`"${kpi.title}" has been added to calendar`);
+      toast.error('Failed to add to calendar');
     }
   };
 
   // Target handlers
   const handleAddMonthlyTarget = async (data: { title: string; description?: string; targetMonth: number; targetYear: number; assigneeName?: string }) => {
     try {
-      const res = await fetch('/api/targets/monthly', {
+      const res = await fetch(`/api/milestones/${milestoneId}/targets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, powerGoalId: milestoneId }),
+        body: JSON.stringify({ level: 'monthly', ...data }),
       });
       if (!res.ok) throw new Error('Failed to add target');
-      const newTarget = await res.json();
-      setMonthlyTargets((prev) => [...prev, { ...newTarget, weeklyTargets: [] }]);
+      const { target } = await res.json();
+      setMonthlyTargets((prev) => [...prev, { ...target.monthly, weeklyTargets: [] }]);
       toast.success('Monthly target added');
     } catch (error) {
       setMonthlyTargets((prev) => [...prev, { id: `mt-${Date.now()}`, ...data, status: 'pending' as const, weeklyTargets: [] }]);
@@ -483,16 +511,16 @@ export default function MilestoneDetailPage() {
 
   const handleAddWeeklyTarget = async (monthlyTargetId: string, data: { title: string; description?: string; weekNumber: number; weekStartDate: string; weekEndDate: string; assigneeName?: string }) => {
     try {
-      const res = await fetch('/api/targets/weekly', {
+      const res = await fetch(`/api/milestones/${milestoneId}/targets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, monthlyTargetId }),
+        body: JSON.stringify({ level: 'weekly', monthlyTargetId, ...data }),
       });
       if (!res.ok) throw new Error('Failed to add target');
-      const newTarget = await res.json();
+      const { target } = await res.json();
       setMonthlyTargets((prev) => prev.map((mt) =>
         mt.id === monthlyTargetId
-          ? { ...mt, weeklyTargets: [...mt.weeklyTargets, { ...newTarget, dailyActions: [] }] }
+          ? { ...mt, weeklyTargets: [...mt.weeklyTargets, { ...target.weekly, dailyActions: [] }] }
           : mt
       ));
       toast.success('Weekly target added');
@@ -508,18 +536,18 @@ export default function MilestoneDetailPage() {
 
   const handleAddDailyAction = async (weeklyTargetId: string, data: { title: string; description?: string; actionDate: string; estimatedMinutes?: number; assigneeName?: string }) => {
     try {
-      const res = await fetch('/api/targets/daily', {
+      const res = await fetch(`/api/milestones/${milestoneId}/targets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, weeklyTargetId }),
+        body: JSON.stringify({ level: 'daily', weeklyTargetId, ...data }),
       });
       if (!res.ok) throw new Error('Failed to add action');
-      const newAction = await res.json();
+      const { target } = await res.json();
       setMonthlyTargets((prev) => prev.map((mt) => ({
         ...mt,
         weeklyTargets: mt.weeklyTargets.map((wt) =>
           wt.id === weeklyTargetId
-            ? { ...wt, dailyActions: [...wt.dailyActions, newAction] }
+            ? { ...wt, dailyActions: [...wt.dailyActions, target.daily] }
             : wt
         ),
       })));
@@ -540,7 +568,7 @@ export default function MilestoneDetailPage() {
   const handleUpdateTargetStatus = async (type: 'monthly' | 'weekly' | 'daily', id: string, status: string) => {
     try {
       await fetch(`/api/targets/${type}/${id}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       });
@@ -579,26 +607,40 @@ export default function MilestoneDetailPage() {
       } else if (type === 'weekly') {
         const weekly = item as WeeklyTarget;
         startDate = new Date(weekly.weekStartDate);
+        startDate.setHours(9, 0, 0, 0);
         endDate = new Date(weekly.weekEndDate);
+        endDate.setHours(17, 0, 0, 0);
       } else {
         const monthly = item as MonthlyTarget;
         startDate = new Date(monthly.targetYear, monthly.targetMonth - 1, 1);
+        startDate.setHours(9, 0, 0, 0);
         endDate = new Date(monthly.targetYear, monthly.targetMonth, 0);
+        endDate.setHours(17, 0, 0, 0);
       }
 
-      await fetch('/api/calendar/google/events', {
+      const res = await fetch('/api/calendar/google/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           summary: item.title,
-          description: item.description,
-          start: { dateTime: startDate.toISOString() },
-          end: { dateTime: endDate.toISOString() },
+          description: item.description || `${type.charAt(0).toUpperCase() + type.slice(1)} target from your milestone`,
+          start: startDate.toISOString(),
+          end: endDate.toISOString(),
         }),
       });
-      toast.success(`"${item.title}" has been added to calendar`);
+
+      if (res.ok) {
+        toast.success(`"${item.title}" has been added to calendar`);
+      } else {
+        const error = await res.json();
+        if (error.error === 'Not connected to Google Calendar') {
+          toast.error('Please connect your Google Calendar first in Settings');
+        } else {
+          toast.error('Failed to add to calendar');
+        }
+      }
     } catch (error) {
-      toast.success(`"${item.title}" has been added to calendar`);
+      toast.error('Failed to add to calendar');
     }
   };
 
