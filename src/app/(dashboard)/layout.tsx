@@ -24,6 +24,7 @@ export default async function DashboardLayout({
     fullName: 'Demo User',
     avatarUrl: undefined as string | undefined,
   };
+  let isAdmin = false;
 
   if (supabase) {
     const { data: { user } } = await supabase.auth.getUser();
@@ -39,7 +40,21 @@ export default async function DashboardLayout({
         fullName: user.user_metadata?.full_name || user.email?.split('@')[0],
         avatarUrl: user.user_metadata?.avatar_url,
       };
+
+      // Check if user is admin
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id)
+        .single();
+
+      isAdmin = profile?.is_admin || false;
     }
+  }
+
+  // Demo mode users are admins for testing
+  if (isDemoMode && !isAdmin) {
+    isAdmin = true;
   }
 
   // Check if user has testing phase full access
@@ -48,7 +63,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar userTier={subscriptionTier} />
+      <Sidebar userTier={subscriptionTier} isAdmin={isAdmin} />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header
           user={userProfile}

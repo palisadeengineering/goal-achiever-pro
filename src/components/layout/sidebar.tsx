@@ -23,6 +23,8 @@ import {
   Menu,
   HelpCircle,
   CalendarCheck,
+  Shield,
+  Cpu,
 } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
 
@@ -64,16 +66,23 @@ const bottomNavItems: NavItem[] = [
   { title: 'Settings', href: ROUTES.settings, icon: Settings },
 ];
 
+const adminNavItems: NavItem[] = [
+  { title: 'AI Usage', href: ROUTES.adminAIUsage, icon: Cpu },
+];
+
 interface SidebarProps {
   userTier?: 'free' | 'pro' | 'premium';
+  isAdmin?: boolean;
 }
 
 // Shared navigation content component
 function SidebarContent({
   userTier = 'free',
+  isAdmin = false,
   onNavigate
 }: {
   userTier: 'free' | 'pro' | 'premium';
+  isAdmin?: boolean;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
@@ -162,6 +171,21 @@ function SidebarContent({
             ))}
           </div>
         </div>
+
+        {/* Admin Section - Only show for admins */}
+        {isAdmin && (
+          <div className="pt-4">
+            <h3 className="mb-2 px-3 text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1">
+              <Shield className="h-3 w-3" />
+              Admin
+            </h3>
+            <div className="space-y-1">
+              {adminNavItems.map((item) => (
+                <NavLink key={item.href} item={item} />
+              ))}
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Bottom Section */}
@@ -175,7 +199,7 @@ function SidebarContent({
 }
 
 // Desktop Sidebar
-export function Sidebar({ userTier = 'free' }: SidebarProps) {
+export function Sidebar({ userTier = 'free', isAdmin = false }: SidebarProps) {
   return (
     <aside className="hidden md:flex h-screen w-64 flex-col border-r bg-background">
       {/* Logo */}
@@ -186,13 +210,13 @@ export function Sidebar({ userTier = 'free' }: SidebarProps) {
         </Link>
       </div>
 
-      <SidebarContent userTier={userTier} />
+      <SidebarContent userTier={userTier} isAdmin={isAdmin} />
     </aside>
   );
 }
 
 // Mobile Sidebar with Sheet
-export function MobileSidebar({ userTier = 'free' }: SidebarProps) {
+export function MobileSidebar({ userTier = 'free', isAdmin = false }: SidebarProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -217,7 +241,7 @@ export function MobileSidebar({ userTier = 'free' }: SidebarProps) {
             </Link>
           </div>
 
-          <SidebarContent userTier={userTier} onNavigate={() => setOpen(false)} />
+          <SidebarContent userTier={userTier} isAdmin={isAdmin} onNavigate={() => setOpen(false)} />
         </div>
       </SheetContent>
     </Sheet>

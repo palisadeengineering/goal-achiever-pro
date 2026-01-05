@@ -82,6 +82,10 @@ export const ROUTES = {
   settingsIntegrations: '/settings/integrations',
   settingsNotifications: '/settings/notifications',
   settingsExport: '/settings/export',
+
+  // Admin
+  admin: '/admin',
+  adminAIUsage: '/admin/ai-usage',
 } as const;
 
 // Routes that require authentication
