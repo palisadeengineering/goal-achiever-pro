@@ -1,31 +1,43 @@
 import { NextResponse } from 'next/server';
-import { stripe } from '@/lib/stripe/client';
 
 export async function GET() {
-  if (!stripe) {
-    return NextResponse.json({ error: 'Stripe not configured', envCheck: {
-      hasSecretKey: !!process.env.STRIPE_SECRET_KEY,
-      keyPrefix: process.env.STRIPE_SECRET_KEY?.substring(0, 10),
-    }});
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+
+  if (!secretKey) {
+    return NextResponse.json({ error: 'Stripe not configured' });
   }
 
   try {
-    // Simple test - list products (should be fast)
-    const products = await stripe.products.list({ limit: 1 });
-    return NextResponse.json({
-      success: true,
-      productCount: products.data.length,
-      stripeReachable: true
+    // Test using raw fetch to bypass SDK
+    const response = await fetch('https://api.stripe.com/v1/products?limit=1', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${secretKey}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
     });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      return NextResponse.json({
+        success: true,
+        method: 'raw_fetch',
+        productCount: data.data?.length || 0,
+        stripeReachable: true
+      });
+    } else {
+      return NextResponse.json({
+        error: 'Stripe API error',
+        status: response.status,
+        details: data.error?.message || 'Unknown error'
+      });
+    }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({
-      error: 'Stripe API test failed',
+      error: 'Fetch failed',
       details: errorMessage,
-      envCheck: {
-        hasSecretKey: !!process.env.STRIPE_SECRET_KEY,
-        keyPrefix: process.env.STRIPE_SECRET_KEY?.substring(0, 10),
-      }
     });
   }
 }

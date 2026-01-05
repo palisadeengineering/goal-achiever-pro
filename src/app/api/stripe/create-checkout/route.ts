@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { stripe, getPriceId } from '@/lib/stripe/client';
+import { getPriceId } from '@/lib/stripe/client';
 
 export async function POST(request: NextRequest) {
-  if (!stripe) {
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+
+  if (!secretKey) {
     return NextResponse.json(
       { error: 'Stripe is not configured' },
       { status: 500 }
@@ -35,34 +37,43 @@ export async function POST(request: NextRequest) {
     }
 
     const priceId = getPriceId(tier as 'pro' | 'premium', interval as 'monthly' | 'yearly');
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
-    const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
-      payment_method_types: ['card'],
-      customer_email: email,
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings/subscription?success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing?canceled=true`,
-      metadata: {
-        userId,
-        tier,
-        interval,
+    // Use fetch directly to avoid SDK connection issues
+    const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${secretKey}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
-      subscription_data: {
-        trial_period_days: 14,
-        metadata: {
-          userId,
-          tier,
-        },
-      },
+      body: new URLSearchParams({
+        'mode': 'subscription',
+        'payment_method_types[0]': 'card',
+        'customer_email': email,
+        'line_items[0][price]': priceId,
+        'line_items[0][quantity]': '1',
+        'success_url': `${appUrl}/settings/subscription?success=true`,
+        'cancel_url': `${appUrl}/pricing?canceled=true`,
+        'metadata[userId]': userId,
+        'metadata[tier]': tier,
+        'metadata[interval]': interval,
+        'subscription_data[trial_period_days]': '14',
+        'subscription_data[metadata][userId]': userId,
+        'subscription_data[metadata][tier]': tier,
+      }).toString(),
     });
 
-    return NextResponse.json({ url: session.url });
+    const data = await response.json();
+
+    if (response.ok && data.url) {
+      return NextResponse.json({ url: data.url });
+    } else {
+      console.error('Stripe checkout error:', data);
+      return NextResponse.json(
+        { error: 'Failed to create checkout session', details: data.error?.message || 'Unknown error' },
+        { status: 500 }
+      );
+    }
   } catch (error) {
     console.error('Error creating checkout session:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';

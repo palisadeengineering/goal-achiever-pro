@@ -106,6 +106,7 @@ export default function MinsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [mins, setMins] = useState(mockMins);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [timeScopeFilter, setTimeScopeFilter] = useState<'all' | 'daily' | 'weekly'>('all');
 
   // Calculate stats
   const totalMins = mins.length;
@@ -184,8 +185,8 @@ export default function MinsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="MINS"
-        description="Most Important Next Steps - your daily action items"
+        title="Daily & Weekly MINS"
+        description="Most Important Next Steps - your daily & weekly action items"
         actions={
           <Button onClick={() => setIsFormOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
@@ -287,6 +288,31 @@ export default function MinsPage() {
       {/* Main Content */}
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
+          {/* Time Scope Filter */}
+          <div className="flex gap-2 mb-4">
+            <Button
+              variant={timeScopeFilter === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setTimeScopeFilter('all')}
+            >
+              All MINS
+            </Button>
+            <Button
+              variant={timeScopeFilter === 'daily' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setTimeScopeFilter('daily')}
+            >
+              Daily
+            </Button>
+            <Button
+              variant={timeScopeFilter === 'weekly' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setTimeScopeFilter('weekly')}
+            >
+              Weekly
+            </Button>
+          </div>
+
           <Tabs defaultValue="all">
             <TabsList className="mb-4">
               <TabsTrigger value="all">All ({mins.length})</TabsTrigger>
@@ -386,18 +412,18 @@ export default function MinsPage() {
                 </p>
               </div>
               <div className="p-3 bg-muted/50 rounded-lg">
-                <p className="font-medium mb-1">Link to Goals</p>
+                <p className="font-medium mb-1">Link to Milestones</p>
                 <p className="text-muted-foreground">
-                  Connect MINS to your Power Goals for better tracking.
+                  Connect MINS to your Milestones for better tracking.
                 </p>
               </div>
             </CardContent>
           </Card>
 
-          {/* Linked Goals Summary */}
+          {/* Linked Milestones Summary */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">Linked Power Goals</CardTitle>
+              <CardTitle className="text-base">Linked Milestones</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {mockPowerGoals.slice(0, 3).map((goal) => {

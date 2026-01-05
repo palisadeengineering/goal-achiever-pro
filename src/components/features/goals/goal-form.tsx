@@ -22,6 +22,8 @@ export interface GoalFormData {
   quarter: number | null;
   category: string;
   visionId: string | null;
+  milestonePeriod: 'monthly' | 'quarterly';
+  assigneeName: string | null;
 }
 
 interface GoalFormProps {
@@ -48,6 +50,11 @@ const quarters = [
   { value: 4, label: 'Q4 (Oct-Dec)' },
 ];
 
+const milestonePeriods = [
+  { value: 'monthly', label: 'Monthly' },
+  { value: 'quarterly', label: 'Quarterly' },
+];
+
 export function GoalForm({
   initialData,
   visions = [],
@@ -63,6 +70,8 @@ export function GoalForm({
     quarter: initialData?.quarter || null,
     category: initialData?.category || '',
     visionId: initialData?.visionId || null,
+    milestonePeriod: initialData?.milestonePeriod || 'quarterly',
+    assigneeName: initialData?.assigneeName || null,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -85,12 +94,12 @@ export function GoalForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{isEditing ? 'Edit Power Goal' : 'Create New Power Goal'}</CardTitle>
+        <CardTitle>{isEditing ? 'Edit Milestone' : 'Create New Milestone'}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="title">Goal Title *</Label>
+            <Label htmlFor="title">Milestone Title *</Label>
             <Input
               id="title"
               placeholder="e.g., Launch my online course"
@@ -104,7 +113,7 @@ export function GoalForm({
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
-              placeholder="What does achieving this goal look like? What are the key milestones?"
+              placeholder="What does achieving this milestone look like? What are the key deliverables?"
               value={formData.description}
               onChange={(e) => updateField('description', e.target.value)}
               rows={4}
@@ -112,6 +121,25 @@ export function GoalForm({
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="milestonePeriod">Milestone Period *</Label>
+              <Select
+                value={formData.milestonePeriod}
+                onValueChange={(value) => updateField('milestonePeriod', value as 'monthly' | 'quarterly')}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select period" />
+                </SelectTrigger>
+                <SelectContent>
+                  {milestonePeriods.map((period) => (
+                    <SelectItem key={period.value} value={period.value}>
+                      {period.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
               <Select
@@ -130,7 +158,9 @@ export function GoalForm({
                 </SelectContent>
               </Select>
             </div>
+          </div>
 
+          <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="quarter">Quarter</Label>
               <Select
@@ -148,6 +178,16 @@ export function GoalForm({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="assigneeName">Assignee</Label>
+              <Input
+                id="assigneeName"
+                placeholder="Who is responsible? (Self if blank)"
+                value={formData.assigneeName || ''}
+                onChange={(e) => updateField('assigneeName', e.target.value || null)}
+              />
             </div>
           </div>
 
@@ -186,12 +226,12 @@ export function GoalForm({
           </div>
 
           <div className="bg-muted/50 rounded-lg p-4">
-            <h4 className="font-medium mb-2">Tips for Setting Power Goals</h4>
+            <h4 className="font-medium mb-2">Tips for Setting Milestones</h4>
             <ul className="text-sm text-muted-foreground space-y-1">
-              <li>Focus on goals that align with your vision</li>
-              <li>Make goals specific and measurable</li>
-              <li>Choose the one goal with the biggest impact to focus on</li>
-              <li>Break it down into MINS (Most Important Next Steps)</li>
+              <li>Focus on milestones that align with your vision</li>
+              <li>Make milestones specific and measurable with trackable KPIs</li>
+              <li>Choose the one milestone with the biggest impact to focus on</li>
+              <li>Break it down into daily &amp; weekly MINS (Most Important Next Steps)</li>
             </ul>
           </div>
 
@@ -206,7 +246,7 @@ export function GoalForm({
                   {isEditing ? 'Saving...' : 'Creating...'}
                 </>
               ) : (
-                isEditing ? 'Save Changes' : 'Create Goal'
+                isEditing ? 'Save Changes' : 'Create Milestone'
               )}
             </Button>
           </div>

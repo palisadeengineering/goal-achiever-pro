@@ -34,10 +34,57 @@ export async function GET(request: NextRequest) {
 
 // Disconnect Google Calendar
 export async function DELETE(request: NextRequest) {
-  // In a real implementation, this would:
-  // 1. Get the user from the session
-  // 2. Revoke the Google OAuth token
-  // 3. Delete the stored tokens from the database
+  const { createClient } = await import('@/lib/supabase/server');
+  const supabase = await createClient();
+
+  if (!supabase) {
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
+  }
+
+  // Get the integration to revoke the token
+  const { data: integration } = await supabase
+    .from('user_integrations')
+    .select('access_token')
+    .eq('user_id', user.id)
+    .eq('provider', 'google_calendar')
+    .single();
+
+  // Revoke the token with Google (best effort)
+  if (integration?.access_token) {
+    try {
+      await fetch(`https://oauth2.googleapis.com/revoke?token=${integration.access_token}`, {
+        method: 'POST',
+      });
+    } catch (e) {
+      console.error('Failed to revoke Google token:', e);
+    }
+  }
+
+  // Delete the integration from database
+  const { error } = await supabase
+    .from('user_integrations')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('provider', 'google_calendar');
+
+  if (error) {
+    console.error('Failed to delete integration:', error);
+    return NextResponse.json(
+      { error: 'Failed to disconnect' },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json({ success: true, message: 'Google Calendar disconnected' });
 }

@@ -17,7 +17,7 @@ export function GoalsGrid({
   onEdit,
   onDelete,
   onSetFocus,
-  emptyMessage = 'No goals found. Create your first power goal to get started!',
+  emptyMessage = 'No milestones found. Create your first milestone to get started!',
 }: GoalsGridProps) {
   if (goals.length === 0) {
     return (

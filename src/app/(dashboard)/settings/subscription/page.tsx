@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/layout/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -9,43 +9,65 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Check,
   CreditCard,
-  Calendar,
   ExternalLink,
   Loader2,
   CheckCircle2,
-  AlertCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 import { PRICING_TIERS } from '@/lib/stripe/config';
 import { ROUTES } from '@/constants/routes';
+import { createClient } from '@/lib/supabase/client';
 
 type SubscriptionTier = 'free' | 'pro' | 'premium';
 
-interface MockSubscription {
+interface Subscription {
   tier: SubscriptionTier;
   status: string;
-  currentPeriodEnd: string | null;
-  cancelAtPeriodEnd: boolean;
   stripeCustomerId: string | null;
 }
-
-// Mock user subscription data
-const mockSubscription: MockSubscription = {
-  tier: 'free',
-  status: 'active',
-  currentPeriodEnd: null,
-  cancelAtPeriodEnd: false,
-  stripeCustomerId: null,
-};
 
 export default function SubscriptionPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isManaging, setIsManaging] = useState(false);
+  const [subscription, setSubscription] = useState<Subscription>({
+    tier: 'free',
+    status: 'active',
+    stripeCustomerId: null,
+  });
+  const [user, setUser] = useState<{ id: string; email: string } | null>(null);
+  const [isLoadingData, setIsLoadingData] = useState(true);
 
-  const currentTier = PRICING_TIERS.find(t => t.id === mockSubscription.tier);
-  const isPaid = mockSubscription.tier !== 'free';
+  useEffect(() => {
+    async function loadData() {
+      const supabase = createClient();
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+
+      if (authUser) {
+        setUser({ id: authUser.id, email: authUser.email || '' });
+
+        // Fetch subscription data
+        const response = await fetch('/api/user/subscription');
+        if (response.ok) {
+          const data = await response.json();
+          setSubscription({
+            tier: data.tier || 'free',
+            status: data.status || 'active',
+            stripeCustomerId: data.stripeCustomerId,
+          });
+        }
+      }
+      setIsLoadingData(false);
+    }
+
+    loadData();
+  }, []);
+
+  const currentTier = PRICING_TIERS.find(t => t.id === subscription.tier);
+  const isPaid = subscription.tier !== 'free';
 
   const handleUpgrade = async (tierId: string) => {
+    if (!user) return;
+
     setIsLoading(true);
     try {
       const response = await fetch('/api/stripe/create-checkout', {
@@ -54,8 +76,8 @@ export default function SubscriptionPage() {
         body: JSON.stringify({
           tier: tierId,
           interval: 'monthly',
-          userId: 'mock-user-id',
-          email: 'user@example.com',
+          userId: user.id,
+          email: user.email,
         }),
       });
 
@@ -71,7 +93,7 @@ export default function SubscriptionPage() {
   };
 
   const handleManageSubscription = async () => {
-    if (!mockSubscription.stripeCustomerId) return;
+    if (!subscription.stripeCustomerId) return;
 
     setIsManaging(true);
     try {
@@ -79,7 +101,7 @@ export default function SubscriptionPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          customerId: mockSubscription.stripeCustomerId,
+          customerId: subscription.stripeCustomerId,
         }),
       });
 
@@ -125,9 +147,9 @@ export default function SubscriptionPage() {
               </CardDescription>
             </div>
             <Badge
-              variant={mockSubscription.status === 'active' ? 'default' : 'secondary'}
+              variant={subscription.status === 'active' ? 'default' : 'secondary'}
             >
-              {mockSubscription.status}
+              {subscription.status}
             </Badge>
           </div>
         </CardHeader>
@@ -146,34 +168,8 @@ export default function SubscriptionPage() {
             </div>
           </div>
 
-          {mockSubscription.currentPeriodEnd && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Calendar className="h-4 w-4" />
-              {mockSubscription.cancelAtPeriodEnd ? (
-                <span>
-                  Your plan will be canceled on{' '}
-                  {new Date(mockSubscription.currentPeriodEnd).toLocaleDateString()}
-                </span>
-              ) : (
-                <span>
-                  Next billing date:{' '}
-                  {new Date(mockSubscription.currentPeriodEnd).toLocaleDateString()}
-                </span>
-              )}
-            </div>
-          )}
-
-          {mockSubscription.cancelAtPeriodEnd && (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Your subscription will be canceled at the end of the current billing period.
-                You can reactivate anytime before then.
-              </AlertDescription>
-            </Alert>
-          )}
         </CardContent>
-        {isPaid && mockSubscription.stripeCustomerId && (
+        {isPaid && subscription.stripeCustomerId && (
           <CardFooter>
             <Button
               variant="outline"
@@ -209,13 +205,13 @@ export default function SubscriptionPage() {
       </Card>
 
       {/* Upgrade Options */}
-      {mockSubscription.tier !== 'premium' && (
+      {subscription.tier !== 'premium' && (
         <div>
           <h2 className="text-lg font-semibold mb-4">Upgrade Your Plan</h2>
           <div className="grid md:grid-cols-2 gap-4">
             {PRICING_TIERS.filter(t => {
-              if (mockSubscription.tier === 'free') return t.id !== 'free';
-              if (mockSubscription.tier === 'pro') return t.id === 'premium';
+              if (subscription.tier === 'free') return t.id !== 'free';
+              if (subscription.tier === 'pro') return t.id === 'premium';
               return false;
             }).map((tier) => (
               <Card key={tier.id} className={tier.highlighted ? 'border-primary' : ''}>

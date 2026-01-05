@@ -135,6 +135,11 @@ export const powerGoals = pgTable('power_goals', {
   year: integer('year').notNull(),
   quarter: integer('quarter'),
   category: text('category'),
+  // Milestone period (monthly or quarterly)
+  milestonePeriod: text('milestone_period').default('quarterly'), // 'monthly' | 'quarterly'
+  // Assignee tracking
+  assigneeId: uuid('assignee_id').references(() => profiles.id, { onDelete: 'set null' }),
+  assigneeName: text('assignee_name'),
   // Time estimation
   estimatedHours: integer('estimated_hours'),
   progressPercentage: integer('progress_percentage').default(0),
@@ -162,6 +167,9 @@ export const monthlyTargets = pgTable('monthly_targets', {
   keyMetric: text('key_metric'),
   targetValue: decimal('target_value', { precision: 15, scale: 2 }),
   currentValue: decimal('current_value', { precision: 15, scale: 2 }).default('0'),
+  // Assignee tracking
+  assigneeId: uuid('assignee_id').references(() => profiles.id, { onDelete: 'set null' }),
+  assigneeName: text('assignee_name'),
   status: text('status').default('pending'), // pending, in_progress, completed
   sortOrder: integer('sort_order').default(0),
   createdAt: timestamp('created_at').defaultNow(),
@@ -185,6 +193,9 @@ export const weeklyTargets = pgTable('weekly_targets', {
   keyMetric: text('key_metric'),
   targetValue: decimal('target_value', { precision: 15, scale: 2 }),
   currentValue: decimal('current_value', { precision: 15, scale: 2 }).default('0'),
+  // Assignee tracking
+  assigneeId: uuid('assignee_id').references(() => profiles.id, { onDelete: 'set null' }),
+  assigneeName: text('assignee_name'),
   status: text('status').default('pending'),
   sortOrder: integer('sort_order').default(0),
   createdAt: timestamp('created_at').defaultNow(),
@@ -207,6 +218,9 @@ export const dailyActions = pgTable('daily_actions', {
   keyMetric: text('key_metric'),
   targetValue: decimal('target_value', { precision: 15, scale: 2 }),
   currentValue: decimal('current_value', { precision: 15, scale: 2 }).default('0'),
+  // Assignee tracking
+  assigneeId: uuid('assignee_id').references(() => profiles.id, { onDelete: 'set null' }),
+  assigneeName: text('assignee_name'),
   status: text('status').default('pending'),
   completedAt: timestamp('completed_at'),
   sortOrder: integer('sort_order').default(0),
@@ -229,6 +243,10 @@ export const mins = pgTable('mins', {
   scheduledTime: time('scheduled_time'),
   durationMinutes: integer('duration_minutes').default(30),
   priority: integer('priority').default(1),
+  // Time scope (daily vs weekly)
+  timeScope: text('time_scope').default('daily'), // 'daily' | 'weekly'
+  weekStartDate: date('week_start_date'), // for weekly MINS
+  weekEndDate: date('week_end_date'), // for weekly MINS
   // DRIP categorization
   dripQuadrant: text('drip_quadrant'),
   makesMoneyScore: integer('makes_money_score'),
@@ -732,6 +750,7 @@ export const powerGoalsRelations = relations(powerGoals, ({ one, many }) => ({
   mins: many(mins),
   leverageItems: many(leverageItems),
   monthlyTargets: many(monthlyTargets),
+  milestoneKpis: many(milestoneKpis),
 }));
 
 export const monthlyTargetsRelations = relations(monthlyTargets, ({ one, many }) => ({
@@ -870,6 +889,25 @@ export const kpiStreaks = pgTable('kpi_streaks', {
 });
 
 // =============================================
+// MILESTONE KPIs (Link Milestones to KPIs)
+// =============================================
+export const milestoneKpis = pgTable('milestone_kpis', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  milestoneId: uuid('milestone_id').notNull().references(() => powerGoals.id, { onDelete: 'cascade' }),
+  kpiId: uuid('kpi_id').references(() => visionKpis.id, { onDelete: 'cascade' }),
+  // Custom KPI fields (when not linking to existing vision KPI)
+  customKpiName: text('custom_kpi_name'),
+  customKpiTarget: text('custom_kpi_target'),
+  // Tracking
+  isAutoLinked: boolean('is_auto_linked').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+  userIdx: index('milestone_kpis_user_idx').on(table.userId),
+  milestoneIdx: index('milestone_kpis_milestone_idx').on(table.milestoneId),
+}));
+
+// =============================================
 // CALENDAR SYNC SETTINGS (User Preferences)
 // =============================================
 export const calendarSyncSettings = pgTable('calendar_sync_settings', {
@@ -963,6 +1001,12 @@ export const kpiLogsRelations = relations(kpiLogs, ({ one }) => ({
 
 export const kpiStreaksRelations = relations(kpiStreaks, ({ one }) => ({
   kpi: one(visionKpis, { fields: [kpiStreaks.kpiId], references: [visionKpis.id] }),
+}));
+
+export const milestoneKpisRelations = relations(milestoneKpis, ({ one }) => ({
+  user: one(profiles, { fields: [milestoneKpis.userId], references: [profiles.id] }),
+  milestone: one(powerGoals, { fields: [milestoneKpis.milestoneId], references: [powerGoals.id] }),
+  kpi: one(visionKpis, { fields: [milestoneKpis.kpiId], references: [visionKpis.id] }),
 }));
 
 // =============================================

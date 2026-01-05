@@ -32,6 +32,9 @@ export interface MinFormData {
   priority: number;
   dripQuadrant: DripQuadrant | '';
   powerGoalId: string | null;
+  timeScope: 'daily' | 'weekly';
+  weekStartDate: string | null;
+  weekEndDate: string | null;
 }
 
 interface MinFormProps {
@@ -79,6 +82,9 @@ export function MinForm({
     priority: initialData?.priority || 2,
     dripQuadrant: initialData?.dripQuadrant || '',
     powerGoalId: initialData?.powerGoalId || null,
+    timeScope: initialData?.timeScope || 'daily',
+    weekStartDate: initialData?.weekStartDate || null,
+    weekEndDate: initialData?.weekEndDate || null,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -131,27 +137,73 @@ export function MinForm({
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="scheduledDate">Date</Label>
-              <Input
-                id="scheduledDate"
-                type="date"
-                value={formData.scheduledDate}
-                onChange={(e) => updateField('scheduledDate', e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="scheduledTime">Time (optional)</Label>
-              <Input
-                id="scheduledTime"
-                type="time"
-                value={formData.scheduledTime}
-                onChange={(e) => updateField('scheduledTime', e.target.value)}
-              />
+          <div className="space-y-2">
+            <Label>Time Scope</Label>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant={formData.timeScope === 'daily' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => updateField('timeScope', 'daily')}
+              >
+                Daily
+              </Button>
+              <Button
+                type="button"
+                variant={formData.timeScope === 'weekly' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => updateField('timeScope', 'weekly')}
+              >
+                Weekly
+              </Button>
             </div>
           </div>
+
+          {formData.timeScope === 'daily' ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="scheduledDate">Date</Label>
+                <Input
+                  id="scheduledDate"
+                  type="date"
+                  value={formData.scheduledDate}
+                  onChange={(e) => updateField('scheduledDate', e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="scheduledTime">Time (optional)</Label>
+                <Input
+                  id="scheduledTime"
+                  type="time"
+                  value={formData.scheduledTime}
+                  onChange={(e) => updateField('scheduledTime', e.target.value)}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="weekStartDate">Week Start</Label>
+                <Input
+                  id="weekStartDate"
+                  type="date"
+                  value={formData.weekStartDate || ''}
+                  onChange={(e) => updateField('weekStartDate', e.target.value || null)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="weekEndDate">Week End</Label>
+                <Input
+                  id="weekEndDate"
+                  type="date"
+                  value={formData.weekEndDate || ''}
+                  onChange={(e) => updateField('weekEndDate', e.target.value || null)}
+                />
+              </div>
+            </div>
+          )}
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">

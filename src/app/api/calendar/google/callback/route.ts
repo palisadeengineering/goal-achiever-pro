@@ -1,6 +1,5 @@
-'use server';
-
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
@@ -29,6 +28,21 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // Get the authenticated user
+  const supabase = await createClient();
+  if (!supabase) {
+    return NextResponse.redirect(
+      new URL(`/settings?error=auth_required`, request.url)
+    );
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.redirect(
+      new URL(`/login?redirect=/settings`, request.url)
+    );
+  }
+
   try {
     // Exchange code for tokens
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
@@ -54,30 +68,49 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // In a real implementation, you would:
-    // 1. Get the user from the session
-    // 2. Store tokens securely in the database (encrypted)
-    // 3. Associate with the user's account
+    // Get user info from Google to store email
+    let googleEmail = null;
+    try {
+      const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+        headers: { Authorization: `Bearer ${tokens.access_token}` },
+      });
+      if (userInfoResponse.ok) {
+        const userInfo = await userInfoResponse.json();
+        googleEmail = userInfo.email;
+      }
+    } catch (e) {
+      console.error('Failed to get Google user info:', e);
+    }
 
-    // For demo purposes, we'll store in a cookie (NOT recommended for production)
-    // In production, use Supabase or another secure storage
-    const response = NextResponse.redirect(
+    // Store tokens in database
+    const tokenExpiry = new Date(Date.now() + (tokens.expires_in * 1000));
+
+    const { error: upsertError } = await supabase
+      .from('user_integrations')
+      .upsert({
+        user_id: user.id,
+        provider: 'google_calendar',
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+        token_expiry: tokenExpiry.toISOString(),
+        scopes: tokens.scope?.split(' ') || [],
+        provider_email: googleEmail,
+        is_active: true,
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'user_id,provider',
+      });
+
+    if (upsertError) {
+      console.error('Failed to store tokens:', upsertError);
+      return NextResponse.redirect(
+        new URL(`/settings?error=token_storage_failed`, request.url)
+      );
+    }
+
+    return NextResponse.redirect(
       new URL(`/settings?success=google_connected`, request.url)
     );
-
-    // Store tokens in HTTP-only cookie for demo (production: use database)
-    response.cookies.set('google_calendar_tokens', JSON.stringify({
-      access_token: tokens.access_token,
-      refresh_token: tokens.refresh_token,
-      expiry_date: Date.now() + (tokens.expires_in * 1000),
-    }), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-    });
-
-    return response;
   } catch (error) {
     console.error('Google OAuth callback error:', error);
     return NextResponse.redirect(

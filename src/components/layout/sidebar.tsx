@@ -43,8 +43,8 @@ const mainNavItems: NavItem[] = [
 
 const visionPlanningItems: NavItem[] = [
   { title: 'Vision', href: ROUTES.vision, icon: Eye },
-  { title: 'Power Goals', href: ROUTES.goals, icon: Trophy },
-  { title: 'MINS', href: ROUTES.mins, icon: ListTodo },
+  { title: 'Milestones', href: ROUTES.goals, icon: Trophy },
+  { title: 'Daily & Weekly MINS', href: ROUTES.mins, icon: ListTodo },
 ];
 
 const systemNavItems: NavItem[] = [

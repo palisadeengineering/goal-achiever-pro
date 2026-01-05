@@ -1,23 +1,38 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 
 // GET: Check if Google Calendar is connected
 export async function GET() {
-  const cookieStore = await cookies();
-  const tokensCookie = cookieStore.get('google_calendar_tokens');
+  const supabase = await createClient();
 
-  if (!tokensCookie) {
+  if (!supabase) {
+    return NextResponse.json({ connected: false });
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
     return NextResponse.json({ connected: false });
   }
 
   try {
-    const tokens = JSON.parse(tokensCookie.value);
+    const { data: integration, error } = await supabase
+      .from('user_integrations')
+      .select('access_token, refresh_token, token_expiry, provider_email, is_active')
+      .eq('user_id', user.id)
+      .eq('provider', 'google_calendar')
+      .single();
 
-    // Check if we have both required tokens
-    if (tokens.access_token && tokens.refresh_token) {
+    if (error || !integration) {
+      return NextResponse.json({ connected: false });
+    }
+
+    // Check if we have required tokens and integration is active
+    if (integration.access_token && integration.refresh_token && integration.is_active) {
       return NextResponse.json({
         connected: true,
-        expiresAt: tokens.expiry_date,
+        email: integration.provider_email,
+        expiresAt: integration.token_expiry,
       });
     }
 

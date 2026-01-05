@@ -156,14 +156,14 @@ export default function GoalsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Power Goals"
-        description="Your 12 annual projects - focus on the one with the biggest impact"
+        title="Milestones"
+        description="Your monthly and quarterly project milestones - focus on the one with the biggest impact"
         actions={
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
-                Add Goal
+                Add Milestone
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
@@ -186,8 +186,8 @@ export default function GoalsPage() {
                 <Target className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Goals</p>
-                <p className="text-2xl font-bold">{totalGoals}/12</p>
+                <p className="text-sm text-muted-foreground">Total Milestones</p>
+                <p className="text-2xl font-bold">{totalGoals}</p>
               </div>
             </div>
           </CardContent>
@@ -200,7 +200,7 @@ export default function GoalsPage() {
                 <TrendingUp className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Active Goals</p>
+                <p className="text-sm text-muted-foreground">Active Milestones</p>
                 <p className="text-2xl font-bold">{activeGoals}</p>
               </div>
             </div>
@@ -238,13 +238,13 @@ export default function GoalsPage() {
         </Card>
       </div>
 
-      {/* Focused Goal Highlight */}
+      {/* Focused Milestone Highlight */}
       {focusedGoal && (
         <Card className="border-2 border-primary/50 bg-primary/5">
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
               <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-              <CardTitle className="text-lg">Current Focus Goal</CardTitle>
+              <CardTitle className="text-lg">Current Focus Milestone</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
@@ -309,24 +309,24 @@ export default function GoalsPage() {
         </Tabs>
       </div>
 
-      {/* 12 Goals Framework Info */}
+      {/* Milestones Framework Info */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">About the 12 Power Goals Framework</CardTitle>
+          <CardTitle className="text-base">About Milestones</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm text-muted-foreground">
           <p>
-            The 12 Power Goals framework helps you break your annual vision into 12 manageable projects.
-            Each goal should be significant enough to move you closer to your vision, but achievable within the year.
+            Milestones help you break your vision into manageable monthly or quarterly projects.
+            Each milestone should be significant enough to move you closer to your vision, with trackable KPIs.
           </p>
           <div className="grid md:grid-cols-2 gap-4">
             <div className="p-3 bg-muted/50 rounded-lg">
               <p className="font-medium text-foreground mb-1">Key Principle</p>
-              <p>Focus on the <strong>one goal</strong> with the biggest impact at any given time.</p>
+              <p>Focus on the <strong>one milestone</strong> with the biggest impact at any given time.</p>
             </div>
             <div className="p-3 bg-muted/50 rounded-lg">
               <p className="font-medium text-foreground mb-1">MINS Connection</p>
-              <p>Break each goal into daily MINS (Most Important Next Steps) to make progress every day.</p>
+              <p>Break each milestone into daily &amp; weekly MINS (Most Important Next Steps) to make progress.</p>
             </div>
           </div>
         </CardContent>
