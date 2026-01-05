@@ -14,6 +14,7 @@ import {
   Users,
   CheckCircle2,
   ArrowRight,
+  ArrowUp,
   Sparkles,
   Zap,
   Brain,
@@ -21,6 +22,12 @@ import {
   Play,
   Mail,
   Star,
+  DollarSign,
+  Lightbulb,
+  RefreshCw,
+  Rocket,
+  UserCheck,
+  TrendingUp as GrowthIcon,
 } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
 
@@ -615,97 +622,175 @@ export default function HomePage() {
               </div>
             </ScrollReveal>
 
-            {/* Centered Matrix */}
-            <div className="max-w-3xl mx-auto">
-              {/* Y-axis label - positioned above */}
-              <div className="flex justify-center mb-3">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <ArrowRight className="h-4 w-4 rotate-[-90deg]" />
-                  <span className="font-semibold tracking-wide">MONEY POTENTIAL</span>
+            {/* Matrix with proper axes */}
+            <div className="max-w-4xl mx-auto">
+              <div className="flex">
+                {/* Y-Axis */}
+                <div className="flex flex-col items-center justify-center pr-4 md:pr-6">
+                  <div className="flex flex-col items-center gap-2 mb-4">
+                    <div className="h-10 w-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                      <DollarSign className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <ArrowUp className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div className="writing-mode-vertical text-sm font-semibold text-muted-foreground tracking-wider" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                    MAKES YOU MONEY
+                  </div>
                 </div>
-              </div>
 
-              {/* The 2x2 Grid */}
-              <div className="relative">
-                {/* Cross lines */}
-                <div className="absolute top-0 bottom-0 left-1/2 w-[2px] bg-gradient-to-b from-primary/40 via-primary to-primary/40 -translate-x-1/2 z-10" />
-                <div className="absolute left-0 right-0 top-1/2 h-[2px] bg-gradient-to-r from-primary/40 via-primary to-primary/40 -translate-y-1/2 z-10" />
+                {/* Main Grid */}
+                <div className="flex-1">
+                  <div className="grid grid-cols-2 border-2 border-border rounded-xl overflow-hidden">
+                    {/* Top Left - Replacement */}
+                    <ScrollReveal animation="fade-up" delay={0}>
+                      <div className="border-r border-b border-border bg-amber-50/50 dark:bg-amber-950/20">
+                        {/* Header Bar */}
+                        <div className="bg-amber-400 dark:bg-amber-500 px-4 py-2 flex items-center gap-2">
+                          <RefreshCw className="h-4 w-4 text-amber-900" />
+                          <span className="font-bold text-amber-900">Replacement</span>
+                        </div>
+                        {/* Content */}
+                        <div className="p-4 md:p-5 min-h-[180px]">
+                          <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-3">High $ • Low Energy</p>
+                          <ul className="space-y-1.5 text-sm text-muted-foreground">
+                            <li className="flex items-start gap-2">
+                              <span className="text-amber-500 mt-0.5">•</span>
+                              <span>Repetitive client tasks</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-amber-500 mt-0.5">•</span>
+                              <span>Administrative work</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-amber-500 mt-0.5">•</span>
+                              <span>Data entry & reports</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-amber-500 mt-0.5">•</span>
+                              <span>Email management</span>
+                            </li>
+                          </ul>
+                          <p className="text-xs text-amber-600 dark:text-amber-400 mt-3 font-medium">→ Automate or systematize</p>
+                        </div>
+                      </div>
+                    </ScrollReveal>
 
-                <div className="grid grid-cols-2 gap-1">
-                  {/* Top Left - Replacement */}
-                  <ScrollReveal animation="fade-up" delay={0}>
-                    <div className="p-2">
-                      <Card className="h-52 border-2 border-amber-400/50 dark:border-amber-500/50 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-orange-500/10 dark:from-amber-500/20 dark:via-amber-500/10 dark:to-orange-500/20 group hover:shadow-xl hover:border-amber-400 transition-all duration-300 hover:-translate-y-1">
-                        <CardContent className="p-6 h-full flex flex-col">
-                          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
-                            <Zap className="h-6 w-6 text-white" />
+                    {/* Top Right - Production */}
+                    <ScrollReveal animation="fade-up" delay={100}>
+                      <div className="border-b border-border bg-emerald-50/50 dark:bg-emerald-950/20 relative">
+                        {/* Highlight glow */}
+                        <div className="absolute inset-0 bg-emerald-400/5 dark:bg-emerald-400/10" />
+                        {/* Header Bar */}
+                        <div className="bg-emerald-500 dark:bg-emerald-600 px-4 py-2 flex items-center justify-between relative">
+                          <div className="flex items-center gap-2">
+                            <Rocket className="h-4 w-4 text-white" />
+                            <span className="font-bold text-white">Production</span>
                           </div>
-                          <h3 className="font-display font-bold text-xl mb-1">Replacement</h3>
-                          <p className="text-sm text-muted-foreground font-medium mb-2">High $, Low Energy</p>
-                          <p className="text-sm text-muted-foreground/80 mt-auto">Automate or systematize these tasks</p>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </ScrollReveal>
+                          <Badge className="bg-white/20 text-white text-[10px] border-0">PRIORITY</Badge>
+                        </div>
+                        {/* Content */}
+                        <div className="p-4 md:p-5 min-h-[180px] relative">
+                          <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 mb-3">High $ • High Energy</p>
+                          <ul className="space-y-1.5 text-sm text-muted-foreground">
+                            <li className="flex items-start gap-2">
+                              <span className="text-emerald-500 mt-0.5">•</span>
+                              <span>Strategic client meetings</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-emerald-500 mt-0.5">•</span>
+                              <span>Business development</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-emerald-500 mt-0.5">•</span>
+                              <span>High-impact decisions</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-emerald-500 mt-0.5">•</span>
+                              <span>Revenue-generating work</span>
+                            </li>
+                          </ul>
+                          <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-3 font-medium">→ Maximize time here!</p>
+                        </div>
+                      </div>
+                    </ScrollReveal>
 
-                  {/* Top Right - Production */}
-                  <ScrollReveal animation="fade-up" delay={100}>
-                    <div className="p-2">
-                      <Card className="h-52 border-2 border-emerald-400 dark:border-emerald-500 bg-gradient-to-br from-emerald-500/15 via-emerald-500/10 to-green-500/15 dark:from-emerald-500/25 dark:via-emerald-500/15 dark:to-green-500/25 shadow-lg shadow-emerald-500/10 group hover:shadow-xl hover:shadow-emerald-500/20 transition-all duration-300 hover:-translate-y-1 ring-1 ring-emerald-400/30">
-                        <CardContent className="p-6 h-full flex flex-col">
-                          <div className="flex items-start justify-between mb-4">
-                            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
-                              <Trophy className="h-6 w-6 text-white" />
-                            </div>
-                            <Badge className="bg-emerald-500 text-white text-xs px-2.5 py-1 font-semibold shadow-md">FOCUS HERE</Badge>
-                          </div>
-                          <h3 className="font-display font-bold text-xl mb-1">Production</h3>
-                          <p className="text-sm text-muted-foreground font-medium mb-2">High $, High Energy</p>
-                          <p className="text-sm text-muted-foreground/80 mt-auto">Your sweet spot! Maximize time here.</p>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </ScrollReveal>
+                    {/* Bottom Left - Delegation */}
+                    <ScrollReveal animation="fade-up" delay={200}>
+                      <div className="border-r border-border bg-blue-50/50 dark:bg-blue-950/20">
+                        {/* Header Bar */}
+                        <div className="bg-blue-400 dark:bg-blue-500 px-4 py-2 flex items-center gap-2">
+                          <UserCheck className="h-4 w-4 text-blue-900" />
+                          <span className="font-bold text-blue-900">Delegation</span>
+                        </div>
+                        {/* Content */}
+                        <div className="p-4 md:p-5 min-h-[180px]">
+                          <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 mb-3">Low $ • Low Energy</p>
+                          <ul className="space-y-1.5 text-sm text-muted-foreground">
+                            <li className="flex items-start gap-2">
+                              <span className="text-blue-500 mt-0.5">•</span>
+                              <span>Scheduling & calendar</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-blue-500 mt-0.5">•</span>
+                              <span>Basic customer support</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-blue-500 mt-0.5">•</span>
+                              <span>Routine maintenance</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-blue-500 mt-0.5">•</span>
+                              <span>Filing & organization</span>
+                            </li>
+                          </ul>
+                          <p className="text-xs text-blue-600 dark:text-blue-400 mt-3 font-medium">→ Delegate or eliminate</p>
+                        </div>
+                      </div>
+                    </ScrollReveal>
 
-                  {/* Bottom Left - Delegation */}
-                  <ScrollReveal animation="fade-up" delay={200}>
-                    <div className="p-2">
-                      <Card className="h-52 border-2 border-violet-400/50 dark:border-violet-500/50 bg-gradient-to-br from-violet-500/10 via-violet-500/5 to-purple-500/10 dark:from-violet-500/20 dark:via-violet-500/10 dark:to-purple-500/20 group hover:shadow-xl hover:border-violet-400 transition-all duration-300 hover:-translate-y-1">
-                        <CardContent className="p-6 h-full flex flex-col">
-                          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-violet-400 to-purple-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
-                            <Users className="h-6 w-6 text-white" />
-                          </div>
-                          <h3 className="font-display font-bold text-xl mb-1">Delegation</h3>
-                          <p className="text-sm text-muted-foreground font-medium mb-2">Low $, Low Energy</p>
-                          <p className="text-sm text-muted-foreground/80 mt-auto">Delegate or eliminate these tasks</p>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </ScrollReveal>
+                    {/* Bottom Right - Investment */}
+                    <ScrollReveal animation="fade-up" delay={300}>
+                      <div className="bg-orange-50/50 dark:bg-orange-950/20">
+                        {/* Header Bar */}
+                        <div className="bg-orange-400 dark:bg-orange-500 px-4 py-2 flex items-center gap-2">
+                          <TrendingUp className="h-4 w-4 text-orange-900" />
+                          <span className="font-bold text-orange-900">Investment</span>
+                        </div>
+                        {/* Content */}
+                        <div className="p-4 md:p-5 min-h-[180px]">
+                          <p className="text-xs font-semibold text-orange-700 dark:text-orange-400 mb-3">Low $ • High Energy</p>
+                          <ul className="space-y-1.5 text-sm text-muted-foreground">
+                            <li className="flex items-start gap-2">
+                              <span className="text-orange-500 mt-0.5">•</span>
+                              <span>Learning & development</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-orange-500 mt-0.5">•</span>
+                              <span>Health & fitness</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-orange-500 mt-0.5">•</span>
+                              <span>Relationship building</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-orange-500 mt-0.5">•</span>
+                              <span>Personal projects</span>
+                            </li>
+                          </ul>
+                          <p className="text-xs text-orange-600 dark:text-orange-400 mt-3 font-medium">→ Keep for growth</p>
+                        </div>
+                      </div>
+                    </ScrollReveal>
+                  </div>
 
-                  {/* Bottom Right - Investment */}
-                  <ScrollReveal animation="fade-up" delay={300}>
-                    <div className="p-2">
-                      <Card className="h-52 border-2 border-blue-400/50 dark:border-blue-500/50 bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-indigo-500/10 dark:from-blue-500/20 dark:via-blue-500/10 dark:to-indigo-500/20 group hover:shadow-xl hover:border-blue-400 transition-all duration-300 hover:-translate-y-1">
-                        <CardContent className="p-6 h-full flex flex-col">
-                          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
-                            <TrendingUp className="h-6 w-6 text-white" />
-                          </div>
-                          <h3 className="font-display font-bold text-xl mb-1">Investment</h3>
-                          <p className="text-sm text-muted-foreground font-medium mb-2">Low $, High Energy</p>
-                          <p className="text-sm text-muted-foreground/80 mt-auto">Keep for long-term growth</p>
-                        </CardContent>
-                      </Card>
+                  {/* X-Axis */}
+                  <div className="flex items-center justify-center gap-3 mt-4">
+                    <span className="text-sm font-semibold text-muted-foreground tracking-wider">LIGHTS YOU UP</span>
+                    <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                    <div className="h-10 w-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+                      <Lightbulb className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                     </div>
-                  </ScrollReveal>
-                </div>
-              </div>
-
-              {/* X-axis label */}
-              <div className="flex justify-center mt-6">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span className="font-semibold tracking-wide">ENERGY LEVEL</span>
-                  <ArrowRight className="h-4 w-4" />
+                  </div>
                 </div>
               </div>
             </div>
