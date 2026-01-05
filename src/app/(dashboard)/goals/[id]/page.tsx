@@ -151,40 +151,119 @@ export default function MilestoneDetailPage() {
       setIsLoading(true);
       try {
         // Fetch milestone details
-        const milestoneRes = await fetch(`/api/power-goals/${milestoneId}`);
+        const milestoneRes = await fetch(`/api/milestones/${milestoneId}`);
         if (!milestoneRes.ok) throw new Error('Failed to fetch milestone');
-        const milestoneData = await milestoneRes.json();
-        setMilestone(milestoneData);
-        setProgress(milestoneData.progressPercentage || 0);
+        const { milestone: milestoneData } = await milestoneRes.json();
+
+        // Transform snake_case to camelCase
+        const transformedMilestone: Milestone = {
+          id: milestoneData.id,
+          title: milestoneData.title,
+          description: milestoneData.description,
+          targetDate: milestoneData.target_date,
+          quarter: milestoneData.quarter,
+          category: milestoneData.category,
+          milestonePeriod: milestoneData.milestone_period || 'quarterly',
+          progressPercentage: milestoneData.progress_percentage || 0,
+          status: milestoneData.status || 'active',
+          visionId: milestoneData.vision_id,
+          visionTitle: milestoneData.vision?.title,
+          assigneeName: milestoneData.assignee_name,
+          createdAt: milestoneData.created_at,
+        };
+        setMilestone(transformedMilestone);
+        setProgress(transformedMilestone.progressPercentage || 0);
 
         // Fetch vision KPIs if milestone has a vision
-        if (milestoneData.visionId) {
-          const kpisRes = await fetch(`/api/vision-kpis?visionId=${milestoneData.visionId}`);
+        if (transformedMilestone.visionId) {
+          const kpisRes = await fetch(`/api/vision-kpis?visionId=${transformedMilestone.visionId}`);
           if (kpisRes.ok) {
-            const kpisData = await kpisRes.json();
-            setVisionKpis(kpisData);
+            const { kpis } = await kpisRes.json();
+            const transformedKpis = (kpis || []).map((kpi: Record<string, unknown>) => ({
+              id: kpi.id,
+              title: kpi.title,
+              description: kpi.description,
+              level: kpi.level,
+              targetValue: kpi.target_value,
+              unit: kpi.unit,
+              trackingMethod: kpi.tracking_method,
+              bestTime: kpi.best_time,
+              timeRequired: kpi.time_required,
+              whyItMatters: kpi.why_it_matters,
+            }));
+            setVisionKpis(transformedKpis);
           }
         }
 
         // Fetch milestone-linked KPIs
         const linkedRes = await fetch(`/api/milestone-kpis?milestoneId=${milestoneId}`);
         if (linkedRes.ok) {
-          const linkedData = await linkedRes.json();
-          setLinkedKpis(linkedData);
+          const { milestoneKpis } = await linkedRes.json();
+          const transformedLinked = (milestoneKpis || []).map((mk: Record<string, unknown>) => ({
+            id: mk.id,
+            milestoneId: mk.milestone_id,
+            kpiId: mk.kpi_id,
+            customKpiName: mk.custom_kpi_name,
+            customKpiTarget: mk.custom_kpi_target,
+            isAutoLinked: mk.is_auto_linked,
+            kpi: mk.kpi ? {
+              id: (mk.kpi as Record<string, unknown>).id,
+              title: (mk.kpi as Record<string, unknown>).title,
+              description: (mk.kpi as Record<string, unknown>).description,
+              level: (mk.kpi as Record<string, unknown>).level,
+              targetValue: (mk.kpi as Record<string, unknown>).target_value,
+              unit: (mk.kpi as Record<string, unknown>).unit,
+              trackingMethod: (mk.kpi as Record<string, unknown>).tracking_method,
+              bestTime: (mk.kpi as Record<string, unknown>).best_time,
+              timeRequired: (mk.kpi as Record<string, unknown>).time_required,
+              whyItMatters: (mk.kpi as Record<string, unknown>).why_it_matters,
+              isCompleted: (mk.kpi as Record<string, unknown>).isCompleted,
+              currentStreak: (mk.kpi as Record<string, unknown>).currentStreak,
+            } : undefined,
+          }));
+          setLinkedKpis(transformedLinked);
         }
 
         // Fetch monthly targets with nested data
-        const targetsRes = await fetch(`/api/targets?milestoneId=${milestoneId}`);
+        const targetsRes = await fetch(`/api/milestones/${milestoneId}/targets`);
         if (targetsRes.ok) {
-          const targetsData = await targetsRes.json();
-          setMonthlyTargets(targetsData);
+          const { targets } = await targetsRes.json();
+          const transformedTargets = (targets || []).map((mt: Record<string, unknown>) => ({
+            id: mt.id,
+            title: mt.title,
+            description: mt.description,
+            targetMonth: mt.target_month,
+            targetYear: mt.target_year,
+            status: mt.status || 'pending',
+            assigneeName: mt.assignee_name,
+            weeklyTargets: ((mt.weekly_targets || []) as Record<string, unknown>[]).map((wt) => ({
+              id: wt.id,
+              title: wt.title,
+              description: wt.description,
+              weekNumber: wt.week_number,
+              weekStartDate: wt.week_start_date,
+              weekEndDate: wt.week_end_date,
+              status: wt.status || 'pending',
+              assigneeName: wt.assignee_name,
+              dailyActions: ((wt.daily_actions || []) as Record<string, unknown>[]).map((da) => ({
+                id: da.id,
+                title: da.title,
+                description: da.description,
+                actionDate: da.action_date,
+                estimatedMinutes: da.estimated_minutes,
+                status: da.status || 'pending',
+                assigneeName: da.assignee_name,
+              })),
+            })),
+          }));
+          setMonthlyTargets(transformedTargets);
         }
 
         // Fetch MINS linked to this milestone
         const minsRes = await fetch(`/api/mins?powerGoalId=${milestoneId}`);
         if (minsRes.ok) {
           const minsData = await minsRes.json();
-          setMins(minsData);
+          setMins(minsData.mins || minsData || []);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
