@@ -276,7 +276,7 @@ export function MinForm({
 
             {powerGoals.length > 0 && (
               <div className="space-y-2">
-                <Label>Link to Power Goal</Label>
+                <Label>Link to Milestone</Label>
                 <Select
                   value={formData.powerGoalId || ''}
                   onValueChange={(value) =>
@@ -284,10 +284,10 @@ export function MinForm({
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select goal (optional)" />
+                    <SelectValue placeholder="Select milestone (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No linked goal</SelectItem>
+                    <SelectItem value="">No linked milestone</SelectItem>
                     {powerGoals.map((goal) => (
                       <SelectItem key={goal.id} value={goal.id}>
                         {goal.title}

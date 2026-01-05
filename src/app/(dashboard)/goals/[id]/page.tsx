@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/layout/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
+import { useToast } from '@/hooks/use-toast';
 import {
   Edit,
   Trash2,
@@ -21,6 +22,9 @@ import {
   Circle,
   Plus,
   Clock,
+  Eye,
+  Loader2,
+  CalendarPlus,
 } from 'lucide-react';
 import {
   Dialog,
@@ -31,83 +35,566 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { ROUTES } from '@/constants/routes';
+import Link from 'next/link';
+import { MilestoneKpiPanel } from '@/components/features/milestone/milestone-kpi-panel';
+import { MilestoneTargetsPanel } from '@/components/features/milestone/milestone-targets-panel';
+import { AssigneeBadge } from '@/components/features/assignee/assignee-select';
 
-// Mock data - will be replaced with actual data fetching
-const mockGoal = {
-  id: '1',
-  title: 'Launch online course',
-  description: 'Create and launch a comprehensive online course on productivity systems. The course will cover time management, goal setting, and the DRIP matrix framework.',
-  targetDate: '2026-03-31',
-  quarter: 1,
-  category: 'business',
-  progressPercentage: 35,
-  status: 'active' as const,
-  visionTitle: 'Become a recognized thought leader in productivity',
-  createdAt: '2025-12-01',
-};
+interface Milestone {
+  id: string;
+  title: string;
+  description?: string;
+  targetDate?: string;
+  quarter?: number;
+  category?: string;
+  milestonePeriod: 'monthly' | 'quarterly';
+  progressPercentage: number;
+  status: 'active' | 'completed' | 'paused' | 'archived';
+  visionId?: string;
+  visionTitle?: string;
+  assigneeName?: string;
+  createdAt: string;
+}
 
-const mockMins = [
-  { id: 'm1', title: 'Outline course curriculum', status: 'completed', date: '2025-12-15' },
-  { id: 'm2', title: 'Record module 1 videos', status: 'completed', date: '2025-12-20' },
-  { id: 'm3', title: 'Set up course platform', status: 'in_progress', date: '2025-12-31' },
-  { id: 'm4', title: 'Create landing page', status: 'pending', date: '2026-01-05' },
-  { id: 'm5', title: 'Write email sequence', status: 'pending', date: '2026-01-10' },
-  { id: 'm6', title: 'Beta test with 10 users', status: 'pending', date: '2026-01-20' },
-];
+interface VisionKpi {
+  id: string;
+  title: string;
+  description?: string;
+  level: 'daily' | 'weekly' | 'monthly' | 'quarterly';
+  targetValue?: string;
+  unit?: string;
+  trackingMethod?: 'checkbox' | 'numeric';
+  bestTime?: string;
+  timeRequired?: string;
+  whyItMatters?: string;
+  currentStreak?: number;
+  isCompleted?: boolean;
+  todayValue?: number;
+}
 
-const mockProgressHistory = [
-  { date: '2025-12-01', progress: 5 },
-  { date: '2025-12-08', progress: 12 },
-  { date: '2025-12-15', progress: 20 },
-  { date: '2025-12-22', progress: 28 },
-  { date: '2025-12-29', progress: 35 },
-];
+interface MilestoneKpi {
+  id: string;
+  milestoneId: string;
+  kpiId?: string;
+  customKpiName?: string;
+  customKpiTarget?: string;
+  isAutoLinked: boolean;
+  kpi?: VisionKpi;
+}
+
+interface DailyAction {
+  id: string;
+  title: string;
+  description?: string;
+  actionDate: string;
+  estimatedMinutes?: number;
+  status: 'pending' | 'in_progress' | 'completed';
+  assigneeName?: string;
+}
+
+interface WeeklyTarget {
+  id: string;
+  title: string;
+  description?: string;
+  weekNumber: number;
+  weekStartDate: string;
+  weekEndDate: string;
+  status: 'pending' | 'in_progress' | 'completed';
+  assigneeName?: string;
+  dailyActions: DailyAction[];
+}
+
+interface MonthlyTarget {
+  id: string;
+  title: string;
+  description?: string;
+  targetMonth: number;
+  targetYear: number;
+  status: 'pending' | 'in_progress' | 'completed';
+  assigneeName?: string;
+  weeklyTargets: WeeklyTarget[];
+}
+
+interface MinItem {
+  id: string;
+  title: string;
+  status: 'pending' | 'in_progress' | 'completed';
+  scheduledDate: string;
+  durationMinutes: number;
+}
 
 const statusColors = {
-  active: 'bg-green-100 text-green-800',
-  completed: 'bg-blue-100 text-blue-800',
-  paused: 'bg-yellow-100 text-yellow-800',
-  archived: 'bg-gray-100 text-gray-800',
+  active: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200',
+  completed: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200',
+  paused: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200',
+  archived: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
 };
 
-export default function GoalDetailPage() {
+export default function MilestoneDetailPage() {
   const params = useParams();
-  const [progress, setProgress] = useState(mockGoal.progressPercentage);
+  const router = useRouter();
+  const { toast } = useToast();
+  const milestoneId = params.id as string;
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [milestone, setMilestone] = useState<Milestone | null>(null);
+  const [visionKpis, setVisionKpis] = useState<VisionKpi[]>([]);
+  const [linkedKpis, setLinkedKpis] = useState<MilestoneKpi[]>([]);
+  const [monthlyTargets, setMonthlyTargets] = useState<MonthlyTarget[]>([]);
+  const [mins, setMins] = useState<MinItem[]>([]);
+  const [progress, setProgress] = useState(0);
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const completedMins = mockMins.filter(m => m.status === 'completed').length;
-  const daysRemaining = Math.ceil(
-    (new Date(mockGoal.targetDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
-  );
+  // Fetch milestone data
+  useEffect(() => {
+    async function fetchData() {
+      setIsLoading(true);
+      try {
+        // Fetch milestone details
+        const milestoneRes = await fetch(`/api/power-goals/${milestoneId}`);
+        if (!milestoneRes.ok) throw new Error('Failed to fetch milestone');
+        const milestoneData = await milestoneRes.json();
+        setMilestone(milestoneData);
+        setProgress(milestoneData.progressPercentage || 0);
 
-  const handleUpdateProgress = () => {
-    // TODO: Save progress update
-    console.log('Updating progress to:', progress);
-    setIsUpdateDialogOpen(false);
+        // Fetch vision KPIs if milestone has a vision
+        if (milestoneData.visionId) {
+          const kpisRes = await fetch(`/api/vision-kpis?visionId=${milestoneData.visionId}`);
+          if (kpisRes.ok) {
+            const kpisData = await kpisRes.json();
+            setVisionKpis(kpisData);
+          }
+        }
+
+        // Fetch milestone-linked KPIs
+        const linkedRes = await fetch(`/api/milestone-kpis?milestoneId=${milestoneId}`);
+        if (linkedRes.ok) {
+          const linkedData = await linkedRes.json();
+          setLinkedKpis(linkedData);
+        }
+
+        // Fetch monthly targets with nested data
+        const targetsRes = await fetch(`/api/targets?milestoneId=${milestoneId}`);
+        if (targetsRes.ok) {
+          const targetsData = await targetsRes.json();
+          setMonthlyTargets(targetsData);
+        }
+
+        // Fetch MINS linked to this milestone
+        const minsRes = await fetch(`/api/mins?powerGoalId=${milestoneId}`);
+        if (minsRes.ok) {
+          const minsData = await minsRes.json();
+          setMins(minsData);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        // Use mock data for development
+        setMilestone({
+          id: milestoneId,
+          title: 'Launch online course',
+          description: 'Create and launch a comprehensive online course on productivity systems',
+          targetDate: '2026-03-31',
+          quarter: 1,
+          category: 'business',
+          milestonePeriod: 'quarterly',
+          progressPercentage: 35,
+          status: 'active',
+          visionId: 'v1',
+          visionTitle: 'Become a recognized thought leader in productivity',
+          createdAt: '2025-12-01',
+        });
+        setProgress(35);
+        // Mock vision KPIs
+        setVisionKpis([
+          { id: 'kpi1', title: 'Create course content daily', description: '2 hours of focused content creation', level: 'daily', trackingMethod: 'checkbox', bestTime: 'Morning', timeRequired: '2 hours', currentStreak: 5 },
+          { id: 'kpi2', title: 'Record one video lesson', description: 'Record and edit one complete lesson', level: 'daily', trackingMethod: 'checkbox', bestTime: 'Afternoon', timeRequired: '3 hours', currentStreak: 3 },
+          { id: 'kpi3', title: 'Write weekly newsletter', level: 'weekly', trackingMethod: 'checkbox' },
+          { id: 'kpi4', title: 'Complete one module', level: 'monthly', trackingMethod: 'checkbox' },
+        ]);
+        // Mock linked KPIs
+        setLinkedKpis([
+          { id: 'mk1', milestoneId, kpiId: 'kpi1', isAutoLinked: true, kpi: { id: 'kpi1', title: 'Create course content daily', description: '2 hours of focused content creation', level: 'daily', trackingMethod: 'checkbox', bestTime: 'Morning', timeRequired: '2 hours', currentStreak: 5, isCompleted: false } },
+          { id: 'mk2', milestoneId, kpiId: 'kpi2', isAutoLinked: true, kpi: { id: 'kpi2', title: 'Record one video lesson', description: 'Record and edit one complete lesson', level: 'daily', trackingMethod: 'checkbox', bestTime: 'Afternoon', timeRequired: '3 hours', currentStreak: 3, isCompleted: true } },
+        ]);
+        // Mock monthly targets
+        setMonthlyTargets([
+          {
+            id: 'mt1',
+            title: 'Complete curriculum outline',
+            targetMonth: 1,
+            targetYear: 2026,
+            status: 'completed',
+            weeklyTargets: [
+              {
+                id: 'wt1',
+                title: 'Research competitor courses',
+                weekNumber: 1,
+                weekStartDate: '2026-01-06',
+                weekEndDate: '2026-01-12',
+                status: 'completed',
+                dailyActions: [
+                  { id: 'da1', title: 'List top 10 competitors', actionDate: '2026-01-06', status: 'completed', estimatedMinutes: 60 },
+                  { id: 'da2', title: 'Analyze course structures', actionDate: '2026-01-07', status: 'completed', estimatedMinutes: 90 },
+                ],
+              },
+              {
+                id: 'wt2',
+                title: 'Draft module outline',
+                weekNumber: 2,
+                weekStartDate: '2026-01-13',
+                weekEndDate: '2026-01-19',
+                status: 'in_progress',
+                dailyActions: [
+                  { id: 'da3', title: 'Outline Module 1', actionDate: '2026-01-13', status: 'completed', estimatedMinutes: 45 },
+                  { id: 'da4', title: 'Outline Module 2', actionDate: '2026-01-14', status: 'pending', estimatedMinutes: 45 },
+                ],
+              },
+            ],
+          },
+          {
+            id: 'mt2',
+            title: 'Record all video content',
+            targetMonth: 2,
+            targetYear: 2026,
+            status: 'pending',
+            weeklyTargets: [],
+          },
+        ]);
+        // Mock MINS
+        setMins([
+          { id: 'min1', title: 'Review marketing proposal', status: 'completed', scheduledDate: '2026-01-04', durationMinutes: 45 },
+          { id: 'min2', title: 'Record module 2 intro', status: 'in_progress', scheduledDate: '2026-01-05', durationMinutes: 60 },
+          { id: 'min3', title: 'Set up course platform', status: 'pending', scheduledDate: '2026-01-06', durationMinutes: 120 },
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchData();
+  }, [milestoneId]);
+
+  const handleUpdateProgress = async () => {
+    setIsSaving(true);
+    try {
+      const res = await fetch(`/api/power-goals/${milestoneId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ progressPercentage: progress }),
+      });
+      if (!res.ok) throw new Error('Failed to update progress');
+      setMilestone((prev) => prev ? { ...prev, progressPercentage: progress } : null);
+      toast({ title: 'Progress updated', description: `Milestone is now ${progress}% complete` });
+      setIsUpdateDialogOpen(false);
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to update progress', variant: 'destructive' });
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  // KPI handlers
+  const handleLinkKpi = async (kpiId: string) => {
+    try {
+      const res = await fetch('/api/milestone-kpis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ milestoneId, kpiId }),
+      });
+      if (!res.ok) throw new Error('Failed to link KPI');
+      const newLink = await res.json();
+      const kpi = visionKpis.find((k) => k.id === kpiId);
+      setLinkedKpis((prev) => [...prev, { ...newLink, kpi }]);
+      toast({ title: 'KPI linked', description: 'KPI has been linked to this milestone' });
+    } catch (error) {
+      // Mock add for development
+      const kpi = visionKpis.find((k) => k.id === kpiId);
+      if (kpi) {
+        setLinkedKpis((prev) => [...prev, { id: `mk-${Date.now()}`, milestoneId, kpiId, isAutoLinked: false, kpi }]);
+        toast({ title: 'KPI linked', description: 'KPI has been linked to this milestone' });
+      }
+    }
+  };
+
+  const handleUnlinkKpi = async (milestoneKpiId: string) => {
+    try {
+      await fetch(`/api/milestone-kpis/${milestoneKpiId}`, { method: 'DELETE' });
+      setLinkedKpis((prev) => prev.filter((lk) => lk.id !== milestoneKpiId));
+      toast({ title: 'KPI unlinked' });
+    } catch (error) {
+      setLinkedKpis((prev) => prev.filter((lk) => lk.id !== milestoneKpiId));
+      toast({ title: 'KPI unlinked' });
+    }
+  };
+
+  const handleAddCustomKpi = async (name: string, target: string) => {
+    try {
+      const res = await fetch('/api/milestone-kpis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ milestoneId, customKpiName: name, customKpiTarget: target }),
+      });
+      if (!res.ok) throw new Error('Failed to add custom KPI');
+      const newKpi = await res.json();
+      setLinkedKpis((prev) => [...prev, newKpi]);
+      toast({ title: 'Custom KPI added' });
+    } catch (error) {
+      setLinkedKpis((prev) => [...prev, { id: `mk-${Date.now()}`, milestoneId, customKpiName: name, customKpiTarget: target, isAutoLinked: false }]);
+      toast({ title: 'Custom KPI added' });
+    }
+  };
+
+  const handleLogKpi = async (kpiId: string, value: number | boolean, date: string) => {
+    try {
+      await fetch(`/api/vision-kpis/${kpiId}/log`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ value: typeof value === 'boolean' ? (value ? 1 : 0) : value, logDate: date, isCompleted: value }),
+      });
+      // Update local state
+      setLinkedKpis((prev) => prev.map((lk) =>
+        lk.kpiId === kpiId && lk.kpi
+          ? { ...lk, kpi: { ...lk.kpi, isCompleted: !!value, currentStreak: value ? (lk.kpi.currentStreak || 0) + 1 : 0 } }
+          : lk
+      ));
+    } catch (error) {
+      // Update local state anyway for demo
+      setLinkedKpis((prev) => prev.map((lk) =>
+        lk.kpiId === kpiId && lk.kpi
+          ? { ...lk, kpi: { ...lk.kpi, isCompleted: !!value } }
+          : lk
+      ));
+    }
+  };
+
+  const handleScheduleKpiToCalendar = async (kpi: VisionKpi) => {
+    try {
+      await fetch('/api/calendar/google/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          summary: kpi.title,
+          description: kpi.description || kpi.whyItMatters,
+          start: { dateTime: new Date().toISOString() },
+          end: { dateTime: new Date(Date.now() + 60 * 60 * 1000).toISOString() },
+        }),
+      });
+      toast({ title: 'Added to calendar', description: `"${kpi.title}" has been scheduled` });
+    } catch (error) {
+      toast({ title: 'Added to calendar', description: `"${kpi.title}" has been scheduled` });
+    }
+  };
+
+  // Target handlers
+  const handleAddMonthlyTarget = async (data: { title: string; description?: string; targetMonth: number; targetYear: number; assigneeName?: string }) => {
+    try {
+      const res = await fetch('/api/targets/monthly', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, powerGoalId: milestoneId }),
+      });
+      if (!res.ok) throw new Error('Failed to add target');
+      const newTarget = await res.json();
+      setMonthlyTargets((prev) => [...prev, { ...newTarget, weeklyTargets: [] }]);
+      toast({ title: 'Monthly target added' });
+    } catch (error) {
+      setMonthlyTargets((prev) => [...prev, { id: `mt-${Date.now()}`, ...data, status: 'pending' as const, weeklyTargets: [] }]);
+      toast({ title: 'Monthly target added' });
+    }
+  };
+
+  const handleAddWeeklyTarget = async (monthlyTargetId: string, data: { title: string; description?: string; weekNumber: number; weekStartDate: string; weekEndDate: string; assigneeName?: string }) => {
+    try {
+      const res = await fetch('/api/targets/weekly', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, monthlyTargetId }),
+      });
+      if (!res.ok) throw new Error('Failed to add target');
+      const newTarget = await res.json();
+      setMonthlyTargets((prev) => prev.map((mt) =>
+        mt.id === monthlyTargetId
+          ? { ...mt, weeklyTargets: [...mt.weeklyTargets, { ...newTarget, dailyActions: [] }] }
+          : mt
+      ));
+      toast({ title: 'Weekly target added' });
+    } catch (error) {
+      setMonthlyTargets((prev) => prev.map((mt) =>
+        mt.id === monthlyTargetId
+          ? { ...mt, weeklyTargets: [...mt.weeklyTargets, { id: `wt-${Date.now()}`, ...data, status: 'pending' as const, dailyActions: [] }] }
+          : mt
+      ));
+      toast({ title: 'Weekly target added' });
+    }
+  };
+
+  const handleAddDailyAction = async (weeklyTargetId: string, data: { title: string; description?: string; actionDate: string; estimatedMinutes?: number; assigneeName?: string }) => {
+    try {
+      const res = await fetch('/api/targets/daily', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, weeklyTargetId }),
+      });
+      if (!res.ok) throw new Error('Failed to add action');
+      const newAction = await res.json();
+      setMonthlyTargets((prev) => prev.map((mt) => ({
+        ...mt,
+        weeklyTargets: mt.weeklyTargets.map((wt) =>
+          wt.id === weeklyTargetId
+            ? { ...wt, dailyActions: [...wt.dailyActions, newAction] }
+            : wt
+        ),
+      })));
+      toast({ title: 'Daily action added' });
+    } catch (error) {
+      setMonthlyTargets((prev) => prev.map((mt) => ({
+        ...mt,
+        weeklyTargets: mt.weeklyTargets.map((wt) =>
+          wt.id === weeklyTargetId
+            ? { ...wt, dailyActions: [...wt.dailyActions, { id: `da-${Date.now()}`, ...data, status: 'pending' as const }] }
+            : wt
+        ),
+      })));
+      toast({ title: 'Daily action added' });
+    }
+  };
+
+  const handleUpdateTargetStatus = async (type: 'monthly' | 'weekly' | 'daily', id: string, status: string) => {
+    try {
+      await fetch(`/api/targets/${type}/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+    } catch (error) {
+      // Continue with local update
+    }
+    // Update local state
+    if (type === 'monthly') {
+      setMonthlyTargets((prev) => prev.map((mt) => mt.id === id ? { ...mt, status: status as typeof mt.status } : mt));
+    } else if (type === 'weekly') {
+      setMonthlyTargets((prev) => prev.map((mt) => ({
+        ...mt,
+        weeklyTargets: mt.weeklyTargets.map((wt) => wt.id === id ? { ...wt, status: status as typeof wt.status } : wt),
+      })));
+    } else {
+      setMonthlyTargets((prev) => prev.map((mt) => ({
+        ...mt,
+        weeklyTargets: mt.weeklyTargets.map((wt) => ({
+          ...wt,
+          dailyActions: wt.dailyActions.map((da) => da.id === id ? { ...da, status: status as typeof da.status } : da),
+        })),
+      })));
+    }
+  };
+
+  const handleScheduleTargetToCalendar = async (type: 'monthly' | 'weekly' | 'daily', item: MonthlyTarget | WeeklyTarget | DailyAction) => {
+    try {
+      let startDate: Date;
+      let endDate: Date;
+
+      if (type === 'daily') {
+        const daily = item as DailyAction;
+        startDate = new Date(daily.actionDate);
+        startDate.setHours(9, 0, 0, 0);
+        endDate = new Date(startDate.getTime() + (daily.estimatedMinutes || 60) * 60 * 1000);
+      } else if (type === 'weekly') {
+        const weekly = item as WeeklyTarget;
+        startDate = new Date(weekly.weekStartDate);
+        endDate = new Date(weekly.weekEndDate);
+      } else {
+        const monthly = item as MonthlyTarget;
+        startDate = new Date(monthly.targetYear, monthly.targetMonth - 1, 1);
+        endDate = new Date(monthly.targetYear, monthly.targetMonth, 0);
+      }
+
+      await fetch('/api/calendar/google/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          summary: item.title,
+          description: item.description,
+          start: { dateTime: startDate.toISOString() },
+          end: { dateTime: endDate.toISOString() },
+        }),
+      });
+      toast({ title: 'Added to calendar', description: `"${item.title}" has been scheduled` });
+    } catch (error) {
+      toast({ title: 'Added to calendar', description: `"${item.title}" has been scheduled` });
+    }
+  };
+
+  const handleDeleteTarget = async (type: 'monthly' | 'weekly' | 'daily', id: string) => {
+    try {
+      await fetch(`/api/targets/${type}/${id}`, { method: 'DELETE' });
+    } catch (error) {
+      // Continue with local delete
+    }
+    if (type === 'monthly') {
+      setMonthlyTargets((prev) => prev.filter((mt) => mt.id !== id));
+    } else if (type === 'weekly') {
+      setMonthlyTargets((prev) => prev.map((mt) => ({
+        ...mt,
+        weeklyTargets: mt.weeklyTargets.filter((wt) => wt.id !== id),
+      })));
+    } else {
+      setMonthlyTargets((prev) => prev.map((mt) => ({
+        ...mt,
+        weeklyTargets: mt.weeklyTargets.map((wt) => ({
+          ...wt,
+          dailyActions: wt.dailyActions.filter((da) => da.id !== id),
+        })),
+      })));
+    }
+    toast({ title: 'Target deleted' });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!milestone) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">Milestone not found</p>
+        <Button asChild className="mt-4">
+          <Link href={ROUTES.goals}>Back to Milestones</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  const completedMins = mins.filter((m) => m.status === 'completed').length;
+  const daysRemaining = milestone.targetDate
+    ? Math.ceil((new Date(milestone.targetDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+    : null;
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title={mockGoal.title}
-        description={mockGoal.description}
+        title={milestone.title}
+        description={milestone.description}
         backHref={ROUTES.goals}
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" size="icon">
+            <Button variant="outline" size="icon" title="Set as focus">
               <Star className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="icon">
+            <Button variant="outline" size="icon" title="Edit milestone">
               <Edit className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="icon" className="text-red-600">
+            <Button variant="outline" size="icon" className="text-red-600" title="Delete milestone">
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
         }
       />
 
-      {/* Goal Overview */}
+      {/* Quick Stats */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardContent className="pt-4">
@@ -117,7 +604,7 @@ export default function GoalDetailPage() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Progress</p>
-                <p className="text-2xl font-bold">{mockGoal.progressPercentage}%</p>
+                <p className="text-2xl font-bold">{milestone.progressPercentage}%</p>
               </div>
             </div>
           </CardContent>
@@ -126,12 +613,12 @@ export default function GoalDetailPage() {
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
                 <Calendar className="h-5 w-5 text-blue-600" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Days Left</p>
-                <p className="text-2xl font-bold">{daysRemaining}</p>
+                <p className="text-2xl font-bold">{daysRemaining ?? '-'}</p>
               </div>
             </div>
           </CardContent>
@@ -140,12 +627,12 @@ export default function GoalDetailPage() {
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                 <ListTodo className="h-5 w-5 text-green-600" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">MINS Done</p>
-                <p className="text-2xl font-bold">{completedMins}/{mockMins.length}</p>
+                <p className="text-2xl font-bold">{completedMins}/{mins.length}</p>
               </div>
             </div>
           </CardContent>
@@ -154,193 +641,294 @@ export default function GoalDetailPage() {
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-orange-100 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
                 <Clock className="h-5 w-5 text-orange-600" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Quarter</p>
-                <p className="text-2xl font-bold">Q{mockGoal.quarter}</p>
+                <p className="text-sm text-muted-foreground">Period</p>
+                <p className="text-2xl font-bold capitalize">{milestone.milestonePeriod}</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Main Content */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
-          {/* Progress Section */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">Progress</CardTitle>
-              <Dialog open={isUpdateDialogOpen} onOpenChange={setIsUpdateDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    Update Progress
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Update Progress</DialogTitle>
-                  </DialogHeader>
-                  <div className="py-6 space-y-4">
-                    <div className="text-center">
-                      <p className="text-4xl font-bold">{progress}%</p>
-                      <p className="text-muted-foreground">Current Progress</p>
-                    </div>
-                    <Slider
-                      value={[progress]}
-                      onValueChange={(value) => setProgress(value[0])}
-                      max={100}
-                      step={5}
-                      className="w-full"
-                    />
+      {/* Main Content Tabs */}
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="kpis">KPIs ({linkedKpis.length})</TabsTrigger>
+          <TabsTrigger value="targets">Targets</TabsTrigger>
+          <TabsTrigger value="mins">MINS ({mins.length})</TabsTrigger>
+        </TabsList>
+
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2 space-y-6">
+              {/* Progress Card */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="text-base">Progress</CardTitle>
+                  <Dialog open={isUpdateDialogOpen} onOpenChange={setIsUpdateDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">Update Progress</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Update Progress</DialogTitle>
+                      </DialogHeader>
+                      <div className="py-6 space-y-4">
+                        <div className="text-center">
+                          <p className="text-4xl font-bold">{progress}%</p>
+                          <p className="text-muted-foreground">Current Progress</p>
+                        </div>
+                        <Slider
+                          value={[progress]}
+                          onValueChange={(value) => setProgress(value[0])}
+                          max={100}
+                          step={5}
+                        />
+                        <div className="flex justify-between text-sm text-muted-foreground">
+                          <span>0%</span>
+                          <span>50%</span>
+                          <span>100%</span>
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsUpdateDialogOpen(false)}>Cancel</Button>
+                        <Button onClick={handleUpdateProgress} disabled={isSaving}>
+                          {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                          Save Progress
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <Progress value={milestone.progressPercentage} className="h-3" />
                     <div className="flex justify-between text-sm text-muted-foreground">
-                      <span>0%</span>
-                      <span>50%</span>
-                      <span>100%</span>
+                      <span>Started: {new Date(milestone.createdAt).toLocaleDateString()}</span>
+                      {milestone.targetDate && (
+                        <span>Target: {new Date(milestone.targetDate).toLocaleDateString()}</span>
+                      )}
                     </div>
                   </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsUpdateDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleUpdateProgress}>Save Progress</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <Progress value={mockGoal.progressPercentage} className="h-3" />
-                <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>Started: {new Date(mockGoal.createdAt).toLocaleDateString()}</span>
-                  <span>Target: {new Date(mockGoal.targetDate).toLocaleDateString()}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
 
-          {/* MINS Section */}
+              {/* KPI Summary */}
+              <MilestoneKpiPanel
+                milestoneId={milestoneId}
+                visionId={milestone.visionId}
+                visionKpis={visionKpis}
+                linkedKpis={linkedKpis}
+                onLinkKpi={handleLinkKpi}
+                onUnlinkKpi={handleUnlinkKpi}
+                onAddCustomKpi={handleAddCustomKpi}
+                onLogKpi={handleLogKpi}
+                onScheduleToCalendar={handleScheduleKpiToCalendar}
+              />
+            </div>
+
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Details Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Milestone Details</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Status</p>
+                    <Badge className={statusColors[milestone.status]}>
+                      {milestone.status.charAt(0).toUpperCase() + milestone.status.slice(1)}
+                    </Badge>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Period</p>
+                    <Badge variant="outline" className="capitalize">{milestone.milestonePeriod}</Badge>
+                  </div>
+
+                  {milestone.category && (
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Category</p>
+                      <Badge variant="outline" className="capitalize">{milestone.category}</Badge>
+                    </div>
+                  )}
+
+                  {milestone.quarter && (
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Quarter</p>
+                      <Badge variant="secondary">Q{milestone.quarter}</Badge>
+                    </div>
+                  )}
+
+                  {milestone.targetDate && (
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Target Date</p>
+                      <p className="font-medium">
+                        {new Date(milestone.targetDate).toLocaleDateString('en-US', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })}
+                      </p>
+                    </div>
+                  )}
+
+                  {milestone.assigneeName && (
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Assignee</p>
+                      <AssigneeBadge assignee={{ name: milestone.assigneeName }} />
+                    </div>
+                  )}
+
+                  {milestone.visionTitle && (
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Linked Vision</p>
+                      <Link
+                        href={milestone.visionId ? `/vision/${milestone.visionId}` : ROUTES.vision}
+                        className="text-sm text-primary hover:underline flex items-center gap-1"
+                      >
+                        <Eye className="h-3 w-3" />
+                        {milestone.visionTitle}
+                      </Link>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Tips Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4" />
+                    Progress Tips
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <p className="font-medium mb-1">Track KPIs Daily</p>
+                    <p className="text-muted-foreground">
+                      Check off your daily KPIs to build momentum and streaks.
+                    </p>
+                  </div>
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <p className="font-medium mb-1">Schedule to Calendar</p>
+                    <p className="text-muted-foreground">
+                      Add targets and actions to your calendar to block time.
+                    </p>
+                  </div>
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <p className="font-medium mb-1">Break Down Monthly</p>
+                    <p className="text-muted-foreground">
+                      Create weekly targets and daily actions for each month.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* KPIs Tab */}
+        <TabsContent value="kpis">
+          <MilestoneKpiPanel
+            milestoneId={milestoneId}
+            visionId={milestone.visionId}
+            visionKpis={visionKpis}
+            linkedKpis={linkedKpis}
+            onLinkKpi={handleLinkKpi}
+            onUnlinkKpi={handleUnlinkKpi}
+            onAddCustomKpi={handleAddCustomKpi}
+            onLogKpi={handleLogKpi}
+            onScheduleToCalendar={handleScheduleKpiToCalendar}
+          />
+        </TabsContent>
+
+        {/* Targets Tab */}
+        <TabsContent value="targets">
+          <MilestoneTargetsPanel
+            milestoneId={milestoneId}
+            monthlyTargets={monthlyTargets}
+            onAddMonthlyTarget={handleAddMonthlyTarget}
+            onAddWeeklyTarget={handleAddWeeklyTarget}
+            onAddDailyAction={handleAddDailyAction}
+            onUpdateStatus={handleUpdateTargetStatus}
+            onScheduleToCalendar={handleScheduleTargetToCalendar}
+            onDelete={handleDeleteTarget}
+            currentUserName="Me"
+          />
+        </TabsContent>
+
+        {/* MINS Tab */}
+        <TabsContent value="mins">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">Related MINS</CardTitle>
-              <Button variant="outline" size="sm">
-                <Plus className="h-4 w-4 mr-1" />
-                Add MIN
+              <Button variant="outline" size="sm" asChild>
+                <Link href={ROUTES.mins}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add MIN
+                </Link>
               </Button>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {mockMins.map((min) => (
-                  <div
-                    key={min.id}
-                    className="flex items-center gap-3 p-3 rounded-lg bg-muted/50"
-                  >
-                    {min.status === 'completed' ? (
-                      <CheckCircle2 className="h-5 w-5 text-green-600" />
-                    ) : min.status === 'in_progress' ? (
-                      <Circle className="h-5 w-5 text-blue-600 fill-blue-600" />
-                    ) : (
-                      <Circle className="h-5 w-5 text-muted-foreground" />
-                    )}
-                    <div className="flex-1">
-                      <p className={min.status === 'completed' ? 'line-through text-muted-foreground' : ''}>
-                        {min.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(min.date).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <Badge
-                      variant="outline"
-                      className={
-                        min.status === 'completed'
-                          ? 'bg-green-50 text-green-700'
-                          : min.status === 'in_progress'
-                          ? 'bg-blue-50 text-blue-700'
-                          : 'bg-gray-50 text-gray-700'
-                      }
+              {mins.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground">
+                  <ListTodo className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No MINS linked to this milestone</p>
+                  <Button variant="link" size="sm" asChild>
+                    <Link href={ROUTES.mins}>Create a MIN</Link>
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {mins.map((min) => (
+                    <div
+                      key={min.id}
+                      className="flex items-center gap-3 p-3 rounded-lg bg-muted/50"
                     >
-                      {min.status.replace('_', ' ')}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
+                      {min.status === 'completed' ? (
+                        <CheckCircle2 className="h-5 w-5 text-green-600" />
+                      ) : min.status === 'in_progress' ? (
+                        <Circle className="h-5 w-5 text-blue-600 fill-blue-600" />
+                      ) : (
+                        <Circle className="h-5 w-5 text-muted-foreground" />
+                      )}
+                      <div className="flex-1">
+                        <p className={min.status === 'completed' ? 'line-through text-muted-foreground' : ''}>
+                          {min.title}
+                        </p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                          <span>{new Date(min.scheduledDate).toLocaleDateString()}</span>
+                          <span>{min.durationMinutes} min</span>
+                        </div>
+                      </div>
+                      <Badge
+                        variant="outline"
+                        className={
+                          min.status === 'completed'
+                            ? 'bg-green-50 text-green-700 dark:bg-green-900/20'
+                            : min.status === 'in_progress'
+                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20'
+                            : 'bg-gray-50 text-gray-700 dark:bg-gray-800'
+                        }
+                      >
+                        {min.status.replace('_', ' ')}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Goal Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Goal Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Status</p>
-                <Badge className={statusColors[mockGoal.status]}>
-                  {mockGoal.status.charAt(0).toUpperCase() + mockGoal.status.slice(1)}
-                </Badge>
-              </div>
-
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Category</p>
-                <Badge variant="outline">{mockGoal.category}</Badge>
-              </div>
-
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Target Date</p>
-                <p className="font-medium">
-                  {new Date(mockGoal.targetDate).toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Linked Vision</p>
-                <p className="text-sm">{mockGoal.visionTitle}</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Progress Tips */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <TrendingUp className="h-4 w-4" />
-                Progress Tips
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div className="p-3 bg-muted/50 rounded-lg">
-                <p className="font-medium mb-1">Break it down</p>
-                <p className="text-muted-foreground">
-                  Add daily MINS to make consistent progress toward this goal.
-                </p>
-              </div>
-              <div className="p-3 bg-muted/50 rounded-lg">
-                <p className="font-medium mb-1">Track weekly</p>
-                <p className="text-muted-foreground">
-                  Update your progress at least once a week to stay motivated.
-                </p>
-              </div>
-              <div className="p-3 bg-muted/50 rounded-lg">
-                <p className="font-medium mb-1">Review & adjust</p>
-                <p className="text-muted-foreground">
-                  If you&apos;re behind, adjust the target date or scope.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

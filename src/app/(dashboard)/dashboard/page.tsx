@@ -50,7 +50,7 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Power Goals</CardTitle>
+            <CardTitle className="text-sm font-medium">Milestones</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -58,7 +58,7 @@ export default function DashboardPage() {
               {stats.powerGoalsCompleted}/{stats.powerGoalsTotal}
             </div>
             <p className="text-xs text-muted-foreground">
-              {stats.powerGoalsTotal - stats.powerGoalsCompleted} remaining this year
+              {stats.powerGoalsTotal - stats.powerGoalsCompleted} active milestones
             </p>
           </CardContent>
         </Card>
@@ -113,7 +113,7 @@ export default function DashboardPage() {
                 <p className="font-medium line-through text-muted-foreground">
                   Review quarterly goals
                 </p>
-                <p className="text-xs text-muted-foreground">Power Goal: Career Growth</p>
+                <p className="text-xs text-muted-foreground">Milestone: Career Growth</p>
               </div>
               <Badge variant="secondary">Completed</Badge>
             </div>
@@ -122,7 +122,7 @@ export default function DashboardPage() {
               <div className="h-5 w-5 rounded-full border-2 border-primary" />
               <div className="flex-1">
                 <p className="font-medium">Complete project proposal</p>
-                <p className="text-xs text-muted-foreground">Power Goal: Career Growth</p>
+                <p className="text-xs text-muted-foreground">Milestone: Career Growth</p>
               </div>
               <Badge className="bg-green-100 text-green-800">Production</Badge>
             </div>
@@ -131,7 +131,7 @@ export default function DashboardPage() {
               <div className="h-5 w-5 rounded-full border-2" />
               <div className="flex-1">
                 <p className="font-medium">30-minute workout</p>
-                <p className="text-xs text-muted-foreground">Power Goal: Health</p>
+                <p className="text-xs text-muted-foreground">Milestone: Health</p>
               </div>
               <Badge className="bg-blue-100 text-blue-800">Investment</Badge>
             </div>
