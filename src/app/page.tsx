@@ -124,6 +124,7 @@ const howItWorksSteps = [
   { number: 1, title: 'Set Your Vision', desc: 'Define goals & break into 12 projects' },
   { number: 2, title: 'Audit Your Time', desc: 'Track hours & categorize with DRIP' },
   { number: 3, title: 'Build Systems', desc: 'Create routines & Pomodoro sprints' },
+  { number: 4, title: 'Achieve Goals', desc: 'Track progress & celebrate wins', isHighlight: true },
 ];
 
 const testimonials = [
@@ -383,40 +384,39 @@ export default function HomePage() {
 
             {/* Desktop Timeline */}
             <div className="hidden md:block">
-              <div className="relative">
+              <div className="relative max-w-4xl mx-auto">
                 {/* Connection line */}
-                <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-primary/20 via-primary to-primary/20 -translate-y-1/2" />
+                <div className="absolute top-1/2 left-[10%] right-[10%] h-0.5 bg-gradient-to-r from-primary/20 via-primary to-emerald-500 -translate-y-1/2" />
 
-                <div className="grid grid-cols-4 gap-6 relative">
+                <div className="grid grid-cols-4 gap-4 relative">
                   {howItWorksSteps.map((step, index) => (
                     <ScrollReveal key={step.number} animation="fade-up" delay={index * 100}>
-                      <div className="relative group">
-                        <div className="bg-background border-2 border-primary/20 rounded-xl p-5 text-center hover:border-primary/50 hover:shadow-lg transition-all duration-300 group-hover:-translate-y-1">
-                          <div className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-primary text-primary-foreground text-sm font-bold mb-3 group-hover:scale-110 transition-transform">
-                            {step.number}
+                      <div className="relative group flex flex-col items-center">
+                        <div className={`w-full h-full bg-background border-2 rounded-xl p-5 text-center hover:shadow-lg transition-all duration-300 group-hover:-translate-y-1 ${
+                          step.isHighlight
+                            ? 'border-emerald-400 dark:border-emerald-600 bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/50 dark:to-green-950/50 shadow-md'
+                            : 'border-primary/20 hover:border-primary/50'
+                        }`}>
+                          <div className={`inline-flex items-center justify-center h-10 w-10 rounded-full text-sm font-bold mb-3 group-hover:scale-110 transition-transform ${
+                            step.isHighlight
+                              ? 'bg-emerald-600 text-white'
+                              : 'bg-primary text-primary-foreground'
+                          }`}>
+                            {step.isHighlight ? <Trophy className="h-5 w-5" /> : step.number}
                           </div>
-                          <h4 className="font-display font-semibold mb-1.5">{step.title}</h4>
-                          <p className="text-xs text-muted-foreground leading-relaxed">{step.desc}</p>
+                          <h4 className={`font-display font-semibold mb-1.5 ${
+                            step.isHighlight ? 'text-emerald-800 dark:text-emerald-200' : ''
+                          }`}>{step.title}</h4>
+                          <p className={`text-xs leading-relaxed ${
+                            step.isHighlight ? 'text-emerald-700 dark:text-emerald-300' : 'text-muted-foreground'
+                          }`}>{step.desc}</p>
                         </div>
-                        {index < 2 && (
-                          <ArrowRight className="absolute top-1/2 -right-3 h-5 w-5 text-primary -translate-y-1/2 hidden lg:block" />
+                        {index < howItWorksSteps.length - 1 && (
+                          <ArrowRight className="absolute top-1/2 -right-2.5 h-5 w-5 text-primary -translate-y-1/2 z-10" />
                         )}
                       </div>
                     </ScrollReveal>
                   ))}
-
-                  {/* Final Step - Highlighted */}
-                  <ScrollReveal animation="scale" delay={300}>
-                    <div className="relative group">
-                      <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/50 dark:to-green-950/50 border-2 border-emerald-300 dark:border-emerald-700 rounded-xl p-5 text-center shadow-lg hover:shadow-xl transition-all duration-300 group-hover:-translate-y-1">
-                        <div className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-emerald-600 text-white mb-3 group-hover:scale-110 transition-transform">
-                          <Trophy className="h-5 w-5" />
-                        </div>
-                        <h4 className="font-display font-semibold text-emerald-800 dark:text-emerald-200 mb-1.5">Achieve Goals</h4>
-                        <p className="text-xs text-emerald-700 dark:text-emerald-300 leading-relaxed">Track progress & celebrate wins</p>
-                      </div>
-                    </div>
-                  </ScrollReveal>
                 </div>
               </div>
             </div>
@@ -426,34 +426,31 @@ export default function HomePage() {
               {howItWorksSteps.map((step, index) => (
                 <ScrollReveal key={step.number} animation="slide-right" delay={index * 100}>
                   <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
-                      {step.number}
+                    <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center font-bold ${
+                      step.isHighlight
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-primary text-primary-foreground'
+                    }`}>
+                      {step.isHighlight ? <Trophy className="h-5 w-5" /> : step.number}
                     </div>
                     <div className="pt-1">
-                      <h4 className="font-display font-semibold mb-0.5">{step.title}</h4>
-                      <p className="text-sm text-muted-foreground">{step.desc}</p>
+                      <h4 className={`font-display font-semibold mb-0.5 ${
+                        step.isHighlight ? 'text-emerald-800 dark:text-emerald-200' : ''
+                      }`}>{step.title}</h4>
+                      <p className={`text-sm ${
+                        step.isHighlight ? 'text-emerald-700 dark:text-emerald-300' : 'text-muted-foreground'
+                      }`}>{step.desc}</p>
                     </div>
                   </div>
                 </ScrollReveal>
               ))}
-              <ScrollReveal animation="slide-right" delay={300}>
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 h-10 w-10 rounded-full bg-emerald-600 text-white flex items-center justify-center">
-                    <Trophy className="h-5 w-5" />
-                  </div>
-                  <div className="pt-1">
-                    <h4 className="font-display font-semibold text-emerald-800 dark:text-emerald-200 mb-0.5">Achieve Goals</h4>
-                    <p className="text-sm text-emerald-700 dark:text-emerald-300">Track progress & celebrate wins</p>
-                  </div>
-                </div>
-              </ScrollReveal>
             </div>
           </div>
         </section>
 
         {/* Features Section */}
         <section id="features" className="py-20 px-4">
-          <div className="container">
+          <div className="container max-w-6xl mx-auto">
             <ScrollReveal>
               <div className="text-center mb-14">
                 <Badge className="mb-4 bg-primary/10 text-primary border-0">Complete Toolkit</Badge>
@@ -569,7 +566,7 @@ export default function HomePage() {
 
         {/* 6-Step Framework Section */}
         <section className="py-20 px-4">
-          <div className="container">
+          <div className="container max-w-6xl mx-auto">
             <ScrollReveal>
               <div className="text-center mb-14">
                 <Badge className="mb-4" variant="outline">The 6-Step Framework</Badge>
@@ -711,7 +708,7 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="border-t py-12 bg-muted/30">
-        <div className="container px-4">
+        <div className="container max-w-6xl mx-auto px-4">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             {/* Brand */}
             <div className="md:col-span-1">
