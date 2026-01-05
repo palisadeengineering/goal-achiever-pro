@@ -601,126 +601,111 @@ export default function HomePage() {
         </section>
 
         {/* DRIP Matrix Section */}
-        <section className="py-20 px-4 bg-muted/30">
-          <div className="container max-w-4xl mx-auto">
+        <section className="py-24 px-4 bg-muted/30">
+          <div className="container max-w-5xl mx-auto">
             <ScrollReveal>
-              <div className="text-center mb-12">
+              <div className="text-center mb-16">
                 <Badge className="mb-4" variant="outline">The DRIP Matrix</Badge>
-                <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
+                <h2 className="font-display text-3xl md:text-5xl font-bold mb-4">
                   Know Where to Spend Your Time
                 </h2>
-                <p className="text-muted-foreground max-w-xl mx-auto">
+                <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
                   Categorize every activity by how much money it makes and how much it energizes you.
                 </p>
               </div>
             </ScrollReveal>
 
-            {/* Matrix with axis labels */}
-            <div className="flex justify-center">
-              <div className="flex items-center gap-4">
-                {/* Y-axis label */}
-                <div className="hidden md:flex flex-col items-center justify-center">
-                  <span className="text-xs font-semibold text-muted-foreground tracking-wider whitespace-nowrap -rotate-90">
-                    MONEY POTENTIAL
-                  </span>
+            {/* Centered Matrix */}
+            <div className="max-w-3xl mx-auto">
+              {/* Y-axis label - positioned above */}
+              <div className="flex justify-center mb-3">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <ArrowRight className="h-4 w-4 rotate-[-90deg]" />
+                  <span className="font-semibold tracking-wide">MONEY POTENTIAL</span>
                 </div>
+              </div>
 
-                <div className="flex flex-col items-center">
-                  {/* High/Low labels for Y-axis */}
-                  <div className="hidden md:flex w-full max-w-2xl justify-between px-2 mb-1">
-                    <span className="text-[10px] text-muted-foreground">HIGH $</span>
-                    <span className="text-[10px] text-muted-foreground">HIGH $</span>
-                  </div>
+              {/* The 2x2 Grid */}
+              <div className="relative">
+                {/* Cross lines */}
+                <div className="absolute top-0 bottom-0 left-1/2 w-[2px] bg-gradient-to-b from-primary/40 via-primary to-primary/40 -translate-x-1/2 z-10" />
+                <div className="absolute left-0 right-0 top-1/2 h-[2px] bg-gradient-to-r from-primary/40 via-primary to-primary/40 -translate-y-1/2 z-10" />
 
-                  {/* The 2x2 Grid with cross lines */}
-                  <div className="relative max-w-2xl">
-                    {/* Vertical line */}
-                    <div className="absolute top-0 bottom-0 left-1/2 w-0.5 bg-border -translate-x-1/2 z-10" />
-                    {/* Horizontal line */}
-                    <div className="absolute left-0 right-0 top-1/2 h-0.5 bg-border -translate-y-1/2 z-10" />
-
-                    <div className="grid grid-cols-2">
-                      {/* Top Left - Replacement */}
-                      <ScrollReveal animation="fade-up" delay={0}>
-                        <div className="p-1">
-                          <Card className="h-40 border-2 border-amber-300 dark:border-amber-700 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 group hover:shadow-lg transition-all">
-                            <CardContent className="p-4 h-full flex flex-col">
-                              <div className="h-8 w-8 rounded-lg bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
-                                <Zap className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                              </div>
-                              <h3 className="font-display font-bold text-amber-800 dark:text-amber-200 text-base">Replacement</h3>
-                              <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">High $, Low Energy</p>
-                              <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-auto">Automate or systematize</p>
-                            </CardContent>
-                          </Card>
-                        </div>
-                      </ScrollReveal>
-
-                      {/* Top Right - Production */}
-                      <ScrollReveal animation="fade-up" delay={100}>
-                        <div className="p-1">
-                          <Card className="h-40 border-2 border-emerald-400 dark:border-emerald-600 bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/30 dark:to-green-950/30 shadow-md group hover:shadow-lg transition-all">
-                            <CardContent className="p-4 h-full flex flex-col">
-                              <div className="flex items-start justify-between">
-                                <div className="h-8 w-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
-                                  <Trophy className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                                </div>
-                                <Badge className="bg-emerald-600 text-white text-[10px] px-1.5 py-0">Focus</Badge>
-                              </div>
-                              <h3 className="font-display font-bold text-emerald-800 dark:text-emerald-200 text-base">Production</h3>
-                              <p className="text-xs text-emerald-700 dark:text-emerald-300 font-medium">High $, High Energy</p>
-                              <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-auto">Your sweet spot!</p>
-                            </CardContent>
-                          </Card>
-                        </div>
-                      </ScrollReveal>
-
-                      {/* Bottom Left - Delegation */}
-                      <ScrollReveal animation="fade-up" delay={200}>
-                        <div className="p-1">
-                          <Card className="h-40 border-2 border-violet-300 dark:border-violet-700 bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 group hover:shadow-lg transition-all">
-                            <CardContent className="p-4 h-full flex flex-col">
-                              <div className="h-8 w-8 rounded-lg bg-violet-100 dark:bg-violet-900/50 flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
-                                <Users className="h-4 w-4 text-violet-600 dark:text-violet-400" />
-                              </div>
-                              <h3 className="font-display font-bold text-violet-800 dark:text-violet-200 text-base">Delegation</h3>
-                              <p className="text-xs text-violet-700 dark:text-violet-300 font-medium">Low $, Low Energy</p>
-                              <p className="text-[10px] text-violet-600 dark:text-violet-400 mt-auto">Delegate or eliminate</p>
-                            </CardContent>
-                          </Card>
-                        </div>
-                      </ScrollReveal>
-
-                      {/* Bottom Right - Investment */}
-                      <ScrollReveal animation="fade-up" delay={300}>
-                        <div className="p-1">
-                          <Card className="h-40 border-2 border-blue-300 dark:border-blue-700 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 group hover:shadow-lg transition-all">
-                            <CardContent className="p-4 h-full flex flex-col">
-                              <div className="h-8 w-8 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
-                                <TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                              </div>
-                              <h3 className="font-display font-bold text-blue-800 dark:text-blue-200 text-base">Investment</h3>
-                              <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">Low $, High Energy</p>
-                              <p className="text-[10px] text-blue-600 dark:text-blue-400 mt-auto">Keep for long-term growth</p>
-                            </CardContent>
-                          </Card>
-                        </div>
-                      </ScrollReveal>
+                <div className="grid grid-cols-2 gap-1">
+                  {/* Top Left - Replacement */}
+                  <ScrollReveal animation="fade-up" delay={0}>
+                    <div className="p-2">
+                      <Card className="h-52 border-2 border-amber-400/50 dark:border-amber-500/50 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-orange-500/10 dark:from-amber-500/20 dark:via-amber-500/10 dark:to-orange-500/20 group hover:shadow-xl hover:border-amber-400 transition-all duration-300 hover:-translate-y-1">
+                        <CardContent className="p-6 h-full flex flex-col">
+                          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                            <Zap className="h-6 w-6 text-white" />
+                          </div>
+                          <h3 className="font-display font-bold text-xl mb-1">Replacement</h3>
+                          <p className="text-sm text-muted-foreground font-medium mb-2">High $, Low Energy</p>
+                          <p className="text-sm text-muted-foreground/80 mt-auto">Automate or systematize these tasks</p>
+                        </CardContent>
+                      </Card>
                     </div>
-                  </div>
+                  </ScrollReveal>
 
-                  {/* Low/Low labels for Y-axis */}
-                  <div className="hidden md:flex w-full max-w-2xl justify-between px-2 mt-1">
-                    <span className="text-[10px] text-muted-foreground">LOW $</span>
-                    <span className="text-[10px] text-muted-foreground">LOW $</span>
-                  </div>
+                  {/* Top Right - Production */}
+                  <ScrollReveal animation="fade-up" delay={100}>
+                    <div className="p-2">
+                      <Card className="h-52 border-2 border-emerald-400 dark:border-emerald-500 bg-gradient-to-br from-emerald-500/15 via-emerald-500/10 to-green-500/15 dark:from-emerald-500/25 dark:via-emerald-500/15 dark:to-green-500/25 shadow-lg shadow-emerald-500/10 group hover:shadow-xl hover:shadow-emerald-500/20 transition-all duration-300 hover:-translate-y-1 ring-1 ring-emerald-400/30">
+                        <CardContent className="p-6 h-full flex flex-col">
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+                              <Trophy className="h-6 w-6 text-white" />
+                            </div>
+                            <Badge className="bg-emerald-500 text-white text-xs px-2.5 py-1 font-semibold shadow-md">FOCUS HERE</Badge>
+                          </div>
+                          <h3 className="font-display font-bold text-xl mb-1">Production</h3>
+                          <p className="text-sm text-muted-foreground font-medium mb-2">High $, High Energy</p>
+                          <p className="text-sm text-muted-foreground/80 mt-auto">Your sweet spot! Maximize time here.</p>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </ScrollReveal>
 
-                  {/* X-axis label */}
-                  <div className="flex items-center justify-center gap-8 mt-4">
-                    <span className="text-[10px] text-muted-foreground">LOW ENERGY</span>
-                    <span className="text-xs font-semibold text-muted-foreground tracking-wider">ENERGY LEVEL</span>
-                    <span className="text-[10px] text-muted-foreground">HIGH ENERGY</span>
-                  </div>
+                  {/* Bottom Left - Delegation */}
+                  <ScrollReveal animation="fade-up" delay={200}>
+                    <div className="p-2">
+                      <Card className="h-52 border-2 border-violet-400/50 dark:border-violet-500/50 bg-gradient-to-br from-violet-500/10 via-violet-500/5 to-purple-500/10 dark:from-violet-500/20 dark:via-violet-500/10 dark:to-purple-500/20 group hover:shadow-xl hover:border-violet-400 transition-all duration-300 hover:-translate-y-1">
+                        <CardContent className="p-6 h-full flex flex-col">
+                          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-violet-400 to-purple-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                            <Users className="h-6 w-6 text-white" />
+                          </div>
+                          <h3 className="font-display font-bold text-xl mb-1">Delegation</h3>
+                          <p className="text-sm text-muted-foreground font-medium mb-2">Low $, Low Energy</p>
+                          <p className="text-sm text-muted-foreground/80 mt-auto">Delegate or eliminate these tasks</p>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </ScrollReveal>
+
+                  {/* Bottom Right - Investment */}
+                  <ScrollReveal animation="fade-up" delay={300}>
+                    <div className="p-2">
+                      <Card className="h-52 border-2 border-blue-400/50 dark:border-blue-500/50 bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-indigo-500/10 dark:from-blue-500/20 dark:via-blue-500/10 dark:to-indigo-500/20 group hover:shadow-xl hover:border-blue-400 transition-all duration-300 hover:-translate-y-1">
+                        <CardContent className="p-6 h-full flex flex-col">
+                          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                            <TrendingUp className="h-6 w-6 text-white" />
+                          </div>
+                          <h3 className="font-display font-bold text-xl mb-1">Investment</h3>
+                          <p className="text-sm text-muted-foreground font-medium mb-2">Low $, High Energy</p>
+                          <p className="text-sm text-muted-foreground/80 mt-auto">Keep for long-term growth</p>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </ScrollReveal>
+                </div>
+              </div>
+
+              {/* X-axis label */}
+              <div className="flex justify-center mt-6">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span className="font-semibold tracking-wide">ENERGY LEVEL</span>
+                  <ArrowRight className="h-4 w-4" />
                 </div>
               </div>
             </div>
