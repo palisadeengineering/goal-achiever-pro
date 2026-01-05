@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
       attainable,
       realistic,
       timeBound,
+      targetDate,
       clarityScore,
       beliefScore,
       consistencyScore,
@@ -95,6 +96,8 @@ export async function POST(request: NextRequest) {
       .eq('user_id', userId);
 
     // Create new vision
+    // Note: time_bound is a date column, use targetDate (YYYY-MM-DD format)
+    // The timeBound text field from SMART goals is for display only
     const { data: vision, error } = await supabase
       .from('visions')
       .insert({
@@ -105,7 +108,7 @@ export async function POST(request: NextRequest) {
         measurable: measurable || null,
         attainable: attainable || null,
         realistic: realistic || null,
-        time_bound: timeBound || null,
+        time_bound: targetDate || null,
         clarity_score: clarityScore || 0,
         belief_score: beliefScore || 0,
         consistency_score: consistencyScore || 0,
@@ -157,6 +160,7 @@ export async function PUT(request: NextRequest) {
       attainable,
       realistic,
       timeBound,
+      targetDate,
       clarityScore,
       beliefScore,
       consistencyScore,
@@ -172,6 +176,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update vision (only if it belongs to the user)
+    // Note: time_bound is a date column, use targetDate (YYYY-MM-DD format)
     const { data: vision, error } = await supabase
       .from('visions')
       .update({
@@ -181,7 +186,7 @@ export async function PUT(request: NextRequest) {
         measurable: measurable || null,
         attainable: attainable || null,
         realistic: realistic || null,
-        time_bound: timeBound || null,
+        time_bound: targetDate || null,
         clarity_score: clarityScore ?? undefined,
         belief_score: beliefScore ?? undefined,
         consistency_score: consistencyScore ?? undefined,

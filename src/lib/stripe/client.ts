@@ -8,8 +8,10 @@ const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 // This is null during build time and when env vars aren't set
 export const stripe = stripeSecretKey
   ? new Stripe(stripeSecretKey, {
-      apiVersion: '2025-12-15.clover',
+      apiVersion: '2023-10-16',
       typescript: true,
+      maxNetworkRetries: 3,
+      timeout: 30000,
     })
   : null;
 
