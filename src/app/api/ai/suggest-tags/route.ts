@@ -1,5 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { createClient } from '@/lib/supabase/server';
+import { logAIUsage } from '@/lib/utils/ai-usage';
+
+const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
+
+async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
+  if (!supabase) return DEMO_USER_ID;
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id || DEMO_USER_ID;
+}
 
 interface TagInfo {
   name: string;
@@ -8,7 +18,13 @@ interface TagInfo {
 }
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  let userId = DEMO_USER_ID;
+
   try {
+    const supabase = await createClient();
+    userId = await getUserId(supabase);
+
     const { activityName, description, existingTags } = await request.json();
 
     if (!activityName) {
@@ -108,6 +124,19 @@ Rules:
       })
       .filter(Boolean);
 
+    const responseTimeMs = Date.now() - startTime;
+
+    logAIUsage({
+      userId,
+      endpoint: '/api/ai/suggest-tags',
+      model: 'claude-sonnet-4-20250514',
+      promptTokens: message.usage?.input_tokens || 0,
+      completionTokens: message.usage?.output_tokens || 0,
+      requestType: 'suggest-tags',
+      success: true,
+      responseTimeMs,
+    });
+
     return NextResponse.json({
       suggestedExistingTags: result.suggestedExistingTags || [],
       suggestedNewTags: result.suggestedNewTags || [],
@@ -117,6 +146,19 @@ Rules:
     });
   } catch (error) {
     console.error('AI Tag Suggestion Error:', error);
+    const responseTimeMs = Date.now() - startTime;
+
+    logAIUsage({
+      userId,
+      endpoint: '/api/ai/suggest-tags',
+      model: 'claude-sonnet-4-20250514',
+      promptTokens: 0,
+      completionTokens: 0,
+      requestType: 'suggest-tags',
+      success: false,
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      responseTimeMs,
+    });
 
     return NextResponse.json(
       { error: 'Failed to generate tag suggestions' },

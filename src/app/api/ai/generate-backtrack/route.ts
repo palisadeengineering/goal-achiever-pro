@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
+import { logAIUsage } from '@/lib/utils/ai-usage';
 
 const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
 
@@ -70,7 +71,14 @@ interface BacktrackPlanResponse {
 }
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  let userId = DEMO_USER_ID;
+
   try {
+    // Get user ID early for logging
+    const supabase = await createClient();
+    userId = await getUserId(supabase);
+
     const body = await request.json();
     const {
       visionId,
@@ -259,6 +267,19 @@ IMPORTANT RULES:
     });
 
     const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
+    const responseTimeMs = Date.now() - startTime;
+
+    // Log AI usage
+    logAIUsage({
+      userId,
+      endpoint: '/api/ai/generate-backtrack',
+      model: 'claude-sonnet-4-20250514',
+      promptTokens: message.usage?.input_tokens || 0,
+      completionTokens: message.usage?.output_tokens || 0,
+      requestType: 'generate-backtrack',
+      success: true,
+      responseTimeMs,
+    });
 
     if (!responseText) {
       return NextResponse.json(
@@ -300,15 +321,12 @@ IMPORTANT RULES:
 
     // If saveToDatabase is true, save everything to the database
     if (saveToDatabase && visionId) {
-      const supabase = await createClient();
       if (!supabase) {
         return NextResponse.json(
           { error: 'Database connection failed' },
           { status: 500 }
         );
       }
-
-      const userId = await getUserId(supabase);
 
       // Create backtrack plan record
       const { data: backtrackPlan, error: planError } = await supabase
@@ -484,6 +502,19 @@ IMPORTANT RULES:
     });
   } catch (error) {
     console.error('AI Backtrack Generation Error:', error);
+    const responseTimeMs = Date.now() - startTime;
+
+    logAIUsage({
+      userId,
+      endpoint: '/api/ai/generate-backtrack',
+      model: 'claude-sonnet-4-20250514',
+      promptTokens: 0,
+      completionTokens: 0,
+      requestType: 'generate-backtrack',
+      success: false,
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      responseTimeMs,
+    });
 
     if (error instanceof SyntaxError) {
       return NextResponse.json(

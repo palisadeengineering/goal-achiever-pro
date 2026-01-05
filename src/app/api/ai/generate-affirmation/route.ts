@@ -1,8 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { createClient } from '@/lib/supabase/server';
+import { logAIUsage } from '@/lib/utils/ai-usage';
+
+const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
+
+async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
+  if (!supabase) return DEMO_USER_ID;
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id || DEMO_USER_ID;
+}
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  let userId = DEMO_USER_ID;
+
   try {
+    const supabase = await createClient();
+    userId = await getUserId(supabase);
+
     const body = await request.json();
     const { visionTitle, visionDescription, smartGoals } = body;
 
@@ -59,6 +75,19 @@ Respond with ONLY the affirmation text, no quotes or additional commentary.`;
         );
       }
 
+      const responseTimeMs = Date.now() - startTime;
+
+      logAIUsage({
+        userId,
+        endpoint: '/api/ai/generate-affirmation',
+        model: 'claude-sonnet-4-20250514',
+        promptTokens: message.usage?.input_tokens || 0,
+        completionTokens: message.usage?.output_tokens || 0,
+        requestType: 'generate-affirmation',
+        success: true,
+        responseTimeMs,
+      });
+
       return NextResponse.json({ affirmation: responseText.trim() });
     }
 
@@ -108,6 +137,18 @@ Respond with ONLY the affirmation text, no quotes or additional commentary.`;
     });
 
     const responseText = completion.choices[0]?.message?.content;
+    const responseTimeMs = Date.now() - startTime;
+
+    logAIUsage({
+      userId,
+      endpoint: '/api/ai/generate-affirmation',
+      model: 'gpt-4o-mini',
+      promptTokens: completion.usage?.prompt_tokens || 0,
+      completionTokens: completion.usage?.completion_tokens || 0,
+      requestType: 'generate-affirmation',
+      success: true,
+      responseTimeMs,
+    });
 
     if (!responseText) {
       return NextResponse.json(
@@ -119,6 +160,20 @@ Respond with ONLY the affirmation text, no quotes or additional commentary.`;
     return NextResponse.json({ affirmation: responseText.trim() });
   } catch (error) {
     console.error('AI Affirmation Generation Error:', error);
+    const responseTimeMs = Date.now() - startTime;
+
+    logAIUsage({
+      userId,
+      endpoint: '/api/ai/generate-affirmation',
+      model: 'unknown',
+      promptTokens: 0,
+      completionTokens: 0,
+      requestType: 'generate-affirmation',
+      success: false,
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      responseTimeMs,
+    });
+
     return NextResponse.json(
       { error: 'Failed to generate affirmation' },
       { status: 500 }

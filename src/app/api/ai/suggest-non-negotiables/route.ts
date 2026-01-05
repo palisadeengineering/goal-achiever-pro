@@ -1,8 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { createClient } from '@/lib/supabase/server';
+import { logAIUsage } from '@/lib/utils/ai-usage';
+
+const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
+
+async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
+  if (!supabase) return DEMO_USER_ID;
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id || DEMO_USER_ID;
+}
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  let userId = DEMO_USER_ID;
+
   try {
+    const supabase = await createClient();
+    userId = await getUserId(supabase);
+
     const body = await request.json();
     const { visionTitle, visionDescription, currentValue, context } = body;
 
@@ -47,10 +63,36 @@ Return ONLY the non-negotiable title/description, no explanations.`;
     });
 
     const suggestion = completion.choices[0]?.message?.content?.trim() || '';
+    const responseTimeMs = Date.now() - startTime;
+
+    logAIUsage({
+      userId,
+      endpoint: '/api/ai/suggest-non-negotiables',
+      model: 'gpt-4o-mini',
+      promptTokens: completion.usage?.prompt_tokens || 0,
+      completionTokens: completion.usage?.completion_tokens || 0,
+      requestType: 'suggest-non-negotiables',
+      success: true,
+      responseTimeMs,
+    });
 
     return NextResponse.json({ suggestion });
   } catch (error) {
     console.error('Error suggesting non-negotiable:', error);
+    const responseTimeMs = Date.now() - startTime;
+
+    logAIUsage({
+      userId,
+      endpoint: '/api/ai/suggest-non-negotiables',
+      model: 'gpt-4o-mini',
+      promptTokens: 0,
+      completionTokens: 0,
+      requestType: 'suggest-non-negotiables',
+      success: false,
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      responseTimeMs,
+    });
+
     return NextResponse.json(
       { error: 'Failed to suggest non-negotiable' },
       { status: 500 }

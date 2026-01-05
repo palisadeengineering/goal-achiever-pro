@@ -105,6 +105,21 @@ export function extractOpenAIUsage(response: {
 }
 
 /**
+ * Extract token usage from Anthropic API response
+ */
+export function extractAnthropicUsage(response: {
+  usage?: {
+    input_tokens?: number;
+    output_tokens?: number;
+  };
+}): { promptTokens: number; completionTokens: number } {
+  return {
+    promptTokens: response.usage?.input_tokens || 0,
+    completionTokens: response.usage?.output_tokens || 0,
+  };
+}
+
+/**
  * Wrapper to time and log AI API calls
  */
 export async function withAILogging<T>(

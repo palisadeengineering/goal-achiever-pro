@@ -73,6 +73,18 @@ Respond ONLY with valid JSON in this exact format:
     });
 
     const responseText = completion.choices[0]?.message?.content;
+    const responseTimeMs = Date.now() - startTime;
+
+    logAIUsage({
+      userId,
+      endpoint: '/api/ai/suggest-vision',
+      model: 'gpt-4o-mini',
+      promptTokens: completion.usage?.prompt_tokens || 0,
+      completionTokens: completion.usage?.completion_tokens || 0,
+      requestType: 'suggest-vision',
+      success: true,
+      responseTimeMs,
+    });
 
     if (!responseText) {
       return NextResponse.json(
@@ -86,6 +98,19 @@ Respond ONLY with valid JSON in this exact format:
     return NextResponse.json(result);
   } catch (error) {
     console.error('AI Vision Suggestion Error:', error);
+    const responseTimeMs = Date.now() - startTime;
+
+    logAIUsage({
+      userId,
+      endpoint: '/api/ai/suggest-vision',
+      model: 'gpt-4o-mini',
+      promptTokens: 0,
+      completionTokens: 0,
+      requestType: 'suggest-vision',
+      success: false,
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      responseTimeMs,
+    });
 
     if (error instanceof SyntaxError) {
       return NextResponse.json(
