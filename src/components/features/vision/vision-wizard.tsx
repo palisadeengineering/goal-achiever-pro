@@ -179,9 +179,10 @@ export function VisionWizard({
     setIsSaving(true);
     try {
       await onComplete(data, visionId || undefined);
+      // Success - wizard will be closed by parent
     } catch (error) {
       console.error('Failed to save vision:', error);
-    } finally {
+      // Error toast is already shown by parent, but ensure button resets
       setIsSaving(false);
     }
   }, [data, visionId, onComplete]);

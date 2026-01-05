@@ -221,10 +221,10 @@ export default function VisionPage() {
         );
       }
 
-      // Reset and refresh
+      // Reset and refresh - don't await fetchVisions so the wizard closes immediately
       setMode('list');
       setEditingVisionId(null);
-      await fetchVisions();
+      fetchVisions(); // Refresh in background
     } catch (error) {
       console.error('Error saving vision:', error);
       toast.error('Failed to save vision');

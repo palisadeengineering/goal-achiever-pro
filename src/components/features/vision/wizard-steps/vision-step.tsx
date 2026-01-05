@@ -43,6 +43,12 @@ export function VisionStep({ data, updateData }: VisionStepProps) {
   const [showAIOptions, setShowAIOptions] = useState(false);
   const [aiContext, setAiContext] = useState('');
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [isGeneratingDate, setIsGeneratingDate] = useState(false);
+  const [dateSuggestion, setDateSuggestion] = useState<{
+    reasoning: string;
+    timeframe: string;
+    keyMilestones: string[];
+  } | null>(null);
 
   const handleDatePreset = (getValue: () => Date) => {
     const date = getValue();
@@ -57,6 +63,47 @@ export function VisionStep({ data, updateData }: VisionStepProps) {
   };
 
   const selectedDate = data.targetDate ? parseISO(data.targetDate) : undefined;
+
+  const generateDateWithAI = async () => {
+    if (!data.title && !data.description) {
+      toast.error('Please enter a vision title or description first');
+      return;
+    }
+
+    setIsGeneratingDate(true);
+    setDateSuggestion(null);
+    try {
+      const response = await fetch('/api/ai/suggest-date', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vision: data.title,
+          description: data.description,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to suggest date');
+      }
+
+      const result = await response.json();
+
+      if (result.suggestedDate) {
+        updateData({ targetDate: result.suggestedDate });
+        setDateSuggestion({
+          reasoning: result.reasoning,
+          timeframe: result.timeframe,
+          keyMilestones: result.keyMilestones || [],
+        });
+        toast.success(`Suggested timeline: ${result.timeframe}`);
+      }
+    } catch (error) {
+      console.error('AI date suggestion error:', error);
+      toast.error('Failed to suggest date. Please try again.');
+    } finally {
+      setIsGeneratingDate(false);
+    }
+  };
 
   const generateVisionWithAI = async () => {
     setIsGenerating(true);
@@ -183,7 +230,29 @@ export function VisionStep({ data, updateData }: VisionStepProps) {
       </div>
 
       <div className="space-y-2">
-        <Label>Target Date</Label>
+        <div className="flex items-center justify-between">
+          <Label>Target Date</Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={generateDateWithAI}
+            disabled={isGeneratingDate || (!data.title && !data.description)}
+            className="gap-2"
+          >
+            {isGeneratingDate ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Analyzing...
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4 text-violet-500" />
+                AI Suggest
+              </>
+            )}
+          </Button>
+        </div>
         <div className="space-y-3">
           {/* Preset buttons */}
           <div className="flex flex-wrap gap-2">
@@ -196,7 +265,10 @@ export function VisionStep({ data, updateData }: VisionStepProps) {
                   type="button"
                   variant={isSelected ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => handleDatePreset(preset.getValue)}
+                  onClick={() => {
+                    handleDatePreset(preset.getValue);
+                    setDateSuggestion(null);
+                  }}
                 >
                   {preset.label}
                 </Button>
@@ -219,7 +291,10 @@ export function VisionStep({ data, updateData }: VisionStepProps) {
                 <Calendar
                   mode="single"
                   selected={selectedDate}
-                  onSelect={handleCalendarSelect}
+                  onSelect={(date) => {
+                    handleCalendarSelect(date);
+                    setDateSuggestion(null);
+                  }}
                   disabled={(date) => date < new Date()}
                   defaultMonth={selectedDate || new Date()}
                 />
@@ -233,6 +308,7 @@ export function VisionStep({ data, updateData }: VisionStepProps) {
               value={data.targetDate}
               onChange={(e) => {
                 const value = e.target.value;
+                setDateSuggestion(null);
                 if (value) {
                   const selectedDate = new Date(value);
                   const today = new Date();
@@ -255,9 +331,37 @@ export function VisionStep({ data, updateData }: VisionStepProps) {
               </span>
             )}
           </div>
+          {/* AI Date Suggestion reasoning */}
+          {dateSuggestion && (
+            <div className="rounded-lg border bg-violet-50 dark:bg-violet-950/20 p-3 space-y-2">
+              <div className="flex items-start gap-2">
+                <Sparkles className="h-4 w-4 text-violet-500 mt-0.5 flex-shrink-0" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">
+                    Suggested: {dateSuggestion.timeframe}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {dateSuggestion.reasoning}
+                  </p>
+                </div>
+              </div>
+              {dateSuggestion.keyMilestones.length > 0 && (
+                <div className="pl-6">
+                  <p className="text-xs font-medium text-muted-foreground mb-1">Key milestones:</p>
+                  <ul className="text-xs text-muted-foreground space-y-0.5">
+                    {dateSuggestion.keyMilestones.map((milestone, i) => (
+                      <li key={i} className="flex items-center gap-1">
+                        <span className="text-violet-500">•</span> {milestone}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
         </div>
         <p className="text-sm text-muted-foreground">
-          When do you want to achieve this vision? Use presets, calendar, or type directly.
+          When do you want to achieve this vision? Use AI for smart suggestions, presets, or pick a custom date.
         </p>
       </div>
 

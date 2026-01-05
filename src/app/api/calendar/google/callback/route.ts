@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const code = searchParams.get('code');
   const error = searchParams.get('error');
+  const state = searchParams.get('state');
 
   if (error) {
     return NextResponse.redirect(
@@ -28,20 +29,40 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Get the authenticated user
-  const supabase = await createClient();
-  if (!supabase) {
+  // Get user ID from state parameter (passed during OAuth initiation)
+  let userId: string | null = null;
+  if (state) {
+    try {
+      const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
+      userId = stateData.userId;
+      // Verify state isn't too old (max 10 minutes)
+      if (Date.now() - stateData.timestamp > 10 * 60 * 1000) {
+        return NextResponse.redirect(
+          new URL(`/settings?error=state_expired`, request.url)
+        );
+      }
+    } catch (e) {
+      console.error('Failed to parse state:', e);
+    }
+  }
+
+  if (!userId) {
     return NextResponse.redirect(
-      new URL(`/settings?error=auth_required`, request.url)
+      new URL(`/settings?error=invalid_state`, request.url)
     );
   }
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
+  // Use service role client to store tokens (bypasses RLS)
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseServiceKey) {
     return NextResponse.redirect(
-      new URL(`/login?redirect=/settings`, request.url)
+      new URL(`/settings?error=server_config`, request.url)
     );
   }
+
+  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey);
 
   try {
     // Exchange code for tokens
@@ -88,7 +109,7 @@ export async function GET(request: NextRequest) {
     const { error: upsertError } = await supabase
       .from('user_integrations')
       .upsert({
-        user_id: user.id,
+        user_id: userId,
         provider: 'google_calendar',
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token,

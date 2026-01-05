@@ -14,12 +14,34 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // Get the authenticated user to include in state
+  const { createClient } = await import('@/lib/supabase/server');
+  const supabase = await createClient();
+
+  if (!supabase) {
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
+  }
+
   // Full calendar access for two-way sync (read/write events)
   // Note: Users who previously connected with readonly scopes will need to re-authenticate
   const scopes = [
     'https://www.googleapis.com/auth/calendar',
     'https://www.googleapis.com/auth/calendar.events',
   ].join(' ');
+
+  // Create state with user ID for callback verification
+  const state = Buffer.from(JSON.stringify({ userId: user.id, timestamp: Date.now() })).toString('base64');
 
   const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
   authUrl.searchParams.set('client_id', GOOGLE_CLIENT_ID);
@@ -28,6 +50,7 @@ export async function GET(request: NextRequest) {
   authUrl.searchParams.set('scope', scopes);
   authUrl.searchParams.set('access_type', 'offline');
   authUrl.searchParams.set('prompt', 'consent');
+  authUrl.searchParams.set('state', state);
 
   return NextResponse.json({ authUrl: authUrl.toString() });
 }
