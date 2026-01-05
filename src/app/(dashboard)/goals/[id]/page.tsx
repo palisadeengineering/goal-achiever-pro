@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import {
   Edit,
   Trash2,
@@ -133,7 +133,6 @@ const statusColors = {
 export default function MilestoneDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { toast } = useToast();
   const milestoneId = params.id as string;
 
   const [isLoading, setIsLoading] = useState(true);
@@ -284,10 +283,10 @@ export default function MilestoneDetailPage() {
       });
       if (!res.ok) throw new Error('Failed to update progress');
       setMilestone((prev) => prev ? { ...prev, progressPercentage: progress } : null);
-      toast({ title: 'Progress updated', description: `Milestone is now ${progress}% complete` });
+      toast.success(`Progress updated: Milestone is now ${progress}% complete`);
       setIsUpdateDialogOpen(false);
     } catch (error) {
-      toast({ title: 'Error', description: 'Failed to update progress', variant: 'destructive' });
+      toast.error('Failed to update progress');
     } finally {
       setIsSaving(false);
     }
@@ -305,13 +304,13 @@ export default function MilestoneDetailPage() {
       const newLink = await res.json();
       const kpi = visionKpis.find((k) => k.id === kpiId);
       setLinkedKpis((prev) => [...prev, { ...newLink, kpi }]);
-      toast({ title: 'KPI linked', description: 'KPI has been linked to this milestone' });
+      toast.success('KPI has been linked to this milestone');
     } catch (error) {
       // Mock add for development
       const kpi = visionKpis.find((k) => k.id === kpiId);
       if (kpi) {
         setLinkedKpis((prev) => [...prev, { id: `mk-${Date.now()}`, milestoneId, kpiId, isAutoLinked: false, kpi }]);
-        toast({ title: 'KPI linked', description: 'KPI has been linked to this milestone' });
+        toast.success('KPI has been linked to this milestone');
       }
     }
   };
@@ -320,10 +319,10 @@ export default function MilestoneDetailPage() {
     try {
       await fetch(`/api/milestone-kpis/${milestoneKpiId}`, { method: 'DELETE' });
       setLinkedKpis((prev) => prev.filter((lk) => lk.id !== milestoneKpiId));
-      toast({ title: 'KPI unlinked' });
+      toast.success('KPI unlinked');
     } catch (error) {
       setLinkedKpis((prev) => prev.filter((lk) => lk.id !== milestoneKpiId));
-      toast({ title: 'KPI unlinked' });
+      toast.success('KPI unlinked');
     }
   };
 
@@ -337,10 +336,10 @@ export default function MilestoneDetailPage() {
       if (!res.ok) throw new Error('Failed to add custom KPI');
       const newKpi = await res.json();
       setLinkedKpis((prev) => [...prev, newKpi]);
-      toast({ title: 'Custom KPI added' });
+      toast.success('Custom KPI added');
     } catch (error) {
       setLinkedKpis((prev) => [...prev, { id: `mk-${Date.now()}`, milestoneId, customKpiName: name, customKpiTarget: target, isAutoLinked: false }]);
-      toast({ title: 'Custom KPI added' });
+      toast.success('Custom KPI added');
     }
   };
 
@@ -379,9 +378,9 @@ export default function MilestoneDetailPage() {
           end: { dateTime: new Date(Date.now() + 60 * 60 * 1000).toISOString() },
         }),
       });
-      toast({ title: 'Added to calendar', description: `"${kpi.title}" has been scheduled` });
+      toast.success(`"${kpi.title}" has been added to calendar`);
     } catch (error) {
-      toast({ title: 'Added to calendar', description: `"${kpi.title}" has been scheduled` });
+      toast.success(`"${kpi.title}" has been added to calendar`);
     }
   };
 
@@ -396,10 +395,10 @@ export default function MilestoneDetailPage() {
       if (!res.ok) throw new Error('Failed to add target');
       const newTarget = await res.json();
       setMonthlyTargets((prev) => [...prev, { ...newTarget, weeklyTargets: [] }]);
-      toast({ title: 'Monthly target added' });
+      toast.success('Monthly target added');
     } catch (error) {
       setMonthlyTargets((prev) => [...prev, { id: `mt-${Date.now()}`, ...data, status: 'pending' as const, weeklyTargets: [] }]);
-      toast({ title: 'Monthly target added' });
+      toast.success('Monthly target added');
     }
   };
 
@@ -417,14 +416,14 @@ export default function MilestoneDetailPage() {
           ? { ...mt, weeklyTargets: [...mt.weeklyTargets, { ...newTarget, dailyActions: [] }] }
           : mt
       ));
-      toast({ title: 'Weekly target added' });
+      toast.success('Weekly target added');
     } catch (error) {
       setMonthlyTargets((prev) => prev.map((mt) =>
         mt.id === monthlyTargetId
           ? { ...mt, weeklyTargets: [...mt.weeklyTargets, { id: `wt-${Date.now()}`, ...data, status: 'pending' as const, dailyActions: [] }] }
           : mt
       ));
-      toast({ title: 'Weekly target added' });
+      toast.success('Weekly target added');
     }
   };
 
@@ -445,7 +444,7 @@ export default function MilestoneDetailPage() {
             : wt
         ),
       })));
-      toast({ title: 'Daily action added' });
+      toast.success('Daily action added');
     } catch (error) {
       setMonthlyTargets((prev) => prev.map((mt) => ({
         ...mt,
@@ -455,7 +454,7 @@ export default function MilestoneDetailPage() {
             : wt
         ),
       })));
-      toast({ title: 'Daily action added' });
+      toast.success('Daily action added');
     }
   };
 
@@ -518,9 +517,9 @@ export default function MilestoneDetailPage() {
           end: { dateTime: endDate.toISOString() },
         }),
       });
-      toast({ title: 'Added to calendar', description: `"${item.title}" has been scheduled` });
+      toast.success(`"${item.title}" has been added to calendar`);
     } catch (error) {
-      toast({ title: 'Added to calendar', description: `"${item.title}" has been scheduled` });
+      toast.success(`"${item.title}" has been added to calendar`);
     }
   };
 
@@ -546,7 +545,7 @@ export default function MilestoneDetailPage() {
         })),
       })));
     }
-    toast({ title: 'Target deleted' });
+    toast.success('Target deleted');
   };
 
   if (isLoading) {
