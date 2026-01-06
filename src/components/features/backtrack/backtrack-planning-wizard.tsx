@@ -354,8 +354,8 @@ export function BacktrackPlanningWizard({
 
   const handleNext = () => {
     const stepIndex = getStepIndex(currentStep);
-    if (stepIndex < STEPS.length - 1) {
-      const nextStep = STEPS[stepIndex + 1].id;
+    if (stepIndex < displayedSteps.length - 1) {
+      const nextStep = displayedSteps[stepIndex + 1].id;
       if (nextStep === 'generate' && !generatedPlan) {
         // Move to generate step first to show loading UI, then start generation
         setCurrentStep('generate');
@@ -372,7 +372,7 @@ export function BacktrackPlanningWizard({
   const handleBack = () => {
     const stepIndex = getStepIndex(currentStep);
     if (stepIndex > 0) {
-      setCurrentStep(STEPS[stepIndex - 1].id);
+      setCurrentStep(displayedSteps[stepIndex - 1].id);
     }
   };
 

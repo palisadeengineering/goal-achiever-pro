@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
 
   if (!supabase) {
     return NextResponse.json(
-      { error: 'Authentication required' },
+      { error: 'Please sign up or log in to connect Google Calendar. Demo accounts cannot use calendar sync.' },
       { status: 401 }
     );
   }
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json(
-      { error: 'Authentication required' },
+      { error: 'Please sign up or log in to connect Google Calendar. Demo accounts cannot use calendar sync.' },
       { status: 401 }
     );
   }
