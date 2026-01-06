@@ -1,4 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+
+// Demo user ID for development
+const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
+
+async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
+  if (!supabase) return DEMO_USER_ID;
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id || DEMO_USER_ID;
+}
 
 // Google Calendar OAuth configuration
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -14,24 +24,9 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Get the authenticated user to include in state
-  const { createClient } = await import('@/lib/supabase/server');
+  // Get the user ID (supports demo users)
   const supabase = await createClient();
-
-  if (!supabase) {
-    return NextResponse.json(
-      { error: 'Please sign up or log in to connect Google Calendar. Demo accounts cannot use calendar sync.' },
-      { status: 401 }
-    );
-  }
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json(
-      { error: 'Please sign up or log in to connect Google Calendar. Demo accounts cannot use calendar sync.' },
-      { status: 401 }
-    );
-  }
+  const userId = await getUserId(supabase);
 
   // Full calendar access for two-way sync (read/write events)
   // Note: Users who previously connected with readonly scopes will need to re-authenticate
@@ -41,7 +36,7 @@ export async function GET(request: NextRequest) {
   ].join(' ');
 
   // Create state with user ID for callback verification
-  const state = Buffer.from(JSON.stringify({ userId: user.id, timestamp: Date.now() })).toString('base64');
+  const state = Buffer.from(JSON.stringify({ userId, timestamp: Date.now() })).toString('base64');
 
   const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
   authUrl.searchParams.set('client_id', GOOGLE_CLIENT_ID);
@@ -57,29 +52,22 @@ export async function GET(request: NextRequest) {
 
 // Disconnect Google Calendar
 export async function DELETE(request: NextRequest) {
-  const { createClient } = await import('@/lib/supabase/server');
   const supabase = await createClient();
 
   if (!supabase) {
     return NextResponse.json(
-      { error: 'Authentication required' },
-      { status: 401 }
+      { error: 'Database connection failed' },
+      { status: 500 }
     );
   }
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json(
-      { error: 'Authentication required' },
-      { status: 401 }
-    );
-  }
+  const userId = await getUserId(supabase);
 
   // Get the integration to revoke the token
   const { data: integration } = await supabase
     .from('user_integrations')
     .select('access_token')
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .eq('provider', 'google_calendar')
     .single();
 
@@ -98,7 +86,7 @@ export async function DELETE(request: NextRequest) {
   const { error } = await supabase
     .from('user_integrations')
     .delete()
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .eq('provider', 'google_calendar');
 
   if (error) {

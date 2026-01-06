@@ -1,6 +1,15 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+// Demo user ID for development
+const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
+
+async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
+  if (!supabase) return DEMO_USER_ID;
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id || DEMO_USER_ID;
+}
+
 // GET: Check if Google Calendar is connected
 export async function GET() {
   const supabase = await createClient();
@@ -9,17 +18,13 @@ export async function GET() {
     return NextResponse.json({ connected: false });
   }
 
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ connected: false });
-  }
+  const userId = await getUserId(supabase);
 
   try {
     const { data: integration, error } = await supabase
       .from('user_integrations')
       .select('access_token, refresh_token, token_expiry, provider_email, is_active')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .eq('provider', 'google_calendar')
       .single();
 
