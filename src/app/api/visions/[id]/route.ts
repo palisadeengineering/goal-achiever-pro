@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 // Demo user ID for development
 const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
@@ -18,8 +19,9 @@ export async function GET(
   try {
     const { id } = await params;
     const supabase = await createClient();
+    const adminClient = createAdminClient();
 
-    if (!supabase) {
+    if (!adminClient) {
       return NextResponse.json(
         { error: 'Database connection failed' },
         { status: 500 }
@@ -28,8 +30,8 @@ export async function GET(
 
     const userId = await getUserId(supabase);
 
-    // Fetch the vision
-    const { data: vision, error: visionError } = await supabase
+    // Fetch the vision using admin client to bypass RLS
+    const { data: vision, error: visionError } = await adminClient
       .from('visions')
       .select('*')
       .eq('id', id)
@@ -46,7 +48,7 @@ export async function GET(
     }
 
     // Fetch board images for this vision
-    const { data: boardImages, error: imagesError } = await supabase
+    const { data: boardImages, error: imagesError } = await adminClient
       .from('vision_board_images')
       .select('id, file_path, caption, is_cover, created_at')
       .eq('vision_id', id)
@@ -57,11 +59,11 @@ export async function GET(
       console.error('Error fetching board images:', imagesError);
     }
 
-    // Transform board images with signed URLs
+    // Transform board images with signed URLs (use admin client for storage too)
     const transformedImages = await Promise.all(
       (boardImages || []).map(async (img) => {
         // Get signed URL from storage
-        const { data: signedUrlData } = await supabase.storage
+        const { data: signedUrlData } = await adminClient.storage
           .from('vision-boards')
           .createSignedUrl(img.file_path, 3600); // 1 hour expiry
 
@@ -94,8 +96,9 @@ export async function PUT(
   try {
     const { id } = await params;
     const supabase = await createClient();
+    const adminClient = createAdminClient();
 
-    if (!supabase) {
+    if (!adminClient) {
       return NextResponse.json(
         { error: 'Database connection failed' },
         { status: 500 }
@@ -113,6 +116,7 @@ export async function PUT(
       attainable,
       realistic,
       timeBound,
+      targetDate,
       clarityScore,
       beliefScore,
       consistencyScore,
@@ -120,8 +124,8 @@ export async function PUT(
       affirmationText,
     } = body;
 
-    // Update vision
-    const { data: vision, error } = await supabase
+    // Update vision using admin client to bypass RLS
+    const { data: vision, error } = await adminClient
       .from('visions')
       .update({
         title,
@@ -130,7 +134,7 @@ export async function PUT(
         measurable: measurable || null,
         attainable: attainable || null,
         realistic: realistic || null,
-        time_bound: timeBound || null,
+        time_bound: targetDate || timeBound || null,
         clarity_score: clarityScore ?? undefined,
         belief_score: beliefScore ?? undefined,
         consistency_score: consistencyScore ?? undefined,
@@ -171,8 +175,9 @@ export async function DELETE(
     const hardDelete = searchParams.get('hard') === 'true';
 
     const supabase = await createClient();
+    const adminClient = createAdminClient();
 
-    if (!supabase) {
+    if (!adminClient) {
       return NextResponse.json(
         { error: 'Database connection failed' },
         { status: 500 }
@@ -184,7 +189,7 @@ export async function DELETE(
     if (hardDelete) {
       // Hard delete - cascades to all related data via foreign keys
       // First delete vision board images from storage
-      const { data: boardImages } = await supabase
+      const { data: boardImages } = await adminClient
         .from('vision_board_images')
         .select('file_path')
         .eq('vision_id', id)
@@ -192,11 +197,11 @@ export async function DELETE(
 
       if (boardImages && boardImages.length > 0) {
         const filePaths = boardImages.map((img) => img.file_path);
-        await supabase.storage.from('vision-boards').remove(filePaths);
+        await adminClient.storage.from('vision-boards').remove(filePaths);
       }
 
       // Delete calendar events for this vision's items
-      await supabase
+      await adminClient
         .from('calendar_events')
         .delete()
         .eq('user_id', userId)
@@ -205,7 +210,7 @@ export async function DELETE(
 
       // Delete the vision (cascades to backtrack_plans, quarterly_targets,
       // non_negotiables, vision_reminders, vision_kpis, etc.)
-      const { error } = await supabase
+      const { error } = await adminClient
         .from('visions')
         .delete()
         .eq('id', id)
@@ -221,8 +226,8 @@ export async function DELETE(
 
       return NextResponse.json({ success: true, deleted: true });
     } else {
-      // Soft delete - archive the vision
-      const { error } = await supabase
+      // Soft delete - archive the vision using admin client to bypass RLS
+      const { error } = await adminClient
         .from('visions')
         .update({
           is_active: false,
