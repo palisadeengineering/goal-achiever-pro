@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,8 +13,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return NextResponse.json(
+        { error: 'Anthropic API key not configured' },
+        { status: 500 }
+      );
+    }
+
+    const anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
     });
 
     const prompt = `Analyze this vision/goal and identify any metrics or measurable targets that would benefit from clarifying questions.
@@ -54,23 +61,18 @@ If no clear metrics are found, return: { "metricsFound": [], "hasMetrics": false
 
 Make questions specific and helpful. For revenue, ask about customer count and pricing. For users, ask about acquisition channels. For habits, ask about current baseline.`;
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+    const message = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 800,
       messages: [
-        {
-          role: 'system',
-          content: 'You are an expert business coach who helps people set realistic, data-driven goals. You ask smart questions to uncover the math behind ambitious targets.',
-        },
         {
           role: 'user',
           content: prompt,
         },
       ],
-      temperature: 0.7,
-      max_tokens: 800,
     });
 
-    const content = response.choices[0]?.message?.content;
+    const content = message.content[0].type === 'text' ? message.content[0].text : '';
     if (!content) {
       throw new Error('No response from AI');
     }

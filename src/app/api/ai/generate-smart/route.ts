@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
 import { logAIUsage } from '@/lib/utils/ai-usage';
 
@@ -29,15 +29,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!process.env.ANTHROPIC_API_KEY) {
       return NextResponse.json(
-        { error: 'OpenAI API key not configured' },
+        { error: 'Anthropic API key not configured' },
         { status: 500 }
       );
     }
 
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+    const anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
     });
 
     const prompt = `You are an expert goal-setting coach specializing in Dan Martell's methodology. Given the following vision statement, generate SMART goal components.
@@ -68,32 +68,27 @@ Respond ONLY with valid JSON in this exact format:
   "suggestedDeadline": "YYYY-MM-DD"
 }`;
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+    const message = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
       messages: [
-        {
-          role: 'system',
-          content: 'You are an expert goal-setting coach. Always respond with valid JSON only.',
-        },
         {
           role: 'user',
           content: prompt,
         },
       ],
-      temperature: 0.7,
-      max_tokens: 1000,
     });
 
-    const responseText = completion.choices[0]?.message?.content;
+    const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
     const responseTimeMs = Date.now() - startTime;
 
     // Log AI usage
     logAIUsage({
       userId,
       endpoint: '/api/ai/generate-smart',
-      model: 'gpt-4o-mini',
-      promptTokens: completion.usage?.prompt_tokens || 0,
-      completionTokens: completion.usage?.completion_tokens || 0,
+      model: 'claude-sonnet-4-20250514',
+      promptTokens: message.usage?.input_tokens || 0,
+      completionTokens: message.usage?.output_tokens || 0,
       requestType: 'generate-smart',
       success: true,
       responseTimeMs,
@@ -118,7 +113,7 @@ Respond ONLY with valid JSON in this exact format:
     logAIUsage({
       userId,
       endpoint: '/api/ai/generate-smart',
-      model: 'gpt-4o-mini',
+      model: 'claude-sonnet-4-20250514',
       promptTokens: 0,
       completionTokens: 0,
       requestType: 'generate-smart',
