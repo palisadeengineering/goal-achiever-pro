@@ -17,9 +17,21 @@ const REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:300
 
 // Generate OAuth URL for Google Calendar
 export async function GET(request: NextRequest) {
-  if (!GOOGLE_CLIENT_ID) {
+  // Check all required configuration upfront
+  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
     return NextResponse.json(
-      { error: 'Google Calendar integration is not configured' },
+      { error: 'Google Calendar integration is not configured. Missing Google OAuth credentials.' },
+      { status: 500 }
+    );
+  }
+
+  // Check Supabase configuration (needed for callback to store tokens)
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    return NextResponse.json(
+      { error: 'Server configuration error. Please contact support.' },
       { status: 500 }
     );
   }
