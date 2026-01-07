@@ -2,6 +2,15 @@
   "mcpServers": {
     "Revit": {
       "disabled": true
+    },
+    "supabase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--read-only",
+        "--project-ref=uomrqmsbmuzlyghaocrj"
+      ]
     }
   }
 }
