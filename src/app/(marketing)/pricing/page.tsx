@@ -133,7 +133,7 @@ export default function PricingPage() {
               key={tier.id}
               className={`relative card-hover-lift ${
                 tier.highlighted
-                  ? 'border-2 border-primary shadow-xl ring-2 ring-primary/20 ring-offset-2 scale-[1.02] md:scale-105'
+                  ? 'border-2 border-primary shadow-xl ring-2 ring-primary/20 ring-offset-2 md:scale-105'
                   : 'border-2'
               }`}
             >
@@ -206,39 +206,42 @@ export default function PricingPage() {
         </div>
 
         {/* Feature Comparison */}
-        <div className="mt-24">
-          <div className="text-center mb-10">
+        <div className="mt-16 md:mt-24">
+          <div className="text-center mb-6 md:mb-10">
             <Badge className="mb-4" variant="outline">Compare Plans</Badge>
             <h2 className="font-display text-2xl md:text-3xl font-bold">
               Feature Comparison
             </h2>
+            <p className="text-sm text-muted-foreground mt-2 md:hidden">
+              ← Scroll to compare →
+            </p>
           </div>
-          <div className="overflow-x-auto rounded-xl border bg-card">
-            <table className="w-full max-w-4xl mx-auto">
+          <div className="overflow-x-auto rounded-xl border bg-card -mx-4 md:mx-0 scrollbar-hide">
+            <table className="w-full min-w-[600px] md:min-w-0 md:max-w-4xl mx-auto">
               <thead>
                 <tr className="border-b bg-muted/30">
-                  <th className="text-left py-4 px-6 font-display font-semibold">Feature</th>
-                  <th className="text-center py-4 px-6 font-display font-semibold">Free</th>
-                  <th className="text-center py-4 px-6 font-display font-semibold bg-primary/5">
-                    <div className="flex items-center justify-center gap-2">
+                  <th className="text-left py-3 px-4 md:py-4 md:px-6 font-display font-semibold text-sm md:text-base sticky left-0 bg-muted/30 z-10">Feature</th>
+                  <th className="text-center py-3 px-3 md:py-4 md:px-6 font-display font-semibold text-sm md:text-base">Free</th>
+                  <th className="text-center py-3 px-3 md:py-4 md:px-6 font-display font-semibold text-sm md:text-base bg-primary/5">
+                    <div className="flex items-center justify-center gap-1 md:gap-2">
                       Pro
-                      <Badge size="sm" className="bg-primary">Popular</Badge>
+                      <Badge size="sm" className="bg-primary text-[10px] md:text-xs">Popular</Badge>
                     </div>
                   </th>
-                  <th className="text-center py-4 px-6 font-display font-semibold">Premium</th>
+                  <th className="text-center py-3 px-3 md:py-4 md:px-6 font-display font-semibold text-sm md:text-base">Premium</th>
                 </tr>
               </thead>
               <tbody>
                 {Object.entries(FEATURE_COMPARISON).map(([feature, tiers], index) => (
                   <tr key={feature} className={`border-b last:border-0 ${index % 2 === 0 ? '' : 'bg-muted/20'}`}>
-                    <td className="py-4 px-6 text-sm font-medium">{feature}</td>
-                    <td className="py-4 px-6 text-center">
+                    <td className={`py-3 px-4 md:py-4 md:px-6 text-xs md:text-sm font-medium sticky left-0 z-10 ${index % 2 === 0 ? 'bg-card' : 'bg-muted/20'}`}>{feature}</td>
+                    <td className="py-3 px-3 md:py-4 md:px-6 text-center">
                       {renderFeatureValue(tiers.free)}
                     </td>
-                    <td className="py-4 px-6 text-center bg-primary/5">
+                    <td className="py-3 px-3 md:py-4 md:px-6 text-center bg-primary/5">
                       {renderFeatureValue(tiers.pro)}
                     </td>
-                    <td className="py-4 px-6 text-center">
+                    <td className="py-3 px-3 md:py-4 md:px-6 text-center">
                       {renderFeatureValue(tiers.premium)}
                     </td>
                   </tr>

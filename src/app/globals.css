@@ -539,3 +539,13 @@
 .dark ::-webkit-scrollbar-thumb:hover {
   background: oklch(0.45 0.015 260);
 }
+
+/* Utility to hide scrollbar but keep functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
