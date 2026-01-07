@@ -444,7 +444,7 @@ export default function VisionDetailPage({ params }: { params: Promise<{ id: str
                   <AlertDialogTitle>Delete Vision?</AlertDialogTitle>
                   <AlertDialogDescription className="space-y-2">
                     <p>
-                      This will permanently delete <strong>"{vision.title}"</strong> and all associated data:
+                      This will permanently delete <strong>&quot;{vision.title}&quot;</strong> and all associated data:
                     </p>
                     <ul className="list-disc pl-5 text-sm space-y-1">
                       <li>Backtrack plans, quarterly targets, monthly/weekly targets</li>
@@ -608,7 +608,7 @@ export default function VisionDetailPage({ params }: { params: Promise<{ id: str
                   Affirmation
                 </h3>
                 <blockquote className="text-lg italic text-muted-foreground border-l-4 border-primary pl-4">
-                  "{vision.affirmation_text}"
+                  &quot;{vision.affirmation_text}&quot;
                 </blockquote>
               </CardContent>
             </Card>
@@ -801,7 +801,7 @@ export default function VisionDetailPage({ params }: { params: Promise<{ id: str
             <CardContent className="pt-6">
               <h3 className="font-semibold flex items-center gap-2 mb-4">
                 <CheckCircle2 className="h-5 w-5" />
-                Today's Non-Negotiables
+                Today&apos;s Non-Negotiables
               </h3>
               {nonNegotiables.length === 0 ? (
                 <div className="text-center py-8">

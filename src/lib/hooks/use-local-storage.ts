@@ -9,17 +9,20 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
   const valueRef = useRef<T>(initialValue);
 
   // Hydrate from localStorage after mount
+  // This is an intentional hydration pattern for SSR compatibility
   useEffect(() => {
     try {
       const item = window.localStorage.getItem(key);
       if (item) {
         const parsed = JSON.parse(item);
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- hydration pattern
         setStoredValue(parsed);
         valueRef.current = parsed;
       }
     } catch (error) {
       console.warn(`Error reading localStorage key "${key}":`, error);
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydration pattern
     setIsHydrated(true);
   }, [key]);
 

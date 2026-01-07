@@ -49,7 +49,7 @@ function calculateStreak(completionDates: string[], targetCount: number): { curr
 
   if (daysSinceLastCompletion <= 1) {
     currentStreak = 1;
-    let expectedDate = new Date(lastDate);
+    const expectedDate = new Date(lastDate);
 
     for (let i = 1; i < sortedDates.length; i++) {
       expectedDate.setDate(expectedDate.getDate() - 1);

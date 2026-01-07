@@ -787,7 +787,7 @@ export default function BacktrackDetailPage({ params }: { params: Promise<{ id: 
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CheckCircle2 className="h-5 w-5" />
-                Today's Non-Negotiables
+                Today&apos;s Non-Negotiables
               </CardTitle>
               <CardDescription>Complete your daily behaviors to build your streak</CardDescription>
             </CardHeader>
@@ -907,7 +907,7 @@ export default function BacktrackDetailPage({ params }: { params: Promise<{ id: 
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CalendarDays className="h-5 w-5" />
-                Today's Actions
+                Today&apos;s Actions
               </CardTitle>
               <CardDescription>
                 {format(new Date(), 'EEEE, MMMM d, yyyy')}
@@ -1024,7 +1024,7 @@ export default function BacktrackDetailPage({ params }: { params: Promise<{ id: 
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CalendarRange className="h-5 w-5" />
-                This Week's Targets
+                This Week&apos;s Targets
               </CardTitle>
               <CardDescription>
                 Week {metrics.currentWeek} • {format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'MMM d')} -{' '}
@@ -1114,7 +1114,7 @@ export default function BacktrackDetailPage({ params }: { params: Promise<{ id: 
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CalendarClock className="h-5 w-5" />
-                This Month's Targets
+                This Month&apos;s Targets
               </CardTitle>
               <CardDescription>
                 {format(new Date(), 'MMMM yyyy')}
