@@ -256,7 +256,7 @@ IMPORTANT RULES:
 - Total hours must fit within the ${totalHours} hour budget`;
 
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-opus-4-20250514',
       max_tokens: 8000,
       messages: [
         {
@@ -273,7 +273,7 @@ IMPORTANT RULES:
     logAIUsage({
       userId,
       endpoint: '/api/ai/generate-backtrack',
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-opus-4-20250514',
       promptTokens: message.usage?.input_tokens || 0,
       completionTokens: message.usage?.output_tokens || 0,
       requestType: 'generate-backtrack',
@@ -507,7 +507,7 @@ IMPORTANT RULES:
     logAIUsage({
       userId,
       endpoint: '/api/ai/generate-backtrack',
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-opus-4-20250514',
       promptTokens: 0,
       completionTokens: 0,
       requestType: 'generate-backtrack',

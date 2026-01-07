@@ -74,7 +74,7 @@ For ${kpiLevel || 'this'} KPIs:
 Return ONLY the improved KPI text, no explanations. Format: "[KPI Title]: [Target/Description]"`;
 
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-opus-4-20250514',
       max_tokens: 200,
       messages: [{ role: 'user', content: prompt }],
     });
@@ -85,7 +85,7 @@ Return ONLY the improved KPI text, no explanations. Format: "[KPI Title]: [Targe
     logAIUsage({
       userId,
       endpoint: '/api/ai/edit-kpi',
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-opus-4-20250514',
       promptTokens: message.usage?.input_tokens || 0,
       completionTokens: message.usage?.output_tokens || 0,
       requestType: 'edit-kpi',
@@ -101,7 +101,7 @@ Return ONLY the improved KPI text, no explanations. Format: "[KPI Title]: [Targe
     logAIUsage({
       userId,
       endpoint: '/api/ai/edit-kpi',
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-opus-4-20250514',
       promptTokens: 0,
       completionTokens: 0,
       requestType: 'edit-kpi',

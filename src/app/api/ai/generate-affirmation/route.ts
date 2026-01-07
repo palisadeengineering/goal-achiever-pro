@@ -61,7 +61,7 @@ Guidelines for the affirmation:
 Respond with ONLY the affirmation text, no quotes or additional commentary.`;
 
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-opus-4-20250514',
       max_tokens: 300,
       messages: [
         {
@@ -85,7 +85,7 @@ Respond with ONLY the affirmation text, no quotes or additional commentary.`;
     logAIUsage({
       userId,
       endpoint: '/api/ai/generate-affirmation',
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-opus-4-20250514',
       promptTokens: message.usage?.input_tokens || 0,
       completionTokens: message.usage?.output_tokens || 0,
       requestType: 'generate-affirmation',
@@ -101,7 +101,7 @@ Respond with ONLY the affirmation text, no quotes or additional commentary.`;
     logAIUsage({
       userId,
       endpoint: '/api/ai/generate-affirmation',
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-opus-4-20250514',
       promptTokens: 0,
       completionTokens: 0,
       requestType: 'generate-affirmation',

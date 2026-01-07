@@ -69,7 +69,7 @@ Respond ONLY with valid JSON in this exact format:
 }`;
 
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-opus-4-20250514',
       max_tokens: 1000,
       messages: [
         {
@@ -86,7 +86,7 @@ Respond ONLY with valid JSON in this exact format:
     logAIUsage({
       userId,
       endpoint: '/api/ai/generate-smart',
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-opus-4-20250514',
       promptTokens: message.usage?.input_tokens || 0,
       completionTokens: message.usage?.output_tokens || 0,
       requestType: 'generate-smart',
@@ -113,7 +113,7 @@ Respond ONLY with valid JSON in this exact format:
     logAIUsage({
       userId,
       endpoint: '/api/ai/generate-smart',
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-opus-4-20250514',
       promptTokens: 0,
       completionTokens: 0,
       requestType: 'generate-smart',

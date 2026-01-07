@@ -52,7 +52,7 @@ Respond with a JSON object:
 Be realistic but ambitious. For business goals, consider typical growth curves. For personal goals, consider the time needed for sustainable habit change.`;
 
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-opus-4-20250514',
       max_tokens: 500,
       messages: [
         {

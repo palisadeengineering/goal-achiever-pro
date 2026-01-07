@@ -62,7 +62,7 @@ If no clear metrics are found, return: { "metricsFound": [], "hasMetrics": false
 Make questions specific and helpful. For revenue, ask about customer count and pricing. For users, ask about acquisition channels. For habits, ask about current baseline.`;
 
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-opus-4-20250514',
       max_tokens: 800,
       messages: [
         {

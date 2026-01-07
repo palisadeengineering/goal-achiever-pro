@@ -63,7 +63,7 @@ Examples of good non-negotiables:
 Return ONLY the non-negotiable title/description, no explanations.`;
 
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-opus-4-20250514',
       max_tokens: 150,
       messages: [{ role: 'user', content: prompt }],
     });
@@ -74,7 +74,7 @@ Return ONLY the non-negotiable title/description, no explanations.`;
     logAIUsage({
       userId,
       endpoint: '/api/ai/suggest-non-negotiables',
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-opus-4-20250514',
       promptTokens: message.usage?.input_tokens || 0,
       completionTokens: message.usage?.output_tokens || 0,
       requestType: 'suggest-non-negotiables',
@@ -90,7 +90,7 @@ Return ONLY the non-negotiable title/description, no explanations.`;
     logAIUsage({
       userId,
       endpoint: '/api/ai/suggest-non-negotiables',
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-opus-4-20250514',
       promptTokens: 0,
       completionTokens: 0,
       requestType: 'suggest-non-negotiables',
