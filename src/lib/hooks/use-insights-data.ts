@@ -49,9 +49,21 @@ interface UseInsightsDataParams {
   filters?: InsightsFilters;
 }
 
+export interface EnergyFlowDataPoint {
+  hour: number;
+  hourLabel: string;
+  avgEnergy: number;
+  energizingMinutes: number;
+  neutralMinutes: number;
+  drainingMinutes: number;
+  totalMinutes: number;
+  dominantEnergy: 'green' | 'yellow' | 'red' | null;
+}
+
 interface UseInsightsDataReturn {
   barChartData: ChartDataPoint[];
   timeSeriesData: TimeSeriesDataPoint[];
+  energyFlowData: EnergyFlowDataPoint[];
   totals: {
     totalHours: number;
     totalEvents: number;
@@ -366,9 +378,138 @@ export function useInsightsData({
       });
   }, [blocksWithDuration, groupBy, granularity, measure, tagMap, startDate, endDate]);
 
+  // Energy flow data - shows energy levels by hour of day
+  const energyFlowData = useMemo((): EnergyFlowDataPoint[] => {
+    // Initialize data for each hour (6 AM to 10 PM for typical work hours)
+    const hourlyData: Record<number, {
+      energizingMinutes: number;
+      neutralMinutes: number;
+      drainingMinutes: number;
+      totalMinutes: number;
+    }> = {};
+
+    // Initialize all hours from 6 AM to 10 PM
+    for (let hour = 6; hour <= 22; hour++) {
+      hourlyData[hour] = {
+        energizingMinutes: 0,
+        neutralMinutes: 0,
+        drainingMinutes: 0,
+        totalMinutes: 0,
+      };
+    }
+
+    // Process each time block and distribute minutes to appropriate hours
+    blocksWithDuration.forEach(block => {
+      const [startHour, startMin] = block.startTime.split(':').map(Number);
+      const [endHour, endMin] = block.endTime.split(':').map(Number);
+
+      // Handle blocks that span multiple hours
+      for (let hour = startHour; hour <= endHour && hour <= 22; hour++) {
+        if (hour < 6) continue; // Skip hours before 6 AM
+
+        let minutesInHour = 0;
+
+        if (hour === startHour && hour === endHour) {
+          // Block is entirely within one hour
+          minutesInHour = endMin - startMin;
+        } else if (hour === startHour) {
+          // First hour of a multi-hour block
+          minutesInHour = 60 - startMin;
+        } else if (hour === endHour) {
+          // Last hour of a multi-hour block
+          minutesInHour = endMin;
+        } else {
+          // Middle hours (full 60 minutes)
+          minutesInHour = 60;
+        }
+
+        if (minutesInHour <= 0) continue;
+
+        if (!hourlyData[hour]) {
+          hourlyData[hour] = {
+            energizingMinutes: 0,
+            neutralMinutes: 0,
+            drainingMinutes: 0,
+            totalMinutes: 0,
+          };
+        }
+
+        hourlyData[hour].totalMinutes += minutesInHour;
+
+        // Distribute minutes by energy rating
+        switch (block.energyRating) {
+          case 'green':
+            hourlyData[hour].energizingMinutes += minutesInHour;
+            break;
+          case 'yellow':
+            hourlyData[hour].neutralMinutes += minutesInHour;
+            break;
+          case 'red':
+            hourlyData[hour].drainingMinutes += minutesInHour;
+            break;
+        }
+      }
+    });
+
+    // Convert energy ratings to numeric scores: green=3, yellow=2, red=1
+    const ENERGY_SCORES: Record<string, number> = {
+      green: 3,
+      yellow: 2,
+      red: 1,
+    };
+
+    // Format hour labels and calculate averages
+    return Object.entries(hourlyData)
+      .sort(([a], [b]) => parseInt(a) - parseInt(b))
+      .map(([hourStr, data]) => {
+        const hour = parseInt(hourStr);
+        const { energizingMinutes, neutralMinutes, drainingMinutes, totalMinutes } = data;
+
+        // Calculate weighted average energy score
+        let avgEnergy = 0;
+        if (totalMinutes > 0) {
+          avgEnergy = (
+            (energizingMinutes * ENERGY_SCORES.green) +
+            (neutralMinutes * ENERGY_SCORES.yellow) +
+            (drainingMinutes * ENERGY_SCORES.red)
+          ) / totalMinutes;
+        }
+
+        // Determine dominant energy
+        let dominantEnergy: 'green' | 'yellow' | 'red' | null = null;
+        if (totalMinutes > 0) {
+          if (energizingMinutes >= neutralMinutes && energizingMinutes >= drainingMinutes) {
+            dominantEnergy = 'green';
+          } else if (neutralMinutes >= drainingMinutes) {
+            dominantEnergy = 'yellow';
+          } else {
+            dominantEnergy = 'red';
+          }
+        }
+
+        // Format hour label (e.g., "6 AM", "12 PM", "6 PM")
+        const hourLabel = hour === 0 ? '12 AM'
+          : hour < 12 ? `${hour} AM`
+          : hour === 12 ? '12 PM'
+          : `${hour - 12} PM`;
+
+        return {
+          hour,
+          hourLabel,
+          avgEnergy: Math.round(avgEnergy * 100) / 100,
+          energizingMinutes,
+          neutralMinutes,
+          drainingMinutes,
+          totalMinutes,
+          dominantEnergy,
+        };
+      });
+  }, [blocksWithDuration]);
+
   return {
     barChartData,
     timeSeriesData,
+    energyFlowData,
     totals,
     breakdown: {
       drip: dripBreakdown,

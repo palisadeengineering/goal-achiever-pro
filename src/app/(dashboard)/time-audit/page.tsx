@@ -213,6 +213,18 @@ export default function TimeAuditPage() {
     }
   }, [googleEvents, getUncategorizedEventIds]);
 
+  // Auto-open categorization dialog when new uncategorized events are detected after sync
+  useEffect(() => {
+    // Only auto-open if:
+    // 1. Google is connected
+    // 2. Not currently loading
+    // 3. There are uncategorized events
+    // 4. Dialog is not already open
+    if (isGoogleConnected && !isLoadingGoogle && uncategorizedCount > 0 && !showCategorizationDialog) {
+      setShowCategorizationDialog(true);
+    }
+  }, [isGoogleConnected, isLoadingGoogle, uncategorizedCount, showCategorizationDialog]);
+
   // Transform time blocks for WeeklyCalendarView (grouped by date)
   // Includes both manual time blocks AND categorized Google Calendar events
   const calendarTimeBlocks = useMemo(() => {

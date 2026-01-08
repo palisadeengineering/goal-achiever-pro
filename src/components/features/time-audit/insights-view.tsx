@@ -35,6 +35,7 @@ import {
   DonutChart,
   StackedBarChart,
   TrendLineChart,
+  EnergyFlowChart,
 } from './insights-charts';
 
 interface InsightsViewProps {
@@ -457,6 +458,35 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Daily Energy Flow Chart */}
+      <Card>
+        <CardHeader>
+          <div>
+            <CardTitle>Daily Energy Flow</CardTitle>
+            <CardDescription>
+              Your average energy levels throughout the day based on tracked activities
+            </CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <EnergyFlowChart data={insightsData.energyFlowData} />
+          <div className="mt-4 flex items-center justify-center gap-6 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span className="h-3 w-3 rounded-full bg-green-500" />
+              <span>High Energy (Energizing)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="h-3 w-3 rounded-full bg-yellow-500" />
+              <span>Medium Energy (Neutral)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="h-3 w-3 rounded-full bg-red-500" />
+              <span>Low Energy (Draining)</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Detailed Breakdown Tables */}
       <div className="grid gap-6 lg:grid-cols-3">

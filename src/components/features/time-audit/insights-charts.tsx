@@ -14,6 +14,9 @@ import {
   Legend,
   LineChart,
   Line,
+  AreaChart,
+  Area,
+  ReferenceLine,
 } from 'recharts';
 
 interface ChartDataPoint {
@@ -208,6 +211,146 @@ export function TrendLineChart({ data, keys, colors, measure }: LineChartProps) 
           />
         ))}
       </LineChart>
+    </ResponsiveContainer>
+  );
+}
+
+// Energy Flow Chart - shows energy levels throughout the day by hour
+export interface EnergyFlowDataPoint {
+  hour: number;
+  hourLabel: string;
+  avgEnergy: number;
+  energizingMinutes: number;
+  neutralMinutes: number;
+  drainingMinutes: number;
+  totalMinutes: number;
+  dominantEnergy: 'green' | 'yellow' | 'red' | null;
+}
+
+interface EnergyFlowChartProps {
+  data: EnergyFlowDataPoint[];
+}
+
+const ENERGY_GRADIENT_COLORS = {
+  high: '#22c55e',    // Green - energizing
+  medium: '#eab308',  // Yellow - neutral
+  low: '#ef4444',     // Red - draining
+};
+
+function getEnergyColor(avgEnergy: number): string {
+  if (avgEnergy >= 2.5) return ENERGY_GRADIENT_COLORS.high;
+  if (avgEnergy >= 1.5) return ENERGY_GRADIENT_COLORS.medium;
+  return ENERGY_GRADIENT_COLORS.low;
+}
+
+function getEnergyLabel(avgEnergy: number): string {
+  if (avgEnergy >= 2.5) return 'High Energy';
+  if (avgEnergy >= 1.5) return 'Medium Energy';
+  if (avgEnergy > 0) return 'Low Energy';
+  return 'No Data';
+}
+
+export function EnergyFlowChart({ data }: EnergyFlowChartProps) {
+  const hasData = data.some(d => d.totalMinutes > 0);
+
+  if (!hasData) {
+    return (
+      <div className="flex h-[300px] items-center justify-center text-muted-foreground">
+        No energy data available for the selected period
+      </div>
+    );
+  }
+
+  // Create gradient stops based on data
+  const gradientId = 'energyGradient';
+
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <AreaChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#22c55e" stopOpacity={0.8} />
+            <stop offset="50%" stopColor="#eab308" stopOpacity={0.6} />
+            <stop offset="100%" stopColor="#ef4444" stopOpacity={0.4} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis
+          dataKey="hourLabel"
+          tick={{ fontSize: 12 }}
+          interval={1}
+        />
+        <YAxis
+          domain={[0, 3]}
+          ticks={[1, 2, 3]}
+          tickFormatter={(v) => {
+            if (v === 3) return 'High';
+            if (v === 2) return 'Med';
+            if (v === 1) return 'Low';
+            return '';
+          }}
+        />
+        <Tooltip
+          content={({ active, payload, label }) => {
+            if (!active || !payload || !payload.length) return null;
+            const dataPoint = payload[0]?.payload as EnergyFlowDataPoint;
+            if (!dataPoint || dataPoint.totalMinutes === 0) {
+              return (
+                <div className="rounded-lg border bg-background p-3 shadow-md">
+                  <p className="font-medium">{label}</p>
+                  <p className="text-sm text-muted-foreground">No activities tracked</p>
+                </div>
+              );
+            }
+            return (
+              <div className="rounded-lg border bg-background p-3 shadow-md">
+                <p className="font-medium">{label}</p>
+                <p className="text-sm" style={{ color: getEnergyColor(dataPoint.avgEnergy) }}>
+                  {getEnergyLabel(dataPoint.avgEnergy)}
+                </p>
+                <div className="mt-2 space-y-1 text-xs">
+                  <p className="text-green-600">
+                    Energizing: {Math.round(dataPoint.energizingMinutes)} min
+                  </p>
+                  <p className="text-yellow-600">
+                    Neutral: {Math.round(dataPoint.neutralMinutes)} min
+                  </p>
+                  <p className="text-red-600">
+                    Draining: {Math.round(dataPoint.drainingMinutes)} min
+                  </p>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Total: {Math.round(dataPoint.totalMinutes)} min tracked
+                </p>
+              </div>
+            );
+          }}
+        />
+        <ReferenceLine y={2} stroke="#94a3b8" strokeDasharray="3 3" />
+        <Area
+          type="monotone"
+          dataKey="avgEnergy"
+          stroke="#3b82f6"
+          strokeWidth={2}
+          fill={`url(#${gradientId})`}
+          dot={(props) => {
+            const { cx, cy, payload } = props;
+            if (!payload || payload.totalMinutes === 0) return <circle key={`dot-${payload?.hour}`} cx={cx} cy={cy} r={0} />;
+            return (
+              <circle
+                key={`dot-${payload.hour}`}
+                cx={cx}
+                cy={cy}
+                r={5}
+                fill={getEnergyColor(payload.avgEnergy)}
+                stroke="#fff"
+                strokeWidth={2}
+              />
+            );
+          }}
+          connectNulls
+        />
+      </AreaChart>
     </ResponsiveContainer>
   );
 }
