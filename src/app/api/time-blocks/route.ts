@@ -72,14 +72,22 @@ export async function GET(request: NextRequest) {
       return acc;
     }, {} as Record<string, string[]>);
 
+    // Helper to normalize time format to HH:mm (remove seconds if present)
+    const normalizeTime = (time: string): string => {
+      if (!time) return time;
+      // If time has seconds (HH:mm:ss), remove them
+      const parts = time.split(':');
+      return parts.length >= 2 ? `${parts[0]}:${parts[1]}` : time;
+    };
+
     // Transform to camelCase for frontend
     const transformed = (timeBlocks || []).map(block => ({
       id: block.id,
       userId: block.user_id,
       minId: block.min_id,
       date: block.block_date,
-      startTime: block.start_time,
-      endTime: block.end_time,
+      startTime: normalizeTime(block.start_time),
+      endTime: normalizeTime(block.end_time),
       durationMinutes: block.duration_minutes,
       activityName: block.activity_name,
       activityCategory: block.activity_category,
@@ -195,13 +203,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Helper to normalize time format to HH:mm
+    const normalizeTimePost = (time: string): string => {
+      if (!time) return time;
+      const parts = time.split(':');
+      return parts.length >= 2 ? `${parts[0]}:${parts[1]}` : time;
+    };
+
     // Transform to camelCase
     const transformed = {
       id: timeBlock.id,
       userId: timeBlock.user_id,
       date: timeBlock.block_date,
-      startTime: timeBlock.start_time,
-      endTime: timeBlock.end_time,
+      startTime: normalizeTimePost(timeBlock.start_time),
+      endTime: normalizeTimePost(timeBlock.end_time),
       durationMinutes: timeBlock.duration_minutes,
       activityName: timeBlock.activity_name,
       activityCategory: timeBlock.activity_category,
@@ -332,13 +347,20 @@ export async function PUT(request: NextRequest) {
       updatedTagIds = (existingAssignments || []).map(a => a.tag_id);
     }
 
+    // Helper to normalize time format to HH:mm
+    const normalizeTimePut = (time: string): string => {
+      if (!time) return time;
+      const parts = time.split(':');
+      return parts.length >= 2 ? `${parts[0]}:${parts[1]}` : time;
+    };
+
     // Transform to camelCase
     const transformed = {
       id: timeBlock.id,
       userId: timeBlock.user_id,
       date: timeBlock.block_date,
-      startTime: timeBlock.start_time,
-      endTime: timeBlock.end_time,
+      startTime: normalizeTimePut(timeBlock.start_time),
+      endTime: normalizeTimePut(timeBlock.end_time),
       durationMinutes: timeBlock.duration_minutes,
       activityName: timeBlock.activity_name,
       activityCategory: timeBlock.activity_category,

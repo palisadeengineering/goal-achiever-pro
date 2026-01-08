@@ -202,6 +202,14 @@ export default function TimeAuditPage() {
     }
   };
 
+  // Auto-fetch Google events on page load when connected and cache is stale
+  useEffect(() => {
+    if (isGoogleConnected && !isLoadingGoogle && googleEvents.length === 0) {
+      // No cached events or cache expired, fetch fresh events
+      handleSyncGoogle();
+    }
+  }, [isGoogleConnected, isLoadingGoogle]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Count uncategorized events
   const uncategorizedCount = useMemo(() => {
     if (!googleEvents || googleEvents.length === 0) return 0;
@@ -218,7 +226,12 @@ export default function TimeAuditPage() {
   const calendarTimeBlocks = useMemo(() => {
     const grouped: Record<string, CalendarTimeBlock[]> = {};
 
-    // Add manual time blocks
+    // Track imported external event IDs to avoid duplicates
+    const importedExternalIds = new Set(
+      timeBlocks.filter(b => b.externalEventId).map(b => b.externalEventId)
+    );
+
+    // Add database/local time blocks
     timeBlocks.forEach((block) => {
       if (!grouped[block.date]) {
         grouped[block.date] = [];
@@ -233,8 +246,13 @@ export default function TimeAuditPage() {
       });
     });
 
-    // Merge categorized Google Calendar events
+    // Merge categorized Google Calendar events that haven't been imported yet
     googleEvents.forEach((event) => {
+      // Skip if already imported as a time block (check both formats)
+      if (importedExternalIds.has(event.id) || importedExternalIds.has(`gcal_${event.id}`)) {
+        return;
+      }
+
       const categorization = getCategorization(event.id);
       if (categorization) {
         // Extract date and times from Google event

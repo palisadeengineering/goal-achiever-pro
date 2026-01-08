@@ -124,13 +124,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Helper to normalize time format to HH:mm (remove seconds if present)
+    const normalizeTime = (time: string): string => {
+      if (!time) return time;
+      const parts = time.split(':');
+      return parts.length >= 2 ? `${parts[0]}:${parts[1]}` : time;
+    };
+
     // Transform to camelCase
     const transformed = (inserted || []).map(block => ({
       id: block.id,
       userId: block.user_id,
       date: block.block_date,
-      startTime: block.start_time,
-      endTime: block.end_time,
+      startTime: normalizeTime(block.start_time),
+      endTime: normalizeTime(block.end_time),
       durationMinutes: block.duration_minutes,
       activityName: block.activity_name,
       activityCategory: block.activity_category,
