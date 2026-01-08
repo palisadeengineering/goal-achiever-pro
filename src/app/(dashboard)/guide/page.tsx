@@ -367,8 +367,8 @@ export default function GuidePage() {
                   <div>
                     <p className="font-medium">Select DRIP Quadrant</p>
                     <p className="text-sm text-muted-foreground">
-                      Choose: Delegation (purple), Replacement (orange), Investment
-                      (blue), or Production (green)
+                      Choose: Delegation (pink), Replacement (orange), Investment
+                      (indigo), or Production (cyan)
                     </p>
                   </div>
                 </div>
@@ -627,7 +627,7 @@ export default function GuidePage() {
                 <div className="border rounded-lg p-4">
                   <h4 className="font-medium mb-2">Production Percentage</h4>
                   <p className="text-sm text-muted-foreground">
-                    What % of your tracked time is in the Production quadrant (green).
+                    What % of your tracked time is in the Production quadrant (cyan).
                     Aim for 50%+ as a leader. World-class performers often hit 70-80%.
                   </p>
                 </div>

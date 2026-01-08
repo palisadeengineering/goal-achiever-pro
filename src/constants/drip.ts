@@ -16,9 +16,9 @@ export const DRIP_QUADRANTS: Record<DripQuadrant, {
     name: 'Delegation',
     description: 'Low earning, low energy tasks',
     action: 'Delegate to others',
-    color: '#ef4444', // Red
-    bgColor: 'bg-red-100 dark:bg-red-900/30',
-    borderColor: 'border-red-500 dark:border-red-400',
+    color: '#ec4899', // Pink
+    bgColor: 'bg-pink-100 dark:bg-pink-900/30',
+    borderColor: 'border-pink-500 dark:border-pink-400',
     moneyLevel: 'low',
     energyLevel: 'low',
   },
@@ -26,9 +26,9 @@ export const DRIP_QUADRANTS: Record<DripQuadrant, {
     name: 'Replacement',
     description: 'High earning, low energy tasks',
     action: 'Automate or replace with systems',
-    color: '#eab308', // Yellow
-    bgColor: 'bg-yellow-100 dark:bg-yellow-900/30',
-    borderColor: 'border-yellow-500 dark:border-yellow-400',
+    color: '#f97316', // Orange
+    bgColor: 'bg-orange-100 dark:bg-orange-900/30',
+    borderColor: 'border-orange-500 dark:border-orange-400',
     moneyLevel: 'high',
     energyLevel: 'low',
   },
@@ -36,9 +36,9 @@ export const DRIP_QUADRANTS: Record<DripQuadrant, {
     name: 'Investment',
     description: 'Low earning, high energy tasks',
     action: 'Keep for long-term growth',
-    color: '#9333ea', // Purple
-    bgColor: 'bg-purple-100 dark:bg-purple-900/30',
-    borderColor: 'border-purple-500 dark:border-purple-400',
+    color: '#6366f1', // Indigo
+    bgColor: 'bg-indigo-100 dark:bg-indigo-900/30',
+    borderColor: 'border-indigo-500 dark:border-indigo-400',
     moneyLevel: 'low',
     energyLevel: 'high',
   },
@@ -46,9 +46,9 @@ export const DRIP_QUADRANTS: Record<DripQuadrant, {
     name: 'Production',
     description: 'High earning, high energy tasks',
     action: 'Focus here! Your sweet spot',
-    color: '#22c55e', // Green
-    bgColor: 'bg-green-100 dark:bg-green-900/30',
-    borderColor: 'border-green-500 dark:border-green-400',
+    color: '#06b6d4', // Cyan
+    bgColor: 'bg-cyan-100 dark:bg-cyan-900/30',
+    borderColor: 'border-cyan-500 dark:border-cyan-400',
     moneyLevel: 'high',
     energyLevel: 'high',
   },
