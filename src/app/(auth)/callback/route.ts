@@ -1,10 +1,32 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
+// Validate redirect path to prevent open redirect attacks
+function getSafeRedirect(redirectParam: string | null): string {
+  const defaultRedirect = '/dashboard';
+
+  if (!redirectParam) {
+    return defaultRedirect;
+  }
+
+  // Must start with a single forward slash (not //)
+  // Must not contain protocol indicators
+  if (
+    !redirectParam.startsWith('/') ||
+    redirectParam.startsWith('//') ||
+    redirectParam.includes('://') ||
+    redirectParam.includes('\\')
+  ) {
+    return defaultRedirect;
+  }
+
+  return redirectParam;
+}
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
-  const redirect = searchParams.get('redirect') || '/dashboard';
+  const redirect = getSafeRedirect(searchParams.get('redirect'));
 
   if (code) {
     const supabase = await createClient();
