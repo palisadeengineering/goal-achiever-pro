@@ -775,14 +775,16 @@ export default function TimeAuditPage() {
 
       {/* Google Calendar Categorization Dialog */}
       <Dialog open={showCategorizationDialog} onOpenChange={setShowCategorizationDialog}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Categorize Google Calendar Events</DialogTitle>
           </DialogHeader>
-          <BulkCategorizationView
-            events={googleEvents}
-            onComplete={() => setShowCategorizationDialog(false)}
-          />
+          <div className="flex-1 overflow-y-auto -mx-6 px-6">
+            <BulkCategorizationView
+              events={googleEvents}
+              onComplete={() => setShowCategorizationDialog(false)}
+            />
+          </div>
         </DialogContent>
       </Dialog>
 
