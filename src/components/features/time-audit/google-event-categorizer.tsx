@@ -5,11 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { useEventPatterns } from '@/lib/hooks/use-event-patterns';
 import { DRIP_QUADRANTS, ENERGY_RATINGS } from '@/constants/drip';
 import type { DripQuadrant, EnergyRating } from '@/types/database';
 import type { GoogleCalendarEvent } from '@/lib/hooks/use-google-calendar';
-import { Calendar, Clock, Sparkles, SkipForward } from 'lucide-react';
+import { Calendar, Clock, Sparkles, SkipForward, ArrowLeft } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
 
 // Safe date parsing helper
@@ -25,19 +24,30 @@ function safeParseDate(dateString: string | undefined | null): Date | null {
   }
 }
 
+interface PatternSuggestion {
+  dripQuadrant: DripQuadrant;
+  energyRating: EnergyRating;
+  confidence: number;
+  pattern: string;
+}
+
 interface GoogleEventCategorizerProps {
   event: GoogleCalendarEvent;
   onCategorize: (eventId: string, dripQuadrant: DripQuadrant, energyRating: EnergyRating) => void;
   onSkip: () => void;
+  onBack?: () => void;
+  canGoBack?: boolean;
+  suggestion?: PatternSuggestion | null;
 }
 
 export function GoogleEventCategorizer({
   event,
   onCategorize,
   onSkip,
+  onBack,
+  canGoBack = false,
+  suggestion,
 }: GoogleEventCategorizerProps) {
-  const { getSuggestion } = useEventPatterns();
-  const suggestion = getSuggestion(event.summary);
 
   const [selectedDrip, setSelectedDrip] = useState<DripQuadrant | null>(
     suggestion?.dripQuadrant || null
@@ -201,14 +211,24 @@ export function GoogleEventCategorizer({
         </div>
 
         {/* Actions */}
-        <div className="flex gap-2 justify-end pt-2">
-          <Button variant="ghost" onClick={onSkip}>
-            <SkipForward className="h-4 w-4 mr-2" />
-            Skip
-          </Button>
-          <Button onClick={handleCategorize} disabled={!selectedDrip || !selectedEnergy}>
-            Categorize
-          </Button>
+        <div className="flex gap-2 justify-between pt-2">
+          <div>
+            {onBack && (
+              <Button variant="ghost" onClick={onBack} disabled={!canGoBack}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={onSkip}>
+              <SkipForward className="h-4 w-4 mr-2" />
+              Skip
+            </Button>
+            <Button onClick={handleCategorize} disabled={!selectedDrip || !selectedEnergy}>
+              Categorize
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

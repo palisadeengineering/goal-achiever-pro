@@ -156,7 +156,15 @@ export default function TimeAuditPage() {
     fetchEvents: fetchGoogleEvents,
   } = useGoogleCalendar();
 
-  const { getUncategorizedEventIds, getCategorization, saveCategorization, categorizations } = useEventPatterns();
+  const {
+    getUncategorizedEventIds,
+    getCategorization,
+    saveCategorization,
+    categorizations,
+    getSuggestion,
+    isCategorized,
+    applySuggestionToSimilar,
+  } = useEventPatterns();
 
   const { tags } = useTags();
 
@@ -783,6 +791,10 @@ export default function TimeAuditPage() {
             <BulkCategorizationView
               events={googleEvents}
               onComplete={() => setShowCategorizationDialog(false)}
+              saveCategorization={saveCategorization}
+              isCategorized={isCategorized}
+              getSuggestion={getSuggestion}
+              applySuggestionToSimilar={applySuggestionToSimilar}
             />
           </div>
         </DialogContent>

@@ -7,12 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import { useEventPatterns } from '@/lib/hooks/use-event-patterns';
 import { GoogleEventCategorizer } from './google-event-categorizer';
 import { DRIP_QUADRANTS, ENERGY_RATINGS } from '@/constants/drip';
 import type { DripQuadrant, EnergyRating } from '@/types/database';
 import type { GoogleCalendarEvent } from '@/lib/hooks/use-google-calendar';
-import { CheckCircle2, ListTodo, Sparkles } from 'lucide-react';
+import { CheckCircle2, ListTodo, Sparkles, ArrowLeft, X } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
 
 // Safe date parsing helper
@@ -28,9 +27,21 @@ function safeParseDate(dateString: string | undefined | null): Date | null {
   }
 }
 
+interface PatternSuggestion {
+  dripQuadrant: DripQuadrant;
+  energyRating: EnergyRating;
+  confidence: number;
+  pattern: string;
+}
+
 interface BulkCategorizationViewProps {
   events: GoogleCalendarEvent[];
   onComplete?: () => void;
+  // Pass these from parent to ensure shared state
+  saveCategorization: (eventId: string, eventName: string, dripQuadrant: DripQuadrant, energyRating: EnergyRating) => void;
+  isCategorized: (eventId: string) => boolean;
+  getSuggestion: (eventName: string) => PatternSuggestion | null;
+  applySuggestionToSimilar: (events: Array<{ id: string; summary: string }>, dripQuadrant: DripQuadrant, energyRating: EnergyRating) => void;
 }
 
 interface GroupedEvents {
@@ -43,14 +54,14 @@ interface GroupedEvents {
   } | null;
 }
 
-export function BulkCategorizationView({ events, onComplete }: BulkCategorizationViewProps) {
-  const {
-    getSuggestion,
-    saveCategorization,
-    isCategorized,
-    applySuggestionToSimilar,
-  } = useEventPatterns();
-
+export function BulkCategorizationView({
+  events,
+  onComplete,
+  saveCategorization,
+  isCategorized,
+  getSuggestion,
+  applySuggestionToSimilar,
+}: BulkCategorizationViewProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   // Filter to only uncategorized events
@@ -124,6 +135,12 @@ export function BulkCategorizationView({ events, onComplete }: BulkCategorizatio
     }
   };
 
+  const handleBack = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex((prev) => prev - 1);
+    }
+  };
+
   const handleApplyAllSuggestions = () => {
     eventsWithSuggestions.forEach((event) => {
       const suggestion = getSuggestion(event.summary);
@@ -175,13 +192,21 @@ export function BulkCategorizationView({ events, onComplete }: BulkCategorizatio
             categorization
           </p>
         </div>
-        {eventsWithSuggestions.length > 0 && (
-          <Button variant="outline" onClick={handleApplyAllSuggestions}>
-            <Sparkles className="h-4 w-4 mr-2" />
-            Apply {eventsWithSuggestions.length} Suggestion
-            {eventsWithSuggestions.length !== 1 ? 's' : ''}
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {eventsWithSuggestions.length > 0 && (
+            <Button variant="outline" onClick={handleApplyAllSuggestions}>
+              <Sparkles className="h-4 w-4 mr-2" />
+              Apply {eventsWithSuggestions.length} Suggestion
+              {eventsWithSuggestions.length !== 1 ? 's' : ''}
+            </Button>
+          )}
+          {onComplete && (
+            <Button variant="outline" onClick={onComplete}>
+              <X className="h-4 w-4 mr-2" />
+              Done
+            </Button>
+          )}
+        </div>
       </div>
 
       <Tabs defaultValue="single">
@@ -199,8 +224,17 @@ export function BulkCategorizationView({ events, onComplete }: BulkCategorizatio
         {/* Single Event Mode */}
         <TabsContent value="single" className="mt-4">
           <div className="space-y-4">
-            {/* Progress indicator */}
+            {/* Progress indicator with back button */}
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleBack}
+                disabled={currentIndex === 0}
+                className="h-7 px-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
               <span>
                 Event {Math.min(currentIndex + 1, uncategorizedEvents.length)} of{' '}
                 {uncategorizedEvents.length}
@@ -220,6 +254,9 @@ export function BulkCategorizationView({ events, onComplete }: BulkCategorizatio
                 event={uncategorizedEvents[currentIndex]}
                 onCategorize={handleCategorize}
                 onSkip={handleSkip}
+                onBack={handleBack}
+                canGoBack={currentIndex > 0}
+                suggestion={getSuggestion(uncategorizedEvents[currentIndex].summary)}
               />
             )}
           </div>
