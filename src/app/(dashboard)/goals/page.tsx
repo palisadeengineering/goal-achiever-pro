@@ -178,7 +178,7 @@ export default function GoalsPage() {
       />
 
       {/* Stats Overview */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-3">
@@ -282,16 +282,18 @@ export default function GoalsPage() {
       {/* Goals List */}
       <div>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <div className="flex items-center justify-between mb-4">
-            <TabsList>
-              <TabsTrigger value="all">All ({mockGoals.length})</TabsTrigger>
-              <TabsTrigger value="active">Active ({activeGoals})</TabsTrigger>
-              <TabsTrigger value="q1">Q1</TabsTrigger>
-              <TabsTrigger value="q2">Q2</TabsTrigger>
-              <TabsTrigger value="q3">Q3</TabsTrigger>
-              <TabsTrigger value="q4">Q4</TabsTrigger>
-            </TabsList>
-            <Button variant="outline" size="sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+            <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
+              <TabsList className="inline-flex w-max sm:w-auto">
+                <TabsTrigger value="all">All ({mockGoals.length})</TabsTrigger>
+                <TabsTrigger value="active">Active ({activeGoals})</TabsTrigger>
+                <TabsTrigger value="q1">Q1</TabsTrigger>
+                <TabsTrigger value="q2">Q2</TabsTrigger>
+                <TabsTrigger value="q3">Q3</TabsTrigger>
+                <TabsTrigger value="q4">Q4</TabsTrigger>
+              </TabsList>
+            </div>
+            <Button variant="outline" size="sm" className="w-fit">
               <Filter className="h-4 w-4 mr-2" />
               Filter
             </Button>

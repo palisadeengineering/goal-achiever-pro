@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { DripQuadrant, EnergyRating } from '@/types/database';
 
 export interface TimeBlock {
@@ -41,6 +41,7 @@ export function useTimeBlocks(initialStartDate?: string, initialEndDate?: string
     startDate: initialStartDate,
     endDate: initialEndDate,
   });
+  const initializedRef = useRef(false);
 
   const fetchTimeBlocks = useCallback(async (startDate?: string, endDate?: string) => {
     setIsLoading(true);
@@ -77,10 +78,12 @@ export function useTimeBlocks(initialStartDate?: string, initialEndDate?: string
     }
   }, [dateRange.startDate, dateRange.endDate]);
 
-  // Initial fetch
+  // Initial fetch - runs once on mount with initial values
   useEffect(() => {
+    if (initializedRef.current) return;
+    initializedRef.current = true;
     fetchTimeBlocks(initialStartDate, initialEndDate);
-  }, []);
+  }, [fetchTimeBlocks, initialStartDate, initialEndDate]);
 
   const refetch = useCallback(async () => {
     await fetchTimeBlocks(dateRange.startDate, dateRange.endDate);

@@ -274,6 +274,31 @@ export default function HomePage() {
               </div>
 
               {/* Right: Visual/Stats */}
+              {/* Mobile: Simplified stats row */}
+              <ScrollReveal animation="fade-up" delay={450} className="lg:hidden">
+                <div className="flex justify-center gap-6 pt-4">
+                  <div className="text-center">
+                    <p className="font-display font-bold text-2xl number-display text-primary">
+                      <AnimatedCounter value={2340} suffix="+" duration={1500} />
+                    </p>
+                    <p className="text-xs text-muted-foreground">Active Users</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="font-display font-bold text-2xl number-display text-primary">
+                      <AnimatedCounter value={12847} duration={1500} delay={200} />
+                    </p>
+                    <p className="text-xs text-muted-foreground">Goals Achieved</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="font-display font-bold text-2xl number-display text-primary">
+                      <AnimatedCounter value={95} suffix="%" duration={1500} delay={400} />
+                    </p>
+                    <p className="text-xs text-muted-foreground">Success Rate</p>
+                  </div>
+                </div>
+              </ScrollReveal>
+
+              {/* Desktop: Full visual card */}
               <ScrollReveal animation="fade-in" delay={300} className="hidden lg:block">
                 <div className="relative">
                   {/* Floating stats cards */}

@@ -65,7 +65,7 @@ export function AffirmationsStep({ data, updateData }: AffirmationsStepProps) {
     <div className="space-y-6">
       <div>
         <p className="text-sm text-muted-foreground">
-          Write a powerful affirmation that you'll read aloud during your vision reviews.
+          Write a powerful affirmation that you&apos;ll read aloud during your vision reviews.
           Speaking your vision reinforces belief and commitment.
         </p>
       </div>

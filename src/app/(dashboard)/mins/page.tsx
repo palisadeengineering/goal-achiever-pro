@@ -212,7 +212,7 @@ export default function MinsPage() {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-3">
@@ -286,10 +286,10 @@ export default function MinsPage() {
       </Card>
 
       {/* Main Content */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 md:gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           {/* Time Scope Filter */}
-          <div className="flex gap-2 mb-4">
+          <div className="flex flex-wrap gap-2 mb-4">
             <Button
               variant={timeScopeFilter === 'all' ? 'default' : 'outline'}
               size="sm"
@@ -314,18 +314,20 @@ export default function MinsPage() {
           </div>
 
           <Tabs defaultValue="all">
-            <TabsList className="mb-4">
-              <TabsTrigger value="all">All ({mins.length})</TabsTrigger>
-              <TabsTrigger value="pending">
-                To Do ({pendingMins.length})
-              </TabsTrigger>
-              <TabsTrigger value="in_progress">
-                In Progress ({inProgressMins.length})
-              </TabsTrigger>
-              <TabsTrigger value="completed">
-                Done ({completedMinsList.length})
-              </TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 mb-4 scrollbar-hide">
+              <TabsList className="inline-flex w-max sm:w-auto">
+                <TabsTrigger value="all">All ({mins.length})</TabsTrigger>
+                <TabsTrigger value="pending">
+                  To Do ({pendingMins.length})
+                </TabsTrigger>
+                <TabsTrigger value="in_progress">
+                  In Progress ({inProgressMins.length})
+                </TabsTrigger>
+                <TabsTrigger value="completed">
+                  Done ({completedMinsList.length})
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="all">
               <MinsList

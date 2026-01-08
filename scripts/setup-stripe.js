@@ -8,6 +8,7 @@
  * 2. Run: node scripts/setup-stripe.js YOUR_STRIPE_SECRET_KEY
  */
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const Stripe = require('stripe');
 
 async function setupStripe(secretKey) {

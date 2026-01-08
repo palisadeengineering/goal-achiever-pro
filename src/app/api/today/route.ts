@@ -153,7 +153,7 @@ export async function GET() {
       .limit(5);
 
     // Format upcoming deadlines
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const upcomingDeadlines = [
       ...(upcomingWeekly || []).map((w: any) => ({
         type: 'weekly' as const,
