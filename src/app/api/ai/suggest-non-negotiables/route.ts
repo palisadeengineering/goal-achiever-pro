@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
 import { logAIUsage } from '@/lib/utils/ai-usage';
 
@@ -29,8 +29,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return NextResponse.json(
+        { error: 'Anthropic API key not configured' },
+        { status: 500 }
+      );
+    }
+
+    const anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
     });
 
     const prompt = `You are an expert life coach helping someone create a powerful daily non-negotiable habit.
@@ -55,22 +62,21 @@ Examples of good non-negotiables:
 
 Return ONLY the non-negotiable title/description, no explanations.`;
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [{ role: 'user', content: prompt }],
+    const message = await anthropic.messages.create({
+      model: 'claude-opus-4-20250514',
       max_tokens: 150,
-      temperature: 0.7,
+      messages: [{ role: 'user', content: prompt }],
     });
 
-    const suggestion = completion.choices[0]?.message?.content?.trim() || '';
+    const suggestion = message.content[0].type === 'text' ? message.content[0].text.trim() : '';
     const responseTimeMs = Date.now() - startTime;
 
     logAIUsage({
       userId,
       endpoint: '/api/ai/suggest-non-negotiables',
-      model: 'gpt-4o-mini',
-      promptTokens: completion.usage?.prompt_tokens || 0,
-      completionTokens: completion.usage?.completion_tokens || 0,
+      model: 'claude-opus-4-20250514',
+      promptTokens: message.usage?.input_tokens || 0,
+      completionTokens: message.usage?.output_tokens || 0,
       requestType: 'suggest-non-negotiables',
       success: true,
       responseTimeMs,
@@ -84,7 +90,7 @@ Return ONLY the non-negotiable title/description, no explanations.`;
     logAIUsage({
       userId,
       endpoint: '/api/ai/suggest-non-negotiables',
-      model: 'gpt-4o-mini',
+      model: 'claude-opus-4-20250514',
       promptTokens: 0,
       completionTokens: 0,
       requestType: 'suggest-non-negotiables',

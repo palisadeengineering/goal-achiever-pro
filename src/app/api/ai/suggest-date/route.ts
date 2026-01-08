@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,8 +13,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return NextResponse.json(
+        { error: 'Anthropic API key not configured' },
+        { status: 500 }
+      );
+    }
+
+    const anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
     });
 
     const today = new Date();
@@ -44,23 +51,18 @@ Respond with a JSON object:
 
 Be realistic but ambitious. For business goals, consider typical growth curves. For personal goals, consider the time needed for sustainable habit change.`;
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+    const message = await anthropic.messages.create({
+      model: 'claude-opus-4-20250514',
+      max_tokens: 500,
       messages: [
-        {
-          role: 'system',
-          content: 'You are an expert goal-setting coach who helps people set realistic timelines for their visions. You understand business growth, personal development, and the importance of setting achievable but ambitious goals.',
-        },
         {
           role: 'user',
           content: prompt,
         },
       ],
-      temperature: 0.7,
-      max_tokens: 500,
     });
 
-    const content = response.choices[0]?.message?.content;
+    const content = message.content[0].type === 'text' ? message.content[0].text : '';
     if (!content) {
       throw new Error('No response from AI');
     }

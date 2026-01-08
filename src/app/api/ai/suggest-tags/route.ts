@@ -77,7 +77,7 @@ Rules:
 - Keep reasoning under 50 words`;
 
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-opus-4-20250514',
       max_tokens: 300,
       messages: [
         {
@@ -129,7 +129,7 @@ Rules:
     logAIUsage({
       userId,
       endpoint: '/api/ai/suggest-tags',
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-opus-4-20250514',
       promptTokens: message.usage?.input_tokens || 0,
       completionTokens: message.usage?.output_tokens || 0,
       requestType: 'suggest-tags',
@@ -151,7 +151,7 @@ Rules:
     logAIUsage({
       userId,
       endpoint: '/api/ai/suggest-tags',
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-opus-4-20250514',
       promptTokens: 0,
       completionTokens: 0,
       requestType: 'suggest-tags',

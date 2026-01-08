@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
 import { logAIUsage } from '@/lib/utils/ai-usage';
 
@@ -21,15 +21,15 @@ export async function POST(request: NextRequest) {
 
     const { context } = await request.json();
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!process.env.ANTHROPIC_API_KEY) {
       return NextResponse.json(
-        { error: 'OpenAI API key not configured' },
+        { error: 'Anthropic API key not configured' },
         { status: 500 }
       );
     }
 
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+    const anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
     });
 
     const prompt = `You are an expert vision and goal-setting coach specializing in Dan Martell's "Buy Back Your Time" methodology.
@@ -56,31 +56,26 @@ Respond ONLY with valid JSON in this exact format:
   "description": "2-3 sentences explaining why this vision is compelling and how it will transform their life"
 }`;
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+    const message = await anthropic.messages.create({
+      model: 'claude-opus-4-20250514',
+      max_tokens: 500,
       messages: [
-        {
-          role: 'system',
-          content: 'You are an expert vision coach. Always respond with valid JSON only.',
-        },
         {
           role: 'user',
           content: prompt,
         },
       ],
-      temperature: 0.8,
-      max_tokens: 500,
     });
 
-    const responseText = completion.choices[0]?.message?.content;
+    const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
     const responseTimeMs = Date.now() - startTime;
 
     logAIUsage({
       userId,
       endpoint: '/api/ai/suggest-vision',
-      model: 'gpt-4o-mini',
-      promptTokens: completion.usage?.prompt_tokens || 0,
-      completionTokens: completion.usage?.completion_tokens || 0,
+      model: 'claude-opus-4-20250514',
+      promptTokens: message.usage?.input_tokens || 0,
+      completionTokens: message.usage?.output_tokens || 0,
       requestType: 'suggest-vision',
       success: true,
       responseTimeMs,
@@ -103,7 +98,7 @@ Respond ONLY with valid JSON in this exact format:
     logAIUsage({
       userId,
       endpoint: '/api/ai/suggest-vision',
-      model: 'gpt-4o-mini',
+      model: 'claude-opus-4-20250514',
       promptTokens: 0,
       completionTokens: 0,
       requestType: 'suggest-vision',
