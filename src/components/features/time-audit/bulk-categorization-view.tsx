@@ -31,6 +31,7 @@ function safeParseDate(dateString: string | undefined | null): Date | null {
 interface BulkCategorizationViewProps {
   events: GoogleCalendarEvent[];
   onComplete?: () => void;
+  onCategorize?: () => void; // Called after each categorization to allow parent to refresh
 }
 
 interface GroupedEvents {
@@ -43,7 +44,7 @@ interface GroupedEvents {
   } | null;
 }
 
-export function BulkCategorizationView({ events, onComplete }: BulkCategorizationViewProps) {
+export function BulkCategorizationView({ events, onComplete, onCategorize }: BulkCategorizationViewProps) {
   const {
     getSuggestion,
     saveCategorization,
@@ -107,6 +108,8 @@ export function BulkCategorizationView({ events, onComplete }: BulkCategorizatio
     const event = uncategorizedEvents.find((e) => e.id === eventId);
     if (event) {
       saveCategorization(eventId, event.summary, dripQuadrant, energyRating);
+      // Notify parent to refresh its state
+      onCategorize?.();
     }
     // Move to next event
     if (currentIndex < uncategorizedEvents.length - 1) {
@@ -131,6 +134,8 @@ export function BulkCategorizationView({ events, onComplete }: BulkCategorizatio
         saveCategorization(event.id, event.summary, suggestion.dripQuadrant, suggestion.energyRating);
       }
     });
+    // Notify parent to refresh its state
+    onCategorize?.();
   };
 
   const handleApplyToGroup = (
@@ -143,6 +148,8 @@ export function BulkCategorizationView({ events, onComplete }: BulkCategorizatio
       dripQuadrant,
       energyRating
     );
+    // Notify parent to refresh its state
+    onCategorize?.();
   };
 
   if (uncategorizedEvents.length === 0) {

@@ -39,6 +39,21 @@ export function useEventPatterns() {
   );
 
   /**
+   * Refresh categorizations from localStorage (for cross-component sync)
+   */
+  const refreshFromStorage = useCallback(() => {
+    try {
+      const stored = window.localStorage.getItem(CATEGORIZATION_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored) as EventCategorization[];
+        setCategorizations(parsed);
+      }
+    } catch (error) {
+      console.warn('Failed to refresh categorizations from storage:', error);
+    }
+  }, [setCategorizations]);
+
+  /**
    * Normalize event name for pattern matching
    */
   const normalizeEventName = useCallback((name: string): string => {
@@ -281,5 +296,6 @@ export function useEventPatterns() {
     applySuggestionToSimilar,
     clearPatterns,
     clearCategorizations,
+    refreshFromStorage,
   };
 }

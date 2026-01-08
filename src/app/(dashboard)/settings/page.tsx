@@ -90,9 +90,13 @@ function SettingsContent() {
       const errorMessages: Record<string, string> = {
         google_auth_denied: 'Google Calendar authorization was denied',
         no_code: 'No authorization code received',
-        not_configured: 'Google Calendar integration is not configured',
-        token_exchange_failed: 'Failed to exchange authorization code',
+        not_configured: 'Google Calendar integration is not configured. Please contact support.',
+        server_config: 'Server configuration error. Required environment variables are missing.',
+        token_exchange_failed: 'Failed to exchange authorization code. Please try again.',
+        token_storage_failed: 'Failed to store authentication tokens. Please try again.',
         callback_failed: 'Failed to complete Google Calendar connection',
+        state_expired: 'Authorization session expired. Please try connecting again.',
+        invalid_state: 'Invalid authorization state. Please try connecting again.',
       };
       setStatusMessage({ type: 'error', message: errorMessages[error] || 'An error occurred' });
     }
