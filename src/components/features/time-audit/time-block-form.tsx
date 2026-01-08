@@ -55,10 +55,10 @@ interface TimeBlockFormProps {
 }
 
 const DRIP_OPTIONS = [
-  { value: 'production', label: 'Production', description: 'High $ + High Energy (Your sweet spot!)', color: 'bg-green-500' },
-  { value: 'investment', label: 'Investment', description: 'Low $ + High Energy (Long-term growth)', color: 'bg-purple-500' },
-  { value: 'replacement', label: 'Replacement', description: 'High $ + Low Energy (Automate this)', color: 'bg-yellow-500' },
-  { value: 'delegation', label: 'Delegation', description: 'Low $ + Low Energy (Delegate this)', color: 'bg-red-500' },
+  { value: 'production', label: 'Production', description: 'High $ + High Energy (Your sweet spot!)', color: 'bg-cyan-500' },
+  { value: 'investment', label: 'Investment', description: 'Low $ + High Energy (Long-term growth)', color: 'bg-indigo-500' },
+  { value: 'replacement', label: 'Replacement', description: 'High $ + Low Energy (Automate this)', color: 'bg-orange-500' },
+  { value: 'delegation', label: 'Delegation', description: 'Low $ + Low Energy (Delegate this)', color: 'bg-pink-500' },
   { value: 'na', label: 'N/A', description: 'Not applicable or uncategorized', color: 'bg-slate-400' },
 ];
 

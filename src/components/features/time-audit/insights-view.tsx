@@ -46,10 +46,10 @@ type DateRangePreset = 'week' | 'month' | '30days' | '90days' | 'custom';
 type ChartType = 'bar' | 'pie' | 'stacked' | 'line';
 
 const DRIP_COLORS: Record<string, string> = {
-  production: '#22c55e',
-  investment: '#9333ea',
-  replacement: '#eab308',
-  delegation: '#ef4444',
+  production: '#06b6d4', // Cyan
+  investment: '#6366f1', // Indigo
+  replacement: '#f97316', // Orange
+  delegation: '#ec4899', // Pink
   na: '#94a3b8',
 };
 
