@@ -267,6 +267,17 @@ export function useEventPatterns() {
     setCategorizations([]);
   }, [setCategorizations]);
 
+  /**
+   * Clear categorizations for specific event IDs
+   */
+  const clearCategorizationsForEvents = useCallback(
+    (eventIds: string[]) => {
+      const idsToRemove = new Set(eventIds);
+      setCategorizations((prev) => prev.filter((c) => !idsToRemove.has(c.eventId)));
+    },
+    [setCategorizations]
+  );
+
   return {
     patterns,
     categorizations,
@@ -281,5 +292,6 @@ export function useEventPatterns() {
     applySuggestionToSimilar,
     clearPatterns,
     clearCategorizations,
+    clearCategorizationsForEvents,
   };
 }

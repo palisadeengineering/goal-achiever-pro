@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Calendar, CalendarDays, CalendarRange, Lock, RefreshCw, ChevronDown, Upload, ArrowUpRight, BarChart3 } from 'lucide-react';
+import { Plus, Calendar, CalendarDays, CalendarRange, Lock, RefreshCw, ChevronDown, Upload, ArrowUpRight, BarChart3, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -153,10 +153,17 @@ export default function TimeAuditPage() {
     events: googleEvents,
     isLoading: isLoadingGoogle,
     isConnected: isGoogleConnected,
+    cacheIsStale: googleCacheIsStale,
     fetchEvents: fetchGoogleEvents,
   } = useGoogleCalendar();
 
-  const { getUncategorizedEventIds, getCategorization, saveCategorization, categorizations } = useEventPatterns();
+  const {
+    getUncategorizedEventIds,
+    getCategorization,
+    saveCategorization,
+    categorizations,
+    clearCategorizationsForEvents,
+  } = useEventPatterns();
 
   const { tags } = useTags();
 
@@ -202,13 +209,15 @@ export default function TimeAuditPage() {
     }
   };
 
-  // Auto-fetch Google events on page load when connected and cache is stale
+  // Auto-fetch Google events on page load when connected and no events or cache is stale
   useEffect(() => {
-    if (isGoogleConnected && !isLoadingGoogle && googleEvents.length === 0) {
-      // No cached events or cache expired, fetch fresh events
-      handleSyncGoogle();
+    if (isGoogleConnected && !isLoadingGoogle) {
+      if (googleEvents.length === 0 || googleCacheIsStale) {
+        // No cached events or cache is stale, fetch fresh events
+        handleSyncGoogle();
+      }
     }
-  }, [isGoogleConnected, isLoadingGoogle]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isGoogleConnected, isLoadingGoogle, googleCacheIsStale]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Count uncategorized events
   const uncategorizedCount = useMemo(() => {
@@ -568,6 +577,19 @@ export default function TimeAuditPage() {
     }
   }, [googleEvents, timeBlocks, getCategorization, importTimeBlocks, fetchTimeBlocks]);
 
+  // Clear categorizations for currently visible Google events
+  const handleClearCategorizations = useCallback(() => {
+    if (googleEvents.length === 0) return;
+    const eventIds = googleEvents.map(e => e.id);
+    clearCategorizationsForEvents(eventIds);
+  }, [googleEvents, clearCategorizationsForEvents]);
+
+  // Count how many events have categorizations (for showing clear button)
+  const categorizedCount = useMemo(() => {
+    if (!googleEvents || googleEvents.length === 0) return 0;
+    return googleEvents.filter(e => getCategorization(e.id) !== null).length;
+  }, [googleEvents, getCategorization]);
+
   // Push a time block to Google Calendar
   const handlePushToCalendar = useCallback(async (block: TimeBlock) => {
     if (!isGoogleConnected) return;
@@ -768,6 +790,16 @@ export default function TimeAuditPage() {
                   >
                     <Upload className={`h-4 w-4 mr-2 ${isImporting ? 'animate-pulse' : ''}`} />
                     Import {categorizedNotImportedCount} to Database
+                  </Button>
+                )}
+                {categorizedCount > 0 && (
+                  <Button
+                    variant="outline"
+                    onClick={handleClearCategorizations}
+                    title="Clear all categorizations and start fresh"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Clear Categorizations
                   </Button>
                 )}
               </>

@@ -28,6 +28,7 @@ interface UseGoogleCalendarReturn {
   error: string | null;
   isConnected: boolean;
   isCheckingConnection: boolean;
+  cacheIsStale: boolean;
   fetchEvents: (startDate: Date, endDate: Date) => Promise<void>;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
@@ -36,7 +37,7 @@ interface UseGoogleCalendarReturn {
 }
 
 const GOOGLE_EVENTS_CACHE_KEY = 'google-calendar-events-cache';
-const CACHE_DURATION_MS = 30 * 60 * 1000; // 30 minutes
+const CACHE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours - longer cache for better UX
 
 export function useGoogleCalendar(): UseGoogleCalendarReturn {
   const [events, setEvents] = useState<GoogleCalendarEvent[]>([]);
@@ -44,8 +45,9 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
   const [error, setError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isCheckingConnection, setIsCheckingConnection] = useState(true);
+  const [cacheIsStale, setCacheIsStale] = useState(false);
 
-  // Restore events from cache on mount
+  // Restore events from cache on mount - always restore, mark if stale
   useEffect(() => {
     try {
       const cached = localStorage.getItem(GOOGLE_EVENTS_CACHE_KEY);
@@ -54,8 +56,10 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
         const cacheAge = Date.now() - new Date(cachedAt).getTime();
         const isFresh = cacheAge < CACHE_DURATION_MS;
 
-        if (isFresh && cachedEvents && cachedEvents.length > 0) {
+        // Always restore cached events so UI has data immediately
+        if (cachedEvents && cachedEvents.length > 0) {
           setEvents(cachedEvents);
+          setCacheIsStale(!isFresh);
         }
       }
     } catch (err) {
@@ -133,6 +137,7 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
         }));
       setEvents(transformedEvents);
       setIsConnected(true);
+      setCacheIsStale(false); // Fresh data fetched
 
       // Cache events in localStorage for persistence
       try {
@@ -195,6 +200,7 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
     error,
     isConnected,
     isCheckingConnection,
+    cacheIsStale,
     fetchEvents,
     connect,
     disconnect,
