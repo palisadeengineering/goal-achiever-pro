@@ -80,12 +80,22 @@ export async function GET(request: NextRequest) {
       return parts.length >= 2 ? `${parts[0]}:${parts[1]}` : time;
     };
 
+    // Helper to normalize date format to YYYY-MM-DD (remove time component if present)
+    const normalizeDate = (date: string): string => {
+      if (!date) return date;
+      // If date has time component (ISO format), extract just the date part
+      if (date.includes('T')) {
+        return date.split('T')[0];
+      }
+      return date;
+    };
+
     // Transform to camelCase for frontend
     const transformed = (timeBlocks || []).map(block => ({
       id: block.id,
       userId: block.user_id,
       minId: block.min_id,
-      date: block.block_date,
+      date: normalizeDate(block.block_date),
       startTime: normalizeTime(block.start_time),
       endTime: normalizeTime(block.end_time),
       durationMinutes: block.duration_minutes,
@@ -210,11 +220,18 @@ export async function POST(request: NextRequest) {
       return parts.length >= 2 ? `${parts[0]}:${parts[1]}` : time;
     };
 
+    // Helper to normalize date format to YYYY-MM-DD
+    const normalizeDatePost = (date: string): string => {
+      if (!date) return date;
+      if (date.includes('T')) return date.split('T')[0];
+      return date;
+    };
+
     // Transform to camelCase
     const transformed = {
       id: timeBlock.id,
       userId: timeBlock.user_id,
-      date: timeBlock.block_date,
+      date: normalizeDatePost(timeBlock.block_date),
       startTime: normalizeTimePost(timeBlock.start_time),
       endTime: normalizeTimePost(timeBlock.end_time),
       durationMinutes: timeBlock.duration_minutes,
@@ -354,11 +371,18 @@ export async function PUT(request: NextRequest) {
       return parts.length >= 2 ? `${parts[0]}:${parts[1]}` : time;
     };
 
+    // Helper to normalize date format to YYYY-MM-DD
+    const normalizeDatePut = (date: string): string => {
+      if (!date) return date;
+      if (date.includes('T')) return date.split('T')[0];
+      return date;
+    };
+
     // Transform to camelCase
     const transformed = {
       id: timeBlock.id,
       userId: timeBlock.user_id,
-      date: timeBlock.block_date,
+      date: normalizeDatePut(timeBlock.block_date),
       startTime: normalizeTimePut(timeBlock.start_time),
       endTime: normalizeTimePut(timeBlock.end_time),
       durationMinutes: timeBlock.duration_minutes,

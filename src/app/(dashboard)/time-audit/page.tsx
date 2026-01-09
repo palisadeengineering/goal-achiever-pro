@@ -792,16 +792,15 @@ export default function TimeAuditPage() {
                     Import {categorizedNotImportedCount} to Database
                   </Button>
                 )}
-                {categorizedCount > 0 && (
-                  <Button
-                    variant="outline"
-                    onClick={handleClearCategorizations}
-                    title="Clear all categorizations and start fresh"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Clear Categorizations
-                  </Button>
-                )}
+                <Button
+                  variant="outline"
+                  onClick={handleClearCategorizations}
+                  disabled={categorizedCount === 0}
+                  title={categorizedCount > 0 ? "Clear all categorizations and start fresh" : "No categorizations to clear"}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Clear Categorizations {categorizedCount > 0 && `(${categorizedCount})`}
+                </Button>
               </>
             )}
             <Button onClick={handleLogTimeBlock}>

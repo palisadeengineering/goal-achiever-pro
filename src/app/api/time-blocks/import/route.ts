@@ -131,11 +131,18 @@ export async function POST(request: NextRequest) {
       return parts.length >= 2 ? `${parts[0]}:${parts[1]}` : time;
     };
 
+    // Helper to normalize date format to YYYY-MM-DD (remove time component if present)
+    const normalizeDate = (date: string): string => {
+      if (!date) return date;
+      if (date.includes('T')) return date.split('T')[0];
+      return date;
+    };
+
     // Transform to camelCase
     const transformed = (inserted || []).map(block => ({
       id: block.id,
       userId: block.user_id,
-      date: block.block_date,
+      date: normalizeDate(block.block_date),
       startTime: normalizeTime(block.start_time),
       endTime: normalizeTime(block.end_time),
       durationMinutes: block.duration_minutes,
