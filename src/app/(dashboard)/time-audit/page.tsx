@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Calendar, CalendarDays, CalendarRange, Lock, RefreshCw, ChevronDown, Upload, ArrowUpRight, BarChart3 } from 'lucide-react';
+import { Plus, Calendar, CalendarDays, CalendarRange, Lock, RefreshCw, ChevronDown, Upload, ArrowUpRight, BarChart3, ListChecks } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -718,6 +718,7 @@ export default function TimeAuditPage() {
         description="Track how you spend your time and energy across DRIP quadrants"
         actions={
           <div className="flex items-center gap-2 flex-wrap">
+            {/* Desktop actions - hidden on mobile where we use floating buttons */}
             {isGoogleConnected && (
               <>
                 <DropdownMenu>
@@ -725,10 +726,12 @@ export default function TimeAuditPage() {
                     <Button
                       variant="outline"
                       disabled={isLoadingGoogle}
+                      size="sm"
+                      className="hidden sm:flex"
                     >
                       <RefreshCw className={`h-4 w-4 mr-2 ${isLoadingGoogle ? 'animate-spin' : ''}`} />
-                      Sync {getTimeframeLabel(syncTimeframe)}
-                      <ChevronDown className="h-4 w-4 ml-2" />
+                      <span className="hidden md:inline">Sync</span> {getTimeframeLabel(syncTimeframe)}
+                      <ChevronDown className="h-4 w-4 ml-1" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -743,15 +746,27 @@ export default function TimeAuditPage() {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+                {/* Mobile: Compact sync button */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="sm:hidden"
+                  disabled={isLoadingGoogle}
+                  onClick={() => handleSyncGoogle()}
+                >
+                  <RefreshCw className={`h-4 w-4 ${isLoadingGoogle ? 'animate-spin' : ''}`} />
+                </Button>
                 {uncategorizedCount > 0 && (
                   <Button
                     variant="secondary"
                     onClick={() => setShowCategorizationDialog(true)}
+                    size="sm"
+                    className="hidden sm:flex"
                   >
                     <Badge variant="destructive" className="mr-2">
                       {uncategorizedCount}
                     </Badge>
-                    Categorize Events
+                    <span className="hidden md:inline">Categorize</span> Events
                   </Button>
                 )}
                 {categorizedNotImportedCount > 0 && (
@@ -759,16 +774,19 @@ export default function TimeAuditPage() {
                     variant="default"
                     onClick={handleImportCategorized}
                     disabled={isImporting}
+                    size="sm"
+                    className="hidden md:flex"
                   >
                     <Upload className={`h-4 w-4 mr-2 ${isImporting ? 'animate-pulse' : ''}`} />
-                    Import {categorizedNotImportedCount} to Database
+                    Import {categorizedNotImportedCount}
                   </Button>
                 )}
               </>
             )}
-            <Button onClick={handleLogTimeBlock}>
+            <Button onClick={handleLogTimeBlock} size="sm" className="hidden sm:flex">
               <Plus className="h-4 w-4 mr-2" />
-              Log Time Block
+              <span className="hidden md:inline">Log Time Block</span>
+              <span className="md:hidden">Add</span>
             </Button>
           </div>
         }
@@ -785,11 +803,14 @@ export default function TimeAuditPage() {
         editBlock={editingBlock}
       />
 
-      {/* Google Calendar Categorization Dialog */}
+      {/* Google Calendar Categorization Dialog - Full screen on mobile */}
       <Dialog open={showCategorizationDialog} onOpenChange={setShowCategorizationDialog}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto sm:max-h-[85vh] h-[100dvh] sm:h-auto w-full sm:w-auto p-4 sm:p-6">
           <DialogHeader>
-            <DialogTitle>Categorize Google Calendar Events</DialogTitle>
+            <DialogTitle className="text-lg">Categorize Events</DialogTitle>
+            <DialogDescription className="text-sm">
+              Tap to set DRIP quadrant and energy level for each event
+            </DialogDescription>
           </DialogHeader>
           <BulkCategorizationView
             events={googleEvents}
@@ -1087,6 +1108,36 @@ export default function TimeAuditPage() {
           />
         </TabsContent>
       </Tabs>
+
+      {/* Mobile Floating Action Buttons */}
+      <div className="fixed bottom-6 right-6 flex flex-col gap-3 md:hidden z-50">
+        {/* Categorize Events Button - Always show if Google connected */}
+        {isGoogleConnected && (
+          <Button
+            size="lg"
+            variant={uncategorizedCount > 0 ? "default" : "secondary"}
+            className="rounded-full h-14 w-14 shadow-lg"
+            onClick={() => setShowCategorizationDialog(true)}
+          >
+            <div className="relative">
+              <ListChecks className="h-6 w-6" />
+              {uncategorizedCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {uncategorizedCount > 9 ? '9+' : uncategorizedCount}
+                </span>
+              )}
+            </div>
+          </Button>
+        )}
+        {/* Add Time Block Button */}
+        <Button
+          size="lg"
+          className="rounded-full h-14 w-14 shadow-lg"
+          onClick={handleLogTimeBlock}
+        >
+          <Plus className="h-6 w-6" />
+        </Button>
+      </div>
 
       {/* Push to Google Calendar Dialog */}
       <Dialog open={showPushDialog} onOpenChange={setShowPushDialog}>

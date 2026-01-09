@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { format, startOfWeek, addDays, isSameDay, isWithinInterval } from 'date-fns';
+import { format, startOfWeek, addDays, isSameDay, isWithinInterval, subDays } from 'date-fns';
 import {
   DndContext,
   DragOverlay,
@@ -210,6 +210,18 @@ export function WeeklyCalendarView({
   const [activeBlock, setActiveBlock] = useState<TimeBlock | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
 
+  // Mobile single-day view state
+  const [isMobileView, setIsMobileView] = useState(false);
+  const [selectedMobileDay, setSelectedMobileDay] = useState(new Date());
+
+  // Detect mobile viewport
+  useEffect(() => {
+    const checkMobile = () => setIsMobileView(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Drag-to-select state
   const [isDragSelecting, setIsDragSelecting] = useState(false);
   const [dragStart, setDragStart] = useState<{ date: Date; time: string } | null>(null);
@@ -301,7 +313,12 @@ export function WeeklyCalendarView({
 
   const goToToday = () => {
     setCurrentWeekStart(startOfWeek(new Date(), { weekStartsOn }));
+    setSelectedMobileDay(new Date());
   };
+
+  // Mobile day navigation
+  const goToPreviousDay = () => setSelectedMobileDay(prev => subDays(prev, 1));
+  const goToNextDay = () => setSelectedMobileDay(prev => addDays(prev, 1));
 
   const getBlocksForDateAndTime = (date: Date, time: string): TimeBlock | undefined => {
     const dateKey = format(date, 'yyyy-MM-dd');
@@ -463,6 +480,124 @@ export function WeeklyCalendarView({
     await onBlockMove(block.id, dropData.date, dropData.time, newEndTime);
   };
 
+  // Mobile single-day render
+  if (isMobileView) {
+    const dayBlocks = timeBlocks[format(selectedMobileDay, 'yyyy-MM-dd')] || [];
+    const sortedBlocks = [...dayBlocks].sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+    return (
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+            </CardTitle>
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="sm" onClick={goToToday}>
+                Today
+              </Button>
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToPreviousDay}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm font-medium min-w-[100px] text-center">
+                {format(selectedMobileDay, 'EEE, MMM d')}
+              </span>
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToNextDay}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-3">
+          {/* Quick day selector - horizontal scroll */}
+          <div className="flex gap-1 overflow-x-auto pb-3 mb-3 border-b scrollbar-hide">
+            {Array.from({ length: 7 }, (_, i) => {
+              const day = addDays(startOfWeek(selectedMobileDay, { weekStartsOn }), i);
+              const isSelected = isSameDay(day, selectedMobileDay);
+              const isToday = isSameDay(day, new Date());
+              const hasBlocks = (timeBlocks[format(day, 'yyyy-MM-dd')] || []).length > 0;
+
+              return (
+                <button
+                  key={i}
+                  onClick={() => setSelectedMobileDay(day)}
+                  className={cn(
+                    'flex flex-col items-center p-2 rounded-lg min-w-[48px] transition-colors',
+                    isSelected ? 'bg-primary text-primary-foreground' : 'hover:bg-muted',
+                    isToday && !isSelected && 'ring-1 ring-primary'
+                  )}
+                >
+                  <span className="text-[10px] uppercase">{format(day, 'EEE')}</span>
+                  <span className={cn('text-lg font-semibold', isToday && !isSelected && 'text-primary')}>
+                    {format(day, 'd')}
+                  </span>
+                  {hasBlocks && <span className="h-1 w-1 rounded-full bg-current mt-0.5" />}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Time blocks list - mobile friendly */}
+          <div className="space-y-2">
+            {sortedBlocks.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p className="text-sm">No time blocks for this day</p>
+                <p className="text-xs mt-1">Tap + to add one</p>
+              </div>
+            ) : (
+              sortedBlocks.map((block) => (
+                <button
+                  key={block.id}
+                  onClick={() => onBlockClick?.(block)}
+                  className="w-full text-left p-3 rounded-lg border transition-all hover:shadow-md active:scale-[0.98]"
+                  style={{
+                    borderLeftWidth: '4px',
+                    borderLeftColor: colorMode === 'energy' ? ENERGY_COLORS[block.energyRating] : DRIP_QUADRANTS[block.dripQuadrant].color,
+                  }}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{block.activityName}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {block.startTime} - {block.endTime}
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] capitalize"
+                        style={{
+                          borderColor: DRIP_QUADRANTS[block.dripQuadrant].color,
+                          color: DRIP_QUADRANTS[block.dripQuadrant].color,
+                        }}
+                      >
+                        {block.dripQuadrant}
+                      </Badge>
+                      <span
+                        className="h-2 w-2 rounded-full"
+                        style={{ backgroundColor: ENERGY_COLORS[block.energyRating] }}
+                      />
+                    </div>
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+
+          {/* Tap to add hint */}
+          <button
+            onClick={() => onAddBlock?.(selectedMobileDay, format(new Date(), 'HH:mm'))}
+            className="w-full mt-4 p-3 border-2 border-dashed rounded-lg text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+          >
+            <Plus className="h-4 w-4 mx-auto mb-1" />
+            <span className="text-sm">Tap to add time block</span>
+          </button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Desktop weekly view
   return (
     <DndContext
       sensors={sensors}
