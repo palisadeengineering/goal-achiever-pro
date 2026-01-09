@@ -51,10 +51,21 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
   useEffect(() => {
     try {
       const cached = localStorage.getItem(GOOGLE_EVENTS_CACHE_KEY);
+      console.log('[GoogleCalendar Debug] Cache check:', {
+        hasCached: !!cached,
+        cacheKey: GOOGLE_EVENTS_CACHE_KEY,
+      });
       if (cached) {
         const { events: cachedEvents, cachedAt } = JSON.parse(cached) as GoogleEventsCache;
         const cacheAge = Date.now() - new Date(cachedAt).getTime();
         const isFresh = cacheAge < CACHE_DURATION_MS;
+
+        console.log('[GoogleCalendar Debug] Cache restore:', {
+          cachedEventsCount: cachedEvents?.length || 0,
+          cacheAgeMinutes: Math.round(cacheAge / 60000),
+          isFresh,
+          sampleEvent: cachedEvents?.[0] ? { id: cachedEvents[0].id, summary: cachedEvents[0].summary } : null,
+        });
 
         // Always restore cached events so UI has data immediately
         if (cachedEvents && cachedEvents.length > 0) {

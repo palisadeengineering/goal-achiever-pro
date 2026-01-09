@@ -165,6 +165,28 @@ export default function TimeAuditPage() {
     clearCategorizationsForEvents,
   } = useEventPatterns();
 
+  // DEBUG: Log data flow for troubleshooting
+  useEffect(() => {
+    console.log('[TimeAudit Debug]', {
+      isGoogleConnected,
+      isLoadingGoogle,
+      googleEventsCount: googleEvents.length,
+      googleCacheIsStale,
+      dbTimeBlocksCount: dbTimeBlocks.length,
+      categorizationsCount: categorizations.length,
+      sampleGoogleEvent: googleEvents[0] ? {
+        id: googleEvents[0].id,
+        summary: googleEvents[0].summary,
+        start: googleEvents[0].start,
+      } : null,
+      sampleDbBlock: dbTimeBlocks[0] ? {
+        id: dbTimeBlocks[0].id,
+        date: dbTimeBlocks[0].date,
+        activityName: dbTimeBlocks[0].activityName,
+      } : null,
+    });
+  }, [isGoogleConnected, isLoadingGoogle, googleEvents, googleCacheIsStale, dbTimeBlocks, categorizations]);
+
   const { tags } = useTags();
 
   // Edit pattern detection
@@ -253,6 +275,14 @@ export default function TimeAuditPage() {
         dripQuadrant: block.dripQuadrant,
         energyRating: block.energyRating,
       });
+    });
+
+    // DEBUG: Log calendar grouping
+    console.log('[CalendarTimeBlocks Debug]', {
+      timeBlocksCount: timeBlocks.length,
+      googleEventsCount: googleEvents.length,
+      groupedDateKeys: Object.keys(grouped),
+      sampleTimeBlock: timeBlocks[0] ? { date: timeBlocks[0].date, startTime: timeBlocks[0].startTime } : null,
     });
 
     // Merge categorized Google Calendar events that haven't been imported yet
