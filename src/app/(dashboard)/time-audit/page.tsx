@@ -608,7 +608,7 @@ export default function TimeAuditPage() {
     }
   }, [googleEvents, timeBlocks, getCategorization, importTimeBlocks, fetchTimeBlocks]);
 
-  // Clear categorizations for currently visible Google events
+  // Clear ALL time blocks and categorizations for the current view
   const handleClearCategorizations = useCallback(async () => {
     // Clear localStorage categorizations
     if (googleEvents.length > 0) {
@@ -616,23 +616,25 @@ export default function TimeAuditPage() {
       clearCategorizationsForEvents(eventIds);
     }
 
-    // Also delete imported time blocks from database (ones that came from Google Calendar)
-    const importedBlocks = timeBlocks.filter(b => b.externalEventId);
-    for (const block of importedBlocks) {
+    // Delete ALL time blocks from database (both imported and manual)
+    for (const block of timeBlocks) {
       await deleteTimeBlock(block.id);
     }
 
+    // Clear local storage time blocks
+    setLocalTimeBlocks([]);
+
     // Refresh time blocks
     await fetchTimeBlocks();
-  }, [googleEvents, clearCategorizationsForEvents, timeBlocks, deleteTimeBlock, fetchTimeBlocks]);
+  }, [googleEvents, clearCategorizationsForEvents, timeBlocks, deleteTimeBlock, setLocalTimeBlocks, fetchTimeBlocks]);
 
-  // Count how many events can be cleared (Google events with categorizations OR imported DB blocks)
+  // Count how many events can be cleared (all time blocks + Google categorizations)
   const clearableCount = useMemo(() => {
     // Count localStorage categorizations for Google events
     const localStorageCount = googleEvents.filter(e => getCategorization(e.id) !== null).length;
-    // Count database time blocks imported from Google Calendar
-    const importedDbCount = timeBlocks.filter(b => b.externalEventId).length;
-    return localStorageCount + importedDbCount;
+    // Count ALL database/local time blocks (not just imported)
+    const allBlocksCount = timeBlocks.length;
+    return localStorageCount + allBlocksCount;
   }, [googleEvents, getCategorization, timeBlocks]);
 
   // Keep original categorizedCount for other uses
@@ -907,9 +909,9 @@ export default function TimeAuditPage() {
         </TabsList>
 
         <TabsContent value="calendar" className="mt-4">
-          <div className="grid gap-4 lg:grid-cols-4">
-            {/* Calendar Views - Takes 3 columns for more space */}
-            <div className="lg:col-span-3">
+          <div className="grid gap-4 lg:grid-cols-5">
+            {/* Calendar Views - Takes 4 columns for maximum space */}
+            <div className="lg:col-span-4">
               <Tabs defaultValue="weekly" className="space-y-4">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="weekly" className="gap-2">
