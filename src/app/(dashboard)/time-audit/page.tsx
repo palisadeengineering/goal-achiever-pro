@@ -155,6 +155,7 @@ export default function TimeAuditPage() {
     isConnected: isGoogleConnected,
     cacheIsStale: googleCacheIsStale,
     fetchEvents: fetchGoogleEvents,
+    connect: connectGoogleCalendar,
   } = useGoogleCalendar();
 
   const {
@@ -776,7 +777,7 @@ export default function TimeAuditPage() {
         description="Track how you spend your time and energy across DRIP quadrants"
         actions={
           <div className="flex items-center gap-2 flex-wrap">
-            {isGoogleConnected && (
+            {isGoogleConnected ? (
               <>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -822,16 +823,25 @@ export default function TimeAuditPage() {
                     Import {categorizedNotImportedCount} to Database
                   </Button>
                 )}
-                <Button
-                  variant="outline"
-                  onClick={handleClearCategorizations}
-                  disabled={categorizedCount === 0}
-                  title={categorizedCount > 0 ? "Clear all categorizations and start fresh" : "No categorizations to clear"}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Clear Categorizations {categorizedCount > 0 && `(${categorizedCount})`}
-                </Button>
               </>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={connectGoogleCalendar}
+              >
+                <Calendar className="h-4 w-4 mr-2" />
+                Connect Google Calendar
+              </Button>
+            )}
+            {categorizedCount > 0 && (
+              <Button
+                variant="outline"
+                onClick={handleClearCategorizations}
+                title="Clear all categorizations and start fresh"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Clear ({categorizedCount})
+              </Button>
             )}
             <Button onClick={handleLogTimeBlock}>
               <Plus className="h-4 w-4 mr-2" />
@@ -896,9 +906,9 @@ export default function TimeAuditPage() {
         </TabsList>
 
         <TabsContent value="calendar" className="mt-4">
-          <div className="grid gap-6 lg:grid-cols-3">
-            {/* Calendar Views - Takes 2 columns */}
-            <div className="lg:col-span-2">
+          <div className="grid gap-4 lg:grid-cols-4">
+            {/* Calendar Views - Takes 3 columns for more space */}
+            <div className="lg:col-span-3">
               <Tabs defaultValue="weekly" className="space-y-4">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="weekly" className="gap-2">
@@ -985,38 +995,38 @@ export default function TimeAuditPage() {
           </Tabs>
         </div>
 
-        {/* Pie Charts - Takes 1 column */}
-        <div className="space-y-6">
+        {/* Pie Charts - Compact sidebar */}
+        <div className="space-y-3">
           {/* DRIP Distribution */}
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">DRIP Distribution</CardTitle>
+            <CardHeader className="py-2 px-3">
+              <CardTitle className="text-sm">DRIP Distribution</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-3 pb-3">
               {hasData ? (
                 <>
-                  <DripPieChart data={dripData} size="md" />
-                  <div className="mt-4 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Production (Sweet Spot)</span>
+                  <DripPieChart data={dripData} size="sm" />
+                  <div className="mt-2 space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Production</span>
                       <span className="font-medium text-green-600">
                         {totalHours > 0 ? Math.round((dripData.production / totalHours) * 100) : 0}%
                       </span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Investment (Growth)</span>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Investment</span>
                       <span className="font-medium text-blue-600">
                         {totalHours > 0 ? Math.round((dripData.investment / totalHours) * 100) : 0}%
                       </span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Replacement (Automate)</span>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Replacement</span>
                       <span className="font-medium text-orange-600">
                         {totalHours > 0 ? Math.round((dripData.replacement / totalHours) * 100) : 0}%
                       </span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Delegation (Delegate)</span>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Delegation</span>
                       <span className="font-medium text-purple-600">
                         {totalHours > 0 ? Math.round((dripData.delegation / totalHours) * 100) : 0}%
                       </span>
@@ -1024,9 +1034,8 @@ export default function TimeAuditPage() {
                   </div>
                 </>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>No time blocks logged yet.</p>
-                  <p className="text-sm">Click &quot;Log Time Block&quot; to get started!</p>
+                <div className="text-center py-4 text-muted-foreground text-xs">
+                  <p>No data yet</p>
                 </div>
               )}
             </CardContent>
@@ -1034,16 +1043,16 @@ export default function TimeAuditPage() {
 
           {/* Energy Distribution */}
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Energy Distribution</CardTitle>
+            <CardHeader className="py-2 px-3">
+              <CardTitle className="text-sm">Energy Distribution</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-3 pb-3">
               {hasData ? (
                 <>
-                  <EnergyPieChart data={energyData} size="md" />
-                  <div className="mt-4 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="flex items-center gap-2">
+                  <EnergyPieChart data={energyData} size="sm" />
+                  <div className="mt-2 space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="flex items-center gap-1">
                         <span className="h-2 w-2 rounded-full bg-green-500" />
                         Energizing
                       </span>
@@ -1051,8 +1060,8 @@ export default function TimeAuditPage() {
                         {totalHours > 0 ? Math.round((energyData.green / totalHours) * 100) : 0}%
                       </span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="flex items-center gap-2">
+                    <div className="flex justify-between text-xs">
+                      <span className="flex items-center gap-1">
                         <span className="h-2 w-2 rounded-full bg-yellow-500" />
                         Neutral
                       </span>
@@ -1060,8 +1069,8 @@ export default function TimeAuditPage() {
                         {totalHours > 0 ? Math.round((energyData.yellow / totalHours) * 100) : 0}%
                       </span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="flex items-center gap-2">
+                    <div className="flex justify-between text-xs">
+                      <span className="flex items-center gap-1">
                         <span className="h-2 w-2 rounded-full bg-red-500" />
                         Draining
                       </span>
@@ -1072,9 +1081,8 @@ export default function TimeAuditPage() {
                   </div>
                 </>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>Track your energy levels</p>
-                  <p className="text-sm">to see distribution here.</p>
+                <div className="text-center py-4 text-muted-foreground text-xs">
+                  <p>No data yet</p>
                 </div>
               )}
             </CardContent>
@@ -1082,11 +1090,11 @@ export default function TimeAuditPage() {
 
           {/* Quick Actions */}
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Quick Actions</CardTitle>
+            <CardHeader className="py-2 px-3">
+              <CardTitle className="text-sm">Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <Button variant="outline" className="w-full justify-start" asChild>
+            <CardContent className="px-3 pb-3 space-y-1">
+              <Button variant="outline" size="sm" className="w-full justify-start text-xs" asChild>
                 <Link href={ROUTES.drip}>
                   View DRIP Matrix
                 </Link>
@@ -1094,9 +1102,9 @@ export default function TimeAuditPage() {
               {isGoogleConnected && (
                 <Button
                   variant="outline"
-                  className="w-full justify-start"
+                  size="sm"
+                  className="w-full justify-start text-xs"
                   onClick={() => {
-                    // Select the most recent block to push
                     const recentBlock = timeBlocks[timeBlocks.length - 1];
                     if (recentBlock && !recentBlock.externalEventId) {
                       setBlockToPush(recentBlock);
@@ -1105,19 +1113,10 @@ export default function TimeAuditPage() {
                   }}
                   disabled={timeBlocks.length === 0}
                 >
-                  <ArrowUpRight className="h-4 w-4 mr-2" />
-                  Push to Google Calendar
+                  <ArrowUpRight className="h-3 w-3 mr-1" />
+                  Push to Calendar
                 </Button>
               )}
-              <Button variant="outline" className="w-full justify-start">
-                Export Report
-                {!hasProAccess && (
-                  <Badge variant="secondary" className="ml-auto">Pro</Badge>
-                )}
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                Set Time Goals
-              </Button>
             </CardContent>
           </Card>
 
