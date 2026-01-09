@@ -777,52 +777,39 @@ export default function TimeAuditPage() {
         description="Track how you spend your time and energy across DRIP quadrants"
         actions={
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Google Calendar Sync - always show dropdown, changes based on connection */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  disabled={isLoadingGoogle}
-                >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${isLoadingGoogle ? 'animate-spin' : ''}`} />
-                  {isGoogleConnected ? `Sync ${getTimeframeLabel(syncTimeframe)}` : 'Google Calendar'}
-                  <ChevronDown className="h-4 w-4 ml-2" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {isGoogleConnected ? (
-                  <>
-                    <DropdownMenuItem onClick={() => handleSyncGoogle('1week')}>
-                      Sync 1 Week
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleSyncGoogle('2weeks')}>
-                      Sync 2 Weeks
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleSyncGoogle('1month')}>
-                      Sync 1 Month
-                    </DropdownMenuItem>
-                  </>
-                ) : (
-                  <DropdownMenuItem onClick={connectGoogleCalendar}>
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Connect Google Calendar
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Sync Google Calendar - always visible */}
+            <Button
+              variant="outline"
+              onClick={() => isGoogleConnected ? handleSyncGoogle() : connectGoogleCalendar()}
+              disabled={isLoadingGoogle}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isLoadingGoogle ? 'animate-spin' : ''}`} />
+              {isGoogleConnected ? 'Sync Calendar' : 'Connect Calendar'}
+            </Button>
 
-            {/* Categorize Events - shows when there are uncategorized Google events */}
-            {uncategorizedCount > 0 && (
-              <Button
-                variant="secondary"
-                onClick={() => setShowCategorizationDialog(true)}
-              >
+            {/* Categorize Events - always visible when we have Google events */}
+            <Button
+              variant="secondary"
+              onClick={() => setShowCategorizationDialog(true)}
+              disabled={googleEvents.length === 0}
+            >
+              {uncategorizedCount > 0 && (
                 <Badge variant="destructive" className="mr-2">
                   {uncategorizedCount}
                 </Badge>
-                Categorize
-              </Button>
-            )}
+              )}
+              Categorize
+            </Button>
+
+            {/* Clear Categorizations - always visible */}
+            <Button
+              variant="outline"
+              onClick={handleClearCategorizations}
+              disabled={categorizedCount === 0}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Clear {categorizedCount > 0 ? `(${categorizedCount})` : ''}
+            </Button>
 
             {/* Import to Database - shows when there are categorized events not yet imported */}
             {categorizedNotImportedCount > 0 && (
@@ -833,18 +820,6 @@ export default function TimeAuditPage() {
               >
                 <Upload className={`h-4 w-4 mr-2 ${isImporting ? 'animate-pulse' : ''}`} />
                 Import ({categorizedNotImportedCount})
-              </Button>
-            )}
-
-            {/* Clear Categorizations - shows when there are any categorizations */}
-            {categorizedCount > 0 && (
-              <Button
-                variant="outline"
-                onClick={handleClearCategorizations}
-                title="Clear all categorizations and re-categorize"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Clear ({categorizedCount})
               </Button>
             )}
 
