@@ -103,7 +103,7 @@ function DraggableBlock({
         }
       }}
       className={cn(
-        'relative text-left p-1 rounded-sm mx-0.5 text-white text-[10px] overflow-hidden',
+        'relative text-left p-1 rounded-sm mx-0.5 text-white text-xs font-medium overflow-hidden',
         'transition-all duration-200 cursor-grab active:cursor-grabbing',
         'shadow-sm hover:shadow-md hover:brightness-110 hover:scale-[1.02]',
         isDragging && 'opacity-50 shadow-lg scale-105',
@@ -185,7 +185,7 @@ function DroppableSlot({
       onMouseEnter={handleMouseEnter}
       onMouseUp={handleMouseUp}
       className={cn(
-        'h-3 transition-all duration-150 border-b border-dashed border-muted/30 last:border-b-0 group select-none',
+        'h-2.5 transition-all duration-150 border-b border-dashed border-muted/30 last:border-b-0 group select-none',
         !children && 'hover:bg-primary/10 cursor-pointer',
         isOver && 'bg-primary/20 ring-1 ring-primary',
         isInDragRange && 'bg-primary/30'
@@ -520,7 +520,7 @@ export function WeeklyCalendarView({
             </div>
 
             {/* Time Grid */}
-            <div className="max-h-[650px] overflow-y-auto relative">
+            <div className="max-h-[550px] overflow-y-auto relative">
               {/* Current Time Indicator */}
               {isCurrentWeekVisible && getCurrentTimePosition() !== null && (
                 <div
@@ -547,7 +547,7 @@ export function WeeklyCalendarView({
                 const isEvenHour = hourNum % 2 === 0;
 
                 return (
-                <div key={hourSlot} className={cn('grid grid-cols-8 border-b', isEvenHour && 'bg-muted/20')}>
+                <div key={hourSlot} className={cn('grid grid-cols-8 border-b min-h-[40px]', isEvenHour && 'bg-muted/20')}>
                   {/* Time Label */}
                   <div className="p-1 text-xs text-muted-foreground border-r flex items-start justify-end pr-2">
                     {formatHour(hourNum, settings.timeFormat)}
@@ -567,7 +567,7 @@ export function WeeklyCalendarView({
                       <div
                         key={dayIndex}
                         className={cn(
-                          'border-r last:border-r-0 min-h-[48px]',
+                          'border-r last:border-r-0 min-h-[40px]',
                           isSameDay(day, new Date()) && 'bg-primary/5'
                         )}
                       >
@@ -599,7 +599,7 @@ export function WeeklyCalendarView({
 
                             if (block) {
                               // Part of existing block, don't render droppable
-                              return <div key={time} className="h-3" />;
+                              return <div key={time} className="h-2.5" />;
                             }
 
                             return (

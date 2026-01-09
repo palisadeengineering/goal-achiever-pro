@@ -817,9 +817,9 @@ export default function TimeAuditPage() {
         </TabsList>
 
         <TabsContent value="calendar" className="mt-4">
-          <div className="grid gap-6 lg:grid-cols-3">
-            {/* Calendar Views - Takes 2 columns */}
-            <div className="lg:col-span-2">
+          <div className="grid gap-4 lg:grid-cols-4">
+            {/* Calendar Views - Takes 3 columns */}
+            <div className="lg:col-span-3">
               <Tabs defaultValue="weekly" className="space-y-4">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="weekly" className="gap-2">
