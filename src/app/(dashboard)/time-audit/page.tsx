@@ -609,13 +609,33 @@ export default function TimeAuditPage() {
   }, [googleEvents, timeBlocks, getCategorization, importTimeBlocks, fetchTimeBlocks]);
 
   // Clear categorizations for currently visible Google events
-  const handleClearCategorizations = useCallback(() => {
-    if (googleEvents.length === 0) return;
-    const eventIds = googleEvents.map(e => e.id);
-    clearCategorizationsForEvents(eventIds);
-  }, [googleEvents, clearCategorizationsForEvents]);
+  const handleClearCategorizations = useCallback(async () => {
+    // Clear localStorage categorizations
+    if (googleEvents.length > 0) {
+      const eventIds = googleEvents.map(e => e.id);
+      clearCategorizationsForEvents(eventIds);
+    }
 
-  // Count how many events have categorizations (for showing clear button)
+    // Also delete imported time blocks from database (ones that came from Google Calendar)
+    const importedBlocks = timeBlocks.filter(b => b.externalEventId);
+    for (const block of importedBlocks) {
+      await deleteTimeBlock(block.id);
+    }
+
+    // Refresh time blocks
+    await fetchTimeBlocks();
+  }, [googleEvents, clearCategorizationsForEvents, timeBlocks, deleteTimeBlock, fetchTimeBlocks]);
+
+  // Count how many events can be cleared (Google events with categorizations OR imported DB blocks)
+  const clearableCount = useMemo(() => {
+    // Count localStorage categorizations for Google events
+    const localStorageCount = googleEvents.filter(e => getCategorization(e.id) !== null).length;
+    // Count database time blocks imported from Google Calendar
+    const importedDbCount = timeBlocks.filter(b => b.externalEventId).length;
+    return localStorageCount + importedDbCount;
+  }, [googleEvents, getCategorization, timeBlocks]);
+
+  // Keep original categorizedCount for other uses
   const categorizedCount = useMemo(() => {
     if (!googleEvents || googleEvents.length === 0) return 0;
     return googleEvents.filter(e => getCategorization(e.id) !== null).length;
@@ -805,10 +825,10 @@ export default function TimeAuditPage() {
             <Button
               variant="outline"
               onClick={handleClearCategorizations}
-              disabled={categorizedCount === 0}
+              disabled={clearableCount === 0}
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              Clear {categorizedCount > 0 ? `(${categorizedCount})` : ''}
+              Clear {clearableCount > 0 ? `(${clearableCount})` : ''}
             </Button>
 
             {/* Import to Database - shows when there are categorized events not yet imported */}
