@@ -804,15 +804,38 @@ export default function TimeAuditPage() {
         description="Track how you spend your time and energy across DRIP quadrants"
         actions={
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Sync Google Calendar - always visible */}
-            <Button
-              variant="outline"
-              onClick={() => isGoogleConnected ? handleSyncGoogle() : connectGoogleCalendar()}
-              disabled={isLoadingGoogle}
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isLoadingGoogle ? 'animate-spin' : ''}`} />
-              {isGoogleConnected ? 'Sync Calendar' : 'Connect Calendar'}
-            </Button>
+            {/* Sync Google Calendar with timeframe dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  disabled={isLoadingGoogle}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isLoadingGoogle ? 'animate-spin' : ''}`} />
+                  {isGoogleConnected ? `Sync (${getTimeframeLabel(syncTimeframe)})` : 'Connect Calendar'}
+                  <ChevronDown className="h-4 w-4 ml-2" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {isGoogleConnected ? (
+                  <>
+                    <DropdownMenuItem onClick={() => handleSyncGoogle('1week')}>
+                      Sync 1 Week
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleSyncGoogle('2weeks')}>
+                      Sync 2 Weeks
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleSyncGoogle('1month')}>
+                      Sync 1 Month
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <DropdownMenuItem onClick={() => connectGoogleCalendar()}>
+                    Connect Google Calendar
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* Categorize Events - always visible when we have Google events */}
             <Button
@@ -825,7 +848,7 @@ export default function TimeAuditPage() {
                   {uncategorizedCount}
                 </Badge>
               )}
-              Categorize
+              Categorize {googleEvents.length > 0 ? `(${googleEvents.length})` : ''}
             </Button>
 
             {/* Clear Categorizations - always visible */}
