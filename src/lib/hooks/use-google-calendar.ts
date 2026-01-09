@@ -108,6 +108,10 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
   }, []);
 
   const fetchEvents = useCallback(async (startDate: Date, endDate: Date) => {
+    console.log('[GoogleCalendar] Starting fetchEvents', {
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+    });
     setIsLoading(true);
     setError(null);
 
@@ -118,19 +122,27 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
       });
 
       const response = await fetch(`/api/calendar/google/events?${params}`);
+      console.log('[GoogleCalendar] API response status:', response.status);
 
       if (response.status === 401) {
+        console.log('[GoogleCalendar] 401 - Session expired');
         setIsConnected(false);
-        setError('Google Calendar session expired. Please reconnect.');
+        setError('Google Calendar session expired. Please click "Reconnect" to re-authenticate.');
         return;
       }
 
       if (!response.ok) {
         const data = await response.json();
+        console.log('[GoogleCalendar] API error:', data);
         throw new Error(data.error || 'Failed to fetch calendar events');
       }
 
       const data = await response.json();
+      console.log('[GoogleCalendar] Raw response:', {
+        eventsCount: data.events?.length || 0,
+        sampleEvent: data.events?.[0] ? { id: data.events[0].id, activityName: data.events[0].activityName } : null,
+      });
+
       // Transform the response to match our GoogleCalendarEvent interface
       const rawEvents = data.events || [];
       const transformedEvents: GoogleCalendarEvent[] = rawEvents
@@ -146,6 +158,12 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
           endTime: event.endTime || '',
           source: event.source || 'google_calendar',
         }));
+
+      console.log('[GoogleCalendar] Transformed events:', {
+        count: transformedEvents.length,
+        sampleEvent: transformedEvents[0] ? { id: transformedEvents[0].id, summary: transformedEvents[0].summary } : null,
+      });
+
       setEvents(transformedEvents);
       setIsConnected(true);
       setCacheIsStale(false); // Fresh data fetched

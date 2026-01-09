@@ -7,7 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Calendar, CalendarDays, CalendarRange, Lock, RefreshCw, ChevronDown, Upload, ArrowUpRight, BarChart3, Trash2 } from 'lucide-react';
+import { Plus, Calendar, CalendarDays, CalendarRange, Lock, RefreshCw, ChevronDown, Upload, ArrowUpRight, BarChart3, Trash2, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -154,8 +155,10 @@ export default function TimeAuditPage() {
     isLoading: isLoadingGoogle,
     isConnected: isGoogleConnected,
     cacheIsStale: googleCacheIsStale,
+    error: googleError,
     fetchEvents: fetchGoogleEvents,
     connect: connectGoogleCalendar,
+    checkConnection: checkGoogleConnection,
   } = useGoogleCalendar();
 
   const {
@@ -241,6 +244,14 @@ export default function TimeAuditPage() {
       }
     }
   }, [isGoogleConnected, isLoadingGoogle, googleCacheIsStale]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Re-check connection status when Google error occurs (in case of token issues)
+  useEffect(() => {
+    if (googleError) {
+      console.log('[TimeAudit] Google error detected, re-checking connection status');
+      checkGoogleConnection();
+    }
+  }, [googleError, checkGoogleConnection]);
 
   // Count uncategorized events
   const uncategorizedCount = useMemo(() => {
@@ -853,6 +864,23 @@ export default function TimeAuditPage() {
           </div>
         }
       />
+
+      {/* Google Calendar Error Alert */}
+      {googleError && (
+        <Alert variant="destructive" className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{googleError}</AlertDescription>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => connectGoogleCalendar()}
+          >
+            Reconnect
+          </Button>
+        </Alert>
+      )}
 
       {/* Time Block Form Modal */}
       <TimeBlockForm
