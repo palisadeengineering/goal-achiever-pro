@@ -158,7 +158,6 @@ export default function TimeAuditPage() {
     error: googleError,
     fetchEvents: fetchGoogleEvents,
     connect: connectGoogleCalendar,
-    checkConnection: checkGoogleConnection,
   } = useGoogleCalendar();
 
   const {
@@ -237,21 +236,16 @@ export default function TimeAuditPage() {
 
   // Auto-fetch Google events on page load when connected and no events or cache is stale
   useEffect(() => {
+    // Don't auto-fetch if there's an error (prevents infinite loop on 401)
+    if (googleError) return;
+
     if (isGoogleConnected && !isLoadingGoogle) {
       if (googleEvents.length === 0 || googleCacheIsStale) {
         // No cached events or cache is stale, fetch fresh events
         handleSyncGoogle();
       }
     }
-  }, [isGoogleConnected, isLoadingGoogle, googleCacheIsStale]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Re-check connection status when Google error occurs (in case of token issues)
-  useEffect(() => {
-    if (googleError) {
-      console.log('[TimeAudit] Google error detected, re-checking connection status');
-      checkGoogleConnection();
-    }
-  }, [googleError, checkGoogleConnection]);
+  }, [isGoogleConnected, isLoadingGoogle, googleCacheIsStale, googleError]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Count uncategorized events
   const uncategorizedCount = useMemo(() => {
