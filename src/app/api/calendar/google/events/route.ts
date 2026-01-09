@@ -1,21 +1,61 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 
-// Refresh access token if expired
-async function refreshTokenIfNeeded(tokens: {
+// Demo user ID for development
+const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
+
+async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
+  if (!supabase) return DEMO_USER_ID;
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id || DEMO_USER_ID;
+}
+
+// Get tokens from database
+async function getTokensFromDatabase(supabase: Awaited<ReturnType<typeof createClient>>, userId: string): Promise<{
   access_token: string;
   refresh_token: string;
   expiry_date: number;
-}): Promise<{ access_token: string; refresh_token: string; expiry_date: number } | null> {
+} | null> {
+  if (!supabase) return null;
+
+  const { data: integration, error } = await supabase
+    .from('user_integrations')
+    .select('access_token, refresh_token, token_expiry')
+    .eq('user_id', userId)
+    .eq('provider', 'google_calendar')
+    .eq('is_active', true)
+    .single();
+
+  if (error || !integration || !integration.access_token || !integration.refresh_token) {
+    console.log('[GoogleEvents] No valid tokens in database:', error?.message);
+    return null;
+  }
+
+  return {
+    access_token: integration.access_token,
+    refresh_token: integration.refresh_token,
+    expiry_date: new Date(integration.token_expiry).getTime(),
+  };
+}
+
+// Refresh access token if expired
+async function refreshTokenIfNeeded(
+  tokens: { access_token: string; refresh_token: string; expiry_date: number },
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string
+): Promise<{ access_token: string; refresh_token: string; expiry_date: number } | null> {
+  // Token still valid (with 1 minute buffer)
   if (Date.now() < tokens.expiry_date - 60000) {
-    // Token still valid (with 1 minute buffer)
     return tokens;
   }
 
+  console.log('[GoogleEvents] Token expired, refreshing...');
+
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+    console.log('[GoogleEvents] Missing Google OAuth credentials');
     return null;
   }
 
@@ -36,46 +76,76 @@ async function refreshTokenIfNeeded(tokens: {
     const newTokens = await response.json();
 
     if (!response.ok) {
+      console.error('[GoogleEvents] Token refresh failed:', newTokens);
       return null;
     }
 
-    return {
+    const refreshedTokens = {
       access_token: newTokens.access_token,
       refresh_token: tokens.refresh_token, // Keep existing refresh token
       expiry_date: Date.now() + (newTokens.expires_in * 1000),
     };
-  } catch {
+
+    // Update tokens in database
+    if (supabase) {
+      const { error: updateError } = await supabase
+        .from('user_integrations')
+        .update({
+          access_token: refreshedTokens.access_token,
+          token_expiry: new Date(refreshedTokens.expiry_date).toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId)
+        .eq('provider', 'google_calendar');
+
+      if (updateError) {
+        console.error('[GoogleEvents] Failed to update tokens in database:', updateError);
+      } else {
+        console.log('[GoogleEvents] Tokens refreshed and saved to database');
+      }
+    }
+
+    return refreshedTokens;
+  } catch (error) {
+    console.error('[GoogleEvents] Token refresh error:', error);
     return null;
   }
 }
 
 // GET: Fetch calendar events
 export async function GET(request: NextRequest) {
-  const cookieStore = await cookies();
-  const tokensCookie = cookieStore.get('google_calendar_tokens');
+  const supabase = await createClient();
+  const userId = await getUserId(supabase);
 
-  if (!tokensCookie) {
+  console.log('[GoogleEvents] GET request for user:', userId);
+
+  // Get tokens from database
+  const tokens = await getTokensFromDatabase(supabase, userId);
+
+  if (!tokens) {
     return NextResponse.json(
-      { error: 'Not connected to Google Calendar' },
+      { error: 'Not connected to Google Calendar. Please connect your calendar first.' },
+      { status: 401 }
+    );
+  }
+
+  // Refresh tokens if needed
+  const refreshedTokens = await refreshTokenIfNeeded(tokens, supabase, userId);
+
+  if (!refreshedTokens) {
+    return NextResponse.json(
+      { error: 'Failed to refresh Google Calendar token. Please reconnect your calendar.' },
       { status: 401 }
     );
   }
 
   try {
-    const tokens = JSON.parse(tokensCookie.value);
-    const refreshedTokens = await refreshTokenIfNeeded(tokens);
-
-    if (!refreshedTokens) {
-      return NextResponse.json(
-        { error: 'Failed to refresh token' },
-        { status: 401 }
-      );
-    }
-
     // Get date range from query params
     const searchParams = request.nextUrl.searchParams;
     const timeMin = searchParams.get('timeMin') || new Date().toISOString();
     const timeMax = searchParams.get('timeMax') || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    console.log('[GoogleEvents] Fetching events:', { timeMin, timeMax });
 
     // Fetch events from Google Calendar
     const calendarUrl = new URL('https://www.googleapis.com/calendar/v3/calendars/primary/events');
@@ -92,14 +162,25 @@ export async function GET(request: NextRequest) {
 
     if (!eventsResponse.ok) {
       const error = await eventsResponse.json();
-      console.error('Google Calendar API error:', error);
+      console.error('[GoogleEvents] Google Calendar API error:', error);
+
+      // If we get a 401 from Google, mark integration as inactive
+      if (eventsResponse.status === 401 && supabase) {
+        await supabase
+          .from('user_integrations')
+          .update({ is_active: false })
+          .eq('user_id', userId)
+          .eq('provider', 'google_calendar');
+      }
+
       return NextResponse.json(
-        { error: 'Failed to fetch calendar events' },
+        { error: 'Failed to fetch calendar events. Please reconnect your calendar.' },
         { status: eventsResponse.status }
       );
     }
 
     const data = await eventsResponse.json();
+    console.log('[GoogleEvents] Fetched events count:', data.items?.length || 0);
 
     // Transform events to our TimeBlock format
     const timeBlocks = data.items?.map((event: {
@@ -132,21 +213,9 @@ export async function GET(request: NextRequest) {
       };
     }) || [];
 
-    // Update cookie with refreshed tokens if needed
-    const response = NextResponse.json({ events: timeBlocks });
-
-    if (refreshedTokens !== tokens) {
-      response.cookies.set('google_calendar_tokens', JSON.stringify(refreshedTokens), {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 30,
-      });
-    }
-
-    return response;
+    return NextResponse.json({ events: timeBlocks });
   } catch (error) {
-    console.error('Error fetching calendar events:', error);
+    console.error('[GoogleEvents] Error fetching calendar events:', error);
     return NextResponse.json(
       { error: 'Failed to fetch calendar events' },
       { status: 500 }
@@ -154,34 +223,23 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Helper to get refreshed tokens from cookie
-async function getTokensFromCookie(): Promise<{
-  access_token: string;
-  refresh_token: string;
-  expiry_date: number;
-} | null> {
-  const cookieStore = await cookies();
-  const tokensCookie = cookieStore.get('google_calendar_tokens');
-
-  if (!tokensCookie) {
-    return null;
-  }
-
-  try {
-    const tokens = JSON.parse(tokensCookie.value);
-    return await refreshTokenIfNeeded(tokens);
-  } catch {
-    return null;
-  }
-}
-
 // POST: Create a new calendar event
 export async function POST(request: NextRequest) {
-  const tokens = await getTokensFromCookie();
+  const supabase = await createClient();
+  const userId = await getUserId(supabase);
 
+  const tokens = await getTokensFromDatabase(supabase, userId);
   if (!tokens) {
     return NextResponse.json(
       { error: 'Not connected to Google Calendar' },
+      { status: 401 }
+    );
+  }
+
+  const refreshedTokens = await refreshTokenIfNeeded(tokens, supabase, userId);
+  if (!refreshedTokens) {
+    return NextResponse.json(
+      { error: 'Failed to refresh token' },
       { status: 401 }
     );
   }
@@ -216,7 +274,7 @@ export async function POST(request: NextRequest) {
       {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${tokens.access_token}`,
+          Authorization: `Bearer ${refreshedTokens.access_token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(event),
@@ -225,7 +283,7 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const error = await response.json();
-      console.error('Google Calendar create error:', error);
+      console.error('[GoogleEvents] Create error:', error);
       return NextResponse.json(
         { error: 'Failed to create calendar event' },
         { status: response.status }
@@ -246,7 +304,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error creating calendar event:', error);
+    console.error('[GoogleEvents] Error creating calendar event:', error);
     return NextResponse.json(
       { error: 'Failed to create calendar event' },
       { status: 500 }
@@ -256,11 +314,21 @@ export async function POST(request: NextRequest) {
 
 // PATCH: Update an existing calendar event
 export async function PATCH(request: NextRequest) {
-  const tokens = await getTokensFromCookie();
+  const supabase = await createClient();
+  const userId = await getUserId(supabase);
 
+  const tokens = await getTokensFromDatabase(supabase, userId);
   if (!tokens) {
     return NextResponse.json(
       { error: 'Not connected to Google Calendar' },
+      { status: 401 }
+    );
+  }
+
+  const refreshedTokens = await refreshTokenIfNeeded(tokens, supabase, userId);
+  if (!refreshedTokens) {
+    return NextResponse.json(
+      { error: 'Failed to refresh token' },
       { status: 401 }
     );
   }
@@ -306,7 +374,7 @@ export async function PATCH(request: NextRequest) {
       {
         method: 'PATCH',
         headers: {
-          Authorization: `Bearer ${tokens.access_token}`,
+          Authorization: `Bearer ${refreshedTokens.access_token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(updatePayload),
@@ -315,7 +383,7 @@ export async function PATCH(request: NextRequest) {
 
     if (!response.ok) {
       const error = await response.json();
-      console.error('Google Calendar update error:', error);
+      console.error('[GoogleEvents] Update error:', error);
       return NextResponse.json(
         { error: 'Failed to update calendar event' },
         { status: response.status }
@@ -336,7 +404,7 @@ export async function PATCH(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error updating calendar event:', error);
+    console.error('[GoogleEvents] Error updating calendar event:', error);
     return NextResponse.json(
       { error: 'Failed to update calendar event' },
       { status: 500 }
@@ -346,11 +414,21 @@ export async function PATCH(request: NextRequest) {
 
 // DELETE: Delete a calendar event
 export async function DELETE(request: NextRequest) {
-  const tokens = await getTokensFromCookie();
+  const supabase = await createClient();
+  const userId = await getUserId(supabase);
 
+  const tokens = await getTokensFromDatabase(supabase, userId);
   if (!tokens) {
     return NextResponse.json(
       { error: 'Not connected to Google Calendar' },
+      { status: 401 }
+    );
+  }
+
+  const refreshedTokens = await refreshTokenIfNeeded(tokens, supabase, userId);
+  if (!refreshedTokens) {
+    return NextResponse.json(
+      { error: 'Failed to refresh token' },
       { status: 401 }
     );
   }
@@ -374,7 +452,7 @@ export async function DELETE(request: NextRequest) {
       {
         method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${tokens.access_token}`,
+          Authorization: `Bearer ${refreshedTokens.access_token}`,
         },
       }
     );
@@ -382,7 +460,7 @@ export async function DELETE(request: NextRequest) {
     // Google returns 204 No Content on successful deletion
     if (!response.ok && response.status !== 204) {
       const error = await response.json().catch(() => ({}));
-      console.error('Google Calendar delete error:', error);
+      console.error('[GoogleEvents] Delete error:', error);
       return NextResponse.json(
         { error: 'Failed to delete calendar event' },
         { status: response.status }
@@ -394,7 +472,7 @@ export async function DELETE(request: NextRequest) {
       deletedEventId: eventId,
     });
   } catch (error) {
-    console.error('Error deleting calendar event:', error);
+    console.error('[GoogleEvents] Error deleting calendar event:', error);
     return NextResponse.json(
       { error: 'Failed to delete calendar event' },
       { status: 500 }
