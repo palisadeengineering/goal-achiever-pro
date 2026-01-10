@@ -29,6 +29,7 @@ interface UseTimeBlocksReturn {
   createTimeBlock: (block: Omit<TimeBlock, 'id' | 'createdAt' | 'updatedAt'>) => Promise<TimeBlock | null>;
   updateTimeBlock: (id: string, updates: Partial<TimeBlock>) => Promise<TimeBlock | null>;
   deleteTimeBlock: (id: string) => Promise<boolean>;
+  clearAllTimeBlocks: () => Promise<boolean>;
   importTimeBlocks: (blocks: Array<Omit<TimeBlock, 'id' | 'createdAt' | 'updatedAt'>>) => Promise<{ imported: number; skipped: number }>;
   refetch: () => Promise<void>;
 }
@@ -175,6 +176,29 @@ export function useTimeBlocks(initialStartDate?: string, initialEndDate?: string
     }
   }, []);
 
+  const clearAllTimeBlocks = useCallback(async (): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/time-blocks?clearAll=true', {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to clear all time blocks');
+      }
+
+      // Clear local state
+      setTimeBlocks([]);
+
+      return true;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to clear all time blocks';
+      setError(message);
+      console.error('Clear all time blocks error:', err);
+      return false;
+    }
+  }, []);
+
   const importTimeBlocks = useCallback(async (
     blocks: Array<Omit<TimeBlock, 'id' | 'createdAt' | 'updatedAt'>>
   ): Promise<{ imported: number; skipped: number }> => {
@@ -214,6 +238,7 @@ export function useTimeBlocks(initialStartDate?: string, initialEndDate?: string
     createTimeBlock,
     updateTimeBlock,
     deleteTimeBlock,
+    clearAllTimeBlocks,
     importTimeBlocks,
     refetch,
   };

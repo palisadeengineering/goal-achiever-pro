@@ -26,7 +26,7 @@ import { TagSelector } from './tag-selector';
 import { TagManager } from './tag-manager';
 import { useTags, type Tag } from '@/lib/hooks/use-tags';
 import { useTagPatterns } from '@/lib/hooks/use-tag-patterns';
-import { Sparkles, Check, X, Loader2 } from 'lucide-react';
+import { Sparkles, Check, X, Loader2, Trash2 } from 'lucide-react';
 import type { DripQuadrant, EnergyRating } from '@/types/database';
 
 export interface TimeBlock {
@@ -48,6 +48,7 @@ interface TimeBlockFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (block: Omit<TimeBlock, 'id' | 'createdAt'>) => void;
+  onDelete?: (block: TimeBlock) => Promise<void>;
   initialDate?: string;
   initialTime?: string;
   initialEndTime?: string;
@@ -72,6 +73,7 @@ export function TimeBlockForm({
   open,
   onOpenChange,
   onSave,
+  onDelete,
   initialDate,
   initialTime,
   initialEndTime,
@@ -88,6 +90,7 @@ export function TimeBlockForm({
   const [energyRating, setEnergyRating] = useState<EnergyRating>('yellow');
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [showTagManager, setShowTagManager] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Smart tag suggestion states
   const [suggestedTagIds, setSuggestedTagIds] = useState<string[]>([]);
@@ -222,6 +225,20 @@ export function TimeBlockForm({
       tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
     });
     onOpenChange(false);
+  };
+
+  const handleDelete = async () => {
+    if (!editBlock || !onDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await onDelete(editBlock);
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Delete error:', error);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -410,13 +427,36 @@ export function TimeBlockForm({
             )}
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit">
-              {editBlock ? 'Save Changes' : 'Log Time Block'}
-            </Button>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            {editBlock && onDelete && (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="w-full sm:w-auto sm:mr-auto"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </>
+                )}
+              </Button>
+            )}
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1 sm:flex-none">
+                Cancel
+              </Button>
+              <Button type="submit" className="flex-1 sm:flex-none">
+                {editBlock ? 'Save Changes' : 'Log Time Block'}
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -362,7 +362,7 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE: Delete a time block
+// DELETE: Delete a time block or all time blocks
 export async function DELETE(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -378,7 +378,27 @@ export async function DELETE(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
+    const clearAll = searchParams.get('clearAll') === 'true';
 
+    // Handle clear all time blocks
+    if (clearAll) {
+      const { error } = await supabase
+        .from('time_blocks')
+        .delete()
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('Error clearing all time blocks:', error);
+        return NextResponse.json(
+          { error: 'Failed to clear all time blocks' },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({ success: true, cleared: true });
+    }
+
+    // Handle single delete
     if (!id) {
       return NextResponse.json(
         { error: 'Time block ID is required' },

@@ -67,17 +67,32 @@ const generateTimeSlots = (startHour: number, endHour: number): string[] => {
   return slots;
 };
 
-// Draggable event block component
+// Format time for display (e.g., "9:45am")
+function formatTimeShort(time: string, format: '12h' | '24h' = '12h'): string {
+  const [hour, min] = time.split(':').map(Number);
+  if (format === '24h') {
+    return `${hour}:${min.toString().padStart(2, '0')}`;
+  }
+  const h = hour % 12 || 12;
+  const ampm = hour < 12 ? 'am' : 'pm';
+  return min === 0 ? `${h}${ampm}` : `${h}:${min.toString().padStart(2, '0')}${ampm}`;
+}
+
+// Draggable event block component with resize support
 function DraggableBlock({
   block,
   durationSlots,
   onBlockClick,
   getBlockColor,
+  onResizeStart,
+  isResizing,
 }: {
   block: TimeBlock;
   durationSlots: number;
   onBlockClick?: (block: TimeBlock) => void;
   getBlockColor: (quadrant: DripQuadrant) => string;
+  onResizeStart?: (block: TimeBlock, e: React.MouseEvent) => void;
+  isResizing?: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: block.id,
@@ -91,36 +106,74 @@ function DraggableBlock({
       }
     : undefined;
 
+  // Format time range
+  const timeRange = `${formatTimeShort(block.startTime)} - ${formatTimeShort(block.endTime)}`;
+
+  const handleResizeMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onResizeStart?.(block, e);
+  };
+
   return (
-    <button
+    <div
       ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      onClick={(e) => {
-        if (!isDragging) {
-          e.stopPropagation();
-          onBlockClick?.(block);
-        }
-      }}
       className={cn(
-        'relative text-left p-1 rounded-sm mx-0.5 text-white text-xs font-medium overflow-hidden',
-        'transition-all duration-200 cursor-grab active:cursor-grabbing',
-        'shadow-sm hover:shadow-md hover:brightness-110 hover:scale-[1.02]',
-        isDragging && 'opacity-50 shadow-lg scale-105',
+        'relative text-left p-1.5 rounded-sm text-white text-xs font-medium overflow-hidden h-full w-full',
+        'transition-all duration-200',
+        isDragging && 'opacity-50 shadow-lg',
+        isResizing && 'ring-2 ring-white/50',
         block.syncStatus === 'pending' && 'animate-pulse',
         block.syncStatus === 'error' && 'ring-2 ring-red-500'
       )}
       style={{
         backgroundColor: getBlockColor(block.dripQuadrant),
-        gridRow: `span ${durationSlots}`,
         ...style,
       }}
     >
-      <span className="line-clamp-2">{block.activityName}</span>
+      {/* Main draggable content area */}
+      <button
+        {...listeners}
+        {...attributes}
+        onClick={(e) => {
+          if (!isDragging && !isResizing) {
+            e.stopPropagation();
+            onBlockClick?.(block);
+          }
+        }}
+        className="w-full h-full text-left cursor-grab active:cursor-grabbing overflow-hidden"
+      >
+        <div className="flex flex-col h-full pr-1">
+          {/* For very short events (15min), show abbreviated */}
+          {durationSlots <= 1 ? (
+            <span className="font-medium text-[10px] truncate">{block.activityName}</span>
+          ) : durationSlots <= 2 ? (
+            /* For 30min events, show name only */
+            <span className="font-semibold text-[11px] line-clamp-1 leading-tight">{block.activityName}</span>
+          ) : (
+            /* For longer events, show name and time */
+            <>
+              <span className="font-semibold line-clamp-2 leading-tight">{block.activityName}</span>
+              {durationSlots >= 4 && (
+                <span className="text-[10px] opacity-80 mt-0.5">{timeRange}</span>
+              )}
+            </>
+          )}
+        </div>
+      </button>
+
       {block.syncStatus === 'pending' && (
         <Loader2 className="absolute top-0.5 right-0.5 h-2 w-2 animate-spin" />
       )}
-    </button>
+
+      {/* Resize handle at bottom */}
+      <div
+        onMouseDown={handleResizeMouseDown}
+        className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize hover:bg-white/30 transition-colors group"
+      >
+        <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-white/40 rounded group-hover:bg-white/70" />
+      </div>
+    </div>
   );
 }
 
@@ -185,15 +238,13 @@ function DroppableSlot({
       onMouseEnter={handleMouseEnter}
       onMouseUp={handleMouseUp}
       className={cn(
-        'h-2.5 transition-all duration-150 border-b border-dashed border-muted/30 last:border-b-0 group select-none',
+        'h-[15px] transition-all duration-150 group select-none',
         !children && 'hover:bg-primary/10 cursor-pointer',
         isOver && 'bg-primary/20 ring-1 ring-primary',
         isInDragRange && 'bg-primary/30'
       )}
     >
-      {children || (
-        <Plus className="h-2 w-2 mx-auto opacity-0 group-hover:opacity-40 transition-opacity" />
-      )}
+      {children}
     </div>
   );
 }
@@ -226,6 +277,12 @@ export function WeeklyCalendarView({
   const [isDragSelecting, setIsDragSelecting] = useState(false);
   const [dragStart, setDragStart] = useState<{ date: Date; time: string } | null>(null);
   const [dragEnd, setDragEnd] = useState<{ date: Date; time: string } | null>(null);
+
+  // Resize state
+  const [resizingBlock, setResizingBlock] = useState<TimeBlock | null>(null);
+  const [resizeStartY, setResizeStartY] = useState<number>(0);
+  const [resizePreviewEndTime, setResizePreviewEndTime] = useState<string | null>(null);
+  const HOUR_HEIGHT = 60; // Must match the value used in rendering
 
   // Update current time every minute for the time indicator
   useEffect(() => {
@@ -409,6 +466,78 @@ export function WeeklyCalendarView({
     window.addEventListener('mouseup', handleGlobalMouseUp);
     return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
   }, [isDragSelecting, handleDragSelectEnd]);
+
+  // Resize handlers
+  const handleResizeStart = useCallback((block: TimeBlock, e: React.MouseEvent) => {
+    setResizingBlock(block);
+    setResizeStartY(e.clientY);
+    setResizePreviewEndTime(block.endTime);
+  }, []);
+
+  const handleResizeMove = useCallback((e: MouseEvent) => {
+    if (!resizingBlock) return;
+
+    const deltaY = e.clientY - resizeStartY;
+    // Convert pixel delta to minutes (15-min increments)
+    const deltaMinutes = Math.round((deltaY / HOUR_HEIGHT) * 60 / 15) * 15;
+
+    // Calculate new end time
+    const [endHour, endMin] = resizingBlock.endTime.split(':').map(Number);
+    const originalEndMins = endHour * 60 + endMin;
+    let newEndMins = originalEndMins + deltaMinutes;
+
+    // Ensure minimum 15 min duration
+    const [startHour, startMin] = resizingBlock.startTime.split(':').map(Number);
+    const startMins = startHour * 60 + startMin;
+    if (newEndMins <= startMins) {
+      newEndMins = startMins + 15;
+    }
+
+    // Ensure within calendar bounds
+    const maxMins = (settings.calendarEndHour + 1) * 60;
+    if (newEndMins > maxMins) {
+      newEndMins = maxMins;
+    }
+
+    const newEndHour = Math.floor(newEndMins / 60);
+    const newEndMin = newEndMins % 60;
+    const newEndTime = `${newEndHour.toString().padStart(2, '0')}:${newEndMin.toString().padStart(2, '0')}`;
+
+    setResizePreviewEndTime(newEndTime);
+  }, [resizingBlock, resizeStartY, settings.calendarEndHour, HOUR_HEIGHT]);
+
+  const handleResizeEnd = useCallback(async () => {
+    if (!resizingBlock || !resizePreviewEndTime || !onBlockMove) {
+      setResizingBlock(null);
+      setResizePreviewEndTime(null);
+      return;
+    }
+
+    // Only update if end time changed
+    if (resizePreviewEndTime !== resizingBlock.endTime) {
+      const blockDate = resizingBlock.date || format(new Date(), 'yyyy-MM-dd');
+      await onBlockMove(resizingBlock.id, blockDate, resizingBlock.startTime, resizePreviewEndTime);
+    }
+
+    setResizingBlock(null);
+    setResizePreviewEndTime(null);
+  }, [resizingBlock, resizePreviewEndTime, onBlockMove]);
+
+  // Resize mouse event listeners
+  useEffect(() => {
+    if (!resizingBlock) return;
+
+    const handleMouseMove = (e: MouseEvent) => handleResizeMove(e);
+    const handleMouseUp = () => handleResizeEnd();
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [resizingBlock, handleResizeMove, handleResizeEnd]);
 
   // Check if current week contains today
   const isCurrentWeekVisible = useMemo(() => {
@@ -655,7 +784,7 @@ export function WeeklyCalendarView({
             </div>
 
             {/* Time Grid */}
-            <div className="max-h-[550px] overflow-y-auto relative">
+            <div className="max-h-[700px] overflow-y-auto relative">
               {/* Current Time Indicator */}
               {isCurrentWeekVisible && getCurrentTimePosition() !== null && (
                 <div
@@ -677,88 +806,138 @@ export function WeeklyCalendarView({
                   </div>
                 </div>
               )}
-              {hourLabels.map((hourSlot: string, hourIndex: number) => {
-                const hourNum = parseInt(hourSlot.split(':')[0]);
-                const isEvenHour = hourNum % 2 === 0;
-
-                return (
-                <div key={hourSlot} className={cn('grid grid-cols-8 border-b min-h-[40px]', isEvenHour && 'bg-muted/20')}>
-                  {/* Time Label */}
-                  <div className="p-1 text-xs text-muted-foreground border-r flex items-start justify-end pr-2">
-                    {formatHour(hourNum, settings.timeFormat)}
-                  </div>
-
-                  {/* Day Columns */}
-                  {weekDays.map((day, dayIndex) => {
-                    // Get the 4 quarter-hour slots for this hour
-                    const quarterSlots = [
-                      `${hourSlot}`,
-                      `${hourNum.toString().padStart(2, '0')}:15`,
-                      `${hourNum.toString().padStart(2, '0')}:30`,
-                      `${hourNum.toString().padStart(2, '0')}:45`,
-                    ];
-
+              {/* Time grid with absolute positioned events */}
+              <div className="grid grid-cols-8">
+                {/* Time Labels Column */}
+                <div className="border-r">
+                  {hourLabels.map((hourSlot: string) => {
+                    const hourNum = parseInt(hourSlot.split(':')[0]);
                     return (
                       <div
-                        key={dayIndex}
-                        className={cn(
-                          'border-r last:border-r-0 min-h-[40px]',
-                          isSameDay(day, new Date()) && 'bg-primary/5'
-                        )}
+                        key={hourSlot}
+                        className="h-[60px] p-1 text-xs text-muted-foreground flex items-start justify-end pr-2 border-b border-border/50"
                       >
-                        <div className="grid grid-rows-4 h-full">
-                          {quarterSlots.map((time) => {
-                            const dateKey = format(day, 'yyyy-MM-dd');
-                            const block = getBlocksForDateAndTime(day, time);
-                            const isBlockStart = block?.startTime === time;
-                            const slotId = `${dateKey}-${time}`;
-
-                            if (block && isBlockStart) {
-                              // Calculate block height based on duration
-                              const startParts = block.startTime.split(':');
-                              const endParts = block.endTime.split(':');
-                              const startMins = parseInt(startParts[0]) * 60 + parseInt(startParts[1]);
-                              const endMins = parseInt(endParts[0]) * 60 + parseInt(endParts[1]);
-                              const durationSlots = (endMins - startMins) / 15;
-
-                              return (
-                                <DraggableBlock
-                                  key={time}
-                                  block={{ ...block, date: dateKey }}
-                                  durationSlots={durationSlots}
-                                  onBlockClick={onBlockClick}
-                                  getBlockColor={(q) => getBlockColor(q, block.energyRating)}
-                                />
-                              );
-                            }
-
-                            if (block) {
-                              // Part of existing block, don't render droppable
-                              return <div key={time} className="h-2.5" />;
-                            }
-
-                            return (
-                              <DroppableSlot
-                                key={time}
-                                id={slotId}
-                                date={day}
-                                time={time}
-                                onAddBlock={onAddBlock}
-                                isDragSelecting={isDragSelecting}
-                                isInDragRange={isSlotInDragRange(day, time)}
-                                onDragSelectStart={handleDragSelectStart}
-                                onDragSelectMove={handleDragSelectMove}
-                                onDragSelectEnd={handleDragSelectEnd}
-                              />
-                            );
-                          })}
-                        </div>
+                        {formatHour(hourNum, settings.timeFormat)}
                       </div>
                     );
                   })}
                 </div>
-                );
-              })}
+
+                {/* Day Columns with absolute positioned events */}
+                {weekDays.map((day, dayIndex) => {
+                  const dateKey = format(day, 'yyyy-MM-dd');
+                  const dayBlocks = timeBlocks[dateKey] || [];
+                  const totalHours = settings.calendarEndHour - settings.calendarStartHour + 1;
+                  const HOUR_HEIGHT = 60; // pixels per hour (reduced for less scrolling)
+
+                  return (
+                    <div
+                      key={dayIndex}
+                      className={cn(
+                        'border-r last:border-r-0 relative',
+                        isSameDay(day, new Date()) && 'bg-primary/5'
+                      )}
+                      style={{ height: `${totalHours * HOUR_HEIGHT}px` }}
+                    >
+                      {/* Hour grid lines and droppable slots */}
+                      {hourLabels.map((hourSlot: string) => {
+                        const hourNum = parseInt(hourSlot.split(':')[0]);
+                        const quarterSlots = [
+                          `${hourSlot}`,
+                          `${hourNum.toString().padStart(2, '0')}:15`,
+                          `${hourNum.toString().padStart(2, '0')}:30`,
+                          `${hourNum.toString().padStart(2, '0')}:45`,
+                        ];
+
+                        return (
+                          <div
+                            key={hourSlot}
+                            className="h-[60px] border-b border-border/50"
+                          >
+                            <div className="grid grid-rows-4 h-full">
+                              {quarterSlots.map((time) => {
+                                const block = getBlocksForDateAndTime(day, time);
+                                const slotId = `${dateKey}-${time}`;
+
+                                // Don't render droppable if there's a block here
+                                if (block) {
+                                  return <div key={time} className="h-[25px]" />;
+                                }
+
+                                return (
+                                  <DroppableSlot
+                                    key={time}
+                                    id={slotId}
+                                    date={day}
+                                    time={time}
+                                    onAddBlock={onAddBlock}
+                                    isDragSelecting={isDragSelecting}
+                                    isInDragRange={isSlotInDragRange(day, time)}
+                                    onDragSelectStart={handleDragSelectStart}
+                                    onDragSelectMove={handleDragSelectMove}
+                                    onDragSelectEnd={handleDragSelectEnd}
+                                  />
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      {/* Absolutely positioned event blocks */}
+                      {dayBlocks.map((block) => {
+                        const [startHour, startMin] = block.startTime.split(':').map(Number);
+                        const [endHour, endMin] = block.endTime.split(':').map(Number);
+                        const startMins = startHour * 60 + startMin;
+                        const endMins = endHour * 60 + endMin;
+                        const durationMins = endMins - startMins;
+
+                        // Calculate position relative to calendar start
+                        const calendarStartMins = settings.calendarStartHour * 60;
+                        const topPosition = ((startMins - calendarStartMins) / 60) * HOUR_HEIGHT;
+                        const height = (durationMins / 60) * HOUR_HEIGHT;
+                        const durationSlots = durationMins / 15;
+
+                        // Check if this block is being resized
+                        const isBeingResized = resizingBlock?.id === block.id;
+                        let displayHeight = height;
+                        let displayDurationSlots = durationSlots;
+
+                        if (isBeingResized && resizePreviewEndTime) {
+                          const [previewEndHour, previewEndMin] = resizePreviewEndTime.split(':').map(Number);
+                          const previewEndMins = previewEndHour * 60 + previewEndMin;
+                          const previewDurationMins = previewEndMins - startMins;
+                          displayHeight = (previewDurationMins / 60) * HOUR_HEIGHT;
+                          displayDurationSlots = previewDurationMins / 15;
+                        }
+
+                        return (
+                          <div
+                            key={block.id}
+                            className="absolute left-0 right-0 z-10"
+                            style={{
+                              top: `${topPosition}px`,
+                              height: `${displayHeight}px`,
+                            }}
+                          >
+                            <DraggableBlock
+                              block={isBeingResized && resizePreviewEndTime
+                                ? { ...block, date: dateKey, endTime: resizePreviewEndTime }
+                                : { ...block, date: dateKey }
+                              }
+                              durationSlots={displayDurationSlots}
+                              onBlockClick={onBlockClick}
+                              getBlockColor={(q) => getBlockColor(q, block.energyRating)}
+                              onResizeStart={handleResizeStart}
+                              isResizing={isBeingResized}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>

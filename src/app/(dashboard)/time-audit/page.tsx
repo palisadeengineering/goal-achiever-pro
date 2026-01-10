@@ -88,6 +88,7 @@ export default function TimeAuditPage() {
     createTimeBlock,
     updateTimeBlock,
     deleteTimeBlock,
+    clearAllTimeBlocks,
     importTimeBlocks,
     fetchTimeBlocks,
   } = useTimeBlocks(
@@ -417,7 +418,7 @@ export default function TimeAuditPage() {
     return getPatternSuggestion(blockInfos);
   }, [timeBlocks, getPatternSuggestion]);
 
-  // Handle saving a new or edited time block (saves to database)
+  // Handle saving a new or edited time block (saves to database and optionally syncs to Google Calendar)
   const handleSaveBlock = async (blockData: Omit<TimeBlock, 'id' | 'createdAt'>) => {
     if (editingBlock) {
       // Track the edit for pattern detection
@@ -471,6 +472,31 @@ export default function TimeAuditPage() {
           energyRating: blockData.energyRating,
         });
 
+        // If this is a Google Calendar event, also update it in Google Calendar
+        if (editingBlock.externalEventId && isGoogleConnected) {
+          try {
+            const eventId = editingBlock.externalEventId.replace('gcal_', '');
+            const startDateTime = new Date(`${blockData.date}T${blockData.startTime}:00`);
+            const endDateTime = new Date(`${blockData.date}T${blockData.endTime}:00`);
+
+            await fetch('/api/calendar/google/events', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                eventId,
+                summary: blockData.activityName,
+                description: `DRIP: ${blockData.dripQuadrant} | Energy: ${blockData.energyRating}`,
+                start: startDateTime.toISOString(),
+                end: endDateTime.toISOString(),
+              }),
+            });
+            // Refresh Google events to reflect changes
+            handleSyncGoogle();
+          } catch (error) {
+            console.error('Error updating Google Calendar event:', error);
+          }
+        }
+
         // Also update local storage for backwards compatibility
         setLocalTimeBlocks(blocks =>
           blocks.map(b =>
@@ -481,7 +507,36 @@ export default function TimeAuditPage() {
         );
       }
     } else {
-      // Create new block in database
+      // Create new block - first create in Google Calendar if connected
+      let externalEventId: string | undefined;
+
+      if (isGoogleConnected) {
+        try {
+          const startDateTime = new Date(`${blockData.date}T${blockData.startTime}:00`);
+          const endDateTime = new Date(`${blockData.date}T${blockData.endTime}:00`);
+
+          const response = await fetch('/api/calendar/google/events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              summary: blockData.activityName,
+              description: `DRIP: ${blockData.dripQuadrant} | Energy: ${blockData.energyRating}`,
+              start: startDateTime.toISOString(),
+              end: endDateTime.toISOString(),
+            }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            // data.event.id already includes the gcal_ prefix from the API
+            externalEventId = data.event?.id || undefined;
+          }
+        } catch (error) {
+          console.error('Error creating Google Calendar event:', error);
+        }
+      }
+
+      // Create new block in database with external event ID if created
       await createTimeBlock({
         date: blockData.date,
         startTime: blockData.startTime,
@@ -489,7 +544,8 @@ export default function TimeAuditPage() {
         activityName: blockData.activityName,
         dripQuadrant: blockData.dripQuadrant,
         energyRating: blockData.energyRating,
-        source: 'manual',
+        source: externalEventId ? 'calendar_sync' : 'manual',
+        externalEventId,
       });
 
       // Also save to local storage for backwards compatibility
@@ -497,8 +553,14 @@ export default function TimeAuditPage() {
         ...blockData,
         id: crypto.randomUUID(),
         createdAt: new Date().toISOString(),
+        externalEventId,
       };
       setLocalTimeBlocks(blocks => [...blocks, newBlock]);
+
+      // Refresh Google events to show the new event
+      if (externalEventId && isGoogleConnected) {
+        handleSyncGoogle();
+      }
     }
     setEditingBlock(undefined);
     setInitialDate(undefined);
@@ -708,11 +770,46 @@ export default function TimeAuditPage() {
     }
   };
 
-  // Handle clearing synced Google Calendar data and categorizations
-  const handleClearSyncedData = useCallback(() => {
+  // Handle clearing synced Google Calendar data, categorizations, and all time blocks
+  const handleClearSyncedData = useCallback(async () => {
     clearGoogleCache();
     clearCategorizations();
-  }, [clearGoogleCache, clearCategorizations]);
+    setLocalTimeBlocks([]); // Clear localStorage blocks
+    await clearAllTimeBlocks(); // Clear database blocks
+  }, [clearGoogleCache, clearCategorizations, setLocalTimeBlocks, clearAllTimeBlocks]);
+
+  // Handle deleting a time block (and optionally from Google Calendar)
+  const handleDeleteBlock = useCallback(async (block: TimeBlock) => {
+    // If it's a Google Calendar event, delete from Google Calendar first
+    if (block.externalEventId && isGoogleConnected) {
+      try {
+        const eventId = block.externalEventId.replace('gcal_', '');
+        const response = await fetch(`/api/calendar/google/events?eventId=${eventId}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok && response.status !== 404) {
+          console.error('Failed to delete from Google Calendar');
+        }
+      } catch (error) {
+        console.error('Error deleting from Google Calendar:', error);
+      }
+    }
+
+    // Only delete from database if the block exists there (check by UUID format or actual existence)
+    const existsInDb = dbTimeBlocks.some(b => b.id === block.id);
+    if (existsInDb) {
+      await deleteTimeBlock(block.id);
+    }
+
+    // Also remove from local storage
+    setLocalTimeBlocks(blocks => blocks.filter(b => b.id !== block.id));
+
+    // Refresh Google events to update the view
+    if (block.externalEventId && isGoogleConnected) {
+      handleSyncGoogle();
+    }
+  }, [deleteTimeBlock, setLocalTimeBlocks, isGoogleConnected, handleSyncGoogle, dbTimeBlocks]);
 
   // Check if we have data (for showing different states) - includes all data sources
   const hasData = allTimeData.length > 0;
@@ -787,7 +884,7 @@ export default function TimeAuditPage() {
                     Import {categorizedNotImportedCount}
                   </Button>
                 )}
-                {googleEvents.length > 0 && (
+                {(googleEvents.length > 0 || timeBlocks.length > 0) && (
                   <Button
                     variant="outline"
                     onClick={handleClearSyncedData}
@@ -812,6 +909,7 @@ export default function TimeAuditPage() {
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
         onSave={handleSaveBlock}
+        onDelete={handleDeleteBlock}
         initialDate={initialDate}
         initialTime={initialTime}
         initialEndTime={initialEndTime}
