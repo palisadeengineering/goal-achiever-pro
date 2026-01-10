@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Calendar, CalendarDays, CalendarRange, Lock, RefreshCw, ChevronDown, Upload, ArrowUpRight, BarChart3, ListChecks } from 'lucide-react';
+import { Plus, Calendar, CalendarDays, CalendarRange, Lock, RefreshCw, ChevronDown, Upload, ArrowUpRight, BarChart3, ListChecks, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -154,9 +154,10 @@ export default function TimeAuditPage() {
     isLoading: isLoadingGoogle,
     isConnected: isGoogleConnected,
     fetchEvents: fetchGoogleEvents,
+    clearCache: clearGoogleCache,
   } = useGoogleCalendar();
 
-  const { getUncategorizedEventIds, getCategorization, saveCategorization, categorizations, refreshFromStorage } = useEventPatterns();
+  const { getUncategorizedEventIds, getCategorization, saveCategorization, categorizations, refreshFromStorage, clearCategorizations } = useEventPatterns();
 
   const { tags } = useTags();
 
@@ -707,6 +708,12 @@ export default function TimeAuditPage() {
     }
   };
 
+  // Handle clearing synced Google Calendar data and categorizations
+  const handleClearSyncedData = useCallback(() => {
+    clearGoogleCache();
+    clearCategorizations();
+  }, [clearGoogleCache, clearCategorizations]);
+
   // Check if we have data (for showing different states) - includes all data sources
   const hasData = allTimeData.length > 0;
   const totalHours = stats.totalMinutes > 0 ? stats.totalMinutes : 0;
@@ -756,19 +763,18 @@ export default function TimeAuditPage() {
                 >
                   <RefreshCw className={`h-4 w-4 ${isLoadingGoogle ? 'animate-spin' : ''}`} />
                 </Button>
-                {uncategorizedCount > 0 && (
-                  <Button
-                    variant="secondary"
-                    onClick={() => setShowCategorizationDialog(true)}
-                    size="sm"
-                    className="hidden sm:flex"
-                  >
-                    <Badge variant="destructive" className="mr-2">
-                      {uncategorizedCount}
-                    </Badge>
-                    <span className="hidden md:inline">Categorize</span> Events
-                  </Button>
-                )}
+                {/* Always show Categorize button */}
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowCategorizationDialog(true)}
+                  size="sm"
+                  className="hidden sm:flex"
+                >
+                  <Badge variant="destructive" className="mr-2">
+                    {uncategorizedCount}
+                  </Badge>
+                  <span className="hidden md:inline">Categorize</span> Events
+                </Button>
                 {categorizedNotImportedCount > 0 && (
                   <Button
                     variant="default"
@@ -779,6 +785,15 @@ export default function TimeAuditPage() {
                   >
                     <Upload className={`h-4 w-4 mr-2 ${isImporting ? 'animate-pulse' : ''}`} />
                     Import {categorizedNotImportedCount}
+                  </Button>
+                )}
+                {googleEvents.length > 0 && (
+                  <Button
+                    variant="outline"
+                    onClick={handleClearSyncedData}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Clear
                   </Button>
                 )}
               </>

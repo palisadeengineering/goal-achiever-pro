@@ -2,6 +2,16 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 
+// Custom event name for same-tab localStorage sync
+const LOCAL_STORAGE_SYNC_EVENT = 'local-storage-sync';
+
+interface LocalStorageSyncEvent extends CustomEvent {
+  detail: {
+    key: string;
+    value: string;
+  };
+}
+
 export function useLocalStorage<T>(key: string, initialValue: T) {
   // Always start with initial value for SSR
   const [storedValue, setStoredValue] = useState<T>(initialValue);
@@ -33,17 +43,25 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
       setStoredValue(valueToStore);
       valueRef.current = valueToStore;
       if (typeof window !== 'undefined') {
-        window.localStorage.setItem(key, JSON.stringify(valueToStore));
+        const stringValue = JSON.stringify(valueToStore);
+        window.localStorage.setItem(key, stringValue);
+
+        // Dispatch custom event for same-tab sync
+        // This allows other hook instances to stay in sync
+        window.dispatchEvent(new CustomEvent(LOCAL_STORAGE_SYNC_EVENT, {
+          detail: { key, value: stringValue }
+        }));
       }
     } catch (error) {
       console.warn(`Error setting localStorage key "${key}":`, error);
     }
   }, [key]);
 
-  // Sync with other tabs
+  // Sync with other tabs (via storage event) and same tab (via custom event)
   useEffect(() => {
     if (!isHydrated) return;
 
+    // Handle cross-tab storage events
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === key && e.newValue) {
         try {
@@ -56,8 +74,30 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
       }
     };
 
+    // Handle same-tab sync events from other hook instances
+    const handleSameTabSync = (e: Event) => {
+      const customEvent = e as LocalStorageSyncEvent;
+      if (customEvent.detail.key === key) {
+        try {
+          const newValue = JSON.parse(customEvent.detail.value);
+          // Only update if the value is actually different (prevents infinite loops)
+          if (JSON.stringify(valueRef.current) !== customEvent.detail.value) {
+            setStoredValue(newValue);
+            valueRef.current = newValue;
+          }
+        } catch {
+          // Ignore parse errors
+        }
+      }
+    };
+
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener(LOCAL_STORAGE_SYNC_EVENT, handleSameTabSync);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener(LOCAL_STORAGE_SYNC_EVENT, handleSameTabSync);
+    };
   }, [key, isHydrated]);
 
   return [storedValue, setValue] as const;
