@@ -16,9 +16,9 @@ export const DRIP_QUADRANTS: Record<DripQuadrant, {
     name: 'Delegation',
     description: 'Low earning, low energy tasks',
     action: 'Delegate to others',
-    color: '#ec4899', // Pink
-    bgColor: 'bg-pink-100 dark:bg-pink-900/30',
-    borderColor: 'border-pink-500 dark:border-pink-400',
+    color: '#ef4444', // Red (variant of Draining energy color)
+    bgColor: 'bg-red-100 dark:bg-red-900/30',
+    borderColor: 'border-red-500 dark:border-red-400',
     moneyLevel: 'low',
     energyLevel: 'low',
   },
@@ -46,9 +46,9 @@ export const DRIP_QUADRANTS: Record<DripQuadrant, {
     name: 'Production',
     description: 'High earning, high energy tasks',
     action: 'Focus here! Your sweet spot',
-    color: '#06b6d4', // Cyan
-    bgColor: 'bg-cyan-100 dark:bg-cyan-900/30',
-    borderColor: 'border-cyan-500 dark:border-cyan-400',
+    color: '#22c55e', // Green (variant of Energizing energy color)
+    bgColor: 'bg-green-100 dark:bg-green-900/30',
+    borderColor: 'border-green-500 dark:border-green-400',
     moneyLevel: 'high',
     energyLevel: 'high',
   },

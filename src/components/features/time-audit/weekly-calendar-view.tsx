@@ -106,8 +106,9 @@ function DraggableBlock({
       }
     : undefined;
 
-  // Format time range
+  // Format time range and start time for display
   const timeRange = `${formatTimeShort(block.startTime)} - ${formatTimeShort(block.endTime)}`;
+  const startTimeDisplay = formatTimeShort(block.startTime);
 
   const handleResizeMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -144,19 +145,23 @@ function DraggableBlock({
         className="w-full h-full text-left cursor-grab active:cursor-grabbing overflow-hidden"
       >
         <div className="flex flex-col h-full pr-1">
-          {/* For very short events (15min), show abbreviated */}
-          {durationSlots <= 1 ? (
-            <span className="font-medium text-[10px] truncate">{block.activityName}</span>
-          ) : durationSlots <= 2 ? (
-            /* For 30min events, show name only */
-            <span className="font-semibold text-[11px] line-clamp-1 leading-tight">{block.activityName}</span>
+          {/* Google Calendar style: short events show "Title, StartTime", longer show Title + time range below */}
+          {durationSlots <= 2 ? (
+            /* For 15-30min events: "Title, StartTime" on one line like Google Calendar */
+            <span className="font-semibold text-[11px] truncate leading-tight">
+              {block.activityName}, {startTimeDisplay}
+            </span>
+          ) : durationSlots <= 4 ? (
+            /* For 45-60min events: Title with time below */
+            <>
+              <span className="font-semibold text-[11px] line-clamp-1 leading-tight">{block.activityName}</span>
+              <span className="text-[10px] opacity-80">{timeRange}</span>
+            </>
           ) : (
-            /* For longer events, show name and time */
+            /* For longer events (75min+): Title with full time range below */
             <>
               <span className="font-semibold line-clamp-2 leading-tight">{block.activityName}</span>
-              {durationSlots >= 4 && (
-                <span className="text-[10px] opacity-80 mt-0.5">{timeRange}</span>
-              )}
+              <span className="text-[10px] opacity-80 mt-0.5">{timeRange}</span>
             </>
           )}
         </div>
