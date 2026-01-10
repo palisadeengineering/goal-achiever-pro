@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import { PageHeader } from '@/components/layout/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -173,6 +173,7 @@ export default function TimeAuditPage() {
   const { trackEdit, getPatternSuggestion, dismissPattern } = useEditPatterns();
 
   const [showCategorizationDialog, setShowCategorizationDialog] = useState(false);
+  const [categorizationDismissed, setCategorizationDismissed] = useState(false); // Track if user manually closed
   const [mainTab, setMainTab] = useState<'calendar' | 'insights'>('calendar');
   const [syncTimeframe, setSyncTimeframe] = useLocalStorage<'1week' | '2weeks' | '1month'>('google-sync-timeframe', '1week');
 
@@ -229,10 +230,21 @@ export default function TimeAuditPage() {
     // 2. Not currently loading
     // 3. There are uncategorized events
     // 4. Dialog is not already open
-    if (isGoogleConnected && !isLoadingGoogle && uncategorizedCount > 0 && !showCategorizationDialog) {
+    // 5. User hasn't manually dismissed the dialog
+    if (isGoogleConnected && !isLoadingGoogle && uncategorizedCount > 0 && !showCategorizationDialog && !categorizationDismissed) {
       setShowCategorizationDialog(true);
     }
-  }, [isGoogleConnected, isLoadingGoogle, uncategorizedCount, showCategorizationDialog]);
+  }, [isGoogleConnected, isLoadingGoogle, uncategorizedCount, showCategorizationDialog, categorizationDismissed]);
+
+  // Reset dismissal when sync completes with new uncategorized events (only on fresh sync)
+  const prevUncategorizedCount = useRef(uncategorizedCount);
+  useEffect(() => {
+    // If uncategorized count increased, reset dismissal to allow auto-open for new events
+    if (uncategorizedCount > prevUncategorizedCount.current) {
+      setCategorizationDismissed(false);
+    }
+    prevUncategorizedCount.current = uncategorizedCount;
+  }, [uncategorizedCount]);
 
   // Transform time blocks for WeeklyCalendarView (grouped by date)
   // Includes both manual time blocks AND categorized Google Calendar events
@@ -1088,7 +1100,13 @@ export default function TimeAuditPage() {
       />
 
       {/* Google Calendar Categorization Dialog - Full screen on mobile */}
-      <Dialog open={showCategorizationDialog} onOpenChange={setShowCategorizationDialog}>
+      <Dialog open={showCategorizationDialog} onOpenChange={(open) => {
+        setShowCategorizationDialog(open);
+        // If user is closing the dialog (not opening it), mark as dismissed
+        if (!open) {
+          setCategorizationDismissed(true);
+        }
+      }}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto sm:max-h-[85vh] h-[100dvh] sm:h-auto w-full sm:w-auto p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle className="text-lg">Categorize Events</DialogTitle>

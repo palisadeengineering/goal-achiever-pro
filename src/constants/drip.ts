@@ -56,9 +56,9 @@ export const DRIP_QUADRANTS: Record<DripQuadrant, {
     name: 'N/A',
     description: 'Not applicable or uncategorized',
     action: 'Review later',
-    color: '#94a3b8', // Slate gray
-    bgColor: 'bg-slate-100 dark:bg-slate-800/50',
-    borderColor: 'border-slate-400 dark:border-slate-500',
+    color: '#3b82f6', // Blue (changed from gray for better visibility)
+    bgColor: 'bg-blue-100 dark:bg-blue-900/30',
+    borderColor: 'border-blue-400 dark:border-blue-500',
     moneyLevel: null,
     energyLevel: null,
   },

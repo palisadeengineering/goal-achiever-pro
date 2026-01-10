@@ -60,7 +60,7 @@ const DRIP_OPTIONS = [
   { value: 'investment', label: 'Investment', description: 'Low $ + High Energy (Long-term growth)', color: 'bg-indigo-500' },
   { value: 'replacement', label: 'Replacement', description: 'High $ + Low Energy (Automate this)', color: 'bg-orange-500' },
   { value: 'delegation', label: 'Delegation', description: 'Low $ + Low Energy (Delegate this)', color: 'bg-pink-500' },
-  { value: 'na', label: 'N/A', description: 'Not applicable or uncategorized', color: 'bg-slate-400' },
+  { value: 'na', label: 'N/A', description: 'Not applicable or uncategorized', color: 'bg-blue-500' },
 ];
 
 const ENERGY_OPTIONS = [
