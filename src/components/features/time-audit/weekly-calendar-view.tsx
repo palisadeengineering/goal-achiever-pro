@@ -116,12 +116,17 @@ function DraggableBlock({
     onResizeStart?.(block, e);
   };
 
+  // Use minimal padding for very short events
+  const isVeryShort = durationSlots <= 1; // 15 min
+  const isShort = durationSlots <= 2; // 30 min or less
+
   return (
     <div
       ref={setNodeRef}
       className={cn(
-        'relative text-left p-1.5 rounded-sm text-white text-xs font-medium overflow-hidden h-full w-full',
+        'relative text-left rounded-sm text-white text-xs font-medium overflow-hidden h-full w-full',
         'transition-all duration-200',
+        isVeryShort ? 'p-0.5' : isShort ? 'p-1' : 'p-1.5',
         isDragging && 'opacity-50 shadow-lg',
         isResizing && 'ring-2 ring-white/50',
         block.syncStatus === 'pending' && 'animate-pulse',
@@ -146,9 +151,14 @@ function DraggableBlock({
       >
         <div className="flex flex-col h-full pr-1">
           {/* Google Calendar style: short events show "Title, StartTime", longer show Title + time range below */}
-          {durationSlots <= 2 ? (
-            /* For 15-30min events: "Title, StartTime" on one line like Google Calendar */
-            <span className="font-semibold text-[11px] truncate leading-tight">
+          {durationSlots <= 1 ? (
+            /* For 15min events: Compact display with smaller font */
+            <span className="font-semibold text-[9px] truncate leading-none">
+              {block.activityName}, {startTimeDisplay}
+            </span>
+          ) : durationSlots <= 2 ? (
+            /* For 30min events: "Title, StartTime" on one line like Google Calendar */
+            <span className="font-semibold text-[10px] truncate leading-tight">
               {block.activityName}, {startTimeDisplay}
             </span>
           ) : durationSlots <= 4 ? (
@@ -171,13 +181,18 @@ function DraggableBlock({
         <Loader2 className="absolute top-0.5 right-0.5 h-2 w-2 animate-spin" />
       )}
 
-      {/* Resize handle at bottom */}
-      <div
-        onMouseDown={handleResizeMouseDown}
-        className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize hover:bg-white/30 transition-colors group"
-      >
-        <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-white/40 rounded group-hover:bg-white/70" />
-      </div>
+      {/* Resize handle at bottom - hide for very short events */}
+      {!isVeryShort && (
+        <div
+          onMouseDown={handleResizeMouseDown}
+          className={cn(
+            "absolute bottom-0 left-0 right-0 cursor-ns-resize hover:bg-white/30 transition-colors group",
+            isShort ? "h-1" : "h-2"
+          )}
+        >
+          <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-white/40 rounded group-hover:bg-white/70" />
+        </div>
+      )}
     </div>
   );
 }
