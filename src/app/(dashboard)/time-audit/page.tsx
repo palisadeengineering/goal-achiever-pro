@@ -585,14 +585,16 @@ export default function TimeAuditPage() {
         externalEventId,
       });
 
-      // Also save to local storage for backwards compatibility
-      const newBlock: TimeBlock = {
-        ...blockData,
-        id: crypto.randomUUID(),
-        createdAt: new Date().toISOString(),
-        externalEventId,
-      };
-      setLocalTimeBlocks(blocks => [...blocks, newBlock]);
+      // If a Google Calendar event was created, save its categorization to patterns
+      // This prevents the event from appearing as "uncategorized" in the categorize dialog
+      if (externalEventId) {
+        saveCategorization(
+          externalEventId,
+          blockData.activityName,
+          blockData.dripQuadrant,
+          blockData.energyRating
+        );
+      }
 
       // Refresh Google events to show the new event
       if (externalEventId && isGoogleConnected) {
