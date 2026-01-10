@@ -105,7 +105,7 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
       const response = await fetch(`/api/calendar/google/events?${params}`);
 
       if (response.status === 401) {
-        setIsConnected(false);
+        // Don't set isConnected to false - keep buttons visible so user can reconnect
         setError('Google Calendar session expired. Please reconnect.');
         return;
       }

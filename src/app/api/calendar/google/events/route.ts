@@ -4,9 +4,65 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+const IS_DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
 // Demo user ID for development
 const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
+
+// Generate demo events for the requested date range
+function generateDemoEvents(startDate: Date, endDate: Date) {
+  const events = [];
+  const demoEventTemplates = [
+    { summary: 'Team Standup', duration: 30, hour: 9 },
+    { summary: 'Client Meeting', duration: 60, hour: 10 },
+    { summary: 'Lunch Break', duration: 60, hour: 12 },
+    { summary: 'Project Review', duration: 45, hour: 14 },
+    { summary: 'Email & Admin', duration: 60, hour: 15 },
+    { summary: 'Strategy Session', duration: 90, hour: 16 },
+  ];
+
+  const currentDate = new Date(startDate);
+  let eventId = 1;
+
+  while (currentDate <= endDate) {
+    // Skip weekends for demo events
+    const dayOfWeek = currentDate.getDay();
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+      // Add 2-4 random events per day
+      const numEvents = 2 + Math.floor(Math.random() * 3);
+      const shuffled = [...demoEventTemplates].sort(() => Math.random() - 0.5);
+      const dayEvents = shuffled.slice(0, numEvents);
+
+      for (const template of dayEvents) {
+        const eventStart = new Date(currentDate);
+        eventStart.setHours(template.hour, 0, 0, 0);
+
+        const eventEnd = new Date(eventStart);
+        eventEnd.setMinutes(eventEnd.getMinutes() + template.duration);
+
+        events.push({
+          id: `gcal_demo_${eventId++}`,
+          date: currentDate.toISOString().split('T')[0],
+          startTime: eventStart.toTimeString().slice(0, 5),
+          endTime: eventEnd.toTimeString().slice(0, 5),
+          activityName: template.summary,
+          description: 'Demo event for testing',
+          source: 'google_calendar',
+          start: {
+            dateTime: eventStart.toISOString(),
+          },
+          end: {
+            dateTime: eventEnd.toISOString(),
+          },
+        });
+      }
+    }
+
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  return events;
+}
 
 async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
   if (!supabase) return DEMO_USER_ID;
@@ -88,6 +144,17 @@ async function refreshTokenIfNeeded(
 // GET: Fetch calendar events
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
+  const userId = supabase ? await getUserId(supabase) : DEMO_USER_ID;
+
+  // In demo mode with demo user, return demo events
+  if (IS_DEMO_MODE && userId === DEMO_USER_ID) {
+    const searchParams = request.nextUrl.searchParams;
+    const timeMin = searchParams.get('timeMin') || new Date().toISOString();
+    const timeMax = searchParams.get('timeMax') || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    const demoEvents = generateDemoEvents(new Date(timeMin), new Date(timeMax));
+    return NextResponse.json({ events: demoEvents, demo: true });
+  }
 
   if (!supabase) {
     return NextResponse.json(
@@ -95,8 +162,6 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-
-  const userId = await getUserId(supabase);
 
   // Get tokens from database
   const { data: integration, error: integrationError } = await supabase
