@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -111,14 +111,37 @@ function ItemOverlay({ item }: { item: DripItem }) {
   );
 }
 
+// Static item component for SSR (no dnd-kit hooks)
+function StaticItem({ item }: { item: DripItem }) {
+  return (
+    <div className="bg-background border rounded-lg p-3 shadow-sm">
+      <div className="flex items-start gap-2">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium truncate">{item.title}</p>
+          {item.description && (
+            <p className="text-xs text-muted-foreground truncate">{item.description}</p>
+          )}
+          {item.timeSpent && (
+            <p className="text-xs text-muted-foreground mt-1">
+              {Math.round(item.timeSpent / 60)}h this week
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function QuadrantBox({
   quadrant,
   items,
   readonly,
+  staticMode,
 }: {
   quadrant: DripQuadrant;
   items: DripItem[];
   readonly?: boolean;
+  staticMode?: boolean;
 }) {
   const config = DRIP_QUADRANTS[quadrant];
   const Icon = QUADRANT_ICONS[quadrant];
@@ -151,27 +174,47 @@ function QuadrantBox({
         </Badge>
       </div>
 
-      <SortableContext
-        items={items.map((i) => i.id)}
-        strategy={rectSortingStrategy}
-      >
+      {staticMode ? (
+        /* Static render without dnd-kit to avoid hydration mismatch */
         <div className="flex-1 space-y-2 overflow-y-auto">
           {items.map((item) => (
-            <SortableItem key={item.id} item={item} readonly={readonly} />
+            <StaticItem key={item.id} item={item} />
           ))}
           {items.length === 0 && (
             <div className="flex items-center justify-center h-20 text-xs text-muted-foreground border-2 border-dashed rounded-lg">
-              {readonly ? 'No items' : 'Drag items here'}
+              No items
             </div>
           )}
         </div>
-      </SortableContext>
+      ) : (
+        <SortableContext
+          items={items.map((i) => i.id)}
+          strategy={rectSortingStrategy}
+        >
+          <div className="flex-1 space-y-2 overflow-y-auto">
+            {items.map((item) => (
+              <SortableItem key={item.id} item={item} readonly={readonly} />
+            ))}
+            {items.length === 0 && (
+              <div className="flex items-center justify-center h-20 text-xs text-muted-foreground border-2 border-dashed rounded-lg">
+                {readonly ? 'No items' : 'Drag items here'}
+              </div>
+            )}
+          </div>
+        </SortableContext>
+      )}
     </div>
   );
 }
 
 export function DripMatrix({ items, onItemMove, readonly = false }: DripMatrixProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Prevent hydration mismatch with dnd-kit by only rendering DnD after mount
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -231,42 +274,68 @@ export function DripMatrix({ items, onItemMove, readonly = false }: DripMatrixPr
 
           {/* Matrix Grid */}
           <div className="flex-1">
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-            >
+            {isMounted ? (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+              >
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Top Row: High Money */}
+                  <QuadrantBox
+                    quadrant="replacement"
+                    items={getItemsByQuadrant('replacement')}
+                    readonly={readonly}
+                  />
+                  <QuadrantBox
+                    quadrant="production"
+                    items={getItemsByQuadrant('production')}
+                    readonly={readonly}
+                  />
+
+                  {/* Bottom Row: Low Money */}
+                  <QuadrantBox
+                    quadrant="delegation"
+                    items={getItemsByQuadrant('delegation')}
+                    readonly={readonly}
+                  />
+                  <QuadrantBox
+                    quadrant="investment"
+                    items={getItemsByQuadrant('investment')}
+                    readonly={readonly}
+                  />
+                </div>
+
+                <DragOverlay>
+                  {activeItem && <ItemOverlay item={activeItem} />}
+                </DragOverlay>
+              </DndContext>
+            ) : (
+              /* Static render for SSR - no DnD to avoid hydration mismatch */
               <div className="grid grid-cols-2 gap-4">
-                {/* Top Row: High Money */}
                 <QuadrantBox
                   quadrant="replacement"
                   items={getItemsByQuadrant('replacement')}
-                  readonly={readonly}
+                  staticMode={true}
                 />
                 <QuadrantBox
                   quadrant="production"
                   items={getItemsByQuadrant('production')}
-                  readonly={readonly}
+                  staticMode={true}
                 />
-
-                {/* Bottom Row: Low Money */}
                 <QuadrantBox
                   quadrant="delegation"
                   items={getItemsByQuadrant('delegation')}
-                  readonly={readonly}
+                  staticMode={true}
                 />
                 <QuadrantBox
                   quadrant="investment"
                   items={getItemsByQuadrant('investment')}
-                  readonly={readonly}
+                  staticMode={true}
                 />
               </div>
-
-              <DragOverlay>
-                {activeItem && <ItemOverlay item={activeItem} />}
-              </DragOverlay>
-            </DndContext>
+            )}
           </div>
         </div>
 
