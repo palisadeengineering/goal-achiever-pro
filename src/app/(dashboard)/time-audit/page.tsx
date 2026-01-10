@@ -232,6 +232,13 @@ export default function TimeAuditPage() {
   const calendarTimeBlocks = useMemo(() => {
     const grouped: Record<string, CalendarTimeBlock[]> = {};
 
+    // Track which Google event IDs are already imported as time blocks
+    const importedGoogleEventIds = new Set(
+      timeBlocks
+        .filter(b => b.externalEventId)
+        .map(b => b.externalEventId)
+    );
+
     // Add manual time blocks
     timeBlocks.forEach((block) => {
       if (!grouped[block.date]) {
@@ -247,8 +254,13 @@ export default function TimeAuditPage() {
       });
     });
 
-    // Merge categorized Google Calendar events
+    // Merge categorized Google Calendar events (skip if already imported)
     googleEvents.forEach((event) => {
+      // Skip if this event is already imported as a time block
+      if (importedGoogleEventIds.has(event.id)) {
+        return;
+      }
+
       const categorization = getCategorization(event.id);
       if (categorization) {
         // Extract date and times from Google event
@@ -458,6 +470,31 @@ export default function TimeAuditPage() {
           blockData.dripQuadrant,
           blockData.energyRating
         );
+
+        // Also update Google Calendar if name/time changed
+        if (isGoogleConnected && editingBlock.externalEventId) {
+          try {
+            const eventId = editingBlock.externalEventId.replace('gcal_', '');
+            const startDateTime = new Date(`${blockData.date}T${blockData.startTime}:00`);
+            const endDateTime = new Date(`${blockData.date}T${blockData.endTime}:00`);
+
+            await fetch('/api/calendar/google/events', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                eventId,
+                summary: blockData.activityName,
+                description: `DRIP: ${blockData.dripQuadrant} | Energy: ${blockData.energyRating}`,
+                start: startDateTime.toISOString(),
+                end: endDateTime.toISOString(),
+              }),
+            });
+            // Refresh Google events to reflect changes
+            handleSyncGoogle();
+          } catch (error) {
+            console.error('Error updating Google Calendar event:', error);
+          }
+        }
 
         // Refresh time blocks from database
         await fetchTimeBlocks();
@@ -688,15 +725,21 @@ export default function TimeAuditPage() {
 
   // Handle clicking on an existing block (receives block object from WeeklyCalendarView)
   const handleBlockClick = (block: CalendarTimeBlock) => {
-    // First check if it's a database/local time block
-    const fullBlock = timeBlocks.find(b => b.id === block.id);
+    // First check if it's a database/local time block by ID
+    let fullBlock = timeBlocks.find(b => b.id === block.id);
+
+    // If not found by ID, check if it's a Google Calendar event that's already imported (by externalEventId)
+    if (!fullBlock) {
+      fullBlock = timeBlocks.find(b => b.externalEventId === block.id);
+    }
+
     if (fullBlock) {
       setEditingBlock(fullBlock);
       setIsFormOpen(true);
       return;
     }
 
-    // Check if it's a Google Calendar event
+    // Check if it's a Google Calendar event that hasn't been imported yet
     const googleEvent = googleEvents.find(e => e.id === block.id);
     if (googleEvent) {
       const categorization = getCategorization(googleEvent.id);
@@ -810,6 +853,121 @@ export default function TimeAuditPage() {
       handleSyncGoogle();
     }
   }, [deleteTimeBlock, setLocalTimeBlocks, isGoogleConnected, handleSyncGoogle, dbTimeBlocks]);
+
+  // Handle moving/resizing a time block (drag-drop or resize)
+  const handleBlockMove = useCallback(async (
+    blockId: string,
+    newDate: string,
+    newStartTime: string,
+    newEndTime: string
+  ): Promise<boolean> => {
+    try {
+      // Find the block - first check database blocks
+      let block = timeBlocks.find(b => b.id === blockId);
+
+      // If not found by ID, check if it's a Google Calendar event by externalEventId
+      if (!block) {
+        block = timeBlocks.find(b => b.externalEventId === blockId);
+      }
+
+      // Also check Google events directly for non-imported events
+      if (!block) {
+        const googleEvent = googleEvents.find(e => e.id === blockId);
+        if (googleEvent) {
+          // This is a Google event that hasn't been imported yet - create it in DB first
+          const categorization = getCategorization(googleEvent.id);
+
+          await createTimeBlock({
+            date: newDate,
+            startTime: newStartTime,
+            endTime: newEndTime,
+            activityName: googleEvent.summary || 'Untitled Event',
+            dripQuadrant: categorization?.dripQuadrant || 'production',
+            energyRating: categorization?.energyRating || 'yellow',
+            source: 'calendar_sync',
+            externalEventId: googleEvent.id,
+          });
+
+          // Update Google Calendar
+          if (isGoogleConnected) {
+            const eventId = googleEvent.id.replace('gcal_', '');
+            const startDateTime = new Date(`${newDate}T${newStartTime}:00`);
+            const endDateTime = new Date(`${newDate}T${newEndTime}:00`);
+
+            await fetch('/api/calendar/google/events', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                eventId,
+                start: startDateTime.toISOString(),
+                end: endDateTime.toISOString(),
+              }),
+            });
+            handleSyncGoogle();
+          }
+
+          await fetchTimeBlocks();
+          return true;
+        }
+        return false;
+      }
+
+      // Check if block exists in database
+      const existsInDb = dbTimeBlocks.some(b => b.id === block!.id || b.externalEventId === blockId);
+
+      if (existsInDb) {
+        // Update in database
+        const dbBlock = dbTimeBlocks.find(b => b.id === block!.id || b.externalEventId === blockId);
+        if (dbBlock) {
+          await updateTimeBlock(dbBlock.id, {
+            date: newDate,
+            startTime: newStartTime,
+            endTime: newEndTime,
+          });
+        }
+      } else {
+        // Update in local storage for backwards compatibility
+        setLocalTimeBlocks(blocks =>
+          blocks.map(b =>
+            b.id === blockId
+              ? { ...b, date: newDate, startTime: newStartTime, endTime: newEndTime }
+              : b
+          )
+        );
+      }
+
+      // If this is a Google Calendar event, sync the change
+      const externalEventId = block.externalEventId || blockId;
+      if (externalEventId && isGoogleConnected) {
+        const eventId = externalEventId.replace('gcal_', '');
+        const startDateTime = new Date(`${newDate}T${newStartTime}:00`);
+        const endDateTime = new Date(`${newDate}T${newEndTime}:00`);
+
+        const response = await fetch('/api/calendar/google/events', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventId,
+            start: startDateTime.toISOString(),
+            end: endDateTime.toISOString(),
+          }),
+        });
+
+        if (!response.ok) {
+          console.error('Failed to update Google Calendar event');
+          return false;
+        }
+
+        // Refresh Google events to reflect changes
+        handleSyncGoogle();
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error moving block:', error);
+      return false;
+    }
+  }, [timeBlocks, googleEvents, dbTimeBlocks, isGoogleConnected, getCategorization, createTimeBlock, updateTimeBlock, setLocalTimeBlocks, fetchTimeBlocks, handleSyncGoogle]);
 
   // Check if we have data (for showing different states) - includes all data sources
   const hasData = allTimeData.length > 0;
@@ -964,9 +1122,9 @@ export default function TimeAuditPage() {
         </TabsList>
 
         <TabsContent value="calendar" className="mt-4">
-          <div className="grid gap-4 lg:grid-cols-4">
-            {/* Calendar Views - Takes 3 columns */}
-            <div className="lg:col-span-3">
+          <div className="grid gap-3 lg:grid-cols-5 xl:grid-cols-6">
+            {/* Calendar Views - Takes more columns for more real estate */}
+            <div className="lg:col-span-4 xl:col-span-5">
               <Tabs defaultValue="weekly" className="space-y-4">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="weekly" className="gap-2">
@@ -993,6 +1151,7 @@ export default function TimeAuditPage() {
                   timeBlocks={calendarTimeBlocks}
                   onAddBlock={handleAddBlock}
                   onBlockClick={handleBlockClick}
+                  onBlockMove={handleBlockMove}
                   colorMode="drip"
                 />
               </div>
@@ -1004,6 +1163,7 @@ export default function TimeAuditPage() {
                   timeBlocks={calendarTimeBlocks}
                   onAddBlock={handleAddBlock}
                   onBlockClick={handleBlockClick}
+                  onBlockMove={handleBlockMove}
                   colorMode="energy"
                 />
               </div>
@@ -1053,84 +1213,83 @@ export default function TimeAuditPage() {
           </Tabs>
         </div>
 
-        {/* Pie Charts - Takes 1 column */}
-        <div className="space-y-6">
-          {/* DRIP Distribution */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">DRIP Distribution</CardTitle>
+        {/* Pie Charts - Compact sidebar */}
+        <div className="space-y-3">
+          {/* DRIP Distribution - Compact */}
+          <Card className="p-0">
+            <CardHeader className="p-3 pb-1">
+              <CardTitle className="text-sm">DRIP</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 pt-0">
               {hasData ? (
                 <>
-                  <DripPieChart data={dripData} size="md" />
-                  <div className="mt-4 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Production (Sweet Spot)</span>
+                  <DripPieChart data={dripData} size="sm" showLegend={false} />
+                  <div className="mt-2 space-y-1 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Production</span>
                       <span className="font-medium text-green-600">
                         {totalHours > 0 ? Math.round((dripData.production / totalHours) * 100) : 0}%
                       </span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Investment (Growth)</span>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Investment</span>
                       <span className="font-medium text-blue-600">
                         {totalHours > 0 ? Math.round((dripData.investment / totalHours) * 100) : 0}%
                       </span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Replacement (Automate)</span>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Replacement</span>
                       <span className="font-medium text-orange-600">
                         {totalHours > 0 ? Math.round((dripData.replacement / totalHours) * 100) : 0}%
                       </span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Delegation (Delegate)</span>
-                      <span className="font-medium text-purple-600">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Delegation</span>
+                      <span className="font-medium text-red-600">
                         {totalHours > 0 ? Math.round((dripData.delegation / totalHours) * 100) : 0}%
                       </span>
                     </div>
                   </div>
                 </>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>No time blocks logged yet.</p>
-                  <p className="text-sm">Click &quot;Log Time Block&quot; to get started!</p>
+                <div className="text-center py-4 text-muted-foreground text-xs">
+                  <p>No data yet</p>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Energy Distribution */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Energy Distribution</CardTitle>
+          {/* Energy Distribution - Compact */}
+          <Card className="p-0">
+            <CardHeader className="p-3 pb-1">
+              <CardTitle className="text-sm">Energy</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 pt-0">
               {hasData ? (
                 <>
-                  <EnergyPieChart data={energyData} size="md" />
-                  <div className="mt-4 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-green-500" />
+                  <EnergyPieChart data={energyData} size="sm" showLegend={false} />
+                  <div className="mt-2 space-y-1 text-xs">
+                    <div className="flex justify-between">
+                      <span className="flex items-center gap-1">
+                        <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
                         Energizing
                       </span>
                       <span className="font-medium text-green-600">
                         {totalHours > 0 ? Math.round((energyData.green / totalHours) * 100) : 0}%
                       </span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-yellow-500" />
+                    <div className="flex justify-between">
+                      <span className="flex items-center gap-1">
+                        <span className="h-1.5 w-1.5 rounded-full bg-yellow-500" />
                         Neutral
                       </span>
                       <span className="font-medium text-yellow-600">
                         {totalHours > 0 ? Math.round((energyData.yellow / totalHours) * 100) : 0}%
                       </span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-red-500" />
+                    <div className="flex justify-between">
+                      <span className="flex items-center gap-1">
+                        <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
                         Draining
                       </span>
                       <span className="font-medium text-red-600">
@@ -1140,21 +1299,20 @@ export default function TimeAuditPage() {
                   </div>
                 </>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>Track your energy levels</p>
-                  <p className="text-sm">to see distribution here.</p>
+                <div className="text-center py-4 text-muted-foreground text-xs">
+                  <p>No data yet</p>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Quick Actions</CardTitle>
+          {/* Quick Actions - Compact */}
+          <Card className="p-0">
+            <CardHeader className="p-3 pb-1">
+              <CardTitle className="text-sm">Actions</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <Button variant="outline" className="w-full justify-start" asChild>
+            <CardContent className="p-3 pt-0 space-y-1.5">
+              <Button variant="outline" size="sm" className="w-full justify-start text-xs h-8" asChild>
                 <Link href={ROUTES.drip}>
                   View DRIP Matrix
                 </Link>
@@ -1162,9 +1320,9 @@ export default function TimeAuditPage() {
               {isGoogleConnected && (
                 <Button
                   variant="outline"
-                  className="w-full justify-start"
+                  size="sm"
+                  className="w-full justify-start text-xs h-8"
                   onClick={() => {
-                    // Select the most recent block to push
                     const recentBlock = timeBlocks[timeBlocks.length - 1];
                     if (recentBlock && !recentBlock.externalEventId) {
                       setBlockToPush(recentBlock);
@@ -1173,28 +1331,19 @@ export default function TimeAuditPage() {
                   }}
                   disabled={timeBlocks.length === 0}
                 >
-                  <ArrowUpRight className="h-4 w-4 mr-2" />
-                  Push to Google Calendar
+                  <ArrowUpRight className="h-3 w-3 mr-1" />
+                  Push to Calendar
                 </Button>
               )}
-              <Button variant="outline" className="w-full justify-start">
-                Export Report
-                {!hasProAccess && (
-                  <Badge variant="secondary" className="ml-auto">Pro</Badge>
-                )}
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                Set Time Goals
-              </Button>
             </CardContent>
           </Card>
 
           {/* Import Result Notification */}
           {importResult && (
-            <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
-              <CardContent className="py-3">
-                <p className="text-sm text-green-800 dark:text-green-200">
-                  Imported {importResult.imported} events
+            <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 p-0">
+              <CardContent className="p-2">
+                <p className="text-xs text-green-800 dark:text-green-200">
+                  Imported {importResult.imported}
                   {importResult.skipped > 0 && ` (${importResult.skipped} skipped)`}
                 </p>
               </CardContent>
