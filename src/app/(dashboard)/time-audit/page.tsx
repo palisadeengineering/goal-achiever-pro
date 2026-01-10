@@ -45,6 +45,13 @@ import type { DripQuadrant, EnergyRating } from '@/types/database';
 
 type SubscriptionTier = 'free' | 'pro' | 'premium';
 
+// Helper to normalize time format to HH:mm (handles both HH:mm and HH:mm:ss formats)
+function normalizeTimeFormat(time: string): string {
+  // If time already has seconds (HH:mm:ss), strip them
+  const parts = time.split(':');
+  return `${parts[0].padStart(2, '0')}:${(parts[1] || '00').padStart(2, '0')}`;
+}
+
 // Interface matching WeeklyCalendarView's expected TimeBlock
 interface CalendarTimeBlock {
   id: string;
@@ -893,8 +900,10 @@ export default function TimeAuditPage() {
           // Update Google Calendar
           if (isGoogleConnected) {
             const eventId = googleEvent.id.replace('gcal_', '');
-            const startDateTime = new Date(`${newDate}T${newStartTime}:00`);
-            const endDateTime = new Date(`${newDate}T${newEndTime}:00`);
+            const normalizedStart = normalizeTimeFormat(newStartTime);
+            const normalizedEnd = normalizeTimeFormat(newEndTime);
+            const startDateTime = new Date(`${newDate}T${normalizedStart}:00`);
+            const endDateTime = new Date(`${newDate}T${normalizedEnd}:00`);
 
             await fetch('/api/calendar/google/events', {
               method: 'PATCH',
@@ -942,8 +951,10 @@ export default function TimeAuditPage() {
       const externalEventId = block.externalEventId || blockId;
       if (externalEventId && isGoogleConnected) {
         const eventId = externalEventId.replace('gcal_', '');
-        const startDateTime = new Date(`${newDate}T${newStartTime}:00`);
-        const endDateTime = new Date(`${newDate}T${newEndTime}:00`);
+        const normalizedStart = normalizeTimeFormat(newStartTime);
+        const normalizedEnd = normalizeTimeFormat(newEndTime);
+        const startDateTime = new Date(`${newDate}T${normalizedStart}:00`);
+        const endDateTime = new Date(`${newDate}T${normalizedEnd}:00`);
 
         const response = await fetch('/api/calendar/google/events', {
           method: 'PATCH',

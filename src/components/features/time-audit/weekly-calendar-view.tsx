@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { format, startOfWeek, addDays, isSameDay, isWithinInterval, subDays } from 'date-fns';
 import {
   DndContext,
@@ -12,7 +12,7 @@ import {
   useSensors,
   DragEndEvent,
   DragStartEvent,
-  closestCenter,
+  CollisionDetection,
 } from '@dnd-kit/core';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -143,6 +143,12 @@ function DraggableBlock({
         {...listeners}
         {...attributes}
         onClick={(e) => {
+          // Keyboard-triggered clicks (Space/Enter) have detail === 0
+          // These should be handled by dnd-kit's drag functionality, not open dialog
+          const isKeyboardClick = e.detail === 0;
+          if (isKeyboardClick) {
+            return; // Let dnd-kit handle keyboard drag
+          }
           if (!isDragging && !isResizing) {
             e.stopPropagation();
             onBlockClick?.(block);
@@ -282,6 +288,12 @@ export function WeeklyCalendarView({
   const [activeBlock, setActiveBlock] = useState<TimeBlock | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
 
+  // Ref for the calendar grid to calculate drop positions
+  const calendarGridRef = useRef<HTMLDivElement>(null);
+
+  // Ref to store the last calculated drop position (since dnd-kit may not have the droppable)
+  const lastCalculatedDropRef = useRef<{ date: string; time: string } | null>(null);
+
   // Mobile single-day view state
   const [isMobileView, setIsMobileView] = useState(false);
   const [selectedMobileDay, setSelectedMobileDay] = useState(new Date());
@@ -366,6 +378,102 @@ export function WeeklyCalendarView({
       },
     })
   );
+
+  // Custom collision detection that calculates drop target based on pointer position
+  // This is needed because event blocks positioned absolutely cover the droppable slots
+  // We always use position-based calculation since pointerWithin would detect the
+  // slot covered by the dragged event itself rather than the actual target slot
+  const customCollisionDetection: CollisionDetection = useCallback((args) => {
+    const { pointerCoordinates } = args;
+    if (!pointerCoordinates || !calendarGridRef.current) {
+      return [];
+    }
+
+    // Get the scroll container to account for scroll position
+    const scrollContainer = calendarGridRef.current.closest('.overflow-y-auto');
+    const scrollTop = scrollContainer?.scrollTop || 0;
+    const scrollContainerRect = scrollContainer?.getBoundingClientRect();
+    const gridRect = calendarGridRef.current.getBoundingClientRect();
+
+    const HOUR_HEIGHT = 60;
+    const TIME_COLUMN_WIDTH = gridRect.width / 8; // 8 columns total (time + 7 days)
+
+    // Use scroll container bounds if available, otherwise use grid bounds
+    const containerTop = scrollContainerRect?.top ?? gridRect.top;
+    const containerBottom = scrollContainerRect?.bottom ?? gridRect.bottom;
+
+    // Check if pointer is within horizontal bounds
+    if (
+      pointerCoordinates.x < gridRect.left + TIME_COLUMN_WIDTH || // Skip time column
+      pointerCoordinates.x > gridRect.right
+    ) {
+      return [];
+    }
+
+    // For Y bounds, use the scroll container's visible area
+    if (
+      pointerCoordinates.y < containerTop ||
+      pointerCoordinates.y > containerBottom
+    ) {
+      return [];
+    }
+
+    // Calculate which day column (0-6 for the 7 days)
+    const relativeX = pointerCoordinates.x - gridRect.left - TIME_COLUMN_WIDTH;
+    const dayColumnWidth = (gridRect.width - TIME_COLUMN_WIDTH) / 7;
+    const dayIndex = Math.floor(relativeX / dayColumnWidth);
+
+    if (dayIndex < 0 || dayIndex > 6) {
+      return [];
+    }
+
+    // Calculate which time slot based on Y position
+    // The grid has a header row, so we need to calculate relative to the grid content area
+    // Find the first time slot row to get the actual starting Y position
+    const firstTimeSlotRow = calendarGridRef.current.querySelector('[class*="col-span-8"]');
+    const gridContentTop = firstTimeSlotRow ? firstTimeSlotRow.getBoundingClientRect().top : gridRect.top;
+
+    // relativeY = pointer position relative to grid content top + scroll offset
+    const relativeY = (pointerCoordinates.y - gridContentTop) + scrollTop;
+    const totalMinutes = (relativeY / HOUR_HEIGHT) * 60;
+    // Round to nearest 15-minute slot
+    const slotMinutes = Math.floor(totalMinutes / 15) * 15;
+    const hour = Math.floor((settings.calendarStartHour * 60 + slotMinutes) / 60);
+    const minute = (settings.calendarStartHour * 60 + slotMinutes) % 60;
+
+    // Ensure within calendar bounds
+    if (hour < settings.calendarStartHour || hour > settings.calendarEndHour) {
+      return [];
+    }
+
+    // Calculate the target date
+    const targetDate = addDays(currentWeekStart, dayIndex);
+    const dateKey = format(targetDate, 'yyyy-MM-dd');
+    const timeKey = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+    const droppableId = `${dateKey}-${timeKey}`;
+
+    // Store the calculated position for use in handleDragEnd
+    lastCalculatedDropRef.current = { date: dateKey, time: timeKey };
+
+    // Find the droppable in the list
+    const droppable = args.droppableContainers.find(container => container.id === droppableId);
+    if (droppable) {
+      return [{
+        id: droppableId,
+        data: { droppableContainer: droppable, value: 1 }
+      }];
+    }
+
+    // If droppable doesn't exist (slot is occupied by another event), still return the calculated target
+    // We'll create a synthetic collision result
+    return [{
+      id: droppableId,
+      data: {
+        droppableContainer: { id: droppableId, data: { current: { date: dateKey, time: timeKey } } },
+        value: 1
+      }
+    }];
+  }, [settings.calendarStartHour, settings.calendarEndHour, currentWeekStart]);
 
   // Generate time slots based on user settings
   const timeSlots = useMemo(
@@ -607,12 +715,41 @@ export function WeeklyCalendarView({
     const { active, over } = event;
     setActiveBlock(null);
 
-    if (!over || !onBlockMove) return;
+    if (!onBlockMove) {
+      lastCalculatedDropRef.current = null;
+      return;
+    }
 
     const block = active.data.current?.block as TimeBlock;
-    const dropData = over.data.current as { date: string; time: string } | undefined;
 
-    if (!block || !dropData) return;
+    // Try to get drop data from multiple sources:
+    // 1. over.data.current (direct from droppable)
+    // 2. Parse from over.id
+    // 3. Use lastCalculatedDropRef (from collision detection)
+    let dropData = over?.data.current as { date: string; time: string } | undefined;
+
+    if (!dropData && over && typeof over.id === 'string') {
+      // Parse date and time from the droppable ID
+      const idParts = (over.id as string).split('-');
+      if (idParts.length >= 4) {
+        // Format: YYYY-MM-DD-HH:mm
+        const date = `${idParts[0]}-${idParts[1]}-${idParts[2]}`;
+        const time = idParts[3];
+        dropData = { date, time };
+      }
+    }
+
+    // Fallback to last calculated drop position from collision detection
+    if (!dropData && lastCalculatedDropRef.current) {
+      dropData = lastCalculatedDropRef.current;
+    }
+
+    // Clear the ref
+    lastCalculatedDropRef.current = null;
+
+    if (!block || !dropData) {
+      return;
+    }
 
     // Calculate new end time based on block duration
     const duration = getBlockDuration(block);
@@ -624,8 +761,13 @@ export function WeeklyCalendarView({
     const newEndTime = `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`;
 
     // Only move if position changed
+    // Normalize times to HH:mm format for comparison (handles HH:mm:ss from database)
+    const normalizeTime = (t: string) => t.split(':').slice(0, 2).join(':');
     const currentDate = block.date || format(new Date(), 'yyyy-MM-dd');
-    if (currentDate === dropData.date && block.startTime === dropData.time) {
+    const normalizedBlockStart = normalizeTime(block.startTime);
+    const normalizedDropTime = normalizeTime(dropData.time);
+
+    if (currentDate === dropData.date && normalizedBlockStart === normalizedDropTime) {
       return;
     }
 
@@ -753,7 +895,7 @@ export function WeeklyCalendarView({
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      collisionDetection={customCollisionDetection}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
@@ -831,7 +973,7 @@ export function WeeklyCalendarView({
                 </div>
               )}
               {/* Time grid with absolute positioned events */}
-              <div className="grid grid-cols-8">
+              <div ref={calendarGridRef} className="grid grid-cols-8">
                 {/* Time Labels Column */}
                 <div className="border-r">
                   {hourLabels.map((hourSlot: string) => {
@@ -936,10 +1078,16 @@ export function WeeklyCalendarView({
                           displayDurationSlots = previewDurationMins / 15;
                         }
 
+                        // While dragging, other blocks should not intercept pointer events
+                        const isDraggingOther = activeBlock && activeBlock.id !== block.id;
+
                         return (
                           <div
                             key={block.id}
-                            className="absolute left-0 right-0 z-10"
+                            className={cn(
+                              "absolute left-0 right-0 z-10",
+                              isDraggingOther && "pointer-events-none"
+                            )}
                             style={{
                               top: `${topPosition}px`,
                               height: `${displayHeight}px`,
