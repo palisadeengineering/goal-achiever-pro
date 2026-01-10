@@ -710,6 +710,71 @@ export function WeeklyCalendarView({
     }
   };
 
+  // Snap threshold in minutes - events within this range will snap to be adjacent
+  const SNAP_THRESHOLD_MINS = 30;
+
+  // Helper to convert time string to minutes
+  const timeToMins = (time: string): number => {
+    const [h, m] = time.split(':').map(Number);
+    return h * 60 + m;
+  };
+
+  // Helper to convert minutes to time string
+  const minsToTime = (mins: number): string => {
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+  };
+
+  // Find snap target for an event being dropped
+  const findSnapTarget = (
+    dropDate: string,
+    dropStartMins: number,
+    duration: number,
+    excludeBlockId: string
+  ): { startMins: number; snapType: 'before' | 'after' | null } => {
+    const dayBlocks = timeBlocks[dropDate] || [];
+    const dropEndMins = dropStartMins + duration;
+
+    let bestSnap: { startMins: number; snapType: 'before' | 'after' | null; distance: number } = {
+      startMins: dropStartMins,
+      snapType: null,
+      distance: Infinity
+    };
+
+    for (const otherBlock of dayBlocks) {
+      // Skip the block being dragged
+      if (otherBlock.id === excludeBlockId) continue;
+
+      const otherStartMins = timeToMins(otherBlock.startTime);
+      const otherEndMins = timeToMins(otherBlock.endTime);
+
+      // Check if we should snap to START right after this event ends
+      // (our start aligns with their end)
+      const distanceToEnd = Math.abs(dropStartMins - otherEndMins);
+      if (distanceToEnd <= SNAP_THRESHOLD_MINS && distanceToEnd < bestSnap.distance) {
+        bestSnap = {
+          startMins: otherEndMins,
+          snapType: 'after',
+          distance: distanceToEnd
+        };
+      }
+
+      // Check if we should snap to END right before this event starts
+      // (our end aligns with their start)
+      const distanceToStart = Math.abs(dropEndMins - otherStartMins);
+      if (distanceToStart <= SNAP_THRESHOLD_MINS && distanceToStart < bestSnap.distance) {
+        bestSnap = {
+          startMins: otherStartMins - duration,
+          snapType: 'before',
+          distance: distanceToStart
+        };
+      }
+    }
+
+    return { startMins: bestSnap.startMins, snapType: bestSnap.snapType };
+  };
+
   // Handle drag end
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
@@ -751,27 +816,39 @@ export function WeeklyCalendarView({
       return;
     }
 
-    // Calculate new end time based on block duration
+    // Calculate duration and initial drop position
     const duration = getBlockDuration(block);
-    const [startHour, startMin] = dropData.time.split(':').map(Number);
-    const startTotalMins = startHour * 60 + startMin;
-    const endTotalMins = startTotalMins + duration;
-    const endHour = Math.floor(endTotalMins / 60);
-    const endMin = endTotalMins % 60;
-    const newEndTime = `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`;
+    const dropStartMins = timeToMins(dropData.time);
+
+    // Find snap target - check if we should snap to an adjacent event
+    const snapResult = findSnapTarget(dropData.date, dropStartMins, duration, block.id);
+
+    // Use snapped position if found, otherwise use original drop position
+    const finalStartMins = snapResult.startMins;
+    const finalEndMins = finalStartMins + duration;
+
+    // Ensure within calendar bounds
+    const minMins = settings.calendarStartHour * 60;
+    const maxMins = (settings.calendarEndHour + 1) * 60;
+
+    let adjustedStartMins = finalStartMins;
+    if (adjustedStartMins < minMins) adjustedStartMins = minMins;
+    if (adjustedStartMins + duration > maxMins) adjustedStartMins = maxMins - duration;
+
+    const newStartTime = minsToTime(adjustedStartMins);
+    const newEndTime = minsToTime(adjustedStartMins + duration);
 
     // Only move if position changed
     // Normalize times to HH:mm format for comparison (handles HH:mm:ss from database)
     const normalizeTime = (t: string) => t.split(':').slice(0, 2).join(':');
     const currentDate = block.date || format(new Date(), 'yyyy-MM-dd');
     const normalizedBlockStart = normalizeTime(block.startTime);
-    const normalizedDropTime = normalizeTime(dropData.time);
 
-    if (currentDate === dropData.date && normalizedBlockStart === normalizedDropTime) {
+    if (currentDate === dropData.date && normalizedBlockStart === newStartTime) {
       return;
     }
 
-    await onBlockMove(block.id, dropData.date, dropData.time, newEndTime);
+    await onBlockMove(block.id, dropData.date, newStartTime, newEndTime);
   };
 
   // Mobile single-day render
