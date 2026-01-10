@@ -12,6 +12,7 @@ import {
   useSensors,
   DragEndEvent,
   DragStartEvent,
+  closestCenter,
 } from '@dnd-kit/core';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -397,10 +398,12 @@ export function WeeklyCalendarView({
   const goToPreviousDay = () => setSelectedMobileDay(prev => subDays(prev, 1));
   const goToNextDay = () => setSelectedMobileDay(prev => addDays(prev, 1));
 
-  const getBlocksForDateAndTime = (date: Date, time: string): TimeBlock | undefined => {
+  const getBlocksForDateAndTime = (date: Date, time: string, excludeBlockId?: string): TimeBlock | undefined => {
     const dateKey = format(date, 'yyyy-MM-dd');
     const blocks = timeBlocks[dateKey] || [];
     return blocks.find(block => {
+      // Skip the block being dragged so its original slots become droppable
+      if (excludeBlockId && block.id === excludeBlockId) return false;
       const blockStart = block.startTime;
       const blockEnd = block.endTime;
       return time >= blockStart && time < blockEnd;
@@ -750,6 +753,7 @@ export function WeeklyCalendarView({
   return (
     <DndContext
       sensors={sensors}
+      collisionDetection={closestCenter}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
@@ -876,12 +880,13 @@ export function WeeklyCalendarView({
                           >
                             <div className="grid grid-rows-4 h-full">
                               {quarterSlots.map((time) => {
-                                const block = getBlocksForDateAndTime(day, time);
+                                // Exclude the actively dragging block so its original slots become droppable
+                                const block = getBlocksForDateAndTime(day, time, activeBlock?.id);
                                 const slotId = `${dateKey}-${time}`;
 
-                                // Don't render droppable if there's a block here
+                                // Don't render droppable if there's a block here (excluding the one being dragged)
                                 if (block) {
-                                  return <div key={time} className="h-[25px]" />;
+                                  return <div key={time} className="h-[15px]" />;
                                 }
 
                                 return (
