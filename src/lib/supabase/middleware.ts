@@ -80,8 +80,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Redirect authenticated users away from auth pages
-  const authPaths = ['/login', '/signup'];
+  // Redirect authenticated users away from auth pages (except reset-password which needs session)
+  const authPaths = ['/login', '/signup', '/forgot-password'];
   const isAuthPath = authPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   );
