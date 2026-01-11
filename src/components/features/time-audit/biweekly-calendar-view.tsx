@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { format, startOfWeek, addDays, addWeeks, isSameDay, parseISO } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,7 @@ interface DayData {
 interface BiweeklyCalendarViewProps {
   timeBlocks?: TimeBlock[];
   onDayClick?: (date: Date) => void;
+  onDateRangeChange?: (startDate: Date, endDate: Date) => void;
 }
 
 // Calculate duration in minutes between two time strings
@@ -82,18 +83,41 @@ function computeWeekData(
 export function BiweeklyCalendarView({
   timeBlocks = [],
   onDayClick,
+  onDateRangeChange,
 }: BiweeklyCalendarViewProps) {
   const [startDate, setStartDate] = useState(() =>
     startOfWeek(addWeeks(new Date(), -1), { weekStartsOn: 1 })
   );
 
-  const week1Start = startDate;
-  const week2Start = addWeeks(startDate, 1);
-  const week1End = addDays(week1Start, 6);
-  const week2End = addDays(week2Start, 6);
+  // Memoize date calculations to prevent infinite re-renders
+  const { week1Start, week2Start, week1End, week2End } = useMemo(() => {
+    const w1Start = startDate;
+    const w2Start = addWeeks(startDate, 1);
+    return {
+      week1Start: w1Start,
+      week2Start: w2Start,
+      week1End: addDays(w1Start, 6),
+      week2End: addDays(w2Start, 6),
+    };
+  }, [startDate]);
 
   const week1Days = Array.from({ length: 7 }, (_, i) => addDays(week1Start, i));
   const week2Days = Array.from({ length: 7 }, (_, i) => addDays(week2Start, i));
+
+  // Notify parent when date range changes - use a ref to track previous values
+  const prevDateRangeRef = useRef<{ start: number; end: number } | null>(null);
+  useEffect(() => {
+    const startTime = week1Start.getTime();
+    const endTime = week2End.getTime();
+
+    // Only call callback if the dates actually changed
+    if (!prevDateRangeRef.current ||
+        prevDateRangeRef.current.start !== startTime ||
+        prevDateRangeRef.current.end !== endTime) {
+      prevDateRangeRef.current = { start: startTime, end: endTime };
+      onDateRangeChange?.(week1Start, week2End);
+    }
+  }, [week1Start, week2End, onDateRangeChange]);
 
   // Compute week data from time blocks
   const week1Data = useMemo(() => computeWeekData(timeBlocks, week1Start, week1End), [timeBlocks, week1Start, week1End]);

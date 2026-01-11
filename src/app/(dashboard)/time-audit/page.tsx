@@ -200,32 +200,43 @@ export default function TimeAuditPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useLocalStorage<boolean>('time-audit-sidebar-collapsed', false);
   const [calendarColorMode, setCalendarColorMode] = useState<'drip' | 'energy'>('drip');
 
-  // Fetch Google events when connected
-  const handleSyncGoogle = (timeframe?: '1week' | '2weeks' | '1month') => {
+  // Track currently viewed date range from calendar views
+  const [viewedDateRange, setViewedDateRange] = useState<{ start: Date; end: Date }>(() => ({
+    start: startOfWeek(new Date(), { weekStartsOn: 1 }),
+    end: endOfWeek(new Date(), { weekStartsOn: 1 }),
+  }));
+
+  // Callback for calendar views to report their current date range
+  const handleDateRangeChange = useCallback((start: Date, end: Date) => {
+    setViewedDateRange({ start, end });
+  }, []);
+
+  // Fetch Google events when connected - uses the currently viewed date range
+  const handleSyncGoogle = useCallback((timeframe?: '1week' | '2weeks' | '1month') => {
     const selectedTimeframe = timeframe || syncTimeframe;
     if (timeframe) {
       setSyncTimeframe(timeframe);
     }
 
-    const today = new Date();
-    const weekStart = startOfWeek(today, { weekStartsOn: 1 });
+    // Use the currently viewed start date from the calendar
+    const viewStart = viewedDateRange.start;
     let endDate: Date;
 
     switch (selectedTimeframe) {
       case '2weeks':
-        endDate = endOfWeek(addWeeks(weekStart, 1), { weekStartsOn: 1 });
+        endDate = endOfWeek(addWeeks(viewStart, 1), { weekStartsOn: 1 });
         break;
       case '1month':
-        endDate = addMonths(weekStart, 1);
+        endDate = addMonths(viewStart, 1);
         break;
       case '1week':
       default:
-        endDate = endOfWeek(addDays(weekStart, 6), { weekStartsOn: 1 });
+        endDate = endOfWeek(addDays(viewStart, 6), { weekStartsOn: 1 });
         break;
     }
 
-    fetchGoogleEvents(weekStart, endDate);
-  };
+    fetchGoogleEvents(viewStart, endDate);
+  }, [syncTimeframe, setSyncTimeframe, viewedDateRange.start, fetchGoogleEvents]);
 
   const getTimeframeLabel = (tf: string) => {
     switch (tf) {
@@ -1228,6 +1239,7 @@ export default function TimeAuditPage() {
                   onBlockClick={handleBlockClick}
                   onBlockMove={handleBlockMove}
                   onColorModeChange={setCalendarColorMode}
+                  onWeekChange={handleDateRangeChange}
                 />
                 {/* Sidebar toggle button - fixed position */}
                 <Button
@@ -1244,7 +1256,7 @@ export default function TimeAuditPage() {
 
             <TabsContent value="biweekly">
               {hasProAccess ? (
-                <BiweeklyCalendarView timeBlocks={timeBlocks} />
+                <BiweeklyCalendarView timeBlocks={timeBlocks} onDateRangeChange={handleDateRangeChange} />
               ) : (
                 <Card className="py-12">
                   <CardContent className="flex flex-col items-center justify-center text-center">
@@ -1265,7 +1277,7 @@ export default function TimeAuditPage() {
 
             <TabsContent value="monthly">
               {hasPremiumAccess ? (
-                <MonthlyCalendarView timeBlocks={timeBlocks} />
+                <MonthlyCalendarView timeBlocks={timeBlocks} onDateRangeChange={handleDateRangeChange} />
               ) : (
                 <Card className="py-12">
                   <CardContent className="flex flex-col items-center justify-center text-center">

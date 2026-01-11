@@ -68,6 +68,7 @@ interface WeeklyCalendarViewProps {
   isLoading?: boolean;
   colorMode?: 'drip' | 'energy';
   onColorModeChange?: (mode: 'drip' | 'energy') => void;
+  onWeekChange?: (weekStart: Date, weekEnd: Date) => void;
 }
 
 // Generate time slots for given hour range in 15-min increments
@@ -398,6 +399,7 @@ export function WeeklyCalendarView({
   isLoading = false,
   colorMode: externalColorMode,
   onColorModeChange,
+  onWeekChange,
 }: WeeklyCalendarViewProps) {
   const [settings] = useLocalStorage<UserSettings>('user-settings', DEFAULT_SETTINGS);
   const [internalColorMode, setInternalColorMode] = useState<'drip' | 'energy'>('drip');
@@ -573,6 +575,24 @@ export function WeeklyCalendarView({
   );
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(currentWeekStart, i));
+
+  // Memoize weekEnd to prevent infinite re-renders
+  const weekEnd = useMemo(() => addDays(currentWeekStart, 6), [currentWeekStart]);
+
+  // Notify parent when week changes - use a ref to track previous values
+  const prevWeekRef = useRef<{ start: number; end: number } | null>(null);
+  useEffect(() => {
+    const startTime = currentWeekStart.getTime();
+    const endTime = weekEnd.getTime();
+
+    // Only call callback if the dates actually changed
+    if (!prevWeekRef.current ||
+        prevWeekRef.current.start !== startTime ||
+        prevWeekRef.current.end !== endTime) {
+      prevWeekRef.current = { start: startTime, end: endTime };
+      onWeekChange?.(currentWeekStart, weekEnd);
+    }
+  }, [currentWeekStart, weekEnd, onWeekChange]);
 
   const goToPreviousWeek = () => setCurrentWeekStart(prev => addDays(prev, -7));
   const goToNextWeek = () => setCurrentWeekStart(prev => addDays(prev, 7));

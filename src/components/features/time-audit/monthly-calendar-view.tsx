@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import {
   format,
   startOfMonth,
@@ -44,6 +44,7 @@ interface DayData {
 interface MonthlyCalendarViewProps {
   timeBlocks?: TimeBlock[];
   onDayClick?: (date: Date) => void;
+  onDateRangeChange?: (startDate: Date, endDate: Date) => void;
 }
 
 // Calculate duration in minutes between two time strings
@@ -56,13 +57,36 @@ function calculateDuration(startTime: string, endTime: string): number {
 export function MonthlyCalendarView({
   timeBlocks = [],
   onDayClick,
+  onDateRangeChange,
 }: MonthlyCalendarViewProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
-  const monthStart = startOfMonth(currentMonth);
-  const monthEnd = endOfMonth(currentMonth);
-  const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
-  const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
+  // Memoize date calculations to prevent infinite re-renders
+  const { monthStart, monthEnd, calendarStart, calendarEnd } = useMemo(() => {
+    const mStart = startOfMonth(currentMonth);
+    const mEnd = endOfMonth(currentMonth);
+    return {
+      monthStart: mStart,
+      monthEnd: mEnd,
+      calendarStart: startOfWeek(mStart, { weekStartsOn: 1 }),
+      calendarEnd: endOfWeek(mEnd, { weekStartsOn: 1 }),
+    };
+  }, [currentMonth]);
+
+  // Notify parent when date range changes - use a ref to track previous values
+  const prevDateRangeRef = useRef<{ start: number; end: number } | null>(null);
+  useEffect(() => {
+    const startTime = monthStart.getTime();
+    const endTime = monthEnd.getTime();
+
+    // Only call callback if the dates actually changed
+    if (!prevDateRangeRef.current ||
+        prevDateRangeRef.current.start !== startTime ||
+        prevDateRangeRef.current.end !== endTime) {
+      prevDateRangeRef.current = { start: startTime, end: endTime };
+      onDateRangeChange?.(monthStart, monthEnd);
+    }
+  }, [monthStart, monthEnd, onDateRangeChange]);
 
   // Generate all days to display
   const days: Date[] = [];
