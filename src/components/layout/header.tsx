@@ -24,7 +24,7 @@ interface HeaderProps {
     fullName?: string;
     avatarUrl?: string;
   };
-  subscriptionTier?: 'free' | 'pro' | 'premium';
+  subscriptionTier?: 'free' | 'pro' | 'elite';
   onSignOut?: () => void;
 }
 
@@ -40,7 +40,7 @@ export function Header({ user, subscriptionTier = 'free', onSignOut }: HeaderPro
   const tierColors = {
     free: 'bg-gray-100 text-gray-800',
     pro: 'bg-blue-100 text-blue-800',
-    premium: 'bg-purple-100 text-purple-800',
+    elite: 'bg-purple-100 text-purple-800',
   };
 
   return (
@@ -65,7 +65,7 @@ export function Header({ user, subscriptionTier = 'free', onSignOut }: HeaderPro
         {/* Right Side */}
         <div className="flex items-center gap-4">
           {/* Subscription Badge */}
-          {subscriptionTier !== 'premium' && (
+          {subscriptionTier !== 'elite' && (
             <Link href={ROUTES.settingsSubscription}>
               <Badge variant="outline" className={tierColors[subscriptionTier]}>
                 {subscriptionTier === 'free' ? (

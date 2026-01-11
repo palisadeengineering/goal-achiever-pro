@@ -33,7 +33,7 @@ interface NavItem {
   href: string;
   icon: React.ElementType;
   badge?: string;
-  tier?: 'pro' | 'premium';
+  tier?: 'pro' | 'elite';
 }
 
 const mainNavItems: NavItem[] = [
@@ -71,7 +71,7 @@ const adminNavItems: NavItem[] = [
 ];
 
 interface SidebarProps {
-  userTier?: 'free' | 'pro' | 'premium';
+  userTier?: 'free' | 'pro' | 'elite';
   isAdmin?: boolean;
 }
 
@@ -81,14 +81,14 @@ function SidebarContent({
   isAdmin = false,
   onNavigate
 }: {
-  userTier: 'free' | 'pro' | 'premium';
+  userTier: 'free' | 'pro' | 'elite';
   isAdmin?: boolean;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
-  const tierHierarchy = { free: 0, pro: 1, premium: 2 };
+  const tierHierarchy = { free: 0, pro: 1, elite: 2 };
 
-  const hasAccess = (tier?: 'pro' | 'premium') => {
+  const hasAccess = (tier?: 'pro' | 'elite') => {
     if (!tier) return true;
     return tierHierarchy[userTier] >= tierHierarchy[tier];
   };

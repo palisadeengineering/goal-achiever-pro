@@ -61,7 +61,7 @@ const DEFAULT_SETTINGS: UserSettings = {
 };
 
 interface SubscriptionInfo {
-  tier: 'free' | 'pro' | 'premium';
+  tier: 'free' | 'pro' | 'elite';
   status: string;
   stripeCustomerId: string | null;
 }
@@ -306,7 +306,7 @@ function SettingsContent() {
             {subscription.tier === 'free' ? (
               <>
                 <p className="text-sm text-muted-foreground">
-                  Upgrade to unlock premium features like Google Calendar sync, advanced analytics, and more.
+                  Upgrade to unlock Pro/Elite features like Google Calendar sync, advanced analytics, and more.
                 </p>
                 <div className="flex gap-2">
                   <Button onClick={() => router.push('/pricing')}>
@@ -345,7 +345,7 @@ function SettingsContent() {
                   </Button>
                   {subscription.tier === 'pro' && (
                     <Button variant="outline" onClick={() => router.push('/pricing')}>
-                      Upgrade to Premium
+                      Upgrade to Elite
                     </Button>
                   )}
                 </div>
@@ -385,7 +385,7 @@ function SettingsContent() {
             </div>
             <div className="flex items-center gap-2">
               <Badge variant={googleConnected ? 'default' : 'secondary'}>
-                {googleConnected ? 'Connected' : 'Premium'}
+                {googleConnected ? 'Connected' : 'Pro'}
               </Badge>
               {googleConnected ? (
                 <Button variant="outline" size="sm" onClick={disconnectGoogleCalendar}>

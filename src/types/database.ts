@@ -1,6 +1,6 @@
 // Database types for Goal Achiever Pro
 
-export type SubscriptionTier = 'free' | 'pro' | 'premium';
+export type SubscriptionTier = 'free' | 'pro' | 'elite';
 export type SubscriptionStatus = 'active' | 'canceled' | 'past_due' | 'trialing';
 
 export type DripQuadrant = 'delegation' | 'replacement' | 'investment' | 'production' | 'na';

@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!['pro', 'premium'].includes(tier)) {
+    if (!['pro', 'elite'].includes(tier)) {
       return NextResponse.json(
         { error: 'Invalid tier' },
         { status: 400 }
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const priceId = getPriceId(tier as 'pro' | 'premium', interval as 'monthly' | 'yearly');
+    const priceId = getPriceId(tier as 'pro' | 'elite', interval as 'monthly' | 'yearly');
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
     // Use fetch directly to avoid SDK connection issues

@@ -60,7 +60,7 @@ export default async function DashboardLayout({
 
   // Check if user has testing phase full access
   const hasTestingAccess = TESTING_FULL_ACCESS_EMAILS.includes(userProfile.email.toLowerCase());
-  const subscriptionTier = hasTestingAccess ? 'premium' as const : 'free' as const;
+  const subscriptionTier = hasTestingAccess ? 'elite' as const : 'free' as const;
 
   return (
     <div className="flex h-screen overflow-hidden">

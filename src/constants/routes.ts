@@ -72,7 +72,7 @@ export const ROUTES = {
   // Help & Guide
   guide: '/guide',
 
-  // Accountability (Premium)
+  // Accountability (Elite)
   accountability: '/accountability',
 
   // Settings
@@ -110,11 +110,11 @@ export const PROTECTED_ROUTES = [
 ];
 
 // Routes by subscription tier requirement
-export const TIER_REQUIRED_ROUTES: Record<string, 'pro' | 'premium'> = {
+export const TIER_REQUIRED_ROUTES: Record<string, 'pro' | 'elite'> = {
   '/time-audit/biweekly': 'pro',
-  '/time-audit/monthly': 'premium',
+  '/time-audit/monthly': 'pro',
   '/leverage': 'pro',
   '/network': 'pro',
-  '/accountability': 'premium',
+  '/accountability': 'elite',
   '/reviews/midday': 'pro',
 };

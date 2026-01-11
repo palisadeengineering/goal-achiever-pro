@@ -18,7 +18,7 @@ import { PRICING_TIERS } from '@/lib/stripe/config';
 import { ROUTES } from '@/constants/routes';
 import { createClient } from '@/lib/supabase/client';
 
-type SubscriptionTier = 'free' | 'pro' | 'premium';
+type SubscriptionTier = 'free' | 'pro' | 'elite';
 
 interface Subscription {
   tier: SubscriptionTier;
@@ -205,13 +205,13 @@ export default function SubscriptionPage() {
       </Card>
 
       {/* Upgrade Options */}
-      {subscription.tier !== 'premium' && (
+      {subscription.tier !== 'elite' && (
         <div>
           <h2 className="text-lg font-semibold mb-4">Upgrade Your Plan</h2>
           <div className="grid md:grid-cols-2 gap-4">
             {PRICING_TIERS.filter(t => {
               if (subscription.tier === 'free') return t.id !== 'free';
-              if (subscription.tier === 'pro') return t.id === 'premium';
+              if (subscription.tier === 'pro') return t.id === 'elite';
               return false;
             }).map((tier) => (
               <Card key={tier.id} className={tier.highlighted ? 'border-primary' : ''}>

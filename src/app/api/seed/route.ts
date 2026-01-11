@@ -32,7 +32,7 @@ export async function POST() {
         id: DEMO_USER_ID,
         email: 'demo@example.com',
         full_name: 'Demo User',
-        subscription_tier: 'premium',
+        subscription_tier: 'elite',
         subscription_status: 'active',
         onboarding_completed: true,
       })

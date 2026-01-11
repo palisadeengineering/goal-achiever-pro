@@ -228,7 +228,7 @@ export default function PricingPage() {
                       <Badge size="sm" className="bg-primary text-[10px] md:text-xs">Popular</Badge>
                     </div>
                   </th>
-                  <th className="text-center py-3 px-3 md:py-4 md:px-6 font-display font-semibold text-sm md:text-base">Premium</th>
+                  <th className="text-center py-3 px-3 md:py-4 md:px-6 font-display font-semibold text-sm md:text-base">Elite</th>
                 </tr>
               </thead>
               <tbody>
@@ -242,7 +242,7 @@ export default function PricingPage() {
                       {renderFeatureValue(tiers.pro)}
                     </td>
                     <td className="py-3 px-3 md:py-4 md:px-6 text-center">
-                      {renderFeatureValue(tiers.premium)}
+                      {renderFeatureValue(tiers.elite)}
                     </td>
                   </tr>
                 ))}

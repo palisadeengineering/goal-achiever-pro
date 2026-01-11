@@ -25,7 +25,7 @@ interface NavItem {
   title: string;
   href: string;
   icon: React.ElementType;
-  tier?: 'pro' | 'premium';
+  tier?: 'pro' | 'elite';
 }
 
 const mainNavItems: NavItem[] = [
@@ -54,15 +54,15 @@ const bottomNavItems: NavItem[] = [
 ];
 
 interface MobileSidebarProps {
-  userTier?: 'free' | 'pro' | 'premium';
+  userTier?: 'free' | 'pro' | 'elite';
 }
 
 export function MobileSidebar({ userTier = 'free' }: MobileSidebarProps) {
   const pathname = usePathname();
 
-  const tierHierarchy = { free: 0, pro: 1, premium: 2 };
+  const tierHierarchy = { free: 0, pro: 1, elite: 2 };
 
-  const hasAccess = (tier?: 'pro' | 'premium') => {
+  const hasAccess = (tier?: 'pro' | 'elite') => {
     if (!tier) return true;
     return tierHierarchy[userTier] >= tierHierarchy[tier];
   };

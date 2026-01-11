@@ -21,15 +21,15 @@ export const STRIPE_PRICES = {
     monthly: process.env.STRIPE_PRO_MONTHLY_PRICE_ID || 'price_pro_monthly',
     yearly: process.env.STRIPE_PRO_YEARLY_PRICE_ID || 'price_pro_yearly',
   },
-  premium: {
-    monthly: process.env.STRIPE_PREMIUM_MONTHLY_PRICE_ID || 'price_premium_monthly',
-    yearly: process.env.STRIPE_PREMIUM_YEARLY_PRICE_ID || 'price_premium_yearly',
+  elite: {
+    monthly: process.env.STRIPE_ELITE_MONTHLY_PRICE_ID || 'price_elite_monthly',
+    yearly: process.env.STRIPE_ELITE_YEARLY_PRICE_ID || 'price_elite_yearly',
   },
 };
 
 // Helper to get price ID
 export function getPriceId(
-  tier: 'pro' | 'premium',
+  tier: 'pro' | 'elite',
   interval: 'monthly' | 'yearly'
 ): string {
   return STRIPE_PRICES[tier][interval];

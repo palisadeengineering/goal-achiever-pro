@@ -44,7 +44,7 @@ import { ROUTES } from '@/constants/routes';
 import { expandRecurringEvents } from '@/lib/utils/recurrence';
 import type { DripQuadrant, EnergyRating } from '@/types/database';
 
-type SubscriptionTier = 'free' | 'pro' | 'premium';
+type SubscriptionTier = 'free' | 'pro' | 'elite';
 
 // Helper to normalize time format to HH:mm (handles both HH:mm and HH:mm:ss formats)
 function normalizeTimeFormat(time: string): string {
@@ -69,11 +69,11 @@ interface CalendarTimeBlock {
 }
 
 function checkProAccess(tier: SubscriptionTier): boolean {
-  return tier === 'pro' || tier === 'premium';
+  return tier === 'pro' || tier === 'elite';
 }
 
-function checkPremiumAccess(tier: SubscriptionTier): boolean {
-  return tier === 'premium';
+function checkEliteAccess(tier: SubscriptionTier): boolean {
+  return tier === 'elite';
 }
 
 // Calculate duration in minutes between two time strings
@@ -85,9 +85,9 @@ function calculateDuration(startTime: string, endTime: string): number {
 
 export default function TimeAuditPage() {
   // In real app, check user subscription tier from database
-  const userTier: SubscriptionTier = 'premium'; // Temporarily set to premium for testing
+  const userTier: SubscriptionTier = 'elite'; // Temporarily set to elite for testing
   const hasProAccess = checkProAccess(userTier);
-  const hasPremiumAccess = checkPremiumAccess(userTier);
+  const hasEliteAccess = checkEliteAccess(userTier);
 
   // Get current week date range for initial fetch
   const today = new Date();
@@ -1270,10 +1270,10 @@ export default function TimeAuditPage() {
                 Bi-weekly
                 {!hasProAccess && <Lock className="h-3 w-3" />}
               </TabsTrigger>
-              <TabsTrigger value="monthly" className="gap-2" disabled={!hasPremiumAccess}>
+              <TabsTrigger value="monthly" className="gap-2" disabled={!hasEliteAccess}>
                 <CalendarRange className="h-4 w-4" />
                 Monthly
-                {!hasPremiumAccess && <Lock className="h-3 w-3" />}
+                {!hasEliteAccess && <Lock className="h-3 w-3" />}
               </TabsTrigger>
             </TabsList>
 
@@ -1323,7 +1323,7 @@ export default function TimeAuditPage() {
             </TabsContent>
 
             <TabsContent value="monthly">
-              {hasPremiumAccess ? (
+              {hasEliteAccess ? (
                 <MonthlyCalendarView timeBlocks={timeBlocks} onDateRangeChange={handleDateRangeChange} />
               ) : (
                 <Card className="py-12">
@@ -1335,7 +1335,7 @@ export default function TimeAuditPage() {
                     </p>
                     <Button asChild>
                       <Link href={ROUTES.settingsSubscription}>
-                        Upgrade to Premium
+                        Upgrade to Elite
                       </Link>
                     </Button>
                   </CardContent>

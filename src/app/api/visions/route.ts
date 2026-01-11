@@ -29,7 +29,7 @@ async function ensureDemoUserProfile(adminClient: ReturnType<typeof createAdminC
         id: DEMO_USER_ID,
         email: 'demo@example.com',
         full_name: 'Demo User',
-        subscription_tier: 'premium',
+        subscription_tier: 'elite',
         subscription_status: 'active',
       });
   }
