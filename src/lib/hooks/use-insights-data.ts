@@ -1,8 +1,15 @@
 'use client';
 
 import { useMemo } from 'react';
+import { startOfDay, endOfDay } from 'date-fns';
 import type { Tag } from './use-tags';
 import type { DripQuadrant, EnergyRating } from '@/types/database';
+
+// Helper to parse date string as local date (avoids UTC timezone issues)
+function parseLocalDate(dateString: string): Date {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
 
 export interface TimeBlockData {
   id: string;
@@ -149,9 +156,14 @@ export function useInsightsData({
   filters,
 }: UseInsightsDataParams): UseInsightsDataReturn {
   const filteredBlocks = useMemo(() => {
+    // Normalize date range to start/end of day for consistent comparison
+    const rangeStart = startOfDay(startDate);
+    const rangeEnd = endOfDay(endDate);
+
     return timeBlocks.filter(block => {
-      const blockDate = new Date(block.date);
-      if (blockDate < startDate || blockDate > endDate) return false;
+      // Parse date string as local date to avoid UTC timezone issues
+      const blockDate = parseLocalDate(block.date);
+      if (blockDate < rangeStart || blockDate > rangeEnd) return false;
 
       if (filters?.dripQuadrants?.length && !filters.dripQuadrants.includes(block.dripQuadrant)) {
         return false;
@@ -319,7 +331,8 @@ export function useInsightsData({
 
     // Aggregate data by period and group
     blocksWithDuration.forEach(block => {
-      const blockDate = new Date(block.date);
+      // Parse date string as local date to avoid UTC timezone issues
+      const blockDate = parseLocalDate(block.date);
       const periodKey = getPeriodKey(blockDate, granularity);
       const value = measure === 'hours' ? block.durationMinutes / 60 : 1;
 

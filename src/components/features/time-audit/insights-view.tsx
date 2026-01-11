@@ -20,7 +20,13 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, differenceInDays, subWeeks } from 'date-fns';
+import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, differenceInDays, subWeeks, startOfDay, endOfDay } from 'date-fns';
+
+// Helper to parse date string as local date (avoids UTC timezone issues)
+function parseLocalDate(dateString: string): Date {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
 import { Progress } from '@/components/ui/progress';
 import {
   useInsightsData,
@@ -186,9 +192,14 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
 
   // Calculate productivity score (weighted by DRIP + Energy)
   const productivityMetrics = useMemo(() => {
+    // Normalize date range to start/end of day for consistent comparison
+    const rangeStart = startOfDay(startDate);
+    const rangeEnd = endOfDay(endDate);
+
     const blocks = timeBlocks.filter(b => {
-      const blockDate = new Date(b.date);
-      return blockDate >= startDate && blockDate <= endDate;
+      // Parse date string as local date to avoid UTC timezone issues
+      const blockDate = parseLocalDate(b.date);
+      return blockDate >= rangeStart && blockDate <= rangeEnd;
     });
 
     if (blocks.length === 0) {
@@ -213,10 +224,11 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
     const score = Math.round(productionRatio * 0.6 + normalizedEnergyBalance * 0.4);
 
     // Calculate week-over-week change
-    const prevWeekStart = subWeeks(startDate, 1);
-    const prevWeekEnd = subWeeks(endDate, 1);
+    const prevWeekStart = startOfDay(subWeeks(startDate, 1));
+    const prevWeekEnd = endOfDay(subWeeks(endDate, 1));
     const prevBlocks = timeBlocks.filter(b => {
-      const blockDate = new Date(b.date);
+      // Parse date string as local date to avoid UTC timezone issues
+      const blockDate = parseLocalDate(b.date);
       return blockDate >= prevWeekStart && blockDate <= prevWeekEnd;
     });
 
@@ -235,9 +247,14 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
 
   // Calculate top activities
   const topActivities = useMemo(() => {
+    // Normalize date range to start/end of day for consistent comparison
+    const rangeStart = startOfDay(startDate);
+    const rangeEnd = endOfDay(endDate);
+
     const blocks = timeBlocks.filter(b => {
-      const blockDate = new Date(b.date);
-      return blockDate >= startDate && blockDate <= endDate;
+      // Parse date string as local date to avoid UTC timezone issues
+      const blockDate = parseLocalDate(b.date);
+      return blockDate >= rangeStart && blockDate <= rangeEnd;
     });
 
     // Group by activity name
@@ -266,14 +283,21 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
   // Calculate day of week distribution
   const dayOfWeekData = useMemo(() => {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    // Normalize date range to start/end of day for consistent comparison
+    const rangeStart = startOfDay(startDate);
+    const rangeEnd = endOfDay(endDate);
+
     const blocks = timeBlocks.filter(b => {
-      const blockDate = new Date(b.date);
-      return blockDate >= startDate && blockDate <= endDate;
+      // Parse date string as local date to avoid UTC timezone issues
+      const blockDate = parseLocalDate(b.date);
+      return blockDate >= rangeStart && blockDate <= rangeEnd;
     });
 
     const dayMinutes: number[] = [0, 0, 0, 0, 0, 0, 0];
     blocks.forEach(block => {
-      const dayIndex = new Date(block.date).getDay();
+      // Parse date string as local date to get correct day of week
+      const blockDate = parseLocalDate(block.date);
+      const dayIndex = blockDate.getDay();
       dayMinutes[dayIndex] += block.durationMinutes || 0;
     });
 
