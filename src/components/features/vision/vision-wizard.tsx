@@ -19,11 +19,13 @@ import { ChevronLeft, ChevronRight, Check, X, Trash2, Loader2 } from 'lucide-rea
 import { toast } from 'sonner';
 import { VisionStep } from './wizard-steps/vision-step';
 import { SmartGoalStep } from './wizard-steps/smart-goal-step';
+import { StrategicDiscoveryStep } from './wizard-steps/strategic-discovery-step';
 import { MonthlyProjectsStep } from './wizard-steps/monthly-projects-step';
 import { RemindersStep } from './wizard-steps/reminders-step';
 import { VisionBoardStep } from './wizard-steps/vision-board-step';
 import { AffirmationsStep } from './wizard-steps/affirmations-step';
 import { ReviewStep } from './wizard-steps/review-step';
+import type { StrategicDiscoveryData } from '@/types/strategic-discovery';
 
 export interface MonthlyProject {
   month: number;
@@ -87,6 +89,9 @@ export interface VisionWizardData {
   projectsSummary?: string;
   criticalPath?: string[];
 
+  // Strategic Discovery Data
+  strategicDiscovery?: StrategicDiscoveryData;
+
   // 300% Scores (from existing vision or defaults)
   clarityScore: number;
   beliefScore: number;
@@ -123,6 +128,7 @@ const INITIAL_DATA: VisionWizardData = {
 const STEPS = [
   { id: 'vision', title: 'Vision', description: 'Define your vision statement' },
   { id: 'smart', title: 'SMART Goals', description: 'Break down your vision' },
+  { id: 'strategic-discovery', title: 'Strategy', description: 'Revenue, positioning & acquisition' },
   { id: 'monthly-projects', title: 'Roadmap', description: 'AI-generated monthly projects' },
   { id: 'reminders', title: 'Reminders', description: 'Review reminder settings' },
   { id: 'vision-board', title: 'Vision Board', description: 'Add inspiring images' },
@@ -216,6 +222,8 @@ export function VisionWizard({
         return <VisionStep data={data} updateData={updateData} />;
       case 'smart':
         return <SmartGoalStep data={data} updateData={updateData} />;
+      case 'strategic-discovery':
+        return <StrategicDiscoveryStep data={data} updateData={updateData} />;
       case 'monthly-projects':
         return <MonthlyProjectsStep data={data} updateData={updateData} />;
       case 'reminders':

@@ -68,6 +68,62 @@ export const visions = pgTable('visions', {
 });
 
 // =============================================
+// STRATEGIC DISCOVERIES (Business model questioning)
+// =============================================
+export const strategicDiscoveries = pgTable('strategic_discoveries', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  visionId: uuid('vision_id').notNull().references(() => visions.id, { onDelete: 'cascade' }),
+
+  // Revenue Math Section
+  revenueTarget: decimal('revenue_target', { precision: 15, scale: 2 }),
+  revenueType: text('revenue_type'), // 'mrr', 'arr', 'one-time'
+  targetTimeframe: date('target_timeframe'),
+  pricingModel: text('pricing_model'), // 'mass_market', 'prosumer', 'enterprise', 'hybrid'
+  basePrice: decimal('base_price', { precision: 10, scale: 2 }),
+  premiumPrice: decimal('premium_price', { precision: 10, scale: 2 }),
+  targetCustomerCount: integer('target_customer_count'),
+  arpu: decimal('arpu', { precision: 10, scale: 2 }),
+  revenueOptions: jsonb('revenue_options').default([]),
+
+  // Positioning Section
+  targetCustomerDescription: text('target_customer_description'),
+  problemSolved: text('problem_solved'),
+  competitorAnalysis: text('competitor_analysis'),
+  uniqueDifferentiator: text('unique_differentiator'),
+  marketSize: text('market_size'), // 'niche', 'medium', 'large', 'massive'
+
+  // Product Section
+  coreFeatures: jsonb('core_features').default([]),
+  pricingTiers: jsonb('pricing_tiers').default([]),
+  retentionStrategy: text('retention_strategy'),
+  upgradePath: text('upgrade_path'),
+
+  // Acquisition Section
+  primaryChannels: jsonb('primary_channels').default([]),
+  estimatedCAC: decimal('estimated_cac', { precision: 10, scale: 2 }),
+  criticalMilestones: jsonb('critical_milestones').default([]),
+  launchDate: date('launch_date'),
+  criticalPath: jsonb('critical_path').default([]),
+
+  // AI Conversation Data
+  aiConversationHistory: jsonb('ai_conversation_history').default([]),
+  aiInsights: jsonb('ai_insights').default({}),
+
+  // Progress
+  completionScore: integer('completion_score').default(0), // 0-100
+  sectionsCompleted: jsonb('sections_completed').default([]),
+
+  // Timestamps
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  userIdx: index('strategic_discoveries_user_idx').on(table.userId),
+  visionIdx: index('strategic_discoveries_vision_idx').on(table.visionId),
+  userVisionUnique: uniqueIndex('strategic_discoveries_user_vision_idx').on(table.userId, table.visionId),
+}));
+
+// =============================================
 // BACKTRACK PLANS (Time-based planning)
 // =============================================
 export const backtrackPlans = pgTable('backtrack_plans', {

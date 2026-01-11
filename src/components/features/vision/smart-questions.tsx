@@ -4,9 +4,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Sparkles, Loader2, ChevronDown, ChevronUp, HelpCircle, CheckCircle2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Sparkles, Loader2, ChevronDown, ChevronUp, HelpCircle, CheckCircle2, Target, DollarSign, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import type { StrategicDiscoveryData } from '@/types/strategic-discovery';
 
 interface Question {
   id: string;
@@ -26,9 +28,11 @@ interface SmartQuestionsProps {
   description: string;
   onAnswersChange: (answers: Record<string, string>) => void;
   className?: string;
+  discoveryData?: StrategicDiscoveryData;
+  onStartDiscovery?: () => void;
 }
 
-export function SmartQuestions({ vision, description, onAnswersChange, className }: SmartQuestionsProps) {
+export function SmartQuestions({ vision, description, onAnswersChange, className, discoveryData, onStartDiscovery }: SmartQuestionsProps) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [metrics, setMetrics] = useState<MetricWithQuestions[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -190,6 +194,58 @@ export function SmartQuestions({ vision, description, onAnswersChange, className
               </div>
             </div>
           ))}
+
+          {/* Strategic Discovery Section */}
+          <div className="pt-4 mt-4 border-t border-amber-200 dark:border-amber-800">
+            {discoveryData && discoveryData.completionScore > 0 ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Target className="h-4 w-4 text-purple-600" />
+                    <span className="text-sm font-medium">Strategic Discovery</span>
+                    <Badge className="bg-green-100 text-green-700">
+                      {discoveryData.completionScore}% Complete
+                    </Badge>
+                  </div>
+                  {onStartDiscovery && (
+                    <Button variant="ghost" size="sm" onClick={onStartDiscovery}>
+                      Continue
+                      <ArrowRight className="h-3 w-3 ml-1" />
+                    </Button>
+                  )}
+                </div>
+                {discoveryData.revenueMath?.revenueTarget > 0 && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground bg-purple-50 dark:bg-purple-950/30 p-2 rounded">
+                    <DollarSign className="h-4 w-4 text-purple-600" />
+                    <span>
+                      Target: ${discoveryData.revenueMath.revenueTarget.toLocaleString()}{' '}
+                      {discoveryData.revenueMath.revenueType?.toUpperCase()} with{' '}
+                      {discoveryData.revenueMath.targetCustomerCount.toLocaleString()} customers at{' '}
+                      ${discoveryData.revenueMath.basePrice}/mo
+                    </span>
+                  </div>
+                )}
+              </div>
+            ) : onStartDiscovery ? (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Target className="h-4 w-4 text-purple-600" />
+                  <span className="text-sm">
+                    Want more precise planning?
+                  </span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onStartDiscovery}
+                  className="bg-white dark:bg-background"
+                >
+                  <Sparkles className="h-3 w-3 mr-1" />
+                  Strategic Discovery
+                </Button>
+              </div>
+            ) : null}
+          </div>
         </div>
       )}
     </div>

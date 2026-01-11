@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
 import { logAIUsage } from '@/lib/utils/ai-usage';
+import type { StrategicDiscoveryData } from '@/types/strategic-discovery';
 
 const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
 
@@ -19,7 +20,18 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
     userId = await getUserId(supabase);
 
-    const { vision, smartGoals, targetDate, count = 4 } = await request.json();
+    const { vision, smartGoals, targetDate, count = 4, strategicDiscovery } = await request.json() as {
+      vision: string;
+      smartGoals?: {
+        specific?: string;
+        measurable?: string;
+        attainable?: string;
+        realistic?: string;
+      };
+      targetDate?: string;
+      count?: number;
+      strategicDiscovery?: StrategicDiscoveryData;
+    };
 
     if (!vision) {
       return NextResponse.json(
@@ -39,6 +51,45 @@ export async function POST(request: NextRequest) {
       apiKey: process.env.ANTHROPIC_API_KEY,
     });
 
+    // Build strategic context if discovery data is available
+    let strategicContext = '';
+    if (strategicDiscovery && strategicDiscovery.completionScore > 0) {
+      const { revenueMath, positioning, product, acquisition } = strategicDiscovery;
+
+      strategicContext = `
+STRATEGIC DISCOVERY DATA (Use these specific numbers in your goals):
+
+REVENUE MATH:
+- Revenue Target: $${revenueMath?.revenueTarget?.toLocaleString() || 0} ${revenueMath?.revenueType?.toUpperCase() || 'ARR'}
+- Monthly Target: $${revenueMath?.revenueType === 'arr' ? Math.round((revenueMath?.revenueTarget || 0) / 12).toLocaleString() : (revenueMath?.revenueTarget || 0).toLocaleString()} MRR
+- Price Point: $${revenueMath?.basePrice || 0}/month
+- Target Customers: ${revenueMath?.targetCustomerCount?.toLocaleString() || 0}
+- Pricing Model: ${revenueMath?.pricingModel || 'Not specified'}
+
+POSITIONING:
+- Target Customer: ${positioning?.targetCustomer || 'Not specified'}
+- Problem Solved: ${positioning?.problemSolved || 'Not specified'}
+- Differentiator: ${positioning?.differentiator || 'Not specified'}
+- Market Size: ${positioning?.marketSize || 'Not specified'}
+
+PRODUCT:
+- Core Features: ${product?.coreFeatures?.join(', ') || 'Not specified'}
+- Retention Strategy: ${product?.retentionStrategy || 'Not specified'}
+- Pricing Tiers: ${product?.pricingTiers?.map(t => `${t.name}: $${t.price}`).join(', ') || 'Not specified'}
+
+ACQUISITION:
+- Primary Channels: ${acquisition?.primaryChannels?.map(c => c.name).join(', ') || 'Not specified'}
+- Estimated CAC: $${acquisition?.estimatedCAC || 0}
+- Launch Date: ${acquisition?.launchDate || 'Not specified'}
+- Milestones: ${acquisition?.milestones?.map(m => `${m.title} by ${m.targetDate}`).join('; ') || 'Not specified'}
+
+IMPORTANT: Generate Power Goals that use SPECIFIC NUMBERS from this data. For example:
+- "Reach $5,000 MRR" instead of "Grow revenue"
+- "Acquire 150 paying customers at $29/mo" instead of "Get more customers"
+- "Launch content marketing to reach 500 qualified leads" instead of "Build marketing funnel"
+`;
+    }
+
     const prompt = `You are an expert goal-setting coach specializing in Dan Martell's Power Goals methodology from "Buy Back Your Time".
 
 Given the following vision and SMART goals, generate ${count} Power Goals that will directly help achieve this vision.
@@ -51,18 +102,18 @@ SMART Goals:
 - Attainable: ${smartGoals?.attainable || 'Not specified'}
 - Realistic: ${smartGoals?.realistic || 'Not specified'}
 ${targetDate ? `Target Completion Date: ${targetDate}` : ''}
-
+${strategicContext}
 Power Goals are:
 1. High-impact goals that move you closer to your vision
-2. Specific and measurable
+2. Specific and measurable with real numbers
 3. Achievable within a quarter (90 days)
-4. Directly derived from the SMART goal breakdown
+4. Directly derived from the SMART goal breakdown${strategicDiscovery ? ' and strategic discovery data' : ''}
 
 Generate ${count} Power Goals distributed across the 4 quarters. Each goal should:
 - Be action-oriented (start with a verb)
-- Have clear success criteria
+- Have clear success criteria with SPECIFIC NUMBERS (revenue targets, customer counts, etc.)
 - Build on the previous quarter's progress
-- Align with the measurable targets in the SMART goals
+- Align with the measurable targets in the SMART goals${strategicDiscovery ? ' and use the exact numbers from strategic discovery' : ''}
 
 Categories to assign:
 - business: Systems, products, marketing, sales, revenue
@@ -76,11 +127,11 @@ Respond ONLY with valid JSON in this exact format:
 {
   "powerGoals": [
     {
-      "title": "Action-oriented goal title",
+      "title": "Action-oriented goal title with specific number",
       "description": "What this achieves and why it matters",
       "quarter": 1,
       "category": "business",
-      "metrics": ["Specific metric 1", "Specific metric 2"]
+      "metrics": ["Specific metric with target number", "Another specific metric"]
     }
   ]
 }`;
@@ -118,8 +169,24 @@ Respond ONLY with valid JSON in this exact format:
       );
     }
 
+    // Extract JSON from response (in case AI includes extra text)
+    let jsonText = responseText;
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      jsonText = jsonMatch[0];
+    }
+
     // Parse the JSON response
-    const result = JSON.parse(responseText);
+    let result;
+    try {
+      result = JSON.parse(jsonText);
+    } catch {
+      console.error('JSON parse error. Response text:', responseText);
+      return NextResponse.json(
+        { error: 'Failed to parse AI response' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(result);
   } catch (error) {
