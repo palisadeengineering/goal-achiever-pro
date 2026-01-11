@@ -515,6 +515,26 @@ export const friendInventory = pgTable('friend_inventory', {
 });
 
 // =============================================
+// USER SETTINGS
+// =============================================
+export const userSettings = pgTable('user_settings', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }).unique(),
+  theme: text('theme').default('system'),
+  notifications: boolean('notifications').default(true),
+  emailReminders: boolean('email_reminders').default(false),
+  weekStartsOn: text('week_starts_on').default('sunday'),
+  timeFormat: text('time_format').default('12h'),
+  pomodoroWorkMinutes: integer('pomodoro_work_minutes').default(25),
+  pomodoroBreakMinutes: integer('pomodoro_break_minutes').default(5),
+  calendarStartHour: integer('calendar_start_hour').default(5),
+  calendarEndHour: integer('calendar_end_hour').default(23),
+  aiProvider: text('ai_provider').default('openai'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// =============================================
 // NORTH STAR METRICS
 // =============================================
 export const northStarMetrics = pgTable('north_star_metrics', {
@@ -721,6 +741,8 @@ export const profilesRelations = relations(profiles, ({ many, one }) => ({
   calendarWebhookChannels: many(calendarWebhookChannels),
   // AI usage tracking
   aiUsageLogs: many(aiUsageLogs),
+  // User settings
+  userSettings: one(userSettings),
 }));
 
 export const visionsRelations = relations(visions, ({ one, many }) => ({

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '@/components/layout/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,7 +32,6 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { formatHour } from '@/lib/utils';
-import { useLocalStorage } from '@/lib/hooks/use-local-storage';
 import { useTheme } from '@/lib/hooks/use-theme';
 
 interface UserSettings {
@@ -69,7 +69,7 @@ interface SubscriptionInfo {
 function SettingsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [settings, setSettings] = useLocalStorage<UserSettings>('user-settings', DEFAULT_SETTINGS);
+  const queryClient = useQueryClient();
   const { theme: currentTheme, setTheme } = useTheme();
   const [isConnectingGoogle, setIsConnectingGoogle] = useState(false);
   const [googleConnected, setGoogleConnected] = useState(false);
@@ -77,6 +77,52 @@ function SettingsContent() {
   const [subscription, setSubscription] = useState<SubscriptionInfo>({ tier: 'free', status: 'active', stripeCustomerId: null });
   const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
   const [isManagingSubscription, setIsManagingSubscription] = useState(false);
+
+  // Fetch settings from API
+  const { data: settings = DEFAULT_SETTINGS, isLoading: isLoadingSettings } = useQuery<UserSettings>({
+    queryKey: ['user-settings'],
+    queryFn: async () => {
+      const response = await fetch('/api/user/settings');
+      if (!response.ok) throw new Error('Failed to fetch settings');
+      return response.json();
+    },
+    staleTime: 60000, // 1 minute
+  });
+
+  // Update settings mutation
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (newSettings: UserSettings) => {
+      const response = await fetch('/api/user/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newSettings),
+      });
+      if (!response.ok) throw new Error('Failed to update settings');
+      return response.json();
+    },
+    onMutate: async (newSettings) => {
+      // Optimistic update
+      await queryClient.cancelQueries({ queryKey: ['user-settings'] });
+      const previousSettings = queryClient.getQueryData(['user-settings']);
+      queryClient.setQueryData(['user-settings'], newSettings);
+      return { previousSettings };
+    },
+    onError: (_err, _newSettings, context) => {
+      // Rollback on error
+      if (context?.previousSettings) {
+        queryClient.setQueryData(['user-settings'], context.previousSettings);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-settings'] });
+    },
+  });
+
+  // Helper to update a single setting
+  const setSettings = (updater: UserSettings | ((prev: UserSettings) => UserSettings)) => {
+    const newSettings = typeof updater === 'function' ? updater(settings) : updater;
+    updateSettingsMutation.mutate(newSettings);
+  };
 
   // Check for OAuth callback results
   useEffect(() => {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '@/components/layout/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,10 +34,8 @@ import {
   Trash2,
   Edit2,
   Lightbulb,
-  Rocket,
-  CheckCircle2,
+  Loader2,
 } from 'lucide-react';
-import { useLocalStorage } from '@/lib/hooks/use-local-storage';
 
 type LeverageType = 'code' | 'content' | 'capital' | 'collaboration';
 type LeverageStatus = 'idea' | 'planning' | 'implementing' | 'active' | 'archived';
@@ -93,7 +92,7 @@ const STATUS_OPTIONS = [
 ];
 
 export default function LeveragePage() {
-  const [items, setItems] = useLocalStorage<LeverageItem[]>('leverage-items', []);
+  const queryClient = useQueryClient();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<LeverageItem | null>(null);
 
@@ -104,6 +103,60 @@ export default function LeveragePage() {
   const [status, setStatus] = useState<LeverageStatus>('idea');
   const [estimatedHoursSaved, setEstimatedHoursSaved] = useState('');
   const [notes, setNotes] = useState('');
+
+  // Fetch leverage items from API
+  const { data: items = [], isLoading } = useQuery<LeverageItem[]>({
+    queryKey: ['leverage-items'],
+    queryFn: async () => {
+      const response = await fetch('/api/leverage');
+      if (!response.ok) throw new Error('Failed to fetch leverage items');
+      return response.json();
+    },
+  });
+
+  // Create item mutation
+  const createMutation = useMutation({
+    mutationFn: async (newItem: Omit<LeverageItem, 'id' | 'createdAt' | 'actualHoursSaved'>) => {
+      const response = await fetch('/api/leverage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newItem),
+      });
+      if (!response.ok) throw new Error('Failed to create item');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leverage-items'] });
+    },
+  });
+
+  // Update item mutation
+  const updateMutation = useMutation({
+    mutationFn: async (item: LeverageItem) => {
+      const response = await fetch('/api/leverage', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(item),
+      });
+      if (!response.ok) throw new Error('Failed to update item');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leverage-items'] });
+    },
+  });
+
+  // Delete item mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await fetch(`/api/leverage?id=${id}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('Failed to delete item');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leverage-items'] });
+    },
+  });
 
   const resetForm = () => {
     setType('code');
@@ -132,41 +185,31 @@ export default function LeveragePage() {
 
   const saveItem = () => {
     if (editingItem) {
-      setItems(prev =>
-        prev.map(item =>
-          item.id === editingItem.id
-            ? {
-                ...item,
-                type,
-                title,
-                description,
-                status,
-                estimatedHoursSaved: parseFloat(estimatedHoursSaved) || 0,
-                notes,
-              }
-            : item
-        )
-      );
-    } else {
-      const newItem: LeverageItem = {
-        id: crypto.randomUUID(),
+      updateMutation.mutate({
+        ...editingItem,
         type,
         title,
         description,
         status,
         estimatedHoursSaved: parseFloat(estimatedHoursSaved) || 0,
-        actualHoursSaved: 0,
         notes,
-        createdAt: new Date().toISOString(),
-      };
-      setItems(prev => [...prev, newItem]);
+      });
+    } else {
+      createMutation.mutate({
+        type,
+        title,
+        description,
+        status,
+        estimatedHoursSaved: parseFloat(estimatedHoursSaved) || 0,
+        notes,
+      });
     }
     setIsFormOpen(false);
     resetForm();
   };
 
   const deleteItem = (id: string) => {
-    setItems(prev => prev.filter(item => item.id !== id));
+    deleteMutation.mutate(id);
   };
 
   // Calculate stats
@@ -266,7 +309,12 @@ export default function LeveragePage() {
                 </div>
               </CardHeader>
               <CardContent>
-                {typeItems.length === 0 ? (
+                {isLoading ? (
+                  <div className="text-center py-6 text-muted-foreground">
+                    <Loader2 className="h-8 w-8 mx-auto mb-2 opacity-50 animate-spin" />
+                    <p className="text-sm">Loading...</p>
+                  </div>
+                ) : typeItems.length === 0 ? (
                   <div className="text-center py-6 text-muted-foreground">
                     <Lightbulb className="h-8 w-8 mx-auto mb-2 opacity-50" />
                     <p className="text-sm">No {config.name.toLowerCase()} leverage yet</p>

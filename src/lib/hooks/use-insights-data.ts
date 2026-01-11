@@ -360,7 +360,10 @@ export function useInsightsData({
         // Parse period key back to date for formatting
         let date: Date;
         if (granularity === 'day') {
-          date = new Date(periodKey);
+          // Parse as local date to avoid timezone issues
+          // periodKey is in format "YYYY-MM-DD"
+          const [year, month, day] = periodKey.split('-').map(Number);
+          date = new Date(year, month - 1, day);
         } else if (granularity === 'week') {
           const [year, week] = periodKey.split('-W');
           date = new Date(parseInt(year), 0, 1 + (parseInt(week) - 1) * 7);

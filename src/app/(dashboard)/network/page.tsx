@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '@/components/layout/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,8 +35,8 @@ import {
   UserPlus,
   Clock,
   Shield,
+  Loader2,
 } from 'lucide-react';
-import { useLocalStorage } from '@/lib/hooks/use-local-storage';
 
 type EnergyImpact = 'energizing' | 'neutral' | 'draining';
 type ConnectionFrequency = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
@@ -68,7 +69,7 @@ const FREQUENCY_OPTIONS = [
 ];
 
 export default function NetworkPage() {
-  const [contacts, setContacts] = useLocalStorage<Contact[]>('network-contacts', []);
+  const queryClient = useQueryClient();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [filter, setFilter] = useState<EnergyImpact | 'all'>('all');
@@ -81,6 +82,60 @@ export default function NetworkPage() {
   const [timeLimitMinutes, setTimeLimitMinutes] = useState('');
   const [boundaries, setBoundaries] = useState('');
   const [notes, setNotes] = useState('');
+
+  // Fetch contacts from API
+  const { data: contacts = [], isLoading } = useQuery<Contact[]>({
+    queryKey: ['network-contacts'],
+    queryFn: async () => {
+      const response = await fetch('/api/network');
+      if (!response.ok) throw new Error('Failed to fetch contacts');
+      return response.json();
+    },
+  });
+
+  // Create contact mutation
+  const createMutation = useMutation({
+    mutationFn: async (newContact: Omit<Contact, 'id' | 'createdAt' | 'lastContact'>) => {
+      const response = await fetch('/api/network', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newContact),
+      });
+      if (!response.ok) throw new Error('Failed to create contact');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['network-contacts'] });
+    },
+  });
+
+  // Update contact mutation
+  const updateMutation = useMutation({
+    mutationFn: async (contact: Contact) => {
+      const response = await fetch('/api/network', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(contact),
+      });
+      if (!response.ok) throw new Error('Failed to update contact');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['network-contacts'] });
+    },
+  });
+
+  // Delete contact mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await fetch(`/api/network?id=${id}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('Failed to delete contact');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['network-contacts'] });
+    },
+  });
 
   const resetForm = () => {
     setName('');
@@ -111,25 +166,8 @@ export default function NetworkPage() {
 
   const saveContact = () => {
     if (editingContact) {
-      setContacts(prev =>
-        prev.map(c =>
-          c.id === editingContact.id
-            ? {
-                ...c,
-                name,
-                relationship,
-                energyImpact,
-                frequency,
-                timeLimitMinutes: parseInt(timeLimitMinutes) || 0,
-                boundaries,
-                notes,
-              }
-            : c
-        )
-      );
-    } else {
-      const newContact: Contact = {
-        id: crypto.randomUUID(),
+      updateMutation.mutate({
+        ...editingContact,
         name,
         relationship,
         energyImpact,
@@ -137,17 +175,24 @@ export default function NetworkPage() {
         timeLimitMinutes: parseInt(timeLimitMinutes) || 0,
         boundaries,
         notes,
-        lastContact: '',
-        createdAt: new Date().toISOString(),
-      };
-      setContacts(prev => [...prev, newContact]);
+      });
+    } else {
+      createMutation.mutate({
+        name,
+        relationship,
+        energyImpact,
+        frequency,
+        timeLimitMinutes: parseInt(timeLimitMinutes) || 0,
+        boundaries,
+        notes,
+      });
     }
     setIsFormOpen(false);
     resetForm();
   };
 
   const deleteContact = (id: string) => {
-    setContacts(prev => prev.filter(c => c.id !== id));
+    deleteMutation.mutate(id);
   };
 
   // Calculate stats
@@ -235,7 +280,14 @@ export default function NetworkPage() {
 
       {/* Contacts Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {sortedContacts.length === 0 ? (
+        {isLoading ? (
+          <Card className="md:col-span-2 lg:col-span-3">
+            <CardContent className="py-12 text-center">
+              <Loader2 className="h-12 w-12 mx-auto text-muted-foreground mb-4 animate-spin" />
+              <h3 className="text-lg font-semibold mb-2">Loading contacts...</h3>
+            </CardContent>
+          </Card>
+        ) : sortedContacts.length === 0 ? (
           <Card className="md:col-span-2 lg:col-span-3">
             <CardContent className="py-12 text-center">
               <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />

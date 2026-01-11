@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '@/components/layout/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,13 +15,11 @@ import {
   RotateCcw,
   Coffee,
   Target,
-  Clock,
   CheckCircle2,
   Settings,
   Volume2,
   VolumeX,
 } from 'lucide-react';
-import { useLocalStorage } from '@/lib/hooks/use-local-storage';
 
 type TimerMode = 'work' | 'shortBreak' | 'longBreak';
 
@@ -52,9 +51,56 @@ const DEFAULT_SETTINGS: PomodoroSettings = {
   soundEnabled: true,
 };
 
+interface TodaySummary {
+  date: string;
+  completedPomodoros: number;
+  totalMinutes: number;
+  tasks: string[];
+}
+
 export default function PomodoroPage() {
-  const [settings, setSettings] = useLocalStorage<PomodoroSettings>('pomodoro-settings', DEFAULT_SETTINGS);
-  const [todaySession, setTodaySession] = useLocalStorage<PomodoroSession | null>('pomodoro-today', null);
+  const queryClient = useQueryClient();
+
+  // Local settings state (synced with server but works offline)
+  const [settings, setLocalSettings] = useState<PomodoroSettings>(DEFAULT_SETTINGS);
+
+  // Fetch today's session data
+  const { data: sessionData } = useQuery<{ sessions: unknown[]; todaySummary: TodaySummary }>({
+    queryKey: ['pomodoro-sessions', new Date().toISOString().split('T')[0]],
+    queryFn: async () => {
+      const today = new Date().toISOString().split('T')[0];
+      const response = await fetch(`/api/pomodoro?date=${today}`);
+      if (!response.ok) throw new Error('Failed to fetch sessions');
+      return response.json();
+    },
+    staleTime: 30000, // 30 seconds
+  });
+
+  const todaySession = sessionData?.todaySummary || null;
+
+  // Create pomodoro session mutation
+  const createSessionMutation = useMutation({
+    mutationFn: async (data: { plannedMinutes: number; actualMinutes: number; focusNotes: string; status: string }) => {
+      const response = await fetch('/api/pomodoro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to create session');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pomodoro-sessions'] });
+    },
+  });
+
+  // Update settings helper
+  const setSettings = (updater: PomodoroSettings | ((prev: PomodoroSettings) => PomodoroSettings)) => {
+    setLocalSettings(prev => {
+      const newSettings = typeof updater === 'function' ? updater(prev) : updater;
+      return newSettings;
+    });
+  };
 
   const [mode, setMode] = useState<TimerMode>('work');
   const [timeLeft, setTimeLeft] = useState(settings.workMinutes * 60);
@@ -111,17 +157,13 @@ export default function PomodoroPage() {
       const newCount = completedPomodoros + 1;
       setCompletedPomodoros(newCount);
 
-      // Update today's session
-      const today = new Date().toISOString().split('T')[0];
-      setTodaySession(prev => ({
-        id: prev?.id || crypto.randomUUID(),
-        date: today,
-        completedPomodoros: newCount,
-        totalMinutes: (prev?.totalMinutes || 0) + settings.workMinutes,
-        tasks: currentTask && !prev?.tasks.includes(currentTask)
-          ? [...(prev?.tasks || []), currentTask]
-          : prev?.tasks || [],
-      }));
+      // Save completed pomodoro to database
+      createSessionMutation.mutate({
+        plannedMinutes: settings.workMinutes,
+        actualMinutes: settings.workMinutes,
+        focusNotes: currentTask || '',
+        status: 'completed',
+      });
 
       // Determine next break type
       const isLongBreak = newCount % settings.pomodorosUntilLongBreak === 0;
@@ -141,7 +183,7 @@ export default function PomodoroPage() {
         setIsRunning(true);
       }
     }
-  }, [mode, completedPomodoros, settings, currentTask, getDuration, playSound, setTodaySession]);
+  }, [mode, completedPomodoros, settings, currentTask, getDuration, playSound, createSessionMutation]);
 
   // Timer effect
   useEffect(() => {
