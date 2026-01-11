@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '@/components/layout/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,6 +16,7 @@ import {
   TrendingUp,
   Calendar,
   Filter,
+  Loader2,
 } from 'lucide-react';
 import {
   Dialog,
@@ -26,7 +28,24 @@ import { GoalForm, GoalFormData } from '@/components/features/goals/goal-form';
 
 type GoalStatus = 'active' | 'completed' | 'paused' | 'archived';
 
-interface MockGoal {
+interface PowerGoal {
+  id: string;
+  title: string;
+  description: string | null;
+  target_date: string | null;
+  quarter: number;
+  category: string | null;
+  progress_percentage: number;
+  status: GoalStatus;
+  vision_id: string | null;
+}
+
+interface Vision {
+  id: string;
+  title: string;
+}
+
+interface GoalForGrid {
   id: string;
   title: string;
   description: string;
@@ -37,102 +56,161 @@ interface MockGoal {
   status: GoalStatus;
 }
 
-// Mock data - will be replaced with actual data fetching
-const mockGoals: MockGoal[] = [
-  {
-    id: '1',
-    title: 'Launch online course',
-    description: 'Create and launch a comprehensive online course on productivity systems',
-    targetDate: '2026-03-31',
-    quarter: 1,
-    category: 'business',
-    progressPercentage: 35,
-    status: 'active',
-  },
-  {
-    id: '2',
-    title: 'Run a marathon',
-    description: 'Train for and complete my first full marathon',
-    targetDate: '2026-06-15',
-    quarter: 2,
-    category: 'health',
-    progressPercentage: 20,
-    status: 'active',
-  },
-  {
-    id: '3',
-    title: 'Build emergency fund',
-    description: 'Save 6 months of expenses in a high-yield savings account',
-    targetDate: '2026-12-31',
-    quarter: 4,
-    category: 'wealth',
-    progressPercentage: 60,
-    status: 'active',
-  },
-  {
-    id: '4',
-    title: 'Write a book',
-    description: 'Complete first draft of my book on time management',
-    targetDate: '2026-09-30',
-    quarter: 3,
-    category: 'personal',
-    progressPercentage: 10,
-    status: 'paused',
-  },
-  {
-    id: '5',
-    title: 'Learn Spanish',
-    description: 'Achieve B2 level fluency in Spanish',
-    targetDate: '2026-12-31',
-    quarter: 4,
-    category: 'personal',
-    progressPercentage: 45,
-    status: 'active',
-  },
-  {
-    id: '6',
-    title: 'Grow newsletter to 10K',
-    description: 'Build email list to 10,000 engaged subscribers',
-    targetDate: '2026-06-30',
-    quarter: 2,
-    category: 'business',
-    progressPercentage: 75,
-    status: 'active',
-  },
-];
+// Fetch power goals
+async function fetchPowerGoals(): Promise<{ powerGoals: PowerGoal[] }> {
+  const response = await fetch('/api/power-goals');
+  if (!response.ok) {
+    throw new Error('Failed to fetch power goals');
+  }
+  return response.json();
+}
 
-const mockVisions = [
-  { id: 'v1', title: 'Become a recognized thought leader in productivity' },
-  { id: 'v2', title: 'Achieve financial independence' },
-];
+// Fetch visions
+async function fetchVisions(): Promise<{ visions: Vision[] }> {
+  const response = await fetch('/api/visions');
+  if (!response.ok) {
+    throw new Error('Failed to fetch visions');
+  }
+  return response.json();
+}
+
+// Create power goal
+async function createPowerGoal(data: GoalFormData): Promise<{ powerGoals: PowerGoal[] }> {
+  const response = await fetch('/api/power-goals', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      powerGoals: [{
+        title: data.title,
+        description: data.description,
+        quarter: data.quarter,
+        category: data.category,
+        targetDate: data.targetDate,
+      }],
+      visionId: data.visionId,
+    }),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to create power goal');
+  }
+  return response.json();
+}
+
+// Update power goal
+async function updatePowerGoal(data: {
+  id: string;
+  title?: string;
+  description?: string;
+  quarter?: number;
+  category?: string;
+  targetDate?: string;
+  progressPercentage?: number;
+  status?: GoalStatus;
+}): Promise<{ powerGoal: PowerGoal }> {
+  const response = await fetch('/api/power-goals', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to update power goal');
+  }
+  return response.json();
+}
+
+// Delete power goal
+async function deletePowerGoal(id: string): Promise<{ success: boolean }> {
+  const response = await fetch(`/api/power-goals?id=${id}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) {
+    throw new Error('Failed to delete power goal');
+  }
+  return response.json();
+}
 
 export default function GoalsPage() {
+  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [focusedGoalId, setFocusedGoalId] = useState<string>('1');
+  const [focusedGoalId, setFocusedGoalId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('all');
 
+  // Fetch power goals
+  const { data: goalsData, isLoading: goalsLoading } = useQuery({
+    queryKey: ['powerGoals'],
+    queryFn: fetchPowerGoals,
+  });
+
+  // Fetch visions
+  const { data: visionsData, isLoading: visionsLoading } = useQuery({
+    queryKey: ['visions'],
+    queryFn: fetchVisions,
+  });
+
+  // Create mutation
+  const createMutation = useMutation({
+    mutationFn: createPowerGoal,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['powerGoals'] });
+      setIsDialogOpen(false);
+    },
+  });
+
+  // Update mutation
+  const updateMutation = useMutation({
+    mutationFn: updatePowerGoal,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['powerGoals'] });
+    },
+  });
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: deletePowerGoal,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['powerGoals'] });
+    },
+  });
+
+  const powerGoals = goalsData?.powerGoals || [];
+  const visions = visionsData?.visions || [];
+
+  // Transform power goals for the grid
+  const transformedGoals: GoalForGrid[] = powerGoals.map(goal => ({
+    id: goal.id,
+    title: goal.title,
+    description: goal.description || '',
+    targetDate: goal.target_date || '',
+    quarter: goal.quarter,
+    category: goal.category || 'general',
+    progressPercentage: goal.progress_percentage || 0,
+    status: goal.status as GoalStatus,
+  }));
+
+  // Set focused goal to first active goal if not set
+  const effectiveFocusedGoalId = focusedGoalId || transformedGoals.find(g => g.status === 'active')?.id || null;
+
   // Calculate stats
-  const totalGoals = mockGoals.length;
-  const activeGoals = mockGoals.filter(g => g.status === 'active').length;
-  const avgProgress = Math.round(
-    mockGoals.reduce((sum, g) => sum + g.progressPercentage, 0) / totalGoals
-  );
-  const focusedGoal = mockGoals.find(g => g.id === focusedGoalId);
+  const totalGoals = transformedGoals.length;
+  const activeGoals = transformedGoals.filter(g => g.status === 'active').length;
+  const avgProgress = totalGoals > 0
+    ? Math.round(transformedGoals.reduce((sum, g) => sum + g.progressPercentage, 0) / totalGoals)
+    : 0;
+  const focusedGoal = transformedGoals.find(g => g.id === effectiveFocusedGoalId);
 
   const handleCreateGoal = async (data: GoalFormData) => {
-    // TODO: Implement actual creation
-    console.log('Creating goal:', data);
-    setIsDialogOpen(false);
+    createMutation.mutate(data);
   };
 
   const handleEditGoal = (id: string) => {
-    // TODO: Implement edit modal
+    // For now, just log - could open edit dialog
     console.log('Edit goal:', id);
   };
 
   const handleDeleteGoal = (id: string) => {
-    // TODO: Implement delete confirmation
-    console.log('Delete goal:', id);
+    if (confirm('Are you sure you want to delete this milestone?')) {
+      deleteMutation.mutate(id);
+    }
   };
 
   const handleSetFocus = (id: string) => {
@@ -140,7 +218,7 @@ export default function GoalsPage() {
   };
 
   // Filter goals based on tab
-  const filteredGoals = mockGoals.filter(goal => {
+  const filteredGoals = transformedGoals.filter(goal => {
     if (activeTab === 'all') return true;
     if (activeTab === 'active') return goal.status === 'active';
     if (activeTab === 'completed') return goal.status === 'completed';
@@ -152,6 +230,16 @@ export default function GoalsPage() {
     if (activeTab === 'q4') return goal.quarter === 4;
     return true;
   });
+
+  const isLoading = goalsLoading || visionsLoading;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -168,7 +256,7 @@ export default function GoalsPage() {
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <GoalForm
-                visions={mockVisions}
+                visions={visions.map(v => ({ id: v.id, title: v.title }))}
                 onSubmit={handleCreateGoal}
                 onCancel={() => setIsDialogOpen(false)}
               />
@@ -264,14 +352,16 @@ export default function GoalsPage() {
               </div>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
-              <Badge variant="outline" className="bg-white">
-                <Calendar className="h-3 w-3 mr-1" />
-                Due: {new Date(focusedGoal.targetDate).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}
-              </Badge>
+              {focusedGoal.targetDate && (
+                <Badge variant="outline" className="bg-white">
+                  <Calendar className="h-3 w-3 mr-1" />
+                  Due: {new Date(focusedGoal.targetDate).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
+                </Badge>
+              )}
               <Badge variant="outline" className="bg-white">Q{focusedGoal.quarter}</Badge>
               <Badge variant="outline" className="bg-white">{focusedGoal.category}</Badge>
             </div>
@@ -285,7 +375,7 @@ export default function GoalsPage() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
             <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
               <TabsList className="inline-flex w-max sm:w-auto">
-                <TabsTrigger value="all">All ({mockGoals.length})</TabsTrigger>
+                <TabsTrigger value="all">All ({transformedGoals.length})</TabsTrigger>
                 <TabsTrigger value="active">Active ({activeGoals})</TabsTrigger>
                 <TabsTrigger value="q1">Q1</TabsTrigger>
                 <TabsTrigger value="q2">Q2</TabsTrigger>
@@ -300,13 +390,29 @@ export default function GoalsPage() {
           </div>
 
           <TabsContent value={activeTab}>
-            <GoalsGrid
-              goals={filteredGoals}
-              focusedGoalId={focusedGoalId}
-              onEdit={handleEditGoal}
-              onDelete={handleDeleteGoal}
-              onSetFocus={handleSetFocus}
-            />
+            {filteredGoals.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <Target className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No milestones yet</h3>
+                  <p className="text-muted-foreground text-center mb-4">
+                    Create your first milestone to start tracking your progress
+                  </p>
+                  <Button onClick={() => setIsDialogOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Milestone
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <GoalsGrid
+                goals={filteredGoals}
+                focusedGoalId={effectiveFocusedGoalId || ''}
+                onEdit={handleEditGoal}
+                onDelete={handleDeleteGoal}
+                onSetFocus={handleSetFocus}
+              />
+            )}
           </TabsContent>
         </Tabs>
       </div>

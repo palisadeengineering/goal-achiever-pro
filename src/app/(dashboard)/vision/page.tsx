@@ -205,7 +205,152 @@ export default function VisionPage() {
         }
       }
 
-      // TODO: Save review reminders
+      // Save review reminders
+      if (data.reminders) {
+        const remindersToSave = [];
+
+        // Add on_login reminder if enabled
+        if (data.reminders.showOnLogin) {
+          remindersToSave.push({
+            reminderType: 'on_login',
+            isActive: true,
+          });
+        }
+
+        // Add morning reminder if enabled
+        if (data.reminders.morningReminder) {
+          remindersToSave.push({
+            reminderType: 'daily',
+            reminderTime: data.reminders.morningTime || '06:00',
+            isActive: true,
+          });
+        }
+
+        // Add midday reminder if enabled
+        if (data.reminders.middayReminder) {
+          remindersToSave.push({
+            reminderType: 'daily',
+            reminderTime: data.reminders.middayTime || '12:00',
+            isActive: true,
+          });
+        }
+
+        // Add evening reminder if enabled
+        if (data.reminders.eveningReminder) {
+          remindersToSave.push({
+            reminderType: 'daily',
+            reminderTime: data.reminders.eveningTime || '20:00',
+            isActive: true,
+          });
+        }
+
+        if (remindersToSave.length > 0) {
+          try {
+            const reminderResponse = await fetch('/api/visions/reminders', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                visionId: savedVisionId,
+                reminders: remindersToSave,
+              }),
+            });
+
+            if (!reminderResponse.ok) {
+              saveFailures.push({
+                success: false,
+                resourceName: 'Review reminders',
+                error: 'Failed to save reminders',
+              });
+            }
+          } catch (reminderError) {
+            console.error('Error saving reminders:', reminderError);
+            saveFailures.push({
+              success: false,
+              resourceName: 'Review reminders',
+              error: 'Failed to save reminders',
+            });
+          }
+        }
+      }
+
+      // Save monthly projects as monthlyTargets (requires creating a Power Goal first)
+      if (data.monthlyProjects && data.monthlyProjects.length > 0) {
+        try {
+          // First, create a Power Goal for this vision to link monthly targets
+          const currentDate = new Date();
+          const currentQuarter = Math.ceil((currentDate.getMonth() + 1) / 3);
+
+          const powerGoalResponse = await fetch('/api/power-goals', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              visionId: savedVisionId,
+              powerGoals: [{
+                title: `${data.title} - Achievement Plan`,
+                description: data.measurable || data.specific || `Achieve: ${data.title}`,
+                quarter: currentQuarter,
+                targetDate: data.targetDate,
+                category: 'vision',
+              }],
+            }),
+          });
+
+          if (powerGoalResponse.ok) {
+            const powerGoalResult = await powerGoalResponse.json();
+            const powerGoalId = powerGoalResult.powerGoals?.[0]?.id;
+
+            if (powerGoalId) {
+              // Now save monthly targets linked to the Power Goal
+              const monthlyTargets = data.monthlyProjects.map(project => ({
+                month: project.month,
+                monthName: project.monthName,
+                title: project.title,
+                description: project.description,
+                keyMetric: project.successMetric,
+                targetValue: project.targetValue ? parseFloat(project.targetValue) || undefined : undefined,
+                weeklyTargets: [], // No weekly targets for now
+              }));
+
+              const targetsResponse = await fetch('/api/targets', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  powerGoalId,
+                  year: data.monthlyProjects[0]?.year || currentDate.getFullYear(),
+                  monthlyTargets,
+                }),
+              });
+
+              if (!targetsResponse.ok) {
+                saveFailures.push({
+                  success: false,
+                  resourceName: 'Monthly projects',
+                  error: 'Failed to save monthly targets',
+                });
+              }
+            } else {
+              saveFailures.push({
+                success: false,
+                resourceName: 'Monthly projects',
+                error: 'No Power Goal created',
+              });
+            }
+          } else {
+            saveFailures.push({
+              success: false,
+              resourceName: 'Monthly projects',
+              error: 'Failed to create Power Goal',
+            });
+          }
+        } catch (projectsError) {
+          console.error('Error saving monthly projects:', projectsError);
+          saveFailures.push({
+            success: false,
+            resourceName: 'Monthly projects',
+            error: 'Failed to save monthly projects',
+          });
+        }
+      }
 
       // Show appropriate success/warning message
       if (saveFailures.length === 0) {

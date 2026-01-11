@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '@/components/layout/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,8 +16,8 @@ import {
   Play,
   CheckCircle2,
   RotateCcw,
+  Loader2,
 } from 'lucide-react';
-import { useLocalStorage } from '@/lib/hooks/use-local-storage';
 import Link from 'next/link';
 import { ROUTES } from '@/constants/routes';
 
@@ -36,75 +37,159 @@ interface Routine {
   isActive: boolean;
 }
 
-// Default routines based on Dan Martell's framework
-const DEFAULT_ROUTINES: Routine[] = [
-  {
-    id: 'morning',
-    name: 'Morning Routine',
-    type: 'morning',
-    description: 'Start your day with intention and clarity',
-    isActive: true,
-    steps: [
-      { id: 'm1', title: 'Wake up & hydrate', durationMinutes: 5, completed: false },
-      { id: 'm2', title: 'Visualize your vision & goals', durationMinutes: 10, completed: false },
-      { id: 'm3', title: 'Review your MINS for today', durationMinutes: 5, completed: false },
-      { id: 'm4', title: 'Exercise or movement', durationMinutes: 30, completed: false },
-      { id: 'm5', title: 'Healthy breakfast', durationMinutes: 15, completed: false },
-      { id: 'm6', title: 'Start first Pomodoro on #1 priority', durationMinutes: 25, completed: false },
-    ],
-  },
-  {
-    id: 'evening',
-    name: 'Evening Routine',
-    type: 'evening',
-    description: 'Wind down and prepare for tomorrow',
-    isActive: true,
-    steps: [
-      { id: 'e1', title: 'Review today\'s accomplishments', durationMinutes: 10, completed: false },
-      { id: 'e2', title: 'Log time blocks & DRIP categories', durationMinutes: 10, completed: false },
-      { id: 'e3', title: 'Set MINS for tomorrow', durationMinutes: 10, completed: false },
-      { id: 'e4', title: 'Gratitude journaling (3 things)', durationMinutes: 5, completed: false },
-      { id: 'e5', title: 'Screen-free wind down', durationMinutes: 30, completed: false },
-      { id: 'e6', title: 'Sleep by target bedtime', durationMinutes: 0, completed: false },
-    ],
-  },
-];
+interface Completion {
+  id: string;
+  routineId: string;
+  date: string;
+  stepsCompleted: string[];
+  completionPercentage: number;
+}
+
+const today = new Date().toISOString().split('T')[0];
+
+// Fetch routines
+async function fetchRoutines(): Promise<Routine[]> {
+  const response = await fetch('/api/routines');
+  if (!response.ok) {
+    throw new Error('Failed to fetch routines');
+  }
+  return response.json();
+}
+
+// Fetch today's completions
+async function fetchCompletions(): Promise<Completion[]> {
+  const response = await fetch(`/api/routines/completions?date=${today}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch completions');
+  }
+  return response.json();
+}
+
+// Toggle step completion
+async function toggleStepCompletion(data: {
+  routineId: string;
+  stepId: string;
+  completed: boolean;
+  totalSteps: number;
+}): Promise<Completion> {
+  const response = await fetch('/api/routines/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      routineId: data.routineId,
+      date: today,
+      stepId: data.stepId,
+      completed: data.completed,
+      totalSteps: data.totalSteps,
+    }),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to toggle step');
+  }
+  return response.json();
+}
+
+// Reset routine completions
+async function resetRoutineCompletions(data: {
+  routineId: string;
+  totalSteps: number;
+}): Promise<Completion> {
+  const response = await fetch('/api/routines/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      routineId: data.routineId,
+      date: today,
+      stepsCompleted: [],
+      totalSteps: data.totalSteps,
+    }),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to reset routine');
+  }
+  return response.json();
+}
 
 export default function RoutinesPage() {
-  const [routines, setRoutines] = useLocalStorage<Routine[]>('routines', DEFAULT_ROUTINES);
+  const queryClient = useQueryClient();
   const [activeRoutineId, setActiveRoutineId] = useState<string | null>(null);
 
+  // Fetch routines
+  const { data: routines = [], isLoading: routinesLoading } = useQuery({
+    queryKey: ['routines'],
+    queryFn: fetchRoutines,
+  });
+
+  // Fetch today's completions
+  const { data: completions = [], isLoading: completionsLoading } = useQuery({
+    queryKey: ['routineCompletions', today],
+    queryFn: fetchCompletions,
+  });
+
+  // Toggle step mutation
+  const toggleMutation = useMutation({
+    mutationFn: toggleStepCompletion,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['routineCompletions', today] });
+    },
+  });
+
+  // Reset mutation
+  const resetMutation = useMutation({
+    mutationFn: resetRoutineCompletions,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['routineCompletions', today] });
+    },
+  });
+
+  // Get completion for a routine
+  const getCompletion = (routineId: string) => {
+    return completions.find(c => c.routineId === routineId);
+  };
+
+  // Check if a step is completed
+  const isStepCompleted = (routineId: string, stepId: string) => {
+    const completion = getCompletion(routineId);
+    return completion?.stepsCompleted?.includes(stepId) || false;
+  };
+
+  // Merge routines with completion state
+  const routinesWithCompletions = routines.map(routine => ({
+    ...routine,
+    steps: routine.steps.map(step => ({
+      ...step,
+      completed: isStepCompleted(routine.id, step.id),
+    })),
+  }));
+
   const toggleStep = (routineId: string, stepId: string) => {
-    setRoutines(prev =>
-      prev.map(routine =>
-        routine.id === routineId
-          ? {
-              ...routine,
-              steps: routine.steps.map(step =>
-                step.id === stepId
-                  ? { ...step, completed: !step.completed }
-                  : step
-              ),
-            }
-          : routine
-      )
-    );
+    const routine = routines.find(r => r.id === routineId);
+    if (!routine) return;
+
+    const isCompleted = isStepCompleted(routineId, stepId);
+    toggleMutation.mutate({
+      routineId,
+      stepId,
+      completed: !isCompleted,
+      totalSteps: routine.steps.length,
+    });
   };
 
   const resetRoutine = (routineId: string) => {
-    setRoutines(prev =>
-      prev.map(routine =>
-        routine.id === routineId
-          ? {
-              ...routine,
-              steps: routine.steps.map(step => ({ ...step, completed: false })),
-            }
-          : routine
-      )
-    );
+    const routine = routines.find(r => r.id === routineId);
+    if (!routine) return;
+
+    resetMutation.mutate({
+      routineId,
+      totalSteps: routine.steps.length,
+    });
   };
 
   const getRoutineProgress = (routine: Routine) => {
+    const completion = getCompletion(routine.id);
+    if (completion) {
+      return completion.completionPercentage;
+    }
     const completed = routine.steps.filter(s => s.completed).length;
     return Math.round((completed / routine.steps.length) * 100);
   };
@@ -123,6 +208,16 @@ export default function RoutinesPage() {
         return Clock;
     }
   };
+
+  const isLoading = routinesLoading || completionsLoading;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -144,7 +239,7 @@ export default function RoutinesPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {routines.filter(r => r.isActive).map(routine => {
+            {routinesWithCompletions.filter(r => r.isActive).map(routine => {
               const progress = getRoutineProgress(routine);
               const Icon = getRoutineIcon(routine.type);
               return (
@@ -164,7 +259,7 @@ export default function RoutinesPage() {
 
       {/* Routines Grid */}
       <div className="grid gap-6 md:grid-cols-2">
-        {routines.map(routine => {
+        {routinesWithCompletions.map(routine => {
           const Icon = getRoutineIcon(routine.type);
           const progress = getRoutineProgress(routine);
           const isActive = activeRoutineId === routine.id;
@@ -198,7 +293,7 @@ export default function RoutinesPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {routine.steps.map((step, index) => (
+                  {routine.steps.map((step) => (
                     <div
                       key={step.id}
                       className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${
@@ -209,6 +304,7 @@ export default function RoutinesPage() {
                         checked={step.completed}
                         onCheckedChange={() => toggleStep(routine.id, step.id)}
                         className="h-5 w-5"
+                        disabled={toggleMutation.isPending}
                       />
                       <div className="flex-1">
                         <span className={step.completed ? 'line-through text-muted-foreground' : ''}>
@@ -247,6 +343,7 @@ export default function RoutinesPage() {
                     size="icon"
                     onClick={() => resetRoutine(routine.id)}
                     title="Reset routine"
+                    disabled={resetMutation.isPending}
                   >
                     <RotateCcw className="h-4 w-4" />
                   </Button>

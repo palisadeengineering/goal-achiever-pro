@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '@/components/layout/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Sun,
   Clock,
@@ -18,9 +18,8 @@ import {
   Target,
   Zap,
   Heart,
-  Lock,
+  Loader2,
 } from 'lucide-react';
-import { useLocalStorage } from '@/lib/hooks/use-local-storage';
 import Link from 'next/link';
 import { ROUTES } from '@/constants/routes';
 
@@ -43,8 +42,30 @@ interface DailyReview {
 
 const today = new Date().toISOString().split('T')[0];
 
+// Fetch reviews for today
+async function fetchTodayReviews(): Promise<DailyReview[]> {
+  const response = await fetch(`/api/reviews?date=${today}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch reviews');
+  }
+  return response.json();
+}
+
+// Save a review
+async function saveReviewToApi(review: Omit<DailyReview, 'id' | 'completedAt'>): Promise<DailyReview> {
+  const response = await fetch('/api/reviews', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(review),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to save review');
+  }
+  return response.json();
+}
+
 export default function ReviewsPage() {
-  const [reviews, setReviews] = useLocalStorage<DailyReview[]>('daily-reviews', []);
+  const queryClient = useQueryClient();
   const [activeReview, setActiveReview] = useState<'morning' | 'midday' | 'evening'>('morning');
 
   // Form state
@@ -59,6 +80,26 @@ export default function ReviewsPage() {
   const [tomorrowFocus, setTomorrowFocus] = useState('');
   const [notes, setNotes] = useState('');
 
+  // Fetch today's reviews
+  const { data: reviews = [], isLoading } = useQuery({
+    queryKey: ['reviews', today],
+    queryFn: fetchTodayReviews,
+  });
+
+  // Save mutation
+  const saveMutation = useMutation({
+    mutationFn: saveReviewToApi,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reviews', today] });
+      // Reset form
+      setWins('');
+      setChallenges('');
+      setGratitude('');
+      setTomorrowFocus('');
+      setNotes('');
+    },
+  });
+
   // Check if review exists for today
   const getTodayReview = (type: 'morning' | 'midday' | 'evening') => {
     return reviews.find(r => r.date === today && r.type === type);
@@ -69,8 +110,7 @@ export default function ReviewsPage() {
   const eveningDone = !!getTodayReview('evening');
 
   const saveReview = () => {
-    const newReview: DailyReview = {
-      id: crypto.randomUUID(),
+    saveMutation.mutate({
       date: today,
       type: activeReview,
       wins: wins.split('\n').filter(w => w.trim()),
@@ -83,25 +123,19 @@ export default function ReviewsPage() {
       moodScore: moodScore[0],
       tomorrowFocus,
       notes,
-      completedAt: new Date().toISOString(),
-    };
-
-    setReviews(prev => {
-      // Remove existing review for same type/day if exists
-      const filtered = prev.filter(r => !(r.date === today && r.type === activeReview));
-      return [...filtered, newReview];
     });
-
-    // Reset form
-    setWins('');
-    setChallenges('');
-    setGratitude('');
-    setTomorrowFocus('');
-    setNotes('');
   };
 
   // Calculate 300% score
   const threeHundredPercent = clarityScore[0] + beliefScore[0] + consistencyScore[0];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -342,8 +376,16 @@ export default function ReviewsPage() {
                 />
               </div>
 
-              <Button onClick={saveReview} className="w-full">
-                <CheckCircle2 className="h-4 w-4 mr-2" />
+              <Button
+                onClick={saveReview}
+                className="w-full"
+                disabled={saveMutation.isPending}
+              >
+                {saveMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                )}
                 Complete {activeReview.charAt(0).toUpperCase() + activeReview.slice(1)} Review
               </Button>
             </CardContent>

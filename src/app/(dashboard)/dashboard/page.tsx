@@ -1,3 +1,6 @@
+'use client';
+
+import { useQuery } from '@tanstack/react-query';
 import { PageHeader } from '@/components/layout/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,20 +15,92 @@ import {
   Clock,
   CheckCircle2,
   ArrowRight,
+  Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { ROUTES } from '@/constants/routes';
 
+interface DashboardStats {
+  visionCount: number;
+  powerGoals: {
+    total: number;
+    active: number;
+    completed: number;
+    avgProgress: number;
+  };
+  mins: {
+    todayTotal: number;
+    todayCompleted: number;
+    weekTotal: number;
+    weekCompleted: number;
+    completionRate: number;
+  };
+  drip: {
+    distribution: {
+      delegation: number;
+      replacement: number;
+      investment: number;
+      production: number;
+    };
+    totalMinutes: number;
+    totalHours: number;
+  };
+  threeHundredRule: {
+    clarity: number;
+    belief: number;
+    consistency: number;
+    total: number;
+  };
+  routines: {
+    todayCompletion: number;
+  };
+  reviews: {
+    todayCount: number;
+    morningDone: boolean;
+  };
+}
+
+async function fetchDashboardStats(): Promise<DashboardStats> {
+  const response = await fetch('/api/dashboard/stats');
+  if (!response.ok) {
+    throw new Error('Failed to fetch dashboard stats');
+  }
+  return response.json();
+}
+
 export default function DashboardPage() {
-  // Mock data - will be replaced with actual data fetching
-  const stats = {
-    visionProgress: 65,
-    powerGoalsCompleted: 3,
-    powerGoalsTotal: 12,
-    minsToday: 5,
-    minsCompletedToday: 2,
-    productionTimePercent: 42,
-    currentStreak: 7,
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ['dashboardStats'],
+    queryFn: fetchDashboardStats,
+    refetchInterval: 60000, // Refresh every minute
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // Use real data or defaults
+  const visionProgress = stats?.powerGoals.avgProgress || 0;
+  const powerGoalsCompleted = stats?.powerGoals.completed || 0;
+  const powerGoalsTotal = stats?.powerGoals.total || 0;
+  const minsToday = stats?.mins.todayTotal || 0;
+  const minsCompletedToday = stats?.mins.todayCompleted || 0;
+  const productionTimePercent = stats?.drip.distribution.production || 0;
+
+  const clarity = stats?.threeHundredRule.clarity || 0;
+  const belief = stats?.threeHundredRule.belief || 0;
+  const consistency = stats?.threeHundredRule.consistency || 0;
+  const threeHundredTotal = stats?.threeHundredRule.total || 0;
+
+  const dripDistribution = stats?.drip.distribution || {
+    delegation: 0,
+    replacement: 0,
+    investment: 0,
+    production: 0,
   };
 
   return (
@@ -43,8 +118,8 @@ export default function DashboardPage() {
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.visionProgress}%</div>
-            <Progress value={stats.visionProgress} className="mt-2" />
+            <div className="text-2xl font-bold">{visionProgress}%</div>
+            <Progress value={visionProgress} className="mt-2" />
           </CardContent>
         </Card>
 
@@ -55,10 +130,10 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {stats.powerGoalsCompleted}/{stats.powerGoalsTotal}
+              {powerGoalsCompleted}/{powerGoalsTotal}
             </div>
             <p className="text-xs text-muted-foreground">
-              {stats.powerGoalsTotal - stats.powerGoalsCompleted} active milestones
+              {stats?.powerGoals.active || 0} active milestones
             </p>
           </CardContent>
         </Card>
@@ -70,10 +145,10 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {stats.minsCompletedToday}/{stats.minsToday}
+              {minsCompletedToday}/{minsToday}
             </div>
             <p className="text-xs text-muted-foreground">
-              {stats.minsToday - stats.minsCompletedToday} tasks remaining
+              {minsToday - minsCompletedToday} tasks remaining
             </p>
           </CardContent>
         </Card>
@@ -84,7 +159,7 @@ export default function DashboardPage() {
             <Zap className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.productionTimePercent}%</div>
+            <div className="text-2xl font-bold">{productionTimePercent}%</div>
             <p className="text-xs text-muted-foreground">
               Time in high-value activities
             </p>
@@ -106,35 +181,30 @@ export default function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Mock MINS items */}
-            <div className="flex items-center gap-3 p-3 rounded-lg border">
-              <CheckCircle2 className="h-5 w-5 text-green-500" />
-              <div className="flex-1">
-                <p className="font-medium line-through text-muted-foreground">
-                  Review quarterly goals
-                </p>
-                <p className="text-xs text-muted-foreground">Milestone: Career Growth</p>
+            {minsToday === 0 ? (
+              <div className="text-center py-6 text-muted-foreground">
+                <ListTodo className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>No MINS scheduled for today</p>
+                <p className="text-sm">Add your most important tasks</p>
               </div>
-              <Badge variant="secondary">Completed</Badge>
-            </div>
-
-            <div className="flex items-center gap-3 p-3 rounded-lg border bg-primary/5">
-              <div className="h-5 w-5 rounded-full border-2 border-primary" />
-              <div className="flex-1">
-                <p className="font-medium">Complete project proposal</p>
-                <p className="text-xs text-muted-foreground">Milestone: Career Growth</p>
-              </div>
-              <Badge className="bg-green-100 text-green-800">Production</Badge>
-            </div>
-
-            <div className="flex items-center gap-3 p-3 rounded-lg border">
-              <div className="h-5 w-5 rounded-full border-2" />
-              <div className="flex-1">
-                <p className="font-medium">30-minute workout</p>
-                <p className="text-xs text-muted-foreground">Milestone: Health</p>
-              </div>
-              <Badge className="bg-blue-100 text-blue-800">Investment</Badge>
-            </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <CheckCircle2 className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">
+                      {minsCompletedToday} of {minsToday} MINS completed
+                    </p>
+                    <Progress value={stats?.mins.completionRate || 0} className="h-2 mt-2" />
+                  </div>
+                  <Badge variant={minsCompletedToday === minsToday ? "default" : "secondary"}>
+                    {stats?.mins.completionRate || 0}%
+                  </Badge>
+                </div>
+              </>
+            )}
 
             <Button asChild className="w-full">
               <Link href={ROUTES.mins}>
@@ -153,7 +223,7 @@ export default function DashboardPage() {
               This Week&apos;s DRIP Distribution
             </CardTitle>
             <CardDescription>
-              How you&apos;re spending your time across quadrants
+              How you&apos;re spending your time across quadrants ({stats?.drip.totalHours || 0}h tracked)
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -165,9 +235,9 @@ export default function DashboardPage() {
                     <span className="h-3 w-3 rounded bg-green-500" />
                     Production
                   </span>
-                  <span className="font-medium">42%</span>
+                  <span className="font-medium">{dripDistribution.production}%</span>
                 </div>
-                <Progress value={42} className="h-2 bg-green-100" />
+                <Progress value={dripDistribution.production} className="h-2 bg-green-100" />
               </div>
 
               <div className="space-y-1">
@@ -176,9 +246,9 @@ export default function DashboardPage() {
                     <span className="h-3 w-3 rounded bg-blue-500" />
                     Investment
                   </span>
-                  <span className="font-medium">25%</span>
+                  <span className="font-medium">{dripDistribution.investment}%</span>
                 </div>
-                <Progress value={25} className="h-2 bg-blue-100" />
+                <Progress value={dripDistribution.investment} className="h-2 bg-blue-100" />
               </div>
 
               <div className="space-y-1">
@@ -187,9 +257,9 @@ export default function DashboardPage() {
                     <span className="h-3 w-3 rounded bg-orange-500" />
                     Replacement
                   </span>
-                  <span className="font-medium">18%</span>
+                  <span className="font-medium">{dripDistribution.replacement}%</span>
                 </div>
-                <Progress value={18} className="h-2 bg-orange-100" />
+                <Progress value={dripDistribution.replacement} className="h-2 bg-orange-100" />
               </div>
 
               <div className="space-y-1">
@@ -198,9 +268,9 @@ export default function DashboardPage() {
                     <span className="h-3 w-3 rounded bg-purple-500" />
                     Delegation
                   </span>
-                  <span className="font-medium">15%</span>
+                  <span className="font-medium">{dripDistribution.delegation}%</span>
                 </div>
-                <Progress value={15} className="h-2 bg-purple-100" />
+                <Progress value={dripDistribution.delegation} className="h-2 bg-purple-100" />
               </div>
             </div>
 
@@ -226,40 +296,46 @@ export default function DashboardPage() {
               <div className="space-y-1">
                 <div className="flex justify-between text-sm">
                   <span>Clarity</span>
-                  <span className="font-medium">85%</span>
+                  <span className="font-medium">{clarity}%</span>
                 </div>
-                <Progress value={85} className="h-2" />
+                <Progress value={clarity} className="h-2" />
               </div>
 
               <div className="space-y-1">
                 <div className="flex justify-between text-sm">
                   <span>Belief</span>
-                  <span className="font-medium">72%</span>
+                  <span className="font-medium">{belief}%</span>
                 </div>
-                <Progress value={72} className="h-2" />
+                <Progress value={belief} className="h-2" />
               </div>
 
               <div className="space-y-1">
                 <div className="flex justify-between text-sm">
                   <span>Consistency</span>
-                  <span className="font-medium">68%</span>
+                  <span className="font-medium">{consistency}%</span>
                 </div>
-                <Progress value={68} className="h-2" />
+                <Progress value={consistency} className="h-2" />
               </div>
             </div>
 
             <div className="p-3 rounded-lg bg-muted">
               <p className="text-sm text-center">
-                Combined Score: <span className="font-bold text-lg">225%</span>
+                Combined Score: <span className="font-bold text-lg">{threeHundredTotal}%</span>
               </p>
               <p className="text-xs text-center text-muted-foreground mt-1">
-                Target: 300% for maximum achievement
+                {threeHundredTotal === 0
+                  ? "Complete a daily review to track your 300% score"
+                  : threeHundredTotal >= 270
+                    ? "Excellent! You're on fire!"
+                    : threeHundredTotal >= 200
+                      ? "Great progress! Keep pushing!"
+                      : "Time to recalibrate - check your reviews"}
               </p>
             </div>
 
             <Button asChild variant="outline" className="w-full">
-              <Link href={ROUTES.vision}>
-                Update Vision
+              <Link href={ROUTES.reviews}>
+                Daily Reviews
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -290,7 +366,7 @@ export default function DashboardPage() {
             </Button>
 
             <Button asChild variant="outline" className="justify-start h-auto py-3">
-              <Link href={ROUTES.reviewEvening}>
+              <Link href={ROUTES.reviews}>
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-primary/10">
                     <Target className="h-5 w-5 text-primary" />
@@ -298,7 +374,7 @@ export default function DashboardPage() {
                   <div className="text-left">
                     <p className="font-medium">Daily Review</p>
                     <p className="text-xs text-muted-foreground">
-                      Reflect on today&apos;s progress
+                      {stats?.reviews.todayCount || 0} reviews today
                     </p>
                   </div>
                 </div>
