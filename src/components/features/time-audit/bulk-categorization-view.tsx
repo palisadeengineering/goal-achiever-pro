@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -70,6 +70,13 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
     () => events.filter((event) => isIgnored(event.id)),
     [events, isIgnored]
   );
+
+  // Auto-switch to ignored tab when all events are categorized but there are ignored events
+  useEffect(() => {
+    if (uncategorizedEvents.length === 0 && ignoredEvents.length > 0) {
+      setActiveTab('ignored');
+    }
+  }, [uncategorizedEvents.length, ignoredEvents.length]);
 
   // Group similar events for bulk categorization
   const groupedEvents = useMemo(() => {
@@ -179,7 +186,8 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
     onCategorize?.();
   };
 
-  if (uncategorizedEvents.length === 0) {
+  // Show "All categorized" only when there are no uncategorized AND no ignored events
+  if (uncategorizedEvents.length === 0 && ignoredEvents.length === 0) {
     return (
       <Card>
         <CardContent className="py-12 text-center">
@@ -205,8 +213,14 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
         <div>
           <h2 className="text-lg font-semibold">Categorize Events</h2>
           <p className="text-sm text-muted-foreground">
-            {uncategorizedEvents.length} event{uncategorizedEvents.length !== 1 ? 's' : ''} need
-            categorization
+            {uncategorizedEvents.length > 0 ? (
+              <>
+                {uncategorizedEvents.length} event{uncategorizedEvents.length !== 1 ? 's' : ''} need
+                categorization
+              </>
+            ) : (
+              <>All events categorized • {ignoredEvents.length} ignored</>
+            )}
           </p>
         </div>
         {eventsWithSuggestions.length > 0 && (
@@ -230,58 +244,82 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
           </TabsTrigger>
           <TabsTrigger value="ignored" className="gap-2">
             <EyeOff className="h-4 w-4" />
-            Ignored ({ignoredEventsInSync.length})
+            Ignored ({ignoredEvents.length})
           </TabsTrigger>
         </TabsList>
 
         {/* Single Event Mode */}
         <TabsContent value="single" className="mt-4">
-          <div className="space-y-4">
-            {/* Progress indicator */}
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>
-                Event {Math.min(currentIndex + 1, uncategorizedEvents.length)} of{' '}
-                {uncategorizedEvents.length}
-              </span>
-              <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-primary transition-all"
-                  style={{
-                    width: `${((currentIndex + 1) / uncategorizedEvents.length) * 100}%`,
-                  }}
-                />
+          {uncategorizedEvents.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-4" />
+                <h3 className="text-lg font-semibold mb-2">All events categorized!</h3>
+                <p className="text-muted-foreground">
+                  Check the Ignored tab to view or unignore events.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {/* Progress indicator */}
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>
+                  Event {Math.min(currentIndex + 1, uncategorizedEvents.length)} of{' '}
+                  {uncategorizedEvents.length}
+                </span>
+                <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-primary transition-all"
+                    style={{
+                      width: `${((currentIndex + 1) / uncategorizedEvents.length) * 100}%`,
+                    }}
+                  />
+                </div>
               </div>
-            </div>
 
-            {uncategorizedEvents[currentIndex] && (
-              <GoogleEventCategorizer
-                event={uncategorizedEvents[currentIndex]}
-                onCategorize={handleCategorize}
-                onSkip={handleSkip}
-                onIgnore={handleIgnore}
-              />
-            )}
-          </div>
+              {uncategorizedEvents[currentIndex] && (
+                <GoogleEventCategorizer
+                  event={uncategorizedEvents[currentIndex]}
+                  onCategorize={handleCategorize}
+                  onSkip={handleSkip}
+                  onIgnore={handleIgnore}
+                />
+              )}
+            </div>
+          )}
         </TabsContent>
 
         {/* Bulk Mode */}
         <TabsContent value="bulk" className="mt-4">
-          <ScrollArea className="h-[600px]">
-            <div className="space-y-4 pr-4">
-              {groupedEvents.map((group) => (
-                <GroupCard
-                  key={group.pattern}
-                  group={group}
-                  onApply={handleApplyToGroup}
-                />
-              ))}
-            </div>
-          </ScrollArea>
+          {groupedEvents.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No groups to categorize</h3>
+                <p className="text-muted-foreground">
+                  Check the Ignored tab to view or unignore events.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <ScrollArea className="h-[600px]">
+              <div className="space-y-4 pr-4">
+                {groupedEvents.map((group) => (
+                  <GroupCard
+                    key={group.pattern}
+                    group={group}
+                    onApply={handleApplyToGroup}
+                  />
+                ))}
+              </div>
+            </ScrollArea>
+          )}
         </TabsContent>
 
         {/* Ignored Events */}
         <TabsContent value="ignored" className="mt-4">
-          {ignoredEventsInSync.length === 0 ? (
+          {ignoredEvents.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
                 <Eye className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
@@ -294,29 +332,35 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
           ) : (
             <ScrollArea className="h-[600px]">
               <div className="space-y-2 pr-4">
-                {ignoredEventsInSync.map((event) => {
-                  const startTime = safeParseDate(event.start?.dateTime || event.startTime);
-                  const endTime = safeParseDate(event.end?.dateTime || event.endTime);
+                {ignoredEvents.map((ignoredEvent) => {
+                  // Try to find the full event details from the events prop
+                  const fullEvent = events.find(e => e.id === ignoredEvent.eventId);
+                  const startTime = fullEvent ? safeParseDate(fullEvent.start?.dateTime || fullEvent.startTime) : null;
+                  const endTime = fullEvent ? safeParseDate(fullEvent.end?.dateTime || fullEvent.endTime) : null;
 
                   return (
-                    <Card key={event.id} className="opacity-75 hover:opacity-100 transition-opacity">
+                    <Card key={ignoredEvent.eventId} className="opacity-75 hover:opacity-100 transition-opacity">
                       <CardContent className="py-3 px-4">
                         <div className="flex items-center justify-between gap-4">
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">{event.summary}</p>
+                            <p className="font-medium truncate">{ignoredEvent.eventName}</p>
                             <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                              {startTime && (
-                                <span>{format(startTime, 'MMM d, yyyy')}</span>
-                              )}
-                              {startTime && endTime && (
-                                <span>{format(startTime, 'h:mm a')} - {format(endTime, 'h:mm a')}</span>
+                              {startTime ? (
+                                <>
+                                  <span>{format(startTime, 'MMM d, yyyy')}</span>
+                                  {endTime && (
+                                    <span>{format(startTime, 'h:mm a')} - {format(endTime, 'h:mm a')}</span>
+                                  )}
+                                </>
+                              ) : (
+                                <span>Ignored {format(new Date(ignoredEvent.ignoredAt), 'MMM d, yyyy')}</span>
                               )}
                             </div>
                           </div>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleUnignore(event.id)}
+                            onClick={() => handleUnignore(ignoredEvent.eventId)}
                             className="shrink-0"
                           >
                             <Undo2 className="h-4 w-4 mr-2" />
