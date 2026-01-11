@@ -387,8 +387,10 @@ export default function TimeAuditPage() {
   }, [timeBlocks, googleEvents, getCategorization]);
 
   // Get all data sources for stats: time blocks + categorized Google events
+  // FILTERED by currently viewed date range
   const allTimeData = useMemo(() => {
     const allBlocks: Array<{
+      date: string;
       startTime: string;
       endTime: string;
       dripQuadrant: DripQuadrant;
@@ -396,15 +398,22 @@ export default function TimeAuditPage() {
       source: string;
     }> = [];
 
-    // Add time blocks (from database and local)
+    const viewStartStr = format(viewedDateRange.start, 'yyyy-MM-dd');
+    const viewEndStr = format(viewedDateRange.end, 'yyyy-MM-dd');
+
+    // Add time blocks (from database and local) - filtered by viewed date range
     timeBlocks.forEach((block) => {
-      allBlocks.push({
-        startTime: block.startTime,
-        endTime: block.endTime,
-        dripQuadrant: block.dripQuadrant,
-        energyRating: block.energyRating,
-        source: block.source || 'manual',
-      });
+      // Only include blocks within the viewed date range
+      if (block.date >= viewStartStr && block.date <= viewEndStr) {
+        allBlocks.push({
+          date: block.date,
+          startTime: block.startTime,
+          endTime: block.endTime,
+          dripQuadrant: block.dripQuadrant,
+          energyRating: block.energyRating,
+          source: block.source || 'manual',
+        });
+      }
     });
 
     // Add categorized Google Calendar events that aren't already imported
@@ -427,14 +436,19 @@ export default function TimeAuditPage() {
           try {
             const startDate = new Date(startDateTime);
             const endDate = new Date(endDateTime);
+            const eventDateStr = format(startDate, 'yyyy-MM-dd');
 
-            allBlocks.push({
-              startTime: format(startDate, 'HH:mm'),
-              endTime: format(endDate, 'HH:mm'),
-              dripQuadrant: categorization.dripQuadrant,
-              energyRating: categorization.energyRating,
-              source: 'google_calendar',
-            });
+            // Only include events within the viewed date range
+            if (eventDateStr >= viewStartStr && eventDateStr <= viewEndStr) {
+              allBlocks.push({
+                date: eventDateStr,
+                startTime: format(startDate, 'HH:mm'),
+                endTime: format(endDate, 'HH:mm'),
+                dripQuadrant: categorization.dripQuadrant,
+                energyRating: categorization.energyRating,
+                source: 'google_calendar',
+              });
+            }
           } catch {
             // Skip invalid dates
           }
@@ -443,7 +457,7 @@ export default function TimeAuditPage() {
     });
 
     return allBlocks;
-  }, [timeBlocks, googleEvents, getCategorization]);
+  }, [timeBlocks, googleEvents, getCategorization, viewedDateRange]);
 
   // Calculate stats from ALL time data (time blocks + categorized Google events)
   const stats = useMemo(() => {

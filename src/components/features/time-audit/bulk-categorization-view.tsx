@@ -12,7 +12,7 @@ import { GoogleEventCategorizer } from './google-event-categorizer';
 import { DRIP_QUADRANTS, ENERGY_RATINGS } from '@/constants/drip';
 import type { DripQuadrant, EnergyRating } from '@/types/database';
 import type { GoogleCalendarEvent } from '@/lib/hooks/use-google-calendar';
-import { CheckCircle2, ListTodo, Sparkles } from 'lucide-react';
+import { CheckCircle2, ListTodo, Sparkles, EyeOff, Eye, Undo2 } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
 
 // Safe date parsing helper
@@ -50,14 +50,25 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
     saveCategorization,
     isCategorized,
     applySuggestionToSimilar,
+    ignoreEvent,
+    unignoreEvent,
+    isIgnored,
+    ignoredEvents,
   } = useEventPatterns();
 
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [activeTab, setActiveTab] = useState<'single' | 'bulk' | 'ignored'>('single');
 
-  // Filter to only uncategorized events
+  // Filter to only uncategorized events (excluding ignored)
   const uncategorizedEvents = useMemo(
-    () => events.filter((event) => !isCategorized(event.id)),
-    [events, isCategorized]
+    () => events.filter((event) => !isCategorized(event.id) && !isIgnored(event.id)),
+    [events, isCategorized, isIgnored]
+  );
+
+  // Get ignored events from the current sync
+  const ignoredEventsInSync = useMemo(
+    () => events.filter((event) => isIgnored(event.id)),
+    [events, isIgnored]
   );
 
   // Group similar events for bulk categorization
@@ -127,6 +138,22 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
     }
   };
 
+  const handleIgnore = (eventId: string, eventName: string) => {
+    ignoreEvent(eventId, eventName);
+    // Notify parent to refresh its state
+    onCategorize?.();
+    // Move to next event or complete
+    if (currentIndex >= uncategorizedEvents.length - 1) {
+      if (onComplete) onComplete();
+    }
+  };
+
+  const handleUnignore = (eventId: string) => {
+    unignoreEvent(eventId);
+    // Notify parent to refresh its state
+    onCategorize?.();
+  };
+
   const handleApplyAllSuggestions = () => {
     eventsWithSuggestions.forEach((event) => {
       const suggestion = getSuggestion(event.summary);
@@ -191,7 +218,7 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
         )}
       </div>
 
-      <Tabs defaultValue="single">
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'single' | 'bulk' | 'ignored')}>
         <TabsList>
           <TabsTrigger value="single" className="gap-2">
             <ListTodo className="h-4 w-4" />
@@ -200,6 +227,10 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
           <TabsTrigger value="bulk" className="gap-2">
             <Sparkles className="h-4 w-4" />
             By Group ({groupedEvents.length})
+          </TabsTrigger>
+          <TabsTrigger value="ignored" className="gap-2">
+            <EyeOff className="h-4 w-4" />
+            Ignored ({ignoredEventsInSync.length})
           </TabsTrigger>
         </TabsList>
 
@@ -227,6 +258,7 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
                 event={uncategorizedEvents[currentIndex]}
                 onCategorize={handleCategorize}
                 onSkip={handleSkip}
+                onIgnore={handleIgnore}
               />
             )}
           </div>
@@ -245,6 +277,59 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
               ))}
             </div>
           </ScrollArea>
+        </TabsContent>
+
+        {/* Ignored Events */}
+        <TabsContent value="ignored" className="mt-4">
+          {ignoredEventsInSync.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <Eye className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No ignored events</h3>
+                <p className="text-muted-foreground">
+                  Events you choose to ignore will appear here. You can unignore them to categorize later.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <ScrollArea className="h-[600px]">
+              <div className="space-y-2 pr-4">
+                {ignoredEventsInSync.map((event) => {
+                  const startTime = safeParseDate(event.start?.dateTime || event.startTime);
+                  const endTime = safeParseDate(event.end?.dateTime || event.endTime);
+
+                  return (
+                    <Card key={event.id} className="opacity-75 hover:opacity-100 transition-opacity">
+                      <CardContent className="py-3 px-4">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">{event.summary}</p>
+                            <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                              {startTime && (
+                                <span>{format(startTime, 'MMM d, yyyy')}</span>
+                              )}
+                              {startTime && endTime && (
+                                <span>{format(startTime, 'h:mm a')} - {format(endTime, 'h:mm a')}</span>
+                              )}
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleUnignore(event.id)}
+                            className="shrink-0"
+                          >
+                            <Undo2 className="h-4 w-4 mr-2" />
+                            Unignore
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+          )}
         </TabsContent>
       </Tabs>
     </div>

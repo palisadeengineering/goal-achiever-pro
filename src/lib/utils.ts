@@ -9,15 +9,20 @@ export function cn(...inputs: ClassValue[]) {
  * Format an hour (0-23) to display string based on time format preference
  * @param hour - Hour in 24-hour format (0-23)
  * @param format - '12h' for 12-hour with AM/PM, '24h' for 24-hour
- * @returns Formatted hour string (e.g., "2:00 PM" or "14:00")
+ * @param compact - If true, uses compact format without :00 (e.g., "5am" instead of "5:00 AM")
+ * @returns Formatted hour string (e.g., "2:00 PM", "14:00", or "2pm" if compact)
  */
-export function formatHour(hour: number, format: '12h' | '24h'): string {
+export function formatHour(hour: number, format: '12h' | '24h', compact: boolean = false): string {
   if (format === '24h') {
-    return `${hour.toString().padStart(2, '0')}:00`;
+    return compact ? `${hour}` : `${hour.toString().padStart(2, '0')}:00`;
   }
 
-  const period = hour >= 12 ? 'PM' : 'AM';
+  const period = hour >= 12 ? (compact ? 'pm' : 'PM') : (compact ? 'am' : 'AM');
   const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+
+  if (compact) {
+    return `${displayHour}${period}`;
+  }
   return `${displayHour}:00 ${period}`;
 }
 

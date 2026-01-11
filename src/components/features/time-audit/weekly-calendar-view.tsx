@@ -100,6 +100,23 @@ const ENERGY_COLORS: Record<EnergyRating, string> = {
   red: '#ef4444',
 };
 
+// Format duration for display
+function formatDuration(startTime: string, endTime: string): string {
+  const [sh, sm] = startTime.split(':').map(Number);
+  const [eh, em] = endTime.split(':').map(Number);
+  const totalMins = (eh * 60 + em) - (sh * 60 + sm);
+
+  if (totalMins < 60) {
+    return `${totalMins} min`;
+  }
+
+  const hours = totalMins / 60;
+  if (hours === Math.floor(hours)) {
+    return `${hours} hr${hours > 1 ? 's' : ''}`;
+  }
+  return `${hours.toFixed(1)} hrs`;
+}
+
 // Event card component with improved styling
 function EventCard({
   block,
@@ -132,6 +149,7 @@ function EventCard({
 
   const timeRange = `${formatTimeShort(block.startTime)} - ${formatTimeShort(block.endTime)}`;
   const startTimeDisplay = formatTimeShort(block.startTime);
+  const durationDisplay = formatDuration(block.startTime, block.endTime);
 
   const handleResizeMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -197,7 +215,7 @@ function EventCard({
               className="w-full h-full text-left cursor-grab active:cursor-grabbing overflow-hidden text-white p-0"
             >
               {isVeryShort ? (
-                /* 15-min slot: ~14px height - single line, compact */
+                /* 15-min slot: ~14px height - single line, compact with duration */
                 <div
                   className="w-full h-full flex items-center overflow-hidden"
                   style={{ padding: '0 3px' }}
@@ -209,39 +227,12 @@ function EventCard({
                     className="font-medium flex-1 overflow-hidden whitespace-nowrap"
                     style={{ fontSize: '9px', lineHeight: '14px', textOverflow: 'ellipsis' }}
                   >
-                    {block.activityName}
+                    <span>{block.activityName}</span>
+                    <span className="opacity-70 ml-1">· {durationDisplay}</span>
                   </div>
                 </div>
               ) : isShort ? (
-                /* 30-min slot: ~28px height - title wraps, time below */
-                <div
-                  className="w-full h-full flex flex-col justify-start overflow-hidden"
-                  style={{ padding: '1px 4px' }}
-                >
-                  <div className="flex items-start gap-0.5 min-w-0">
-                    {isRecurring && <Repeat className="h-2.5 w-2.5 flex-shrink-0 opacity-80 mt-0.5" />}
-                    <div
-                      className="font-semibold w-full overflow-hidden"
-                      style={{
-                        fontSize: '10px',
-                        lineHeight: '11px',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                      }}
-                    >
-                      {block.activityName}
-                    </div>
-                  </div>
-                  <div
-                    className="opacity-80 flex-shrink-0"
-                    style={{ fontSize: '9px', lineHeight: '10px' }}
-                  >
-                    {startTimeDisplay}
-                  </div>
-                </div>
-              ) : isMedium ? (
-                /* 45-60 min slot: ~42-56px height - more lines allowed */
+                /* 30-min slot: ~28px height - title wraps, time and duration below */
                 <div
                   className="w-full h-full flex flex-col justify-start overflow-hidden"
                   style={{ padding: '2px 4px' }}
@@ -251,10 +242,10 @@ function EventCard({
                     <div
                       className="font-semibold w-full overflow-hidden"
                       style={{
-                        fontSize: '11px',
+                        fontSize: '10px',
                         lineHeight: '12px',
                         display: '-webkit-box',
-                        WebkitLineClamp: durationSlots <= 3 ? 3 : 4,
+                        WebkitLineClamp: 2,
                         WebkitBoxOrient: 'vertical',
                       }}
                     >
@@ -262,27 +253,28 @@ function EventCard({
                     </div>
                   </div>
                   <div
-                    className="opacity-80 flex-shrink-0"
+                    className="opacity-80 flex-shrink-0 flex items-center gap-1"
                     style={{ fontSize: '9px', lineHeight: '11px' }}
                   >
-                    {timeRange}
+                    <span>{startTimeDisplay}</span>
+                    <span>· {durationDisplay}</span>
                   </div>
                 </div>
-              ) : (
-                /* 1+ hour slot - full text wrap with time range */
+              ) : isMedium ? (
+                /* 45-60 min slot: ~42-56px height - more lines allowed, time and duration */
                 <div
                   className="w-full h-full flex flex-col justify-start overflow-hidden"
                   style={{ padding: '3px 5px' }}
                 >
-                  <div className="flex items-start gap-1 min-w-0 flex-1">
-                    {isRecurring && <Repeat className="h-3 w-3 flex-shrink-0 opacity-80 mt-0.5" />}
+                  <div className="flex items-start gap-0.5 min-w-0 flex-1">
+                    {isRecurring && <Repeat className="h-2.5 w-2.5 flex-shrink-0 opacity-80 mt-0.5" />}
                     <div
                       className="font-semibold w-full overflow-hidden"
                       style={{
                         fontSize: '11px',
                         lineHeight: '13px',
                         display: '-webkit-box',
-                        WebkitLineClamp: Math.max(2, Math.floor((durationSlots * 14 - 20) / 13)),
+                        WebkitLineClamp: durationSlots <= 3 ? 2 : 3,
                         WebkitBoxOrient: 'vertical',
                       }}
                     >
@@ -291,9 +283,37 @@ function EventCard({
                   </div>
                   <div
                     className="opacity-80 flex-shrink-0"
-                    style={{ fontSize: '10px', lineHeight: '12px' }}
+                    style={{ fontSize: '9px', lineHeight: '12px' }}
                   >
-                    {timeRange}
+                    {timeRange} · {durationDisplay}
+                  </div>
+                </div>
+              ) : (
+                /* 1+ hour slot - full text wrap with time range and duration */
+                <div
+                  className="w-full h-full flex flex-col justify-start overflow-hidden"
+                  style={{ padding: '4px 6px' }}
+                >
+                  <div className="flex items-start gap-1 min-w-0 flex-1">
+                    {isRecurring && <Repeat className="h-3 w-3 flex-shrink-0 opacity-80 mt-0.5" />}
+                    <div
+                      className="font-semibold w-full overflow-hidden"
+                      style={{
+                        fontSize: '12px',
+                        lineHeight: '14px',
+                        display: '-webkit-box',
+                        WebkitLineClamp: Math.max(2, Math.floor((durationSlots * 14 - 24) / 14)),
+                        WebkitBoxOrient: 'vertical',
+                      }}
+                    >
+                      {block.activityName}
+                    </div>
+                  </div>
+                  <div
+                    className="opacity-80 flex-shrink-0"
+                    style={{ fontSize: '10px', lineHeight: '13px' }}
+                  >
+                    {timeRange} · {durationDisplay}
                   </div>
                 </div>
               )}
@@ -317,10 +337,10 @@ function EventCard({
             )}
           </div>
         </TooltipTrigger>
-        <TooltipContent side="right" className="max-w-xs">
-          <div className="space-y-1">
-            <p className="font-semibold">{block.activityName}</p>
-            <p className="text-xs text-muted-foreground">{timeRange}</p>
+        <TooltipContent side="right" className="max-w-xs p-3">
+          <div className="space-y-2">
+            <p className="font-semibold text-sm">{block.activityName}</p>
+            <p className="text-xs text-muted-foreground">{timeRange} · {durationDisplay}</p>
             {isRecurring && block.recurrenceRule && (
               <p className="text-xs text-muted-foreground flex items-center gap-1">
                 <Repeat className="h-3 w-3" />
@@ -329,16 +349,20 @@ function EventCard({
             )}
             <div className="flex gap-2 mt-2">
               <Badge
-                variant="outline"
-                className="text-[10px] capitalize"
-                style={{ borderColor: DRIP_QUADRANTS[block.dripQuadrant].color }}
+                className="text-[10px] capitalize text-white font-medium px-2 py-0.5"
+                style={{
+                  backgroundColor: DRIP_QUADRANTS[block.dripQuadrant].color,
+                  borderColor: DRIP_QUADRANTS[block.dripQuadrant].color,
+                }}
               >
-                {block.dripQuadrant}
+                {block.dripQuadrant === 'na' ? 'N/A' : block.dripQuadrant}
               </Badge>
               <Badge
-                variant="outline"
-                className="text-[10px]"
-                style={{ borderColor: ENERGY_COLORS[block.energyRating] }}
+                className="text-[10px] text-white font-medium px-2 py-0.5"
+                style={{
+                  backgroundColor: ENERGY_COLORS[block.energyRating],
+                  borderColor: ENERGY_COLORS[block.energyRating],
+                }}
               >
                 {block.energyRating === 'green' ? 'Energizing' : block.energyRating === 'yellow' ? 'Neutral' : 'Draining'}
               </Badge>
@@ -1105,14 +1129,17 @@ export function WeeklyCalendarView({
                 <div ref={calendarGridRef} className="grid grid-cols-[48px_repeat(7,1fr)]">
                   {/* Time column */}
                   <div className="border-r border-border/30">
-                    {hourLabels.map((hourSlot: string) => {
+                    {hourLabels.map((hourSlot: string, index: number) => {
                       const hourNum = parseInt(hourSlot.split(':')[0]);
                       return (
                         <div
                           key={hourSlot}
-                          className="h-[56px] pr-2 text-[11px] text-muted-foreground flex items-start justify-end pt-0 -mt-2"
+                          className={cn(
+                            "h-[56px] pr-2 text-[11px] text-muted-foreground flex items-start justify-end whitespace-nowrap",
+                            index === 0 ? "pt-2" : "pt-0 -mt-2"
+                          )}
                         >
-                          {formatHour(hourNum, settings.timeFormat)}
+                          {formatHour(hourNum, settings.timeFormat, true)}
                         </div>
                       );
                     })}

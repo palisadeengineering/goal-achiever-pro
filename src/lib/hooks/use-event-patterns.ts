@@ -21,6 +21,12 @@ export interface EventCategorization {
   categorizedAt: string;
 }
 
+export interface IgnoredEvent {
+  eventId: string;
+  eventName: string;
+  ignoredAt: string;
+}
+
 interface PatternSuggestion {
   dripQuadrant: DripQuadrant;
   energyRating: EnergyRating;
@@ -30,11 +36,16 @@ interface PatternSuggestion {
 
 const PATTERN_STORAGE_KEY = 'google-calendar-patterns';
 const CATEGORIZATION_STORAGE_KEY = 'event-categorizations';
+const IGNORED_EVENTS_STORAGE_KEY = 'ignored-events';
 
 export function useEventPatterns() {
   const [patterns, setPatterns] = useLocalStorage<EventPattern[]>(PATTERN_STORAGE_KEY, []);
   const [categorizations, setCategorizations] = useLocalStorage<EventCategorization[]>(
     CATEGORIZATION_STORAGE_KEY,
+    []
+  );
+  const [ignoredEvents, setIgnoredEvents] = useLocalStorage<IgnoredEvent[]>(
+    IGNORED_EVENTS_STORAGE_KEY,
     []
   );
 
@@ -242,14 +253,15 @@ export function useEventPatterns() {
   );
 
   /**
-   * Get all uncategorized event IDs from a list
+   * Get all uncategorized event IDs from a list (excludes ignored events)
    */
   const getUncategorizedEventIds = useCallback(
     (eventIds: string[]): string[] => {
       const categorizedIds = new Set(categorizations.map((c) => c.eventId));
-      return eventIds.filter((id) => !categorizedIds.has(id));
+      const ignoredIds = new Set(ignoredEvents.map((e) => e.eventId));
+      return eventIds.filter((id) => !categorizedIds.has(id) && !ignoredIds.has(id));
     },
-    [categorizations]
+    [categorizations, ignoredEvents]
   );
 
   /**
@@ -282,9 +294,65 @@ export function useEventPatterns() {
     setCategorizations([]);
   }, [setCategorizations]);
 
+  /**
+   * Ignore an event (skip categorization)
+   */
+  const ignoreEvent = useCallback(
+    (eventId: string, eventName: string) => {
+      setIgnoredEvents((prev) => {
+        // Remove if already exists
+        const filtered = prev.filter((e) => e.eventId !== eventId);
+        return [
+          ...filtered,
+          {
+            eventId,
+            eventName,
+            ignoredAt: new Date().toISOString(),
+          },
+        ];
+      });
+    },
+    [setIgnoredEvents]
+  );
+
+  /**
+   * Unignore an event
+   */
+  const unignoreEvent = useCallback(
+    (eventId: string) => {
+      setIgnoredEvents((prev) => prev.filter((e) => e.eventId !== eventId));
+    },
+    [setIgnoredEvents]
+  );
+
+  /**
+   * Check if an event is ignored
+   */
+  const isIgnored = useCallback(
+    (eventId: string): boolean => {
+      return ignoredEvents.some((e) => e.eventId === eventId);
+    },
+    [ignoredEvents]
+  );
+
+  /**
+   * Get all ignored events
+   */
+  const getIgnoredEvents = useCallback((): IgnoredEvent[] => {
+    return ignoredEvents;
+  }, [ignoredEvents]);
+
+  /**
+   * Clear all ignored events
+   */
+  const clearIgnoredEvents = useCallback(() => {
+    setIgnoredEvents([]);
+  }, [setIgnoredEvents]);
+
   return {
     patterns,
     categorizations,
+    ignoredEvents,
     findMatchingPattern,
     learnPattern,
     getSuggestion,
@@ -297,5 +365,10 @@ export function useEventPatterns() {
     clearPatterns,
     clearCategorizations,
     refreshFromStorage,
+    ignoreEvent,
+    unignoreEvent,
+    isIgnored,
+    getIgnoredEvents,
+    clearIgnoredEvents,
   };
 }

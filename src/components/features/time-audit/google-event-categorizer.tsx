@@ -9,7 +9,7 @@ import { useEventPatterns } from '@/lib/hooks/use-event-patterns';
 import { DRIP_QUADRANTS, ENERGY_RATINGS } from '@/constants/drip';
 import type { DripQuadrant, EnergyRating } from '@/types/database';
 import type { GoogleCalendarEvent } from '@/lib/hooks/use-google-calendar';
-import { Calendar, Clock, Sparkles, SkipForward } from 'lucide-react';
+import { Calendar, Clock, Sparkles, SkipForward, EyeOff } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
 
 // Safe date parsing helper
@@ -29,12 +29,14 @@ interface GoogleEventCategorizerProps {
   event: GoogleCalendarEvent;
   onCategorize: (eventId: string, dripQuadrant: DripQuadrant, energyRating: EnergyRating) => void;
   onSkip: () => void;
+  onIgnore?: (eventId: string, eventName: string) => void;
 }
 
 export function GoogleEventCategorizer({
   event,
   onCategorize,
   onSkip,
+  onIgnore,
 }: GoogleEventCategorizerProps) {
   const { getSuggestion } = useEventPatterns();
   const suggestion = getSuggestion(event.summary);
@@ -202,6 +204,12 @@ export function GoogleEventCategorizer({
 
         {/* Actions */}
         <div className="flex gap-2 justify-end pt-2">
+          {onIgnore && (
+            <Button variant="ghost" onClick={() => onIgnore(event.id, event.summary)} className="text-muted-foreground hover:text-foreground">
+              <EyeOff className="h-4 w-4 mr-2" />
+              Ignore
+            </Button>
+          )}
           <Button variant="ghost" onClick={onSkip}>
             <SkipForward className="h-4 w-4 mr-2" />
             Skip

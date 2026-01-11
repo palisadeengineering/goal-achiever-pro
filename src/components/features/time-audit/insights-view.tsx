@@ -44,7 +44,7 @@ interface InsightsViewProps {
   tags: Tag[];
 }
 
-type DateRangePreset = 'week' | 'month' | '30days' | '90days' | 'custom';
+type DateRangePreset = 'lastWeek' | 'week' | 'month' | '30days' | '90days' | 'custom';
 type ChartType = 'bar' | 'pie' | 'stacked' | 'line';
 
 const DRIP_COLORS: Record<string, string> = {
@@ -78,8 +78,16 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
   const { startDate, endDate } = useMemo(() => {
     const now = new Date();
     switch (dateRangePreset) {
+      case 'lastWeek':
+        return {
+          startDate: startOfWeek(subWeeks(now, 1), { weekStartsOn: 1 }),
+          endDate: endOfWeek(subWeeks(now, 1), { weekStartsOn: 1 })
+        };
       case 'week':
-        return { startDate: startOfWeek(now), endDate: endOfWeek(now) };
+        return {
+          startDate: startOfWeek(now, { weekStartsOn: 1 }),
+          endDate: endOfWeek(now, { weekStartsOn: 1 })
+        };
       case 'month':
         return { startDate: startOfMonth(now), endDate: endOfMonth(now) };
       case '30days':
@@ -289,6 +297,7 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="lastWeek">Last Week</SelectItem>
               <SelectItem value="week">This Week</SelectItem>
               <SelectItem value="month">This Month</SelectItem>
               <SelectItem value="30days">Last 30 Days</SelectItem>
