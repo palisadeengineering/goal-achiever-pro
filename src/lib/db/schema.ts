@@ -291,11 +291,20 @@ export const timeBlocks = pgTable('time_blocks', {
   // Source tracking
   source: text('source').default('manual'),
   externalEventId: text('external_event_id'),
+  // Recurring event support
+  isRecurring: boolean('is_recurring').default(false),
+  recurrenceRule: text('recurrence_rule'), // RFC 5545 RRULE format (e.g., "FREQ=WEEKLY;BYDAY=MO,WE,FR")
+  recurrenceEndDate: date('recurrence_end_date'), // When the recurrence ends
+  parentBlockId: uuid('parent_block_id'), // For instances of recurring events, points to the template
+  isRecurrenceException: boolean('is_recurrence_exception').default(false), // True if this instance was modified from template
+  originalDate: date('original_date'), // Original date before modification (for exceptions)
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 }, (table) => ({
   userDateIdx: index('time_blocks_user_date_idx').on(table.userId, table.blockDate),
   dripIdx: index('time_blocks_drip_idx').on(table.userId, table.dripQuadrant),
+  recurringIdx: index('time_blocks_recurring_idx').on(table.userId, table.isRecurring),
+  parentIdx: index('time_blocks_parent_idx').on(table.parentBlockId),
 }));
 
 // =============================================

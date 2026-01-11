@@ -17,6 +17,14 @@ export interface TimeBlock {
   dripQuadrant: DripQuadrant;
   source?: string;
   externalEventId?: string;
+  // Recurring event fields
+  isRecurring?: boolean;
+  recurrenceRule?: string; // RFC 5545 RRULE format
+  recurrenceEndDate?: string;
+  parentBlockId?: string;
+  isRecurrenceException?: boolean;
+  originalDate?: string;
+  tagIds?: string[];
   createdAt?: string;
   updatedAt?: string;
 }

@@ -91,6 +91,13 @@ export async function GET(request: NextRequest) {
       lightsUpScore: block.lights_up_score,
       source: block.source,
       externalEventId: block.external_event_id,
+      // Recurring event fields
+      isRecurring: block.is_recurring,
+      recurrenceRule: block.recurrence_rule,
+      recurrenceEndDate: block.recurrence_end_date,
+      parentBlockId: block.parent_block_id,
+      isRecurrenceException: block.is_recurrence_exception,
+      originalDate: block.original_date,
       tagIds: tagsByBlock[block.id] || [],
       createdAt: block.created_at,
       updatedAt: block.updated_at,
@@ -134,6 +141,13 @@ export async function POST(request: NextRequest) {
       externalEventId,
       minId,
       tagIds,
+      // Recurring event fields
+      isRecurring,
+      recurrenceRule,
+      recurrenceEndDate,
+      parentBlockId,
+      isRecurrenceException,
+      originalDate,
     } = body;
 
     if (!date || !startTime || !endTime || !activityName) {
@@ -164,6 +178,13 @@ export async function POST(request: NextRequest) {
         source: source || 'manual',
         external_event_id: externalEventId || null,
         min_id: minId || null,
+        // Recurring event fields
+        is_recurring: isRecurring || false,
+        recurrence_rule: recurrenceRule || null,
+        recurrence_end_date: recurrenceEndDate || null,
+        parent_block_id: parentBlockId || null,
+        is_recurrence_exception: isRecurrenceException || false,
+        original_date: originalDate || null,
       })
       .select()
       .single();
@@ -210,6 +231,13 @@ export async function POST(request: NextRequest) {
       dripQuadrant: timeBlock.drip_quadrant,
       source: timeBlock.source,
       externalEventId: timeBlock.external_event_id,
+      // Recurring event fields
+      isRecurring: timeBlock.is_recurring,
+      recurrenceRule: timeBlock.recurrence_rule,
+      recurrenceEndDate: timeBlock.recurrence_end_date,
+      parentBlockId: timeBlock.parent_block_id,
+      isRecurrenceException: timeBlock.is_recurrence_exception,
+      originalDate: timeBlock.original_date,
       tagIds: assignedTagIds,
       createdAt: timeBlock.created_at,
     };
@@ -250,6 +278,13 @@ export async function PUT(request: NextRequest) {
       energyRating,
       dripQuadrant,
       tagIds,
+      // Recurring event fields
+      isRecurring,
+      recurrenceRule,
+      recurrenceEndDate,
+      parentBlockId,
+      isRecurrenceException,
+      originalDate,
     } = body;
 
     if (!id) {
@@ -280,6 +315,13 @@ export async function PUT(request: NextRequest) {
     if (notes !== undefined) updateData.notes = notes;
     if (energyRating !== undefined) updateData.energy_rating = energyRating;
     if (dripQuadrant !== undefined) updateData.drip_quadrant = dripQuadrant;
+    // Recurring event fields
+    if (isRecurring !== undefined) updateData.is_recurring = isRecurring;
+    if (recurrenceRule !== undefined) updateData.recurrence_rule = recurrenceRule;
+    if (recurrenceEndDate !== undefined) updateData.recurrence_end_date = recurrenceEndDate;
+    if (parentBlockId !== undefined) updateData.parent_block_id = parentBlockId;
+    if (isRecurrenceException !== undefined) updateData.is_recurrence_exception = isRecurrenceException;
+    if (originalDate !== undefined) updateData.original_date = originalDate;
 
     const { data: timeBlock, error } = await supabase
       .from('time_blocks')
@@ -347,6 +389,13 @@ export async function PUT(request: NextRequest) {
       dripQuadrant: timeBlock.drip_quadrant,
       source: timeBlock.source,
       externalEventId: timeBlock.external_event_id,
+      // Recurring event fields
+      isRecurring: timeBlock.is_recurring,
+      recurrenceRule: timeBlock.recurrence_rule,
+      recurrenceEndDate: timeBlock.recurrence_end_date,
+      parentBlockId: timeBlock.parent_block_id,
+      isRecurrenceException: timeBlock.is_recurrence_exception,
+      originalDate: timeBlock.original_date,
       tagIds: updatedTagIds,
       createdAt: timeBlock.created_at,
       updatedAt: timeBlock.updated_at,

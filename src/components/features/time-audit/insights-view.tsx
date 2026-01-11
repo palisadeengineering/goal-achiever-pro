@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { CalendarIcon, Clock, Activity, TrendingUp } from 'lucide-react';
+import { CalendarIcon, Clock, Activity, TrendingUp, Target, Zap, ArrowUpRight, ArrowDownRight, Minus, BarChart2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
@@ -20,7 +20,8 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
+import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, differenceInDays, subWeeks } from 'date-fns';
+import { Progress } from '@/components/ui/progress';
 import {
   useInsightsData,
   type TimeBlockData,
@@ -174,6 +175,107 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
   };
 
   const hasFilters = selectedDrip.length > 0 || selectedEnergy.length > 0 || selectedTags.length > 0;
+
+  // Calculate productivity score (weighted by DRIP + Energy)
+  const productivityMetrics = useMemo(() => {
+    const blocks = timeBlocks.filter(b => {
+      const blockDate = new Date(b.date);
+      return blockDate >= startDate && blockDate <= endDate;
+    });
+
+    if (blocks.length === 0) {
+      return { score: 0, productionRatio: 0, energyBalance: 0, weeklyChange: 0 };
+    }
+
+    // Calculate production ratio (production + investment hours / total hours)
+    const totalMinutes = blocks.reduce((sum, b) => sum + (b.durationMinutes || 0), 0);
+    const productiveMinutes = blocks
+      .filter(b => b.dripQuadrant === 'production' || b.dripQuadrant === 'investment')
+      .reduce((sum, b) => sum + (b.durationMinutes || 0), 0);
+    const productionRatio = totalMinutes > 0 ? (productiveMinutes / totalMinutes) * 100 : 0;
+
+    // Calculate energy balance (energizing - draining hours)
+    const energizingMinutes = blocks.filter(b => b.energyRating === 'green').reduce((sum, b) => sum + (b.durationMinutes || 0), 0);
+    const drainingMinutes = blocks.filter(b => b.energyRating === 'red').reduce((sum, b) => sum + (b.durationMinutes || 0), 0);
+    const energyBalance = totalMinutes > 0 ? ((energizingMinutes - drainingMinutes) / totalMinutes) * 100 : 0;
+
+    // Calculate overall productivity score (0-100)
+    // Formula: 60% weight on production ratio + 40% weight on energy balance (normalized to 0-100)
+    const normalizedEnergyBalance = (energyBalance + 100) / 2; // Convert -100 to 100 range to 0 to 100
+    const score = Math.round(productionRatio * 0.6 + normalizedEnergyBalance * 0.4);
+
+    // Calculate week-over-week change
+    const prevWeekStart = subWeeks(startDate, 1);
+    const prevWeekEnd = subWeeks(endDate, 1);
+    const prevBlocks = timeBlocks.filter(b => {
+      const blockDate = new Date(b.date);
+      return blockDate >= prevWeekStart && blockDate <= prevWeekEnd;
+    });
+
+    let weeklyChange = 0;
+    if (prevBlocks.length > 0) {
+      const prevTotalMinutes = prevBlocks.reduce((sum, b) => sum + (b.durationMinutes || 0), 0);
+      const prevProductiveMinutes = prevBlocks
+        .filter(b => b.dripQuadrant === 'production' || b.dripQuadrant === 'investment')
+        .reduce((sum, b) => sum + (b.durationMinutes || 0), 0);
+      const prevProductionRatio = prevTotalMinutes > 0 ? (prevProductiveMinutes / prevTotalMinutes) * 100 : 0;
+      weeklyChange = productionRatio - prevProductionRatio;
+    }
+
+    return { score, productionRatio, energyBalance, weeklyChange };
+  }, [timeBlocks, startDate, endDate]);
+
+  // Calculate top activities
+  const topActivities = useMemo(() => {
+    const blocks = timeBlocks.filter(b => {
+      const blockDate = new Date(b.date);
+      return blockDate >= startDate && blockDate <= endDate;
+    });
+
+    // Group by activity name
+    const activityMap = new Map<string, { name: string; minutes: number; events: number; drip: string; energy: string }>();
+    blocks.forEach(block => {
+      const name = block.activityName.toLowerCase().trim();
+      const existing = activityMap.get(name) || { name: block.activityName, minutes: 0, events: 0, drip: block.dripQuadrant, energy: block.energyRating };
+      existing.minutes += block.durationMinutes || 0;
+      existing.events += 1;
+      activityMap.set(name, existing);
+    });
+
+    // Sort by minutes and take top 10
+    const sorted = Array.from(activityMap.values())
+      .sort((a, b) => b.minutes - a.minutes)
+      .slice(0, 10);
+
+    const totalMinutes = blocks.reduce((sum, b) => sum + (b.durationMinutes || 0), 0);
+    return sorted.map(a => ({
+      ...a,
+      hours: Number((a.minutes / 60).toFixed(1)),
+      percentage: totalMinutes > 0 ? Math.round((a.minutes / totalMinutes) * 100) : 0,
+    }));
+  }, [timeBlocks, startDate, endDate]);
+
+  // Calculate day of week distribution
+  const dayOfWeekData = useMemo(() => {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const blocks = timeBlocks.filter(b => {
+      const blockDate = new Date(b.date);
+      return blockDate >= startDate && blockDate <= endDate;
+    });
+
+    const dayMinutes: number[] = [0, 0, 0, 0, 0, 0, 0];
+    blocks.forEach(block => {
+      const dayIndex = new Date(block.date).getDay();
+      dayMinutes[dayIndex] += block.durationMinutes || 0;
+    });
+
+    const maxMinutes = Math.max(...dayMinutes, 1);
+    return days.map((day, i) => ({
+      day,
+      hours: Number((dayMinutes[i] / 60).toFixed(1)),
+      percentage: Math.round((dayMinutes[i] / maxMinutes) * 100),
+    }));
+  }, [timeBlocks, startDate, endDate]);
 
   return (
     <div className="space-y-6">
@@ -344,53 +446,111 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
         </CardContent>
       </Card>
 
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      {/* Summary Cards - Enhanced */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* Productivity Score */}
+        <Card className="relative overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Productivity Score</CardTitle>
+            <Target className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-baseline gap-2">
+              <div className="text-3xl font-bold">{productivityMetrics.score}</div>
+              <span className="text-lg text-muted-foreground">/100</span>
+              {productivityMetrics.weeklyChange !== 0 && (
+                <div className={`flex items-center text-xs ${productivityMetrics.weeklyChange > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {productivityMetrics.weeklyChange > 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                  {Math.abs(productivityMetrics.weeklyChange).toFixed(1)}%
+                </div>
+              )}
+            </div>
+            <Progress value={productivityMetrics.score} className="mt-2 h-2" />
+            <p className="text-xs text-muted-foreground mt-1">
+              Based on DRIP quadrant + energy balance
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Total Hours */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Hours</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{insightsData.totals.totalHours.toFixed(1)}h</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-3xl font-bold">{insightsData.totals.totalHours.toFixed(1)}h</div>
+            <p className="text-xs text-muted-foreground mt-1">
               {insightsData.totals.totalEvents} events tracked
             </p>
+            <div className="mt-2 text-xs">
+              <span className="text-muted-foreground">Avg: </span>
+              <span className="font-medium">{insightsData.totals.avgHoursPerDay.toFixed(1)}h/day</span>
+            </div>
           </CardContent>
         </Card>
 
+        {/* Production Ratio */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Hours/Day</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Production Ratio</CardTitle>
+            <Zap className="h-4 w-4 text-cyan-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{insightsData.totals.avgHoursPerDay.toFixed(1)}h</div>
-            <p className="text-xs text-muted-foreground">
-              Daily average for period
+            <div className="text-3xl font-bold">{productivityMetrics.productionRatio.toFixed(0)}%</div>
+            <Progress value={productivityMetrics.productionRatio} className="mt-2 h-2" />
+            <p className="text-xs text-muted-foreground mt-1">
+              Production + Investment time
             </p>
           </CardContent>
         </Card>
 
+        {/* Energy Balance */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Top Category</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Energy Balance</CardTitle>
+            {productivityMetrics.energyBalance >= 0 ? (
+              <ArrowUpRight className="h-4 w-4 text-green-500" />
+            ) : (
+              <ArrowDownRight className="h-4 w-4 text-red-500" />
+            )}
           </CardHeader>
           <CardContent>
-            {insightsData.barChartData.length > 0 ? (
-              <>
-                <div className="text-2xl font-bold">{insightsData.barChartData[0]?.label}</div>
-                <p className="text-xs text-muted-foreground">
-                  {insightsData.barChartData[0]?.percentage}% of total
-                </p>
-              </>
-            ) : (
-              <div className="text-sm text-muted-foreground">No data</div>
-            )}
+            <div className={`text-3xl font-bold ${productivityMetrics.energyBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {productivityMetrics.energyBalance >= 0 ? '+' : ''}{productivityMetrics.energyBalance.toFixed(0)}%
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {productivityMetrics.energyBalance >= 0 ? 'Net positive energy' : 'Net energy drain'}
+            </p>
+            <div className="flex items-center gap-2 mt-2">
+              <span className="h-2 w-2 rounded-full bg-green-500" />
+              <span className="text-xs text-muted-foreground">Energizing - Draining</span>
+            </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Day of Week Distribution */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium">Time by Day of Week</CardTitle>
+          <CardDescription>See which days you track the most time</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-end justify-between gap-2 h-32">
+            {dayOfWeekData.map((day) => (
+              <div key={day.day} className="flex-1 flex flex-col items-center gap-1">
+                <div
+                  className="w-full bg-primary/80 rounded-t transition-all hover:bg-primary"
+                  style={{ height: `${day.percentage}%`, minHeight: day.hours > 0 ? '8px' : '2px' }}
+                />
+                <span className="text-xs font-medium">{day.day}</span>
+                <span className="text-xs text-muted-foreground">{day.hours}h</span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Charts */}
       <div className="grid gap-6 lg:grid-cols-2">
@@ -584,6 +744,50 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Top Activities Table */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Top Activities</CardTitle>
+              <CardDescription>Your most tracked activities by time spent</CardDescription>
+            </div>
+            <BarChart2 className="h-4 w-4 text-muted-foreground" />
+          </div>
+        </CardHeader>
+        <CardContent>
+          {topActivities.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">No activities tracked yet</p>
+          ) : (
+            <div className="space-y-3">
+              {topActivities.map((activity, index) => (
+                <div key={activity.name} className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-muted-foreground w-4">{index + 1}</span>
+                      <span className="font-medium text-sm truncate max-w-[200px]">{activity.name}</span>
+                      <Badge
+                        variant="outline"
+                        className="text-xs capitalize"
+                        style={{ borderColor: DRIP_COLORS[activity.drip], color: DRIP_COLORS[activity.drip] }}
+                      >
+                        {activity.drip === 'na' ? 'N/A' : activity.drip}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-xs text-muted-foreground">{activity.events} events</span>
+                      <span className="font-bold text-sm">{activity.hours}h</span>
+                      <span className="text-xs text-muted-foreground w-12 text-right">{activity.percentage}%</span>
+                    </div>
+                  </div>
+                  <Progress value={activity.percentage} className="h-1.5" />
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

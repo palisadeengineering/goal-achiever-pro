@@ -480,6 +480,10 @@ export default function TimeAuditPage() {
           energyRating: blockData.energyRating,
           source: 'calendar_sync',
           externalEventId: editingBlock.externalEventId,
+          // Recurring event fields
+          isRecurring: blockData.isRecurring,
+          recurrenceRule: blockData.recurrenceRule,
+          recurrenceEndDate: blockData.recurrenceEndDate,
         });
 
         // Also save/update the categorization in localStorage for pattern learning
@@ -526,6 +530,10 @@ export default function TimeAuditPage() {
           activityName: blockData.activityName,
           dripQuadrant: blockData.dripQuadrant,
           energyRating: blockData.energyRating,
+          // Recurring event fields
+          isRecurring: blockData.isRecurring,
+          recurrenceRule: blockData.recurrenceRule,
+          recurrenceEndDate: blockData.recurrenceEndDate,
         });
 
         // If this is a Google Calendar event, also update it in Google Calendar
@@ -584,8 +592,9 @@ export default function TimeAuditPage() {
 
           if (response.ok) {
             const data = await response.json();
-            // data.event.id already includes the gcal_ prefix from the API
-            externalEventId = data.event?.id || undefined;
+            // Store the actual Google event ID (without gcal_ prefix) for database storage
+            // The API returns googleEventId which is the raw Google ID
+            externalEventId = data.event?.googleEventId || data.event?.id?.replace('gcal_', '') || undefined;
           }
         } catch (error) {
           console.error('Error creating Google Calendar event:', error);
@@ -602,13 +611,18 @@ export default function TimeAuditPage() {
         energyRating: blockData.energyRating,
         source: externalEventId ? 'calendar_sync' : 'manual',
         externalEventId,
+        // Recurring event fields
+        isRecurring: blockData.isRecurring,
+        recurrenceRule: blockData.recurrenceRule,
+        recurrenceEndDate: blockData.recurrenceEndDate,
       });
 
       // If a Google Calendar event was created, save its categorization to patterns
       // This prevents the event from appearing as "uncategorized" in the categorize dialog
+      // Use gcal_ prefixed ID for categorization storage to match how events appear from Google API
       if (externalEventId) {
         saveCategorization(
-          externalEventId,
+          `gcal_${externalEventId}`,
           blockData.activityName,
           blockData.dripQuadrant,
           blockData.energyRating
@@ -960,9 +974,12 @@ export default function TimeAuditPage() {
       }
 
       // If this is a Google Calendar event, sync the change
-      const externalEventId = block.externalEventId || blockId;
-      if (externalEventId && isGoogleConnected) {
-        const eventId = externalEventId.replace('gcal_', '');
+      // Check if the block has an external event ID or if blockId starts with gcal_
+      const externalEventId = block.externalEventId;
+      const isGoogleEvent = externalEventId || blockId.startsWith('gcal_');
+      if (isGoogleEvent && isGoogleConnected) {
+        // Extract the Google event ID - remove gcal_ prefix if present
+        const eventId = (externalEventId || blockId).replace('gcal_', '');
         const normalizedStart = normalizeTimeFormat(newStartTime);
         const normalizedEnd = normalizeTimeFormat(newEndTime);
         const startDateTime = new Date(`${newDate}T${normalizedStart}:00`);

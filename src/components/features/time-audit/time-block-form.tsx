@@ -26,7 +26,8 @@ import { TagSelector } from './tag-selector';
 import { TagManager } from './tag-manager';
 import { useTags, type Tag } from '@/lib/hooks/use-tags';
 import { useTagPatterns } from '@/lib/hooks/use-tag-patterns';
-import { Sparkles, Check, X, Loader2, Trash2 } from 'lucide-react';
+import { Sparkles, Check, X, Loader2, Trash2, Repeat } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import type { DripQuadrant, EnergyRating } from '@/types/database';
 
 export interface TimeBlock {
@@ -41,13 +42,29 @@ export interface TimeBlock {
   source?: string;
   externalEventId?: string;
   tagIds?: string[];
+  // Recurring event fields
+  isRecurring?: boolean;
+  recurrenceRule?: string;
+  recurrenceEndDate?: string;
+  parentBlockId?: string;
+  isRecurrenceException?: boolean;
+  originalDate?: string;
   createdAt: string;
 }
+
+// Recurrence rule options
+const RECURRENCE_OPTIONS = [
+  { value: 'FREQ=DAILY', label: 'Daily', description: 'Repeats every day' },
+  { value: 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR', label: 'Weekdays', description: 'Monday through Friday' },
+  { value: 'FREQ=WEEKLY', label: 'Weekly', description: 'Repeats every week on this day' },
+  { value: 'FREQ=WEEKLY;INTERVAL=2', label: 'Bi-weekly', description: 'Repeats every 2 weeks' },
+  { value: 'FREQ=MONTHLY', label: 'Monthly', description: 'Repeats every month on this date' },
+];
 
 interface TimeBlockFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (block: Omit<TimeBlock, 'id' | 'createdAt'>) => void;
+  onSave: (block: Omit<TimeBlock, 'id' | 'createdAt' | 'parentBlockId' | 'isRecurrenceException' | 'originalDate'>) => void;
   onDelete?: (block: TimeBlock) => Promise<void>;
   initialDate?: string;
   initialTime?: string;
@@ -92,6 +109,11 @@ export function TimeBlockForm({
   const [showTagManager, setShowTagManager] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Recurring event states
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrenceRule, setRecurrenceRule] = useState('FREQ=WEEKLY');
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState('');
+
   // Smart tag suggestion states
   const [suggestedTagIds, setSuggestedTagIds] = useState<string[]>([]);
   const [showSuggestion, setShowSuggestion] = useState(false);
@@ -113,6 +135,10 @@ export function TimeBlockForm({
         setDripQuadrant(editBlock.dripQuadrant);
         setEnergyRating(editBlock.energyRating);
         setSelectedTagIds(editBlock.tagIds || []);
+        // Recurring fields
+        setIsRecurring(editBlock.isRecurring || false);
+        setRecurrenceRule(editBlock.recurrenceRule || 'FREQ=WEEKLY');
+        setRecurrenceEndDate(editBlock.recurrenceEndDate || '');
       } else {
         setDate(initialDate || today);
         setStartTime(initialTime || '09:00');
@@ -123,6 +149,10 @@ export function TimeBlockForm({
         setDripQuadrant('production');
         setEnergyRating('yellow');
         setSelectedTagIds([]);
+        // Reset recurring fields
+        setIsRecurring(false);
+        setRecurrenceRule('FREQ=WEEKLY');
+        setRecurrenceEndDate('');
       }
       // Reset suggestion state
       setSuggestedTagIds([]);
@@ -223,6 +253,10 @@ export function TimeBlockForm({
       dripQuadrant,
       energyRating,
       tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
+      // Recurring event fields
+      isRecurring: isRecurring || undefined,
+      recurrenceRule: isRecurring ? recurrenceRule : undefined,
+      recurrenceEndDate: isRecurring && recurrenceEndDate ? recurrenceEndDate : undefined,
     });
     onOpenChange(false);
   };
@@ -309,6 +343,67 @@ export function TimeBlockForm({
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
             />
+          </div>
+
+          {/* Recurring Event */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Repeat className="h-4 w-4 text-muted-foreground" />
+                <Label htmlFor="recurring">Repeat</Label>
+              </div>
+              <Switch
+                id="recurring"
+                checked={isRecurring}
+                onCheckedChange={setIsRecurring}
+              />
+            </div>
+
+            {isRecurring && (
+              <div className="space-y-3 pl-6 border-l-2 border-muted animate-in fade-in slide-in-from-top-1">
+                <div className="space-y-2">
+                  <Label>Frequency</Label>
+                  <Select value={recurrenceRule} onValueChange={setRecurrenceRule}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {RECURRENCE_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{option.label}</span>
+                            <span className="text-xs text-muted-foreground">{option.description}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="recurrenceEndDate">End Date (Optional)</Label>
+                  <Input
+                    id="recurrenceEndDate"
+                    type="date"
+                    value={recurrenceEndDate}
+                    onChange={(e) => setRecurrenceEndDate(e.target.value)}
+                    min={date}
+                    placeholder="No end date"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Leave empty for no end date
+                  </p>
+                </div>
+
+                {/* Show indicator if editing a recurring event instance */}
+                {editBlock?.parentBlockId && (
+                  <div className="p-2 bg-amber-50 dark:bg-amber-900/20 rounded-md text-xs text-amber-800 dark:text-amber-200">
+                    <strong>Note:</strong> This is an instance of a recurring event.
+                    Changes will only apply to this occurrence.
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* DRIP Quadrant */}
