@@ -17,7 +17,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Plus, Loader2, Palette } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Loader2, Palette, Repeat } from 'lucide-react';
 import { cn, formatHour } from '@/lib/utils';
 import { DRIP_QUADRANTS } from '@/constants/drip';
 import { useLocalStorage } from '@/lib/hooks/use-local-storage';
@@ -28,6 +28,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import type { DripQuadrant, EnergyRating } from '@/types/database';
+import { describeRecurrence } from '@/lib/utils/recurrence';
 
 interface TimeBlock {
   id: string;
@@ -38,6 +39,11 @@ interface TimeBlock {
   energyRating: EnergyRating;
   date?: string;
   syncStatus?: 'synced' | 'pending' | 'error';
+  // Recurring event properties
+  isRecurring?: boolean;
+  recurrenceRule?: string;
+  isRecurrenceInstance?: boolean;
+  parentBlockId?: string;
 }
 
 interface UserSettings {
@@ -136,6 +142,9 @@ function EventCard({
   const isShort = durationSlots <= 2;
   const isMedium = durationSlots <= 4;
 
+  // Check if this is a recurring event
+  const isRecurring = block.isRecurring || block.isRecurrenceInstance;
+
   // Solid background colors like Google Calendar for better readability
   const getBgColor = () => {
     if (colorMode === 'energy') {
@@ -161,10 +170,12 @@ function EventCard({
           <div
             ref={setNodeRef}
             className={cn(
-              'relative rounded h-full w-full overflow-hidden',
+              'relative rounded-lg h-full w-full overflow-hidden',
               'transition-all duration-200 ease-out',
+              'shadow-md hover:shadow-lg',
+              'ring-1 ring-white/15',
               getBgColor(),
-              isDragging && 'opacity-70 shadow-lg scale-[1.02]',
+              isDragging && 'opacity-80 shadow-2xl scale-[1.02] ring-2 ring-white/40',
               isResizing && 'ring-2 ring-white/50',
               block.syncStatus === 'pending' && 'animate-pulse',
               block.syncStatus === 'error' && 'ring-2 ring-red-300'
@@ -190,8 +201,11 @@ function EventCard({
                   className="w-full h-full flex items-center overflow-hidden"
                   style={{ padding: '0 4px' }}
                 >
+                  {isRecurring && (
+                    <Repeat className="h-2.5 w-2.5 mr-1 flex-shrink-0 opacity-80" />
+                  )}
                   <div
-                    className="font-semibold truncate w-full"
+                    className="font-semibold truncate flex-1"
                     style={{ fontSize: '9px', lineHeight: '13px' }}
                   >
                     {block.activityName}
@@ -204,10 +218,11 @@ function EventCard({
                   style={{ padding: '2px 6px' }}
                 >
                   <div
-                    className="font-bold truncate w-full"
+                    className="font-bold truncate w-full flex items-center gap-1"
                     style={{ fontSize: '11px', lineHeight: '13px' }}
                   >
-                    {block.activityName}
+                    {isRecurring && <Repeat className="h-2.5 w-2.5 flex-shrink-0 opacity-80" />}
+                    <span className="truncate">{block.activityName}</span>
                   </div>
                   <div
                     className="truncate w-full opacity-90"
@@ -223,13 +238,14 @@ function EventCard({
                   style={{ padding: '4px 6px' }}
                 >
                   <div
-                    className="font-bold truncate w-full"
+                    className="font-bold truncate w-full flex items-center gap-1"
                     style={{ fontSize: '12px', lineHeight: '14px' }}
                   >
-                    {block.activityName}
+                    {isRecurring && <Repeat className="h-3 w-3 flex-shrink-0 opacity-80" />}
+                    <span className="truncate">{block.activityName}</span>
                   </div>
                   <div
-                    className="truncate w-full opacity-90"
+                    className="truncate w-full opacity-90 flex items-center gap-1"
                     style={{ fontSize: '10px', lineHeight: '12px' }}
                   >
                     {timeRange}
@@ -242,10 +258,11 @@ function EventCard({
                   style={{ padding: '4px 8px' }}
                 >
                   <div
-                    className="font-bold w-full"
+                    className="font-bold w-full flex items-center gap-1.5"
                     style={{ fontSize: '13px', lineHeight: '16px' }}
                   >
-                    {block.activityName}
+                    {isRecurring && <Repeat className="h-3.5 w-3.5 flex-shrink-0 opacity-80" />}
+                    <span className="truncate">{block.activityName}</span>
                   </div>
                   <div
                     className="w-full opacity-90"
@@ -279,6 +296,12 @@ function EventCard({
           <div className="space-y-1">
             <p className="font-semibold">{block.activityName}</p>
             <p className="text-xs text-muted-foreground">{timeRange}</p>
+            {isRecurring && block.recurrenceRule && (
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <Repeat className="h-3 w-3" />
+                {describeRecurrence(block.recurrenceRule)}
+              </p>
+            )}
             <div className="flex gap-2 mt-2">
               <Badge
                 variant="outline"
@@ -882,11 +905,13 @@ export function WeeklyCalendarView({
                 <p className="text-xs mt-1 opacity-70">Tap + to add one</p>
               </div>
             ) : (
-              sortedBlocks.map((block) => (
+              sortedBlocks.map((block) => {
+                const isBlockRecurring = block.isRecurring || block.isRecurrenceInstance;
+                return (
                 <button
                   key={block.id}
                   onClick={() => onBlockClick?.(block)}
-                  className="w-full text-left p-3 rounded-xl bg-card border transition-all hover:shadow-md active:scale-[0.98]"
+                  className="w-full text-left p-3 rounded-xl bg-card border shadow-sm transition-all hover:shadow-lg active:scale-[0.98]"
                   style={{
                     borderLeftWidth: '4px',
                     borderLeftColor: colorMode === 'energy' ? ENERGY_COLORS[block.energyRating] : DRIP_QUADRANTS[block.dripQuadrant].color,
@@ -894,7 +919,10 @@ export function WeeklyCalendarView({
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold truncate">{block.activityName}</p>
+                      <p className="font-semibold truncate flex items-center gap-1.5">
+                        {isBlockRecurring && <Repeat className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />}
+                        {block.activityName}
+                      </p>
                       <p className="text-sm text-muted-foreground">
                         {formatTimeShort(block.startTime)} - {formatTimeShort(block.endTime)}
                       </p>
@@ -906,7 +934,7 @@ export function WeeklyCalendarView({
                     </div>
                   </div>
                 </button>
-              ))
+              );})
             )}
           </div>
 

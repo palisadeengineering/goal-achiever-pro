@@ -41,6 +41,7 @@ import { useTags } from '@/lib/hooks/use-tags';
 import { useEditPatterns } from '@/lib/hooks/use-edit-patterns';
 import { EditSuggestionBanner } from '@/components/features/time-audit/edit-suggestion-banner';
 import { ROUTES } from '@/constants/routes';
+import { expandRecurringEvents } from '@/lib/utils/recurrence';
 import type { DripQuadrant, EnergyRating } from '@/types/database';
 
 type SubscriptionTier = 'free' | 'pro' | 'premium';
@@ -60,6 +61,11 @@ interface CalendarTimeBlock {
   activityName: string;
   dripQuadrant: DripQuadrant;
   energyRating: EnergyRating;
+  // Recurring event properties
+  isRecurring?: boolean;
+  recurrenceRule?: string;
+  isRecurrenceInstance?: boolean;
+  parentBlockId?: string;
 }
 
 function checkProAccess(tier: SubscriptionTier): boolean {
@@ -88,7 +94,8 @@ export default function TimeAuditPage() {
   const weekStart = startOfWeek(today, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
 
-  // Database time blocks
+  // Database time blocks - fetch a wide range to support navigation
+  // 3 months back and 6 months forward to cover most navigation scenarios
   const {
     timeBlocks: dbTimeBlocks,
     isLoading: isLoadingDb,
@@ -99,14 +106,14 @@ export default function TimeAuditPage() {
     importTimeBlocks,
     fetchTimeBlocks,
   } = useTimeBlocks(
-    format(weekStart, 'yyyy-MM-dd'),
-    format(addMonths(weekEnd, 1), 'yyyy-MM-dd')
+    format(addMonths(weekStart, -3), 'yyyy-MM-dd'),
+    format(addMonths(weekEnd, 6), 'yyyy-MM-dd')
   );
 
   // Local storage for backwards compatibility (will migrate to DB)
   const [localTimeBlocks, setLocalTimeBlocks] = useLocalStorage<TimeBlock[]>('time-blocks', []);
 
-  // Combine database and local time blocks (prefer database)
+  // Combine database and local time blocks (prefer database), then expand recurring events
   const timeBlocks = useMemo(() => {
     // Create a set of external event IDs from database
     const dbExternalIds = new Set(
@@ -119,7 +126,7 @@ export default function TimeAuditPage() {
       b => !dbLocalIds.has(b.id) && (!b.externalEventId || !dbExternalIds.has(b.externalEventId))
     );
 
-    // Merge and sort by date/time
+    // Merge blocks with recurring event fields
     const merged = [...dbTimeBlocks.map(b => ({
       id: b.id,
       date: b.date,
@@ -131,14 +138,26 @@ export default function TimeAuditPage() {
       source: b.source,
       externalEventId: b.externalEventId,
       createdAt: b.createdAt || new Date().toISOString(),
+      // Include recurring event fields
+      isRecurring: b.isRecurring,
+      recurrenceRule: b.recurrenceRule,
+      recurrenceEndDate: b.recurrenceEndDate,
+      parentBlockId: b.parentBlockId,
     })), ...uniqueLocalBlocks];
 
-    return merged.sort((a, b) => {
+    // Expand recurring events for a wide range to support navigation
+    // 3 months back and 6 months forward to match the fetch range
+    const rangeStart = addMonths(weekStart, -3);
+    const rangeEnd = addMonths(weekEnd, 6);
+
+    const expanded = expandRecurringEvents(merged, rangeStart, rangeEnd);
+
+    return expanded.sort((a, b) => {
       const dateCompare = a.date.localeCompare(b.date);
       if (dateCompare !== 0) return dateCompare;
       return a.startTime.localeCompare(b.startTime);
     });
-  }, [dbTimeBlocks, localTimeBlocks]);
+  }, [dbTimeBlocks, localTimeBlocks, weekStart, weekEnd]);
 
   // State for the form modal
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -274,6 +293,11 @@ export default function TimeAuditPage() {
         activityName: block.activityName,
         dripQuadrant: block.dripQuadrant,
         energyRating: block.energyRating,
+        // Include recurring event properties
+        isRecurring: block.isRecurring,
+        recurrenceRule: block.recurrenceRule,
+        isRecurrenceInstance: 'isRecurrenceInstance' in block ? (block.isRecurrenceInstance as boolean) : undefined,
+        parentBlockId: 'parentBlockId' in block ? (block.parentBlockId as string) : undefined,
       });
     });
 
