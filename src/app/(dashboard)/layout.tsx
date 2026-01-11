@@ -1,5 +1,6 @@
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
+import { Providers } from '@/components/providers';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 
@@ -70,7 +71,9 @@ export default async function DashboardLayout({
           subscriptionTier={subscriptionTier}
         />
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
-          {children}
+          <Providers>
+            {children}
+          </Providers>
         </main>
       </div>
     </div>
