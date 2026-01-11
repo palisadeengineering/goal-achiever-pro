@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Calendar, CalendarDays, CalendarRange, Lock, RefreshCw, ChevronDown, Upload, ArrowUpRight, BarChart3, ListChecks, Trash2 } from 'lucide-react';
+import { Plus, Calendar, CalendarDays, CalendarRange, Lock, RefreshCw, ChevronDown, Upload, ArrowUpRight, BarChart3, ListChecks, Trash2, ChevronRight, PanelRightClose, PanelRight } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -176,6 +176,10 @@ export default function TimeAuditPage() {
   const [categorizationDismissed, setCategorizationDismissed] = useState(false); // Track if user manually closed
   const [mainTab, setMainTab] = useState<'calendar' | 'insights'>('calendar');
   const [syncTimeframe, setSyncTimeframe] = useLocalStorage<'1week' | '2weeks' | '1month'>('google-sync-timeframe', '1week');
+
+  // Sidebar state
+  const [sidebarCollapsed, setSidebarCollapsed] = useLocalStorage<boolean>('time-audit-sidebar-collapsed', false);
+  const [calendarColorMode, setCalendarColorMode] = useState<'drip' | 'energy'>('drip');
 
   // Fetch Google events when connected
   const handleSyncGoogle = (timeframe?: '1week' | '2weeks' | '1month') => {
@@ -1170,9 +1174,9 @@ export default function TimeAuditPage() {
         </TabsList>
 
         <TabsContent value="calendar" className="mt-4">
-          <div className="grid gap-3 lg:grid-cols-5 xl:grid-cols-6">
-            {/* Calendar Views - Takes more columns for more real estate */}
-            <div className="lg:col-span-4 xl:col-span-5">
+          <div className={`grid gap-3 ${sidebarCollapsed ? '' : 'lg:grid-cols-5 xl:grid-cols-6'}`}>
+            {/* Calendar Views - Takes more columns when sidebar visible */}
+            <div className={sidebarCollapsed ? '' : 'lg:col-span-4 xl:col-span-5'}>
               <Tabs defaultValue="weekly" className="space-y-4">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="weekly" className="gap-2">
@@ -1191,29 +1195,26 @@ export default function TimeAuditPage() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="weekly" className="space-y-6">
-              {/* DRIP Distribution Calendar */}
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">DRIP Distribution</h3>
+            <TabsContent value="weekly">
+              {/* Unified Calendar with DRIP/Energy toggle */}
+              <div className="relative">
                 <WeeklyCalendarView
                   timeBlocks={calendarTimeBlocks}
                   onAddBlock={handleAddBlock}
                   onBlockClick={handleBlockClick}
                   onBlockMove={handleBlockMove}
-                  colorMode="drip"
+                  onColorModeChange={setCalendarColorMode}
                 />
-              </div>
-
-              {/* Energy Distribution Calendar */}
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">Energy Distribution</h3>
-                <WeeklyCalendarView
-                  timeBlocks={calendarTimeBlocks}
-                  onAddBlock={handleAddBlock}
-                  onBlockClick={handleBlockClick}
-                  onBlockMove={handleBlockMove}
-                  colorMode="energy"
-                />
+                {/* Sidebar toggle button - fixed position */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute top-3 right-24 z-20 hidden lg:flex"
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+                >
+                  {sidebarCollapsed ? <PanelRight className="h-4 w-4" /> : <PanelRightClose className="h-4 w-4" />}
+                </Button>
               </div>
             </TabsContent>
 
@@ -1261,143 +1262,291 @@ export default function TimeAuditPage() {
           </Tabs>
         </div>
 
-        {/* Pie Charts - Compact sidebar */}
-        <div className="space-y-3">
-          {/* DRIP Distribution - Compact */}
-          <Card className="p-0">
-            <CardHeader className="p-3 pb-1">
-              <CardTitle className="text-sm">DRIP</CardTitle>
-            </CardHeader>
-            <CardContent className="p-3 pt-0">
-              {hasData ? (
-                <>
-                  <DripPieChart data={dripData} size="sm" showLegend={false} />
-                  <div className="mt-2 space-y-1 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Production</span>
-                      <span className="font-medium text-green-600">
-                        {totalHours > 0 ? Math.round((dripData.production / totalHours) * 100) : 0}%
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Investment</span>
-                      <span className="font-medium text-blue-600">
-                        {totalHours > 0 ? Math.round((dripData.investment / totalHours) * 100) : 0}%
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Replacement</span>
-                      <span className="font-medium text-orange-600">
-                        {totalHours > 0 ? Math.round((dripData.replacement / totalHours) * 100) : 0}%
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Delegation</span>
-                      <span className="font-medium text-red-600">
-                        {totalHours > 0 ? Math.round((dripData.delegation / totalHours) * 100) : 0}%
-                      </span>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center py-4 text-muted-foreground text-xs">
-                  <p>No data yet</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        {/* Pie Charts - Collapsible sidebar */}
+        {!sidebarCollapsed && (
+          <div className="space-y-3 hidden lg:block pt-[52px]">
+            {/* Show active chart first based on calendar color mode */}
+            {calendarColorMode === 'drip' ? (
+              <>
+                {/* DRIP Distribution - Primary when in DRIP mode */}
+                <Card className="p-0 ring-2 ring-primary/20">
+                  <CardHeader className="p-3 pb-1">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      DRIP
+                      <Badge variant="secondary" className="text-[10px]">Active</Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-3 pt-0">
+                    {hasData ? (
+                      <>
+                        <DripPieChart data={dripData} size="sm" showLegend={false} />
+                        <div className="mt-2 space-y-1 text-xs">
+                          <div className="flex justify-between items-center">
+                            <span className="flex items-center gap-1.5 text-muted-foreground">
+                              <span className="h-2 w-2 rounded-sm bg-green-500" />
+                              Production
+                            </span>
+                            <span className="font-medium text-green-600">
+                              {totalHours > 0 ? Math.round((dripData.production / totalHours) * 100) : 0}%
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="flex items-center gap-1.5 text-muted-foreground">
+                              <span className="h-2 w-2 rounded-sm bg-purple-500" />
+                              Investment
+                            </span>
+                            <span className="font-medium text-purple-600">
+                              {totalHours > 0 ? Math.round((dripData.investment / totalHours) * 100) : 0}%
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="flex items-center gap-1.5 text-muted-foreground">
+                              <span className="h-2 w-2 rounded-sm bg-amber-500" />
+                              Replacement
+                            </span>
+                            <span className="font-medium text-amber-600">
+                              {totalHours > 0 ? Math.round((dripData.replacement / totalHours) * 100) : 0}%
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="flex items-center gap-1.5 text-muted-foreground">
+                              <span className="h-2 w-2 rounded-sm bg-red-500" />
+                              Delegation
+                            </span>
+                            <span className="font-medium text-red-600">
+                              {totalHours > 0 ? Math.round((dripData.delegation / totalHours) * 100) : 0}%
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="flex items-center gap-1.5 text-muted-foreground">
+                              <span className="h-2 w-2 rounded-sm bg-blue-500" />
+                              N/A
+                            </span>
+                            <span className="font-medium text-blue-600">
+                              {totalHours > 0 ? Math.round((dripData.na / totalHours) * 100) : 0}%
+                            </span>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-4 text-muted-foreground text-xs">
+                        <p>No data yet</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
 
-          {/* Energy Distribution - Compact */}
-          <Card className="p-0">
-            <CardHeader className="p-3 pb-1">
-              <CardTitle className="text-sm">Energy</CardTitle>
-            </CardHeader>
-            <CardContent className="p-3 pt-0">
-              {hasData ? (
-                <>
-                  <EnergyPieChart data={energyData} size="sm" showLegend={false} />
-                  <div className="mt-2 space-y-1 text-xs">
-                    <div className="flex justify-between">
-                      <span className="flex items-center gap-1">
-                        <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                        Energizing
-                      </span>
-                      <span className="font-medium text-green-600">
-                        {totalHours > 0 ? Math.round((energyData.green / totalHours) * 100) : 0}%
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="flex items-center gap-1">
-                        <span className="h-1.5 w-1.5 rounded-full bg-yellow-500" />
-                        Neutral
-                      </span>
-                      <span className="font-medium text-yellow-600">
-                        {totalHours > 0 ? Math.round((energyData.yellow / totalHours) * 100) : 0}%
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="flex items-center gap-1">
-                        <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                        Draining
-                      </span>
-                      <span className="font-medium text-red-600">
-                        {totalHours > 0 ? Math.round((energyData.red / totalHours) * 100) : 0}%
-                      </span>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center py-4 text-muted-foreground text-xs">
-                  <p>No data yet</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                {/* Energy Distribution - Secondary */}
+                <Card className="p-0 opacity-70">
+                  <CardHeader className="p-3 pb-1">
+                    <CardTitle className="text-sm">Energy</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-3 pt-0">
+                    {hasData ? (
+                      <>
+                        <EnergyPieChart data={energyData} size="sm" showLegend={false} />
+                        <div className="mt-2 space-y-1 text-xs">
+                          <div className="flex justify-between items-center">
+                            <span className="flex items-center gap-1.5 text-muted-foreground">
+                              <span className="h-2 w-2 rounded-sm bg-green-500" />
+                              Energizing
+                            </span>
+                            <span className="font-medium text-green-600">
+                              {totalHours > 0 ? Math.round((energyData.green / totalHours) * 100) : 0}%
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="flex items-center gap-1.5 text-muted-foreground">
+                              <span className="h-2 w-2 rounded-sm bg-yellow-500" />
+                              Neutral
+                            </span>
+                            <span className="font-medium text-yellow-600">
+                              {totalHours > 0 ? Math.round((energyData.yellow / totalHours) * 100) : 0}%
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="flex items-center gap-1.5 text-muted-foreground">
+                              <span className="h-2 w-2 rounded-sm bg-red-500" />
+                              Draining
+                            </span>
+                            <span className="font-medium text-red-600">
+                              {totalHours > 0 ? Math.round((energyData.red / totalHours) * 100) : 0}%
+                            </span>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-4 text-muted-foreground text-xs">
+                        <p>No data yet</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </>
+            ) : (
+              <>
+                {/* Energy Distribution - Primary when in Energy mode */}
+                <Card className="p-0 ring-2 ring-primary/20">
+                  <CardHeader className="p-3 pb-1">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      Energy
+                      <Badge variant="secondary" className="text-[10px]">Active</Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-3 pt-0">
+                    {hasData ? (
+                      <>
+                        <EnergyPieChart data={energyData} size="sm" showLegend={false} />
+                        <div className="mt-2 space-y-1 text-xs">
+                          <div className="flex justify-between items-center">
+                            <span className="flex items-center gap-1.5 text-muted-foreground">
+                              <span className="h-2 w-2 rounded-sm bg-green-500" />
+                              Energizing
+                            </span>
+                            <span className="font-medium text-green-600">
+                              {totalHours > 0 ? Math.round((energyData.green / totalHours) * 100) : 0}%
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="flex items-center gap-1.5 text-muted-foreground">
+                              <span className="h-2 w-2 rounded-sm bg-yellow-500" />
+                              Neutral
+                            </span>
+                            <span className="font-medium text-yellow-600">
+                              {totalHours > 0 ? Math.round((energyData.yellow / totalHours) * 100) : 0}%
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="flex items-center gap-1.5 text-muted-foreground">
+                              <span className="h-2 w-2 rounded-sm bg-red-500" />
+                              Draining
+                            </span>
+                            <span className="font-medium text-red-600">
+                              {totalHours > 0 ? Math.round((energyData.red / totalHours) * 100) : 0}%
+                            </span>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-4 text-muted-foreground text-xs">
+                        <p>No data yet</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
 
-          {/* Quick Actions - Compact */}
-          <Card className="p-0">
-            <CardHeader className="p-3 pb-1">
-              <CardTitle className="text-sm">Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="p-3 pt-0 space-y-1.5">
-              <Button variant="outline" size="sm" className="w-full justify-start text-xs h-8" asChild>
-                <Link href={ROUTES.drip}>
-                  View DRIP Matrix
-                </Link>
-              </Button>
-              {isGoogleConnected && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full justify-start text-xs h-8"
-                  onClick={() => {
-                    const recentBlock = timeBlocks[timeBlocks.length - 1];
-                    if (recentBlock && !recentBlock.externalEventId) {
-                      setBlockToPush(recentBlock);
-                      setShowPushDialog(true);
-                    }
-                  }}
-                  disabled={timeBlocks.length === 0}
-                >
-                  <ArrowUpRight className="h-3 w-3 mr-1" />
-                  Push to Calendar
+                {/* DRIP Distribution - Secondary */}
+                <Card className="p-0 opacity-70">
+                  <CardHeader className="p-3 pb-1">
+                    <CardTitle className="text-sm">DRIP</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-3 pt-0">
+                    {hasData ? (
+                      <>
+                        <DripPieChart data={dripData} size="sm" showLegend={false} />
+                        <div className="mt-2 space-y-1 text-xs">
+                          <div className="flex justify-between items-center">
+                            <span className="flex items-center gap-1.5 text-muted-foreground">
+                              <span className="h-2 w-2 rounded-sm bg-green-500" />
+                              Production
+                            </span>
+                            <span className="font-medium text-green-600">
+                              {totalHours > 0 ? Math.round((dripData.production / totalHours) * 100) : 0}%
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="flex items-center gap-1.5 text-muted-foreground">
+                              <span className="h-2 w-2 rounded-sm bg-purple-500" />
+                              Investment
+                            </span>
+                            <span className="font-medium text-purple-600">
+                              {totalHours > 0 ? Math.round((dripData.investment / totalHours) * 100) : 0}%
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="flex items-center gap-1.5 text-muted-foreground">
+                              <span className="h-2 w-2 rounded-sm bg-amber-500" />
+                              Replacement
+                            </span>
+                            <span className="font-medium text-amber-600">
+                              {totalHours > 0 ? Math.round((dripData.replacement / totalHours) * 100) : 0}%
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="flex items-center gap-1.5 text-muted-foreground">
+                              <span className="h-2 w-2 rounded-sm bg-red-500" />
+                              Delegation
+                            </span>
+                            <span className="font-medium text-red-600">
+                              {totalHours > 0 ? Math.round((dripData.delegation / totalHours) * 100) : 0}%
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="flex items-center gap-1.5 text-muted-foreground">
+                              <span className="h-2 w-2 rounded-sm bg-blue-500" />
+                              N/A
+                            </span>
+                            <span className="font-medium text-blue-600">
+                              {totalHours > 0 ? Math.round((dripData.na / totalHours) * 100) : 0}%
+                            </span>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-4 text-muted-foreground text-xs">
+                        <p>No data yet</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </>
+            )}
+
+            {/* Quick Actions - Compact */}
+            <Card className="p-0">
+              <CardHeader className="p-3 pb-1">
+                <CardTitle className="text-sm">Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="p-3 pt-0 space-y-1.5">
+                <Button variant="outline" size="sm" className="w-full justify-start text-xs h-8" asChild>
+                  <Link href={ROUTES.drip}>
+                    View DRIP Matrix
+                  </Link>
                 </Button>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Import Result Notification */}
-          {importResult && (
-            <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 p-0">
-              <CardContent className="p-2">
-                <p className="text-xs text-green-800 dark:text-green-200">
-                  Imported {importResult.imported}
-                  {importResult.skipped > 0 && ` (${importResult.skipped} skipped)`}
-                </p>
+                {isGoogleConnected && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start text-xs h-8"
+                    onClick={() => {
+                      const recentBlock = timeBlocks[timeBlocks.length - 1];
+                      if (recentBlock && !recentBlock.externalEventId) {
+                        setBlockToPush(recentBlock);
+                        setShowPushDialog(true);
+                      }
+                    }}
+                    disabled={timeBlocks.length === 0}
+                  >
+                    <ArrowUpRight className="h-3 w-3 mr-1" />
+                    Push to Calendar
+                  </Button>
+                )}
               </CardContent>
             </Card>
-          )}
-        </div>
+
+            {/* Import Result Notification */}
+            {importResult && (
+              <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 p-0">
+                <CardContent className="p-2">
+                  <p className="text-xs text-green-800 dark:text-green-200">
+                    Imported {importResult.imported}
+                    {importResult.skipped > 0 && ` (${importResult.skipped} skipped)`}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
       </div>
         </TabsContent>
 
