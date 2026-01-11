@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   format,
   startOfMonth,
@@ -11,6 +11,7 @@ import {
   addMonths,
   isSameMonth,
   isSameDay,
+  parseISO,
 } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,16 @@ import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DRIP_QUADRANTS } from '@/constants/drip';
+import type { DripQuadrant } from '@/types/database';
+
+interface TimeBlock {
+  id: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  activityName: string;
+  dripQuadrant: DripQuadrant;
+}
 
 interface DayData {
   date: Date;
@@ -31,12 +42,19 @@ interface DayData {
 }
 
 interface MonthlyCalendarViewProps {
-  monthData?: DayData[];
+  timeBlocks?: TimeBlock[];
   onDayClick?: (date: Date) => void;
 }
 
+// Calculate duration in minutes between two time strings
+function calculateDuration(startTime: string, endTime: string): number {
+  const [startHour, startMin] = startTime.split(':').map(Number);
+  const [endHour, endMin] = endTime.split(':').map(Number);
+  return (endHour * 60 + endMin) - (startHour * 60 + startMin);
+}
+
 export function MonthlyCalendarView({
-  monthData = [],
+  timeBlocks = [],
   onDayClick,
 }: MonthlyCalendarViewProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -53,6 +71,42 @@ export function MonthlyCalendarView({
     days.push(day);
     day = addDays(day, 1);
   }
+
+  // Compute month data from time blocks
+  const monthData = useMemo(() => {
+    const dayDataMap = new Map<string, DayData>();
+
+    // Filter blocks for the current month's calendar range
+    const calendarStartStr = format(calendarStart, 'yyyy-MM-dd');
+    const calendarEndStr = format(calendarEnd, 'yyyy-MM-dd');
+
+    timeBlocks.forEach((block) => {
+      if (block.date >= calendarStartStr && block.date <= calendarEndStr) {
+        const dateKey = block.date;
+        const duration = calculateDuration(block.startTime, block.endTime);
+
+        if (!dayDataMap.has(dateKey)) {
+          dayDataMap.set(dateKey, {
+            date: parseISO(dateKey),
+            totalMinutes: 0,
+            dripBreakdown: { delegation: 0, replacement: 0, investment: 0, production: 0 },
+          });
+        }
+
+        const dayData = dayDataMap.get(dateKey)!;
+        dayData.totalMinutes += duration;
+
+        // Add duration to the appropriate DRIP quadrant
+        const quadrant = block.dripQuadrant;
+        if (quadrant === 'delegation' || quadrant === 'replacement' ||
+            quadrant === 'investment' || quadrant === 'production') {
+          dayData.dripBreakdown[quadrant] += duration;
+        }
+      }
+    });
+
+    return Array.from(dayDataMap.values());
+  }, [timeBlocks, calendarStart, calendarEnd]);
 
   const goToPreviousMonth = () => {
     setCurrentMonth(prev => addMonths(prev, -1));

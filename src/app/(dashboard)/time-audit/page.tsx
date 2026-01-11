@@ -1244,7 +1244,7 @@ export default function TimeAuditPage() {
 
             <TabsContent value="biweekly">
               {hasProAccess ? (
-                <BiweeklyCalendarView />
+                <BiweeklyCalendarView timeBlocks={timeBlocks} />
               ) : (
                 <Card className="py-12">
                   <CardContent className="flex flex-col items-center justify-center text-center">
@@ -1265,7 +1265,7 @@ export default function TimeAuditPage() {
 
             <TabsContent value="monthly">
               {hasPremiumAccess ? (
-                <MonthlyCalendarView />
+                <MonthlyCalendarView timeBlocks={timeBlocks} />
               ) : (
                 <Card className="py-12">
                   <CardContent className="flex flex-col items-center justify-center text-center">
