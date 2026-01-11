@@ -45,3 +45,15 @@ next-env.d.ts
 
 .vercel
 .env*.local
+
+# Local/temporary files
+.claude/settings.local.json
+.claude/ralph-loop.local.md
+progress.txt
+nul
+80%
+
+# Local folders
+Dan martell assests/
+scripts/ralph/
+skills/
