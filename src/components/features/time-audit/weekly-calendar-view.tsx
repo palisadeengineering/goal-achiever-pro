@@ -197,77 +197,101 @@ function EventCard({
               className="w-full h-full text-left cursor-grab active:cursor-grabbing overflow-hidden text-white p-0"
             >
               {isVeryShort ? (
-                /* 15-min slot: ~13px height - single line only */
+                /* 15-min slot: ~14px height - single line, compact */
                 <div
                   className="w-full h-full flex items-center overflow-hidden"
-                  style={{ padding: '0 4px' }}
+                  style={{ padding: '0 3px' }}
                 >
                   {isRecurring && (
-                    <Repeat className="h-2.5 w-2.5 mr-1 flex-shrink-0 opacity-80" />
+                    <Repeat className="h-2 w-2 mr-0.5 flex-shrink-0 opacity-80" />
                   )}
                   <div
-                    className="font-semibold truncate flex-1"
-                    style={{ fontSize: '9px', lineHeight: '13px' }}
+                    className="font-medium flex-1 overflow-hidden whitespace-nowrap"
+                    style={{ fontSize: '9px', lineHeight: '14px', textOverflow: 'ellipsis' }}
                   >
                     {block.activityName}
                   </div>
                 </div>
               ) : isShort ? (
-                /* 30-min slot: ~27px height - title + time stacked */
+                /* 30-min slot: ~28px height - title wraps, time below */
                 <div
-                  className="w-full h-full flex flex-col justify-center overflow-hidden"
-                  style={{ padding: '2px 6px' }}
+                  className="w-full h-full flex flex-col justify-start overflow-hidden"
+                  style={{ padding: '1px 4px' }}
                 >
-                  <div
-                    className="font-bold truncate w-full flex items-center gap-1"
-                    style={{ fontSize: '11px', lineHeight: '13px' }}
-                  >
-                    {isRecurring && <Repeat className="h-2.5 w-2.5 flex-shrink-0 opacity-80" />}
-                    <span className="truncate">{block.activityName}</span>
+                  <div className="flex items-start gap-0.5 min-w-0">
+                    {isRecurring && <Repeat className="h-2.5 w-2.5 flex-shrink-0 opacity-80 mt-0.5" />}
+                    <div
+                      className="font-semibold w-full overflow-hidden"
+                      style={{
+                        fontSize: '10px',
+                        lineHeight: '11px',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                      }}
+                    >
+                      {block.activityName}
+                    </div>
                   </div>
                   <div
-                    className="truncate w-full opacity-90"
-                    style={{ fontSize: '9px', lineHeight: '11px' }}
+                    className="opacity-80 flex-shrink-0"
+                    style={{ fontSize: '9px', lineHeight: '10px' }}
                   >
                     {startTimeDisplay}
                   </div>
                 </div>
               ) : isMedium ? (
-                /* 45-60 min slot: ~42-55px height */
+                /* 45-60 min slot: ~42-56px height - more lines allowed */
                 <div
-                  className="w-full h-full flex flex-col overflow-hidden"
-                  style={{ padding: '4px 6px' }}
+                  className="w-full h-full flex flex-col justify-start overflow-hidden"
+                  style={{ padding: '2px 4px' }}
                 >
-                  <div
-                    className="font-bold truncate w-full flex items-center gap-1"
-                    style={{ fontSize: '12px', lineHeight: '14px' }}
-                  >
-                    {isRecurring && <Repeat className="h-3 w-3 flex-shrink-0 opacity-80" />}
-                    <span className="truncate">{block.activityName}</span>
+                  <div className="flex items-start gap-0.5 min-w-0 flex-1">
+                    {isRecurring && <Repeat className="h-2.5 w-2.5 flex-shrink-0 opacity-80 mt-0.5" />}
+                    <div
+                      className="font-semibold w-full overflow-hidden"
+                      style={{
+                        fontSize: '11px',
+                        lineHeight: '12px',
+                        display: '-webkit-box',
+                        WebkitLineClamp: durationSlots <= 3 ? 3 : 4,
+                        WebkitBoxOrient: 'vertical',
+                      }}
+                    >
+                      {block.activityName}
+                    </div>
                   </div>
                   <div
-                    className="truncate w-full opacity-90 flex items-center gap-1"
-                    style={{ fontSize: '10px', lineHeight: '12px' }}
+                    className="opacity-80 flex-shrink-0"
+                    style={{ fontSize: '9px', lineHeight: '11px' }}
                   >
                     {timeRange}
                   </div>
                 </div>
               ) : (
-                /* 1+ hour slot */
+                /* 1+ hour slot - full text wrap with time range */
                 <div
-                  className="w-full h-full flex flex-col overflow-hidden"
-                  style={{ padding: '4px 8px' }}
+                  className="w-full h-full flex flex-col justify-start overflow-hidden"
+                  style={{ padding: '3px 5px' }}
                 >
-                  <div
-                    className="font-bold w-full flex items-center gap-1.5"
-                    style={{ fontSize: '13px', lineHeight: '16px' }}
-                  >
-                    {isRecurring && <Repeat className="h-3.5 w-3.5 flex-shrink-0 opacity-80" />}
-                    <span className="truncate">{block.activityName}</span>
+                  <div className="flex items-start gap-1 min-w-0 flex-1">
+                    {isRecurring && <Repeat className="h-3 w-3 flex-shrink-0 opacity-80 mt-0.5" />}
+                    <div
+                      className="font-semibold w-full overflow-hidden"
+                      style={{
+                        fontSize: '11px',
+                        lineHeight: '13px',
+                        display: '-webkit-box',
+                        WebkitLineClamp: Math.max(2, Math.floor((durationSlots * 14 - 20) / 13)),
+                        WebkitBoxOrient: 'vertical',
+                      }}
+                    >
+                      {block.activityName}
+                    </div>
                   </div>
                   <div
-                    className="w-full opacity-90"
-                    style={{ fontSize: '11px', lineHeight: '14px' }}
+                    className="opacity-80 flex-shrink-0"
+                    style={{ fontSize: '10px', lineHeight: '12px' }}
                   >
                     {timeRange}
                   </div>
