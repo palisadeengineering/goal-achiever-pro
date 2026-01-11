@@ -396,7 +396,7 @@ export function WeeklyCalendarView({
     const gridRect = calendarGridRef.current.getBoundingClientRect();
 
     const HOUR_HEIGHT = 60;
-    const TIME_COLUMN_WIDTH = gridRect.width / 8; // 8 columns total (time + 7 days)
+    const TIME_COLUMN_WIDTH = 50; // Fixed 50px time column (matches grid-cols-[50px_repeat(7,1fr)])
 
     // Use scroll container bounds if available, otherwise use grid bounds
     const containerTop = scrollContainerRect?.top ?? gridRect.top;
@@ -430,7 +430,7 @@ export function WeeklyCalendarView({
     // Calculate which time slot based on Y position
     // The grid has a header row, so we need to calculate relative to the grid content area
     // Find the first time slot row to get the actual starting Y position
-    const firstTimeSlotRow = calendarGridRef.current.querySelector('[class*="col-span-8"]');
+    const firstTimeSlotRow = calendarGridRef.current.querySelector('[class*="border-r"]');
     const gridContentTop = firstTimeSlotRow ? firstTimeSlotRow.getBoundingClientRect().top : gridRect.top;
 
     // relativeY = pointer position relative to grid content top + scroll offset
@@ -1003,7 +1003,7 @@ export function WeeklyCalendarView({
         <div className="overflow-x-auto">
           <div className="min-w-[800px]">
             {/* Header Row - Days */}
-            <div className="grid grid-cols-8 border-b sticky top-0 bg-background z-10">
+            <div className="grid grid-cols-[50px_repeat(7,1fr)] border-b sticky top-0 bg-background z-10">
               <div className="p-2 text-xs text-muted-foreground border-r">Time</div>
               {weekDays.map((day, index) => (
                 <div
@@ -1034,7 +1034,7 @@ export function WeeklyCalendarView({
                   className="absolute left-0 right-0 z-20 pointer-events-none"
                   style={{ top: `${getCurrentTimePosition()}%` }}
                 >
-                  <div className="grid grid-cols-8">
+                  <div className="grid grid-cols-[50px_repeat(7,1fr)]">
                     <div className="col-span-1" /> {/* Time column spacer */}
                     {weekDays.map((day, index) => (
                       <div key={index} className="relative">
@@ -1050,7 +1050,7 @@ export function WeeklyCalendarView({
                 </div>
               )}
               {/* Time grid with absolute positioned events */}
-              <div ref={calendarGridRef} className="grid grid-cols-8">
+              <div ref={calendarGridRef} className="grid grid-cols-[50px_repeat(7,1fr)]">
                 {/* Time Labels Column */}
                 <div className="border-r">
                   {hourLabels.map((hourSlot: string) => {

@@ -26,9 +26,9 @@ export const DRIP_QUADRANTS: Record<DripQuadrant, {
     name: 'Replacement',
     description: 'High earning, low energy tasks',
     action: 'Automate or replace with systems',
-    color: '#f97316', // Orange
-    bgColor: 'bg-orange-100 dark:bg-orange-900/30',
-    borderColor: 'border-orange-500 dark:border-orange-400',
+    color: '#f59e0b', // Amber/Yellow-ish (more distinct from delegation red)
+    bgColor: 'bg-amber-100 dark:bg-amber-900/30',
+    borderColor: 'border-amber-500 dark:border-amber-400',
     moneyLevel: 'high',
     energyLevel: 'low',
   },
@@ -36,9 +36,9 @@ export const DRIP_QUADRANTS: Record<DripQuadrant, {
     name: 'Investment',
     description: 'Low earning, high energy tasks',
     action: 'Keep for long-term growth',
-    color: '#6366f1', // Indigo
-    bgColor: 'bg-indigo-100 dark:bg-indigo-900/30',
-    borderColor: 'border-indigo-500 dark:border-indigo-400',
+    color: '#a855f7', // Purple (more distinct from other colors)
+    bgColor: 'bg-purple-100 dark:bg-purple-900/30',
+    borderColor: 'border-purple-500 dark:border-purple-400',
     moneyLevel: 'low',
     energyLevel: 'high',
   },
