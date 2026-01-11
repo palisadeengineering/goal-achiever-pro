@@ -78,8 +78,15 @@ async function refreshTokenIfNeeded(
     token_expiry: string;
   },
   userId: string
-): Promise<{ access_token: string; refresh_token: string; token_expiry: string } | null> {
+): Promise<{ access_token: string; refresh_token: string; token_expiry: string; needsReconnect?: boolean } | null> {
   const expiryTime = new Date(tokens.token_expiry).getTime();
+
+  // Check if we have a valid refresh token
+  if (!tokens.refresh_token) {
+    console.error('No refresh token available - user needs to reconnect');
+    await markIntegrationInactive(userId, 'No refresh token');
+    return null;
+  }
 
   if (Date.now() < expiryTime - 60000) {
     // Token still valid (with 1 minute buffer)
@@ -87,6 +94,7 @@ async function refreshTokenIfNeeded(
   }
 
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+    console.error('Missing Google OAuth credentials');
     return null;
   }
 
@@ -108,6 +116,13 @@ async function refreshTokenIfNeeded(
 
     if (!response.ok) {
       console.error('Token refresh failed:', newTokens);
+
+      // If refresh token is invalid/revoked, mark integration as inactive
+      if (newTokens.error === 'invalid_grant' || newTokens.error === 'invalid_token') {
+        console.error('Refresh token revoked or expired - marking integration as inactive');
+        await markIntegrationInactive(userId, newTokens.error_description || newTokens.error);
+      }
+
       return null;
     }
 
@@ -138,6 +153,27 @@ async function refreshTokenIfNeeded(
   } catch (error) {
     console.error('Token refresh error:', error);
     return null;
+  }
+}
+
+// Mark integration as inactive when tokens are invalid
+async function markIntegrationInactive(userId: string, reason: string) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (supabaseUrl && supabaseServiceKey) {
+    const adminClient = createSupabaseClient(supabaseUrl, supabaseServiceKey);
+    await adminClient
+      .from('user_integrations')
+      .update({
+        is_active: false,
+        updated_at: new Date().toISOString(),
+        // Store the reason in a metadata field if available, otherwise just log it
+      })
+      .eq('user_id', userId)
+      .eq('provider', 'google_calendar');
+
+    console.log(`Marked Google Calendar integration as inactive for user ${userId}: ${reason}`);
   }
 }
 

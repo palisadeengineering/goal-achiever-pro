@@ -5,7 +5,8 @@
 
 import { addDays, addWeeks, addMonths, format, parseISO, isAfter, isBefore, isEqual, getDay, startOfWeek, differenceInWeeks } from 'date-fns';
 
-export interface RecurringEvent {
+// Base fields required for recurring event expansion
+export interface RecurringEventBase {
   id: string;
   date: string; // Original start date (YYYY-MM-DD)
   startTime: string;
@@ -14,10 +15,13 @@ export interface RecurringEvent {
   recurrenceRule?: string;
   recurrenceEndDate?: string;
   parentBlockId?: string;
-  [key: string]: unknown; // Allow additional properties
 }
 
-export interface ExpandedEvent extends RecurringEvent {
+// For internal use - allows additional properties
+export type RecurringEvent = RecurringEventBase & Record<string, unknown>;
+
+// Extended event with recurrence instance metadata
+export interface ExpandedEventMeta {
   isRecurrenceInstance: boolean;
   originalDate: string; // The original event's date
   instanceDate: string; // This instance's date
@@ -85,12 +89,12 @@ function matchesByDay(date: Date, byDay: number[]): boolean {
 /**
  * Generate all occurrences of a recurring event within a date range
  */
-export function expandRecurringEvent(
-  event: RecurringEvent,
+export function expandRecurringEvent<T extends RecurringEventBase>(
+  event: T,
   rangeStart: Date,
   rangeEnd: Date,
   maxOccurrences: number = 100
-): ExpandedEvent[] {
+): (T & ExpandedEventMeta)[] {
   // If not recurring, return as-is with instance metadata
   if (!event.isRecurring || !event.recurrenceRule) {
     const eventDate = parseISO(event.date);
@@ -106,7 +110,7 @@ export function expandRecurringEvent(
   }
 
   const rule = parseRRule(event.recurrenceRule);
-  const occurrences: ExpandedEvent[] = [];
+  const occurrences: (T & ExpandedEventMeta)[] = [];
   const startDate = parseISO(event.date);
 
   // Determine the end date for recurrence
@@ -150,17 +154,17 @@ export function expandRecurringEvent(
     }
 
     if (isInRange && matchesDay) {
-      const instanceDate = format(currentDate, 'yyyy-MM-dd');
+      const instanceDateStr = format(currentDate, 'yyyy-MM-dd');
       occurrences.push({
         ...event,
         // Generate a unique ID for the instance
-        id: `${event.id}_${instanceDate}`,
-        date: instanceDate,
+        id: `${event.id}_${instanceDateStr}`,
+        date: instanceDateStr,
         isRecurrenceInstance: true,
         originalDate: event.date,
-        instanceDate: instanceDate,
+        instanceDate: instanceDateStr,
         parentBlockId: event.id,
-      });
+      } as T & ExpandedEventMeta);
     }
 
     // Move to next occurrence based on frequency
@@ -194,21 +198,16 @@ export function expandRecurringEvent(
 /**
  * Expand all recurring events in a list within a date range
  */
-export function expandRecurringEvents<T extends RecurringEvent>(
+export function expandRecurringEvents<T extends RecurringEventBase>(
   events: T[],
   rangeStart: Date,
   rangeEnd: Date
-): (T & { isRecurrenceInstance: boolean; originalDate: string; instanceDate: string })[] {
-  const expanded: (T & { isRecurrenceInstance: boolean; originalDate: string; instanceDate: string })[] = [];
+): (T & ExpandedEventMeta)[] {
+  const expanded: (T & ExpandedEventMeta)[] = [];
 
   for (const event of events) {
     const instances = expandRecurringEvent(event, rangeStart, rangeEnd);
-    for (const instance of instances) {
-      expanded.push({
-        ...event,
-        ...instance,
-      } as T & { isRecurrenceInstance: boolean; originalDate: string; instanceDate: string });
-    }
+    expanded.push(...instances);
   }
 
   // Sort by date and time
