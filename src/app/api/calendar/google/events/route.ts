@@ -276,9 +276,15 @@ export async function GET(request: NextRequest) {
       description?: string;
       start: { dateTime?: string; date?: string };
       end: { dateTime?: string; date?: string };
+      recurringEventId?: string;
+      recurrence?: string[];
     }) => {
       const start = event.start.dateTime ? new Date(event.start.dateTime) : new Date(event.start.date || '');
       const end = event.end.dateTime ? new Date(event.end.dateTime) : new Date(event.end.date || '');
+
+      // Check if this is a recurring event instance
+      // When singleEvents=true, recurring events have a recurringEventId
+      const isRecurringInstance = !!event.recurringEventId;
 
       return {
         id: `gcal_${event.id}`,
@@ -297,6 +303,9 @@ export async function GET(request: NextRequest) {
           dateTime: event.end.dateTime || end.toISOString(),
           date: event.end.date,
         },
+        // Recurring event info
+        recurringEventId: event.recurringEventId ? `gcal_${event.recurringEventId}` : undefined,
+        isRecurringInstance,
       };
     }) || [];
 
@@ -429,7 +438,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PATCH: Update an existing calendar event
+// PATCH: Update an existing calendar event (including recurring event instances)
 export async function PATCH(request: NextRequest) {
   const supabase = await createClient();
   if (!supabase) {
@@ -461,7 +470,10 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Extract Google event ID (remove gcal_ prefix if present)
+    // For recurring event instances, this will include the instance timestamp (e.g., abc123_20260111T090000Z)
     const googleEventId = eventId.startsWith('gcal_') ? eventId.slice(5) : eventId;
+
+    console.log(`[Google Calendar PATCH] Updating event: ${googleEventId}`);
 
     // Build update payload with only provided fields
     const updatePayload: Record<string, unknown> = {};
@@ -486,7 +498,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const response = await fetch(
-      `https://www.googleapis.com/calendar/v3/calendars/primary/events/${googleEventId}`,
+      `https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(googleEventId)}`,
       {
         method: 'PATCH',
         headers: {
@@ -499,14 +511,30 @@ export async function PATCH(request: NextRequest) {
 
     if (!response.ok) {
       const error = await response.json();
-      console.error('Google Calendar update error:', error);
+      console.error('Google Calendar update error:', { eventId: googleEventId, error });
+
+      // Provide more specific error messages
+      if (response.status === 404) {
+        return NextResponse.json(
+          { error: 'Event not found. It may have been deleted in Google Calendar.' },
+          { status: 404 }
+        );
+      }
+      if (response.status === 403) {
+        return NextResponse.json(
+          { error: 'You do not have permission to edit this event. It may belong to a shared calendar.' },
+          { status: 403 }
+        );
+      }
+
       return NextResponse.json(
-        { error: 'Failed to update calendar event' },
+        { error: error.error?.message || 'Failed to update calendar event' },
         { status: response.status }
       );
     }
 
     const updatedEvent = await response.json();
+    console.log(`[Google Calendar PATCH] Successfully updated event: ${updatedEvent.id}`);
 
     return NextResponse.json({
       success: true,

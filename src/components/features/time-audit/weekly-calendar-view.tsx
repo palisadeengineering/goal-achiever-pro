@@ -157,9 +157,31 @@ function EventCard({
     onResizeStart?.(block, e);
   };
 
-  const isVeryShort = durationSlots <= 1;
-  const isShort = durationSlots <= 2;
-  const isMedium = durationSlots <= 4;
+  // Calculate responsive font sizes based on available height
+  // Each slot is ~14px, so we calculate based on total height available
+  const heightPx = durationSlots * 14;
+  const isVeryShort = durationSlots <= 1; // 15 min (~14px)
+  const isShort = durationSlots <= 2;     // 30 min (~28px)
+  const isMedium = durationSlots <= 4;    // 45-60 min (~42-56px)
+
+  // Dynamic font size calculation based on height
+  // For very short events, prioritize readability over fitting everything
+  const getTitleFontSize = () => {
+    if (isVeryShort) return 11; // Readable single line
+    if (isShort) return 11;    // Slightly larger for better readability
+    if (isMedium) return 12;   // Medium events
+    return 13;                  // Larger events
+  };
+
+  const getMetaFontSize = () => {
+    if (isVeryShort) return 10;
+    if (isShort) return 10;
+    if (isMedium) return 10;
+    return 11;
+  };
+
+  const titleFontSize = getTitleFontSize();
+  const metaFontSize = getMetaFontSize();
 
   // Check if this is a recurring event
   const isRecurring = block.isRecurring || block.isRecurrenceInstance;
@@ -215,37 +237,36 @@ function EventCard({
               className="w-full h-full text-left cursor-grab active:cursor-grabbing overflow-hidden text-white p-0"
             >
               {isVeryShort ? (
-                /* 15-min slot: ~14px height - single line, compact with duration */
+                /* 15-min slot: ~14px height - single line, compact */
                 <div
                   className="w-full h-full flex items-center overflow-hidden"
-                  style={{ padding: '0 3px' }}
+                  style={{ padding: '0 4px' }}
                 >
                   {isRecurring && (
-                    <Repeat className="h-2 w-2 mr-0.5 flex-shrink-0 opacity-80" />
+                    <Repeat className="h-2.5 w-2.5 mr-0.5 flex-shrink-0 opacity-80" />
                   )}
                   <div
-                    className="font-medium flex-1 overflow-hidden whitespace-nowrap"
-                    style={{ fontSize: '9px', lineHeight: '14px', textOverflow: 'ellipsis' }}
+                    className="font-semibold flex-1 overflow-hidden whitespace-nowrap"
+                    style={{ fontSize: `${titleFontSize}px`, lineHeight: '14px', textOverflow: 'ellipsis' }}
                   >
-                    <span>{block.activityName}</span>
-                    <span className="opacity-70 ml-1">· {durationDisplay}</span>
+                    {block.activityName}
                   </div>
                 </div>
               ) : isShort ? (
-                /* 30-min slot: ~28px height - title wraps, time and duration below */
+                /* 30-min slot: ~28px height - title wraps, time below */
                 <div
                   className="w-full h-full flex flex-col justify-start overflow-hidden"
-                  style={{ padding: '2px 4px' }}
+                  style={{ padding: '2px 5px' }}
                 >
                   <div className="flex items-start gap-0.5 min-w-0 flex-1">
                     {isRecurring && <Repeat className="h-2.5 w-2.5 flex-shrink-0 opacity-80 mt-0.5" />}
                     <div
                       className="font-semibold w-full overflow-hidden"
                       style={{
-                        fontSize: '10px',
-                        lineHeight: '12px',
+                        fontSize: `${titleFontSize}px`,
+                        lineHeight: '13px',
                         display: '-webkit-box',
-                        WebkitLineClamp: 2,
+                        WebkitLineClamp: 1,
                         WebkitBoxOrient: 'vertical',
                       }}
                     >
@@ -253,8 +274,8 @@ function EventCard({
                     </div>
                   </div>
                   <div
-                    className="opacity-80 flex-shrink-0 flex items-center gap-1"
-                    style={{ fontSize: '9px', lineHeight: '11px' }}
+                    className="opacity-85 flex-shrink-0 flex items-center gap-1"
+                    style={{ fontSize: `${metaFontSize}px`, lineHeight: '12px' }}
                   >
                     <span>{startTimeDisplay}</span>
                     <span>· {durationDisplay}</span>
@@ -264,15 +285,15 @@ function EventCard({
                 /* 45-60 min slot: ~42-56px height - more lines allowed, time and duration */
                 <div
                   className="w-full h-full flex flex-col justify-start overflow-hidden"
-                  style={{ padding: '3px 5px' }}
+                  style={{ padding: '3px 6px' }}
                 >
                   <div className="flex items-start gap-0.5 min-w-0 flex-1">
-                    {isRecurring && <Repeat className="h-2.5 w-2.5 flex-shrink-0 opacity-80 mt-0.5" />}
+                    {isRecurring && <Repeat className="h-3 w-3 flex-shrink-0 opacity-80 mt-0.5" />}
                     <div
                       className="font-semibold w-full overflow-hidden"
                       style={{
-                        fontSize: '11px',
-                        lineHeight: '13px',
+                        fontSize: `${titleFontSize}px`,
+                        lineHeight: '14px',
                         display: '-webkit-box',
                         WebkitLineClamp: durationSlots <= 3 ? 2 : 3,
                         WebkitBoxOrient: 'vertical',
@@ -282,8 +303,8 @@ function EventCard({
                     </div>
                   </div>
                   <div
-                    className="opacity-80 flex-shrink-0"
-                    style={{ fontSize: '9px', lineHeight: '12px' }}
+                    className="opacity-85 flex-shrink-0"
+                    style={{ fontSize: `${metaFontSize}px`, lineHeight: '13px' }}
                   >
                     {timeRange} · {durationDisplay}
                   </div>
@@ -292,17 +313,17 @@ function EventCard({
                 /* 1+ hour slot - full text wrap with time range and duration */
                 <div
                   className="w-full h-full flex flex-col justify-start overflow-hidden"
-                  style={{ padding: '4px 6px' }}
+                  style={{ padding: '4px 7px' }}
                 >
                   <div className="flex items-start gap-1 min-w-0 flex-1">
-                    {isRecurring && <Repeat className="h-3 w-3 flex-shrink-0 opacity-80 mt-0.5" />}
+                    {isRecurring && <Repeat className="h-3.5 w-3.5 flex-shrink-0 opacity-80 mt-0.5" />}
                     <div
                       className="font-semibold w-full overflow-hidden"
                       style={{
-                        fontSize: '12px',
-                        lineHeight: '14px',
+                        fontSize: `${titleFontSize}px`,
+                        lineHeight: '16px',
                         display: '-webkit-box',
-                        WebkitLineClamp: Math.max(2, Math.floor((durationSlots * 14 - 24) / 14)),
+                        WebkitLineClamp: Math.max(2, Math.floor((durationSlots * 14 - 24) / 16)),
                         WebkitBoxOrient: 'vertical',
                       }}
                     >
@@ -310,8 +331,8 @@ function EventCard({
                     </div>
                   </div>
                   <div
-                    className="opacity-80 flex-shrink-0"
-                    style={{ fontSize: '10px', lineHeight: '13px' }}
+                    className="opacity-85 flex-shrink-0"
+                    style={{ fontSize: `${metaFontSize}px`, lineHeight: '14px' }}
                   >
                     {timeRange} · {durationDisplay}
                   </div>

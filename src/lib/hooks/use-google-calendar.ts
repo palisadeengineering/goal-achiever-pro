@@ -14,6 +14,9 @@ export interface GoogleCalendarEvent {
   colorId?: string;
   htmlLink?: string;
   source?: string;
+  // Recurring event info
+  recurringEventId?: string;
+  isRecurringInstance?: boolean;
 }
 
 interface GoogleEventsCache {
@@ -130,6 +133,9 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
           startTime: event.startTime || '',
           endTime: event.endTime || '',
           source: event.source || 'google_calendar',
+          // Recurring event info
+          recurringEventId: event.recurringEventId,
+          isRecurringInstance: event.isRecurringInstance,
         }));
       setEvents(transformedEvents);
       setIsConnected(true);
