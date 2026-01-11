@@ -25,6 +25,8 @@ import {
   CalendarCheck,
   Shield,
   Cpu,
+  UsersRound,
+  TrendingUp,
 } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
 
@@ -43,8 +45,13 @@ const mainNavItems: NavItem[] = [
 
 const visionPlanningItems: NavItem[] = [
   { title: 'Vision', href: ROUTES.vision, icon: Eye },
+  { title: 'Key Results', href: ROUTES.okrs, icon: TrendingUp, badge: 'New' },
   { title: 'Milestones', href: ROUTES.goals, icon: Trophy },
   { title: 'Daily & Weekly MINS', href: ROUTES.mins, icon: ListTodo },
+];
+
+const executionItems: NavItem[] = [
+  { title: 'Team', href: ROUTES.team, icon: UsersRound, badge: 'New' },
 ];
 
 const systemNavItems: NavItem[] = [
@@ -143,6 +150,18 @@ function SidebarContent({
           </h3>
           <div className="space-y-1">
             {visionPlanningItems.map((item) => (
+              <NavLink key={item.href} item={item} />
+            ))}
+          </div>
+        </div>
+
+        {/* Execution Section */}
+        <div className="pt-4">
+          <h3 className="mb-2 px-3 text-xs font-semibold uppercase text-muted-foreground">
+            Execution
+          </h3>
+          <div className="space-y-1">
+            {executionItems.map((item) => (
               <NavLink key={item.href} item={item} />
             ))}
           </div>

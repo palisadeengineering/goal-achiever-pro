@@ -799,6 +799,11 @@ export const profilesRelations = relations(profiles, ({ many, one }) => ({
   aiUsageLogs: many(aiUsageLogs),
   // User settings
   userSettings: one(userSettings),
+  // Team collaboration
+  ownedTeamMembers: many(teamMembers, { relationName: 'teamOwner' }),
+  teamMemberships: many(teamMembers, { relationName: 'teamUser' }),
+  keyResults: many(keyResults),
+  taskComments: many(taskComments),
 }));
 
 export const visionsRelations = relations(visions, ({ one, many }) => ({
@@ -1143,4 +1148,153 @@ export const aiUsageLogs = pgTable('ai_usage_logs', {
 
 export const aiUsageLogsRelations = relations(aiUsageLogs, ({ one }) => ({
   user: one(profiles, { fields: [aiUsageLogs.userId], references: [profiles.id] }),
+}));
+
+// =============================================
+// TEAM MEMBERS (Team Directory)
+// =============================================
+export const teamMembers = pgTable('team_members', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  ownerId: uuid('owner_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  // Member identity
+  email: text('email'),
+  name: text('name').notNull(),
+  avatarUrl: text('avatar_url'),
+  // Role and access
+  role: text('role').notNull().default('member'), // 'admin', 'member', 'viewer', 'external'
+  accessLevel: text('access_level').notNull().default('limited'), // 'full', 'limited', 'external'
+  // For linked accounts
+  userId: uuid('user_id').references(() => profiles.id, { onDelete: 'set null' }),
+  // Invitation status
+  inviteStatus: text('invite_status').default('pending'), // 'pending', 'accepted', 'declined'
+  invitedAt: timestamp('invited_at'),
+  acceptedAt: timestamp('accepted_at'),
+  inviteToken: text('invite_token'),
+  // Contact info
+  phone: text('phone'),
+  title: text('title'), // Job title
+  department: text('department'),
+  // Notes
+  notes: text('notes'),
+  // Status
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  ownerIdx: index('team_members_owner_idx').on(table.ownerId),
+  emailIdx: index('team_members_email_idx').on(table.ownerId, table.email),
+  userIdx: index('team_members_user_idx').on(table.userId),
+}));
+
+// =============================================
+// KEY RESULTS (OKRs)
+// =============================================
+export const keyResults = pgTable('key_results', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  visionId: uuid('vision_id').notNull().references(() => visions.id, { onDelete: 'cascade' }),
+  // Optional link to power goal
+  powerGoalId: uuid('power_goal_id').references(() => powerGoals.id, { onDelete: 'set null' }),
+  // Key Result details
+  title: text('title').notNull(),
+  description: text('description'),
+  // Target metrics
+  targetValue: decimal('target_value', { precision: 15, scale: 2 }).notNull(),
+  currentValue: decimal('current_value', { precision: 15, scale: 2 }).default('0'),
+  startValue: decimal('start_value', { precision: 15, scale: 2 }).default('0'),
+  unit: text('unit').notNull(), // '$', 'users', '%', 'count', etc.
+  // Ownership
+  assigneeId: uuid('assignee_id').references(() => teamMembers.id, { onDelete: 'set null' }),
+  assigneeName: text('assignee_name'),
+  // Time period
+  quarter: integer('quarter'), // 1-4
+  year: integer('year'),
+  dueDate: date('due_date'),
+  // Status tracking
+  status: text('status').default('on_track'), // 'on_track', 'at_risk', 'behind', 'achieved', 'cancelled'
+  progressPercentage: integer('progress_percentage').default(0),
+  // Confidence level
+  confidenceLevel: integer('confidence_level').default(70), // 0-100%
+  // Notes and context
+  successCriteria: text('success_criteria'),
+  notes: text('notes'),
+  // Status
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  userVisionIdx: index('key_results_user_vision_idx').on(table.userId, table.visionId),
+  quarterIdx: index('key_results_quarter_idx').on(table.userId, table.year, table.quarter),
+  assigneeIdx: index('key_results_assignee_idx').on(table.assigneeId),
+}));
+
+// =============================================
+// KEY RESULT UPDATES (Progress History)
+// =============================================
+export const keyResultUpdates = pgTable('key_result_updates', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  keyResultId: uuid('key_result_id').notNull().references(() => keyResults.id, { onDelete: 'cascade' }),
+  // Value change
+  previousValue: decimal('previous_value', { precision: 15, scale: 2 }),
+  newValue: decimal('new_value', { precision: 15, scale: 2 }).notNull(),
+  // Status change
+  previousStatus: text('previous_status'),
+  newStatus: text('new_status'),
+  // Context
+  notes: text('notes'),
+  // Who made the update
+  updatedBy: uuid('updated_by').references(() => profiles.id, { onDelete: 'set null' }),
+  updatedByName: text('updated_by_name'),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+  keyResultIdx: index('key_result_updates_kr_idx').on(table.keyResultId),
+  dateIdx: index('key_result_updates_date_idx').on(table.createdAt),
+}));
+
+// =============================================
+// TASK COMMENTS (For team collaboration)
+// =============================================
+export const taskComments = pgTable('task_comments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  // Polymorphic reference to task
+  entityType: text('entity_type').notNull(), // 'daily_action', 'weekly_target', 'monthly_target', 'power_goal', 'key_result'
+  entityId: uuid('entity_id').notNull(),
+  // Comment content
+  content: text('content').notNull(),
+  // Thread support
+  parentCommentId: uuid('parent_comment_id'),
+  // Status
+  isEdited: boolean('is_edited').default(false),
+  editedAt: timestamp('edited_at'),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+  entityIdx: index('task_comments_entity_idx').on(table.entityType, table.entityId),
+  userIdx: index('task_comments_user_idx').on(table.userId),
+}));
+
+// =============================================
+// TEAM MEMBER RELATIONS
+// =============================================
+export const teamMembersRelations = relations(teamMembers, ({ one, many }) => ({
+  owner: one(profiles, { fields: [teamMembers.ownerId], references: [profiles.id], relationName: 'teamOwner' }),
+  user: one(profiles, { fields: [teamMembers.userId], references: [profiles.id], relationName: 'teamUser' }),
+  keyResults: many(keyResults),
+}));
+
+export const keyResultsRelations = relations(keyResults, ({ one, many }) => ({
+  user: one(profiles, { fields: [keyResults.userId], references: [profiles.id] }),
+  vision: one(visions, { fields: [keyResults.visionId], references: [visions.id] }),
+  powerGoal: one(powerGoals, { fields: [keyResults.powerGoalId], references: [powerGoals.id] }),
+  assignee: one(teamMembers, { fields: [keyResults.assigneeId], references: [teamMembers.id] }),
+  updates: many(keyResultUpdates),
+}));
+
+export const keyResultUpdatesRelations = relations(keyResultUpdates, ({ one }) => ({
+  keyResult: one(keyResults, { fields: [keyResultUpdates.keyResultId], references: [keyResults.id] }),
+  updatedByUser: one(profiles, { fields: [keyResultUpdates.updatedBy], references: [profiles.id] }),
+}));
+
+export const taskCommentsRelations = relations(taskComments, ({ one }) => ({
+  user: one(profiles, { fields: [taskComments.userId], references: [profiles.id] }),
 }));

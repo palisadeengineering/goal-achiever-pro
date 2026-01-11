@@ -60,6 +60,15 @@ export const ROUTES = {
   reviewMidday: '/reviews/midday',
   reviewEvening: '/reviews/evening',
 
+  // Team & Collaboration
+  team: '/team',
+  teamMember: (id: string) => `/team/${id}`,
+
+  // Key Results / OKRs
+  okrs: '/okrs',
+  okrNew: '/okrs/new',
+  okrDetail: (id: string) => `/okrs/${id}`,
+
   // Leverage & Network (Pro+)
   leverage: '/leverage',
   network: '/network',
@@ -101,6 +110,8 @@ export const PROTECTED_ROUTES = [
   '/routines',
   '/pomodoro',
   '/reviews',
+  '/team',
+  '/okrs',
   '/leverage',
   '/network',
   '/metrics',
