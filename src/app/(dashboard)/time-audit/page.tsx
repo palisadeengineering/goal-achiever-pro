@@ -211,6 +211,39 @@ export default function TimeAuditPage() {
     setViewedDateRange({ start, end });
   }, []);
 
+  // Auto-sync Google Calendar events when navigating to different weeks
+  const prevViewedRangeRef = useRef<{ start: number; end: number } | null>(null);
+  useEffect(() => {
+    if (!isGoogleConnected || isLoadingGoogle) return;
+
+    const startTime = viewedDateRange.start.getTime();
+    const endTime = viewedDateRange.end.getTime();
+
+    // Only fetch if the date range actually changed (and not on initial mount)
+    if (prevViewedRangeRef.current &&
+        (prevViewedRangeRef.current.start !== startTime ||
+         prevViewedRangeRef.current.end !== endTime)) {
+      // Calculate the end date based on the sync timeframe
+      let endDate: Date;
+      switch (syncTimeframe) {
+        case '2weeks':
+          endDate = endOfWeek(addWeeks(viewedDateRange.start, 1), { weekStartsOn: 1 });
+          break;
+        case '1month':
+          endDate = addMonths(viewedDateRange.start, 1);
+          break;
+        case '1week':
+        default:
+          endDate = endOfWeek(addDays(viewedDateRange.start, 6), { weekStartsOn: 1 });
+          break;
+      }
+
+      fetchGoogleEvents(viewedDateRange.start, endDate);
+    }
+
+    prevViewedRangeRef.current = { start: startTime, end: endTime };
+  }, [viewedDateRange, isGoogleConnected, isLoadingGoogle, syncTimeframe, fetchGoogleEvents]);
+
   // Fetch Google events when connected - uses the currently viewed date range
   const handleSyncGoogle = useCallback((timeframe?: '1week' | '2weeks' | '1month') => {
     const selectedTimeframe = timeframe || syncTimeframe;
