@@ -59,7 +59,42 @@ export async function GET(
       return NextResponse.json({ error: 'Failed to fetch targets' }, { status: 500 });
     }
 
-    return NextResponse.json({ targets: monthlyTargets || [] });
+    // Calculate progress statistics
+    let totalDailyActions = 0;
+    let completedDailyActions = 0;
+    let totalWeeklyTargets = 0;
+    let completedWeeklyTargets = 0;
+    let totalMonthlyTargets = monthlyTargets?.length || 0;
+    let completedMonthlyTargets = 0;
+
+    for (const monthly of monthlyTargets || []) {
+      if (monthly.status === 'completed') completedMonthlyTargets++;
+
+      for (const weekly of monthly.weekly_targets || []) {
+        totalWeeklyTargets++;
+        if (weekly.status === 'completed') completedWeeklyTargets++;
+
+        for (const daily of weekly.daily_actions || []) {
+          totalDailyActions++;
+          if (daily.status === 'completed') completedDailyActions++;
+        }
+      }
+    }
+
+    // Calculate progress percentage based on daily actions
+    const progressPercentage = totalDailyActions > 0
+      ? Math.round((completedDailyActions / totalDailyActions) * 100)
+      : 0;
+
+    return NextResponse.json({
+      targets: monthlyTargets || [],
+      progress: {
+        percentage: progressPercentage,
+        daily: { completed: completedDailyActions, total: totalDailyActions },
+        weekly: { completed: completedWeeklyTargets, total: totalWeeklyTargets },
+        monthly: { completed: completedMonthlyTargets, total: totalMonthlyTargets },
+      }
+    });
   } catch (error) {
     console.error('Get targets error:', error);
     return NextResponse.json({ error: 'Failed to fetch targets' }, { status: 500 });

@@ -577,6 +577,17 @@ export default function MilestoneDetailPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       });
+
+      // Refetch milestone to get updated progress (calculated from daily action completions)
+      if (type === 'daily') {
+        const milestoneRes = await fetch(`/api/milestones/${milestoneId}`);
+        if (milestoneRes.ok) {
+          const { milestone: milestoneData } = await milestoneRes.json();
+          const newProgress = milestoneData.progress_percentage || 0;
+          setMilestone((prev) => prev ? { ...prev, progressPercentage: newProgress } : null);
+          setProgress(newProgress);
+        }
+      }
     } catch (error) {
       // Continue with local update
     }

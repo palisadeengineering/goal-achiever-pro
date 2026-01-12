@@ -85,12 +85,66 @@ export async function PUT(
       .update(updateData)
       .eq('id', id)
       .eq('user_id', userId)
-      .select()
+      .select(`
+        *,
+        weekly_target:weekly_targets(
+          id,
+          monthly_target:monthly_targets(
+            id,
+            power_goal_id
+          )
+        )
+      `)
       .single();
 
     if (error) {
       console.error('Error updating daily action:', error);
       return NextResponse.json({ error: 'Failed to update action' }, { status: 500 });
+    }
+
+    // If status was updated, recalculate milestone progress
+    if (body.status !== undefined && action?.weekly_target?.monthly_target?.power_goal_id) {
+      const powerGoalId = action.weekly_target.monthly_target.power_goal_id;
+
+      // Get all monthly targets for this power goal
+      const { data: monthlyTargets } = await supabase
+        .from('monthly_targets')
+        .select(`
+          id,
+          weekly_targets(
+            id,
+            daily_actions(id, status)
+          )
+        `)
+        .eq('power_goal_id', powerGoalId)
+        .eq('user_id', userId);
+
+      // Count total and completed daily actions
+      let totalDailyActions = 0;
+      let completedDailyActions = 0;
+
+      for (const monthly of monthlyTargets || []) {
+        for (const weekly of monthly.weekly_targets || []) {
+          for (const daily of weekly.daily_actions || []) {
+            totalDailyActions++;
+            if (daily.status === 'completed') completedDailyActions++;
+          }
+        }
+      }
+
+      // Calculate and update progress percentage
+      const progressPercentage = totalDailyActions > 0
+        ? Math.round((completedDailyActions / totalDailyActions) * 100)
+        : 0;
+
+      await supabase
+        .from('power_goals')
+        .update({
+          progress_percentage: progressPercentage,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', powerGoalId)
+        .eq('user_id', userId);
     }
 
     return NextResponse.json({ action });
