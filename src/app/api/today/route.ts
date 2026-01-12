@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
 const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
@@ -9,7 +9,7 @@ async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
   return user?.id || DEMO_USER_ID;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
 
@@ -23,8 +23,12 @@ export async function GET() {
     const userId = await getUserId(supabase);
     const today = new Date().toISOString().split('T')[0];
 
-    // Fetch today's daily actions with their full hierarchy
-    const { data: dailyActions, error: actionsError } = await supabase
+    // Get filter params
+    const { searchParams } = new URL(request.url);
+    const assigneeFilter = searchParams.get('assignee'); // 'all', 'me', or a team member ID
+
+    // Build query for today's daily actions with their full hierarchy
+    let query = supabase
       .from('daily_actions')
       .select(`
         *,
@@ -50,6 +54,18 @@ export async function GET() {
       .eq('user_id', userId)
       .eq('action_date', today)
       .order('sort_order', { ascending: true });
+
+    // Apply assignee filter
+    if (assigneeFilter === 'me') {
+      // Show only tasks assigned to current user or unassigned
+      query = query.or(`assignee_id.eq.${userId},assignee_id.is.null`);
+    } else if (assigneeFilter && assigneeFilter !== 'all') {
+      // Filter by specific team member ID
+      query = query.eq('assignee_id', assigneeFilter);
+    }
+    // 'all' or no filter shows everything
+
+    const { data: dailyActions, error: actionsError } = await query;
 
     if (actionsError) {
       console.error('Error fetching daily actions:', actionsError);

@@ -1,12 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { PageHeader } from '@/components/layout/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import {
@@ -21,11 +28,14 @@ import {
   Loader2,
   Sparkles,
   RefreshCw,
+  Users,
+  User,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { useGoogleCalendar } from '@/lib/hooks/use-google-calendar';
 import { Daily300Checkin } from '@/components/features/reviews/daily-300-checkin';
+import type { TeamMember } from '@/types/team';
 
 interface DailyAction {
   id: string;
@@ -35,6 +45,8 @@ interface DailyAction {
   status: string;
   key_metric?: string;
   target_value?: number;
+  assignee_id?: string;
+  assignee_name?: string;
   weekly_targets?: {
     id: string;
     title: string;
@@ -100,8 +112,23 @@ export default function TodayPage() {
   const [completingIds, setCompletingIds] = useState<Set<string>>(new Set());
   const [expandedVisions, setExpandedVisions] = useState<Set<string>>(new Set());
   const [isSyncing, setIsSyncing] = useState(false);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [assigneeFilter, setAssigneeFilter] = useState<string>('all');
 
   const { isConnected, connect } = useGoogleCalendar();
+
+  // Fetch team members
+  const fetchTeamMembers = useCallback(async () => {
+    try {
+      const response = await fetch('/api/team');
+      if (response.ok) {
+        const data = await response.json();
+        setTeamMembers(data);
+      }
+    } catch (error) {
+      console.error('Error fetching team members:', error);
+    }
+  }, []);
 
   const handleSyncToCalendar = async () => {
     if (!isConnected) {
@@ -132,25 +159,15 @@ export default function TodayPage() {
     }
   };
 
-  useEffect(() => {
-    fetchTodayData();
-    // Initialize all visions as expanded
-    if (data?.actionsByVision) {
-      setExpandedVisions(new Set(data.actionsByVision.map((v) => v.visionId)));
-    }
-  }, []);
-
-  useEffect(() => {
-    if (data?.actionsByVision) {
-      setExpandedVisions(new Set(data.actionsByVision.map((v) => v.visionId)));
-    }
-  }, [data?.actionsByVision]);
-
-  const fetchTodayData = async () => {
+  const fetchTodayData = useCallback(async (filter?: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/today');
+      const filterParam = filter ?? assigneeFilter;
+      const url = filterParam && filterParam !== 'all'
+        ? `/api/today?assignee=${filterParam}`
+        : '/api/today';
+      const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch today\'s data');
       const result = await response.json();
       setData(result);
@@ -160,7 +177,23 @@ export default function TodayPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [assigneeFilter]);
+
+  useEffect(() => {
+    fetchTodayData();
+    fetchTeamMembers();
+  }, []);
+
+  // Refetch when filter changes
+  useEffect(() => {
+    fetchTodayData(assigneeFilter);
+  }, [assigneeFilter]);
+
+  useEffect(() => {
+    if (data?.actionsByVision) {
+      setExpandedVisions(new Set(data.actionsByVision.map((v) => v.visionId)));
+    }
+  }, [data?.actionsByVision]);
 
   const handleToggleComplete = async (actionId: string, currentStatus: string) => {
     setCompletingIds((prev) => new Set(prev).add(actionId));
@@ -304,6 +337,37 @@ export default function TodayPage() {
         icon={<CalendarCheck className="h-6 w-6" />}
         actions={
           <div className="flex items-center gap-2">
+            {/* Team Filter */}
+            <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
+              <SelectTrigger className="w-[160px] h-9">
+                <Users className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Filter by..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    All Tasks
+                  </div>
+                </SelectItem>
+                <SelectItem value="me">
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    My Tasks
+                  </div>
+                </SelectItem>
+                {teamMembers.map((member) => (
+                  <SelectItem key={member.id} value={member.id}>
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-medium">
+                        {member.name.charAt(0).toUpperCase()}
+                      </div>
+                      {member.name}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button
               variant="outline"
               onClick={handleSyncToCalendar}
@@ -317,7 +381,7 @@ export default function TodayPage() {
               )}
               {isConnected ? 'Sync to Calendar' : 'Connect Calendar'}
             </Button>
-            <Button variant="outline" onClick={fetchTodayData} size="sm">
+            <Button variant="outline" onClick={() => fetchTodayData()} size="sm">
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
@@ -449,26 +513,34 @@ export default function TodayPage() {
                                 {action.description}
                               </p>
                             )}
-                            {action.weekly_targets && (
-                              <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-                                <Target className="h-3 w-3" />
-                                <span className="truncate">
-                                  {action.weekly_targets.title}
-                                </span>
-                                {action.weekly_targets.monthly_targets?.power_goals?.category && (
-                                  <Badge
-                                    className={cn(
-                                      'text-xs',
-                                      CATEGORY_COLORS[
-                                        action.weekly_targets.monthly_targets.power_goals.category
-                                      ]
-                                    )}
-                                  >
-                                    {action.weekly_targets.monthly_targets.power_goals.category}
-                                  </Badge>
-                                )}
-                              </div>
-                            )}
+                            <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground flex-wrap">
+                              {action.weekly_targets && (
+                                <>
+                                  <Target className="h-3 w-3" />
+                                  <span className="truncate">
+                                    {action.weekly_targets.title}
+                                  </span>
+                                  {action.weekly_targets.monthly_targets?.power_goals?.category && (
+                                    <Badge
+                                      className={cn(
+                                        'text-xs',
+                                        CATEGORY_COLORS[
+                                          action.weekly_targets.monthly_targets.power_goals.category
+                                        ]
+                                      )}
+                                    >
+                                      {action.weekly_targets.monthly_targets.power_goals.category}
+                                    </Badge>
+                                  )}
+                                </>
+                              )}
+                              {action.assignee_name && (
+                                <Badge variant="outline" className="text-xs gap-1">
+                                  <User className="h-3 w-3" />
+                                  {action.assignee_name}
+                                </Badge>
+                              )}
+                            </div>
                           </div>
                         </div>
                       ))}
