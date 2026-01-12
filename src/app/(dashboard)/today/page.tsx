@@ -229,20 +229,26 @@ export default function TodayPage() {
         };
       });
 
-      // TODO: Implement API call to update action status
-      // await fetch(`/api/daily-actions/${actionId}`, {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ status: newStatus }),
-      // });
+      // Update action status via API
+      const response = await fetch(`/api/targets/daily/${actionId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update action');
+      }
 
       if (newStatus === 'completed') {
         toast.success('Action completed!');
+      } else {
+        toast.success('Action marked as pending');
       }
     } catch (err) {
       console.error('Error updating action:', err);
       toast.error('Failed to update action');
-      fetchTodayData(); // Revert on error
+      fetchTodayData(); // Revert on error by refetching
     } finally {
       setCompletingIds((prev) => {
         const next = new Set(prev);
@@ -291,7 +297,7 @@ export default function TodayPage() {
           <CardContent className="flex flex-col items-center justify-center py-12">
             <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
             <p className="text-muted-foreground mb-4">{error}</p>
-            <Button onClick={fetchTodayData} variant="outline">
+            <Button onClick={() => fetchTodayData()} variant="outline">
               <RefreshCw className="h-4 w-4 mr-2" />
               Retry
             </Button>
