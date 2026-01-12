@@ -270,6 +270,45 @@ export default function TodayPage() {
     });
   };
 
+  const handleAssigneeChange = async (actionId: string, memberId: string | null, memberName: string | null) => {
+    // Optimistic update
+    setData((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        actionsByVision: prev.actionsByVision.map((group) => ({
+          ...group,
+          actions: group.actions.map((action) =>
+            action.id === actionId
+              ? { ...action, assignee_id: memberId || undefined, assignee_name: memberName || undefined }
+              : action
+          ),
+        })),
+      };
+    });
+
+    try {
+      const response = await fetch(`/api/targets/daily/${actionId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          assigneeId: memberId,
+          assigneeName: memberName,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update assignee');
+      }
+
+      toast.success(memberName ? `Assigned to ${memberName}` : 'Assignee removed');
+    } catch (err) {
+      console.error('Error updating assignee:', err);
+      toast.error('Failed to update assignee');
+      fetchTodayData(); // Revert on error
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -540,12 +579,33 @@ export default function TodayPage() {
                                   )}
                                 </>
                               )}
-                              {action.assignee_name && (
-                                <Badge variant="outline" className="text-xs gap-1">
+                              {/* Assignee Dropdown */}
+                              <Select
+                                value={action.assignee_id || '__unassigned__'}
+                                onValueChange={(value) => {
+                                  if (value === '__unassigned__') {
+                                    handleAssigneeChange(action.id, null, null);
+                                  } else {
+                                    const member = teamMembers.find((m) => m.id === value);
+                                    handleAssigneeChange(action.id, value, member?.name || null);
+                                  }
+                                }}
+                              >
+                                <SelectTrigger className="h-6 w-auto min-w-[100px] text-xs gap-1 px-2">
                                   <User className="h-3 w-3" />
-                                  {action.assignee_name}
-                                </Badge>
-                              )}
+                                  <SelectValue placeholder="Assign..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="__unassigned__">
+                                    <span className="text-muted-foreground">Unassigned</span>
+                                  </SelectItem>
+                                  {teamMembers.map((member) => (
+                                    <SelectItem key={member.id} value={member.id}>
+                                      {member.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                             </div>
                           </div>
                         </div>
