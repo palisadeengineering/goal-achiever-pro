@@ -70,7 +70,10 @@ export async function PUT(
     if (body.targetValue !== undefined) updateData.target_value = body.targetValue;
     if (body.currentValue !== undefined) updateData.current_value = body.currentValue;
     if (body.status !== undefined) updateData.status = body.status;
-    if (body.assigneeId !== undefined) updateData.assignee_id = body.assigneeId;
+    if (body.assigneeId !== undefined) {
+      // Handle "self" assignment by using the current user's ID
+      updateData.assignee_id = body.assigneeId === 'self' ? userId : body.assigneeId;
+    }
     if (body.assigneeName !== undefined) updateData.assignee_name = body.assigneeName;
 
     const { data: target, error } = await supabase
