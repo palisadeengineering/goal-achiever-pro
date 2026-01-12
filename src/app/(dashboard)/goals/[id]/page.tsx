@@ -100,6 +100,7 @@ interface WeeklyTarget {
   weekStartDate: string;
   weekEndDate: string;
   status: 'pending' | 'in_progress' | 'completed';
+  assigneeId?: string;
   assigneeName?: string;
   dailyActions: DailyAction[];
 }
@@ -244,6 +245,7 @@ export default function MilestoneDetailPage() {
               weekStartDate: wt.week_start_date,
               weekEndDate: wt.week_end_date,
               status: wt.status || 'pending',
+              assigneeId: wt.assignee_id,
               assigneeName: wt.assignee_name,
               dailyActions: ((wt.daily_actions || []) as Record<string, unknown>[]).map((da) => ({
                 id: da.id,
@@ -669,6 +671,36 @@ export default function MilestoneDetailPage() {
     toast.success('Target deleted');
   };
 
+  const handleUpdateTargetAssignee = async (type: 'monthly' | 'weekly' | 'daily', id: string, assigneeId: string | null, assigneeName: string | null) => {
+    try {
+      await fetch(`/api/targets/${type}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assigneeId, assigneeName }),
+      });
+      toast.success('Assignee updated');
+    } catch (error) {
+      console.error('Failed to update assignee:', error);
+    }
+    // Update local state
+    if (type === 'monthly') {
+      setMonthlyTargets((prev) => prev.map((mt) => mt.id === id ? { ...mt, assigneeName: assigneeName || undefined } : mt));
+    } else if (type === 'weekly') {
+      setMonthlyTargets((prev) => prev.map((mt) => ({
+        ...mt,
+        weeklyTargets: mt.weeklyTargets.map((wt) => wt.id === id ? { ...wt, assigneeId: assigneeId || undefined, assigneeName: assigneeName || undefined } : wt),
+      })));
+    } else {
+      setMonthlyTargets((prev) => prev.map((mt) => ({
+        ...mt,
+        weeklyTargets: mt.weeklyTargets.map((wt) => ({
+          ...wt,
+          dailyActions: wt.dailyActions.map((da) => da.id === id ? { ...da, assigneeName: assigneeName || undefined } : da),
+        })),
+      })));
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -979,6 +1011,7 @@ export default function MilestoneDetailPage() {
             onAddWeeklyTarget={handleAddWeeklyTarget}
             onAddDailyAction={handleAddDailyAction}
             onUpdateStatus={handleUpdateTargetStatus}
+            onUpdateAssignee={handleUpdateTargetAssignee}
             onScheduleToCalendar={handleScheduleTargetToCalendar}
             onDelete={handleDeleteTarget}
             currentUserName="Me"

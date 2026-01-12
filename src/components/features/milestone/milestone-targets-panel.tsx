@@ -53,6 +53,7 @@ interface WeeklyTarget {
   weekStartDate: string;
   weekEndDate: string;
   status: 'pending' | 'in_progress' | 'completed';
+  assigneeId?: string;
   assigneeName?: string;
   dailyActions: DailyAction[];
 }
@@ -75,6 +76,7 @@ interface MilestoneTargetsPanelProps {
   onAddWeeklyTarget: (monthlyTargetId: string, data: { title: string; description?: string; weekNumber: number; weekStartDate: string; weekEndDate: string; assigneeName?: string }) => Promise<void>;
   onAddDailyAction: (weeklyTargetId: string, data: { title: string; description?: string; actionDate: string; estimatedMinutes?: number; assigneeName?: string }) => Promise<void>;
   onUpdateStatus: (type: 'monthly' | 'weekly' | 'daily', id: string, status: string) => Promise<void>;
+  onUpdateAssignee?: (type: 'monthly' | 'weekly' | 'daily', id: string, assigneeId: string | null, assigneeName: string | null) => Promise<void>;
   onScheduleToCalendar: (type: 'monthly' | 'weekly' | 'daily', item: MonthlyTarget | WeeklyTarget | DailyAction) => Promise<void>;
   onDelete: (type: 'monthly' | 'weekly' | 'daily', id: string) => Promise<void>;
   currentUserName?: string;
@@ -92,6 +94,7 @@ export function MilestoneTargetsPanel({
   onAddWeeklyTarget,
   onAddDailyAction,
   onUpdateStatus,
+  onUpdateAssignee,
   onScheduleToCalendar,
   onDelete,
   currentUserName = 'Me',
@@ -140,6 +143,20 @@ export function MilestoneTargetsPanel({
       setSchedulingItems((prev) => {
         const next = new Set(prev);
         next.delete(item.id);
+        return next;
+      });
+    }
+  };
+
+  const handleAssigneeChange = async (type: 'monthly' | 'weekly' | 'daily', id: string, assignee: Assignee | null) => {
+    if (!onUpdateAssignee) return;
+    setLoadingItems((prev) => new Set(prev).add(`assignee-${id}`));
+    try {
+      await onUpdateAssignee(type, id, assignee?.id || null, assignee?.name || null);
+    } finally {
+      setLoadingItems((prev) => {
+        const next = new Set(prev);
+        next.delete(`assignee-${id}`);
         return next;
       });
     }
@@ -338,6 +355,21 @@ export function MilestoneTargetsPanel({
                                     {weekly.title}
                                   </span>
                                   <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                                    {onUpdateAssignee && (
+                                      <div className="min-w-[120px]">
+                                        {loadingItems.has(`assignee-${weekly.id}`) ? (
+                                          <Loader2 className="h-4 w-4 animate-spin mx-auto" />
+                                        ) : (
+                                          <AssigneeSelect
+                                            value={weekly.assigneeName ? { id: weekly.assigneeId, name: weekly.assigneeName } : null}
+                                            onChange={(assignee) => handleAssigneeChange('weekly', weekly.id, assignee)}
+                                            currentUserName={currentUserName}
+                                            placeholder="Assign..."
+                                            className="h-6 text-xs"
+                                          />
+                                        )}
+                                      </div>
+                                    )}
                                     <Button
                                       variant="ghost"
                                       size="sm"
