@@ -140,7 +140,7 @@ Respond ONLY with valid JSON in this exact format:
 
     const message = await anthropic.messages.create({
       model: 'claude-opus-4-20250514',
-      max_tokens: 4000,
+      max_tokens: 8000,
       messages: [
         {
           role: 'user',
@@ -209,7 +209,7 @@ Respond ONLY with valid JSON in this exact format:
 
     if (error instanceof SyntaxError) {
       return NextResponse.json(
-        { error: 'Failed to parse AI response' },
+        { error: 'Failed to parse AI response', parseError: error.message },
         { status: 500 }
       );
     }
