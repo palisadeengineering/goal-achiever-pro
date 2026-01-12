@@ -106,12 +106,11 @@ export function getAdaptiveEventStyles(sizeBucket: EventSizeBucket) {
       // Show abbreviated title, no time
       return {
         containerClass: 'px-1 py-0',
-        titleStyle: {
-          fontSize: '10px',
-          lineHeight: '1',
-          fontWeight: 600,
-        } as React.CSSProperties,
-        metaStyle: null, // No meta for xs
+        // Use Tailwind arbitrary classes for reliable font sizing
+        titleClass: 'text-[10px] leading-none font-semibold',
+        titleStyle: {} as React.CSSProperties,
+        metaClass: '',
+        metaStyle: null as React.CSSProperties | null,
         showTime: false,
         showDuration: false,
         showRecurringIcon: false,
@@ -123,12 +122,10 @@ export function getAdaptiveEventStyles(sizeBucket: EventSizeBucket) {
       // Show full title on single line, readable font
       return {
         containerClass: 'px-1.5 py-0',
-        titleStyle: {
-          fontSize: '11px',
-          lineHeight: '1.1',
-          fontWeight: 600,
-        } as React.CSSProperties,
-        metaStyle: null, // No meta for sm
+        titleClass: 'text-[11px] leading-tight font-semibold',
+        titleStyle: {} as React.CSSProperties,
+        metaClass: '',
+        metaStyle: null as React.CSSProperties | null,
         showTime: false,
         showDuration: false,
         showRecurringIcon: true,
@@ -140,15 +137,10 @@ export function getAdaptiveEventStyles(sizeBucket: EventSizeBucket) {
       // Show title + start time
       return {
         containerClass: 'px-1.5 py-0.5',
-        titleStyle: {
-          fontSize: '12px',
-          lineHeight: '1.15',
-          fontWeight: 600,
-        } as React.CSSProperties,
-        metaStyle: {
-          fontSize: '10px',
-          lineHeight: '1.1',
-        } as React.CSSProperties,
+        titleClass: 'text-xs leading-tight font-semibold',
+        titleStyle: {} as React.CSSProperties,
+        metaClass: 'text-[10px] leading-tight',
+        metaStyle: {} as React.CSSProperties,
         showTime: true,
         showDuration: false,
         showRecurringIcon: true,
@@ -161,15 +153,10 @@ export function getAdaptiveEventStyles(sizeBucket: EventSizeBucket) {
       // Full content: title + time + duration
       return {
         containerClass: 'px-2 py-1',
-        titleStyle: {
-          fontSize: '13px',
-          lineHeight: '1.2',
-          fontWeight: 600,
-        } as React.CSSProperties,
-        metaStyle: {
-          fontSize: '11px',
-          lineHeight: '1.15',
-        } as React.CSSProperties,
+        titleClass: 'text-[13px] leading-snug font-semibold',
+        titleStyle: {} as React.CSSProperties,
+        metaClass: 'text-[11px] leading-tight',
+        metaStyle: {} as React.CSSProperties,
         showTime: true,
         showDuration: true,
         showRecurringIcon: true,

@@ -262,15 +262,12 @@ function EventCard({
 
   // Render event content based on size bucket
   const renderContent = () => {
-    const titleStyle: React.CSSProperties = {
-      ...adaptiveStyles.titleStyle,
-      display: adaptiveStyles.lineClamp > 1 ? '-webkit-box' : 'block',
-      WebkitLineClamp: adaptiveStyles.lineClamp,
-      WebkitBoxOrient: 'vertical' as const,
-      overflow: 'hidden',
-      textOverflow: 'ellipsis',
-      whiteSpace: adaptiveStyles.lineClamp === 1 ? 'nowrap' : 'normal',
-    };
+    // Use CSS classes for line clamping
+    const lineClampClass = adaptiveStyles.lineClamp === 1
+      ? 'truncate'
+      : adaptiveStyles.lineClamp === 2
+        ? 'line-clamp-2'
+        : 'line-clamp-3';
 
     return (
       <div className={cn('w-full h-full flex flex-col justify-center overflow-hidden', adaptiveStyles.containerClass)}>
@@ -281,15 +278,12 @@ function EventCard({
               style={{ width: '10px', height: '10px' }}
             />
           )}
-          <div className="font-semibold flex-1 min-w-0 text-white" style={titleStyle}>
+          <div className={cn('flex-1 min-w-0 text-white', adaptiveStyles.titleClass, lineClampClass)}>
             {getDisplayTitle()}
           </div>
         </div>
-        {adaptiveStyles.showTime && adaptiveStyles.metaStyle && (
-          <div
-            className="opacity-90 truncate text-white/90 flex-shrink-0"
-            style={adaptiveStyles.metaStyle}
-          >
+        {adaptiveStyles.showTime && (
+          <div className={cn('opacity-90 truncate text-white/90 flex-shrink-0', adaptiveStyles.metaClass)}>
             {startTimeDisplay}
             {adaptiveStyles.showDuration && ` · ${durationDisplay}`}
           </div>
