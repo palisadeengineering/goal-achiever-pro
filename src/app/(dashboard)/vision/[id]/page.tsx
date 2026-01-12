@@ -20,6 +20,7 @@ import {
 import { CascadingPlanView } from '@/components/features/backtrack/cascading-plan-view';
 import { BacktrackPlanningWizard } from '@/components/features/backtrack/backtrack-planning-wizard';
 import { KpiTrackingPanel } from '@/components/features/kpi/kpi-tracking-panel';
+import { AIProjectPlanner } from '@/components/features/vision/ai-project-planner';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { format, parseISO } from 'date-fns';
@@ -187,6 +188,9 @@ export default function VisionDetailPage({ params }: { params: Promise<{ id: str
 
   // Backtrack wizard state
   const [showBacktrackWizard, setShowBacktrackWizard] = useState(false);
+
+  // Power Goals generation state
+  const [showPowerGoalsPlanner, setShowPowerGoalsPlanner] = useState(false);
 
   // Handle delete vision
   const handleDeleteVision = async () => {
@@ -746,19 +750,51 @@ export default function VisionDetailPage({ params }: { params: Promise<{ id: str
                 />
               </CardContent>
             </Card>
+          ) : showPowerGoalsPlanner ? (
+            <div className="space-y-4">
+              <div className="flex justify-end">
+                <Button variant="outline" size="sm" onClick={() => setShowPowerGoalsPlanner(false)}>
+                  Cancel
+                </Button>
+              </div>
+              <AIProjectPlanner
+                vision={vision.title + (vision.description ? `: ${vision.description}` : '')}
+                visionId={id}
+                smartGoals={{
+                  specific: vision.specific || undefined,
+                  measurable: vision.measurable || undefined,
+                  attainable: vision.attainable || undefined,
+                  realistic: vision.realistic || undefined,
+                }}
+                targetDate={vision.time_bound ? new Date(vision.time_bound) : null}
+                onPowerGoalsSaved={() => {
+                  setShowPowerGoalsPlanner(false);
+                  toast.success('Power Goals saved! View them in the Milestones page.');
+                }}
+              />
+            </div>
           ) : (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <GitBranch className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                <h3 className="font-semibold mb-2">No Backtrack Plan Yet</h3>
-                <p className="text-muted-foreground text-center mb-4 max-w-md">
-                  Create a backtrack plan to break down your vision into quarterly targets,
-                  monthly goals, weekly tasks, and daily actions.
+                <Target className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                <h3 className="font-semibold mb-2">No Plan Yet</h3>
+                <p className="text-muted-foreground text-center mb-6 max-w-md">
+                  Break down your vision into actionable steps. Choose how you want to create your plan:
                 </p>
-                <Button onClick={() => setShowBacktrackWizard(true)}>
-                  <GitBranch className="h-4 w-4 mr-2" />
-                  Create Backtrack Plan
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button onClick={() => setShowPowerGoalsPlanner(true)} className="gap-2">
+                    <Sparkles className="h-4 w-4" />
+                    Generate 12 Power Goals (AI)
+                  </Button>
+                  <Button variant="outline" onClick={() => setShowBacktrackWizard(true)} className="gap-2">
+                    <GitBranch className="h-4 w-4" />
+                    Create Backtrack Plan
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-4 text-center max-w-sm">
+                  Power Goals: AI creates 12 quarterly milestones (3 per quarter) based on your vision.
+                  Backtrack: Manual planning with quarterly targets.
+                </p>
               </CardContent>
             </Card>
           )}

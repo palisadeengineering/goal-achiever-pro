@@ -39,6 +39,8 @@ import Link from 'next/link';
 import { MilestoneKpiPanel } from '@/components/features/milestone/milestone-kpi-panel';
 import { MilestoneTargetsPanel } from '@/components/features/milestone/milestone-targets-panel';
 import { AssigneeBadge } from '@/components/features/assignee/assignee-select';
+import { TargetGenerationWizard } from '@/components/features/targets';
+import { Sparkles } from 'lucide-react';
 
 interface Milestone {
   id: string;
@@ -145,6 +147,7 @@ export default function MilestoneDetailPage() {
   const [progress, setProgress] = useState(0);
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isTargetWizardOpen, setIsTargetWizardOpen] = useState(false);
 
   // Fetch milestone data
   useEffect(() => {
@@ -1003,7 +1006,25 @@ export default function MilestoneDetailPage() {
         </TabsContent>
 
         {/* Targets Tab */}
-        <TabsContent value="targets">
+        <TabsContent value="targets" className="space-y-4">
+          {/* Generate Targets Button */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-medium">AI Target Generation</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Automatically generate monthly, weekly, and daily targets for this milestone
+                  </p>
+                </div>
+                <Button onClick={() => setIsTargetWizardOpen(true)} className="gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  Generate Targets
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           <MilestoneTargetsPanel
             milestoneId={milestoneId}
             monthlyTargets={monthlyTargets}
@@ -1016,6 +1037,68 @@ export default function MilestoneDetailPage() {
             onDelete={handleDeleteTarget}
             currentUserName="Me"
           />
+
+          {/* Target Generation Wizard Dialog */}
+          <Dialog open={isTargetWizardOpen} onOpenChange={setIsTargetWizardOpen}>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  Generate Detailed Plan
+                </DialogTitle>
+              </DialogHeader>
+              <TargetGenerationWizard
+                powerGoal={{
+                  id: milestoneId,
+                  title: milestone.title,
+                  description: milestone.description,
+                  quarter: milestone.quarter || 1,
+                  category: milestone.category,
+                }}
+                targetDate={milestone.targetDate ? new Date(milestone.targetDate) : null}
+                onCancel={() => setIsTargetWizardOpen(false)}
+                onSave={async () => {
+                  setIsTargetWizardOpen(false);
+                  // Refresh targets
+                  const targetsRes = await fetch(`/api/milestones/${milestoneId}/targets`);
+                  if (targetsRes.ok) {
+                    const { targets } = await targetsRes.json();
+                    const transformedTargets = (targets || []).map((mt: Record<string, unknown>) => ({
+                      id: mt.id,
+                      title: mt.title,
+                      description: mt.description,
+                      targetMonth: mt.target_month,
+                      targetYear: mt.target_year,
+                      status: mt.status || 'pending',
+                      assigneeName: mt.assignee_name,
+                      weeklyTargets: ((mt.weekly_targets || []) as Record<string, unknown>[]).map((wt) => ({
+                        id: wt.id,
+                        title: wt.title,
+                        description: wt.description,
+                        weekNumber: wt.week_number,
+                        weekStartDate: wt.week_start_date,
+                        weekEndDate: wt.week_end_date,
+                        status: wt.status || 'pending',
+                        assigneeId: wt.assignee_id,
+                        assigneeName: wt.assignee_name,
+                        dailyActions: ((wt.daily_actions || []) as Record<string, unknown>[]).map((da) => ({
+                          id: da.id,
+                          title: da.title,
+                          description: da.description,
+                          actionDate: da.action_date,
+                          estimatedMinutes: da.estimated_minutes,
+                          status: da.status || 'pending',
+                          assigneeName: da.assignee_name,
+                        })),
+                      })),
+                    }));
+                    setMonthlyTargets(transformedTargets);
+                    toast.success('Targets generated and saved successfully!');
+                  }
+                }}
+              />
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         {/* MINS Tab */}
