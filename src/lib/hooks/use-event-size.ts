@@ -18,15 +18,15 @@ interface UseEventSizeResult {
 }
 
 // Size bucket thresholds in pixels
-// Adjusted for better readability at small sizes:
-// - 15-min event = ~13px → should be readable (sm bucket)
+// With minimum event height of 22px (like Google Calendar):
+// - All events get at least 22px → readable title + time
 // - 30-min event = ~27px → title + time (md bucket)
 // - 45-min event = ~41px → full content (lg bucket)
 const SIZE_THRESHOLDS = {
-  xs: 12,   // < 12px (only 5-10 min events)
-  sm: 22,   // 12-22px (15-min events land here)
-  md: 38,   // 22-38px (30-min events land here)
-  // lg: >= 38px
+  xs: 20,   // < 20px - shouldn't happen with min height
+  sm: 26,   // 20-26px (15-min events with min height)
+  md: 40,   // 26-40px (30-min events land here)
+  // lg: >= 40px
 } as const;
 
 /**
@@ -102,33 +102,32 @@ export function useEventSize(fallbackHeight?: number): UseEventSizeResult {
 export function getAdaptiveEventStyles(sizeBucket: EventSizeBucket) {
   switch (sizeBucket) {
     case 'xs':
-      // For truly tiny events (< 12px, like 5-10 min)
-      // Show abbreviated title, no time
+      // Fallback for very tiny events (shouldn't happen with min height)
+      // Show title + time like Google Calendar
       return {
-        containerClass: 'px-1 py-0',
-        // Use Tailwind arbitrary classes for reliable font sizing
-        titleClass: 'text-[10px] leading-none font-semibold',
+        containerClass: 'px-1 py-0.5',
+        titleClass: 'text-xs leading-tight font-semibold',
         titleStyle: {} as React.CSSProperties,
-        metaClass: '',
-        metaStyle: null as React.CSSProperties | null,
-        showTime: false,
+        metaClass: 'text-[10px] leading-tight',
+        metaStyle: {} as React.CSSProperties,
+        showTime: true,
         showDuration: false,
         showRecurringIcon: false,
         lineClamp: 1,
-        truncateToFirstWord: true,
+        truncateToFirstWord: false,
       };
     case 'sm':
-      // For short events (12-22px, like 15-min)
-      // Show full title on single line, readable font
+      // For short events (20-26px, like 15-min with min height)
+      // Show title + time like Google Calendar
       return {
-        containerClass: 'px-1.5 py-0',
-        titleClass: 'text-[11px] leading-tight font-semibold',
+        containerClass: 'px-1 py-0.5',
+        titleClass: 'text-xs leading-tight font-semibold',
         titleStyle: {} as React.CSSProperties,
-        metaClass: '',
-        metaStyle: null as React.CSSProperties | null,
-        showTime: false,
+        metaClass: 'text-[10px] leading-tight',
+        metaStyle: {} as React.CSSProperties,
+        showTime: true,
         showDuration: false,
-        showRecurringIcon: true,
+        showRecurringIcon: false,
         lineClamp: 1,
         truncateToFirstWord: false,
       };

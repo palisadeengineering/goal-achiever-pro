@@ -269,6 +269,20 @@ function EventCard({
         ? 'line-clamp-2'
         : 'line-clamp-3';
 
+    // For small events (xs/sm), show Google Calendar style: "Title, time" on one line
+    const isCompact = sizeBucket === 'xs' || sizeBucket === 'sm';
+
+    if (isCompact) {
+      return (
+        <div className={cn('w-full h-full flex flex-col justify-center overflow-hidden', adaptiveStyles.containerClass)}>
+          <div className={cn('text-white truncate', adaptiveStyles.titleClass)}>
+            {getDisplayTitle()}, {startTimeDisplay}
+          </div>
+        </div>
+      );
+    }
+
+    // For larger events, show title and time on separate lines
     return (
       <div className={cn('w-full h-full flex flex-col justify-center overflow-hidden', adaptiveStyles.containerClass)}>
         <div className="flex items-center gap-0.5 min-w-0 flex-1">
@@ -1249,6 +1263,9 @@ export function WeeklyCalendarView({
 
                           const isDraggingOther = activeBlock && activeBlock.id !== block.id;
 
+                          // Minimum height of 22px ensures text is always readable (like Google Calendar)
+                          const MIN_EVENT_HEIGHT = 22;
+
                           return (
                             <div
                               key={block.id}
@@ -1258,7 +1275,7 @@ export function WeeklyCalendarView({
                               )}
                               style={{
                                 top: `${topPosition}px`,
-                                height: `${Math.max(displayHeight - 1, 13)}px`,
+                                height: `${Math.max(displayHeight - 1, MIN_EVENT_HEIGHT)}px`,
                               }}
                             >
                               <EventCard
