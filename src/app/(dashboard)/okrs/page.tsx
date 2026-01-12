@@ -105,7 +105,8 @@ export default function OKRsPage() {
       }
       if (visionsRes.ok) {
         const data = await visionsRes.json();
-        setVisions(data);
+        // API returns { visions: [...] } so extract the array
+        setVisions(data.visions || data || []);
       }
       if (teamRes.ok) {
         const data = await teamRes.json();
@@ -439,12 +440,13 @@ export default function OKRsPage() {
                     <div className="grid gap-2">
                       <Label htmlFor="assignee">Owner (Optional)</Label>
                       <Select
-                        value={formData.assigneeId}
+                        value={formData.assigneeId || '__none__'}
                         onValueChange={(value) => {
-                          const member = teamMembers.find((m) => m.id === value);
+                          const actualValue = value === '__none__' ? '' : value;
+                          const member = teamMembers.find((m) => m.id === actualValue);
                           setFormData({
                             ...formData,
-                            assigneeId: value,
+                            assigneeId: actualValue,
                             assigneeName: member?.name || '',
                           });
                         }}
@@ -453,7 +455,7 @@ export default function OKRsPage() {
                           <SelectValue placeholder="Select owner" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">No owner</SelectItem>
+                          <SelectItem value="__none__">No owner</SelectItem>
                           {teamMembers.map((member) => (
                             <SelectItem key={member.id} value={member.id}>
                               {member.name}
