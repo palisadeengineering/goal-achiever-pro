@@ -170,8 +170,19 @@ Respond ONLY with valid JSON in this exact format:
       );
     }
 
-    // Parse the JSON response
-    const targetPlan = JSON.parse(responseText);
+    // Parse the JSON response - strip markdown code blocks if present
+    let cleanedResponse = responseText.trim();
+    if (cleanedResponse.startsWith('```json')) {
+      cleanedResponse = cleanedResponse.slice(7);
+    } else if (cleanedResponse.startsWith('```')) {
+      cleanedResponse = cleanedResponse.slice(3);
+    }
+    if (cleanedResponse.endsWith('```')) {
+      cleanedResponse = cleanedResponse.slice(0, -3);
+    }
+    cleanedResponse = cleanedResponse.trim();
+
+    const targetPlan = JSON.parse(cleanedResponse);
 
     // Add power goal context to response
     return NextResponse.json({
@@ -204,7 +215,7 @@ Respond ONLY with valid JSON in this exact format:
     }
 
     return NextResponse.json(
-      { error: 'Failed to generate target plan' },
+      { error: 'Failed to generate target plan', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

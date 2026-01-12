@@ -20,6 +20,7 @@ import {
 import { CascadingPlanView } from '@/components/features/backtrack/cascading-plan-view';
 import { BacktrackPlanningWizard } from '@/components/features/backtrack/backtrack-planning-wizard';
 import { KpiTrackingPanel } from '@/components/features/kpi/kpi-tracking-panel';
+import { AIProjectPlanner } from '@/components/features/vision/ai-project-planner';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { format, parseISO } from 'date-fns';
@@ -187,6 +188,9 @@ export default function VisionDetailPage({ params }: { params: Promise<{ id: str
 
   // Backtrack wizard state
   const [showBacktrackWizard, setShowBacktrackWizard] = useState(false);
+
+  // AI Project Planner state
+  const [showAIPlanner, setShowAIPlanner] = useState(false);
 
   // Handle delete vision
   const handleDeleteVision = async () => {
@@ -746,19 +750,46 @@ export default function VisionDetailPage({ params }: { params: Promise<{ id: str
                 />
               </CardContent>
             </Card>
+          ) : showAIPlanner ? (
+            <AIProjectPlanner
+              vision={vision.title}
+              visionId={id}
+              smartGoals={{
+                specific: vision.specific || undefined,
+                measurable: vision.measurable || undefined,
+                attainable: vision.attainable || undefined,
+                realistic: vision.realistic || undefined,
+              }}
+              targetDate={vision.time_bound ? new Date(vision.time_bound) : null}
+              onPowerGoalsSaved={() => {
+                setShowAIPlanner(false);
+                toast.success('Power Goals saved! View them in the Milestones page.');
+              }}
+            />
           ) : (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <GitBranch className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                <h3 className="font-semibold mb-2">No Backtrack Plan Yet</h3>
-                <p className="text-muted-foreground text-center mb-4 max-w-md">
-                  Create a backtrack plan to break down your vision into quarterly targets,
-                  monthly goals, weekly tasks, and daily actions.
+                <Sparkles className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                <h3 className="font-semibold mb-2">No Plan Yet</h3>
+                <p className="text-muted-foreground text-center mb-6 max-w-md">
+                  Create a plan to break down your vision into actionable steps.
+                  Choose how you want to get started:
                 </p>
-                <Button onClick={() => setShowBacktrackWizard(true)}>
-                  <GitBranch className="h-4 w-4 mr-2" />
-                  Create Backtrack Plan
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button onClick={() => setShowAIPlanner(true)} className="gap-2">
+                    <Sparkles className="h-4 w-4" />
+                    Generate Power Goals with AI
+                  </Button>
+                  <Button variant="outline" onClick={() => setShowBacktrackWizard(true)} className="gap-2">
+                    <GitBranch className="h-4 w-4" />
+                    Create Backtrack Plan
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-4 max-w-md text-center">
+                  <strong>AI Power Goals:</strong> Generates 12 quarterly milestones you can break down further.
+                  <br />
+                  <strong>Backtrack Plan:</strong> Manual planning with quarterly, monthly, weekly, and daily targets.
+                </p>
               </CardContent>
             </Card>
           )}

@@ -147,8 +147,19 @@ Respond ONLY with valid JSON in this exact format:
       );
     }
 
-    // Parse the JSON response
-    const kpis = JSON.parse(responseText);
+    // Parse the JSON response - strip markdown code blocks if present
+    let cleanedResponse = responseText.trim();
+    if (cleanedResponse.startsWith('```json')) {
+      cleanedResponse = cleanedResponse.slice(7);
+    } else if (cleanedResponse.startsWith('```')) {
+      cleanedResponse = cleanedResponse.slice(3);
+    }
+    if (cleanedResponse.endsWith('```')) {
+      cleanedResponse = cleanedResponse.slice(0, -3);
+    }
+    cleanedResponse = cleanedResponse.trim();
+
+    const kpis = JSON.parse(cleanedResponse);
 
     return NextResponse.json(kpis);
   } catch (error) {

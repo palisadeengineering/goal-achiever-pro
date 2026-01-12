@@ -88,7 +88,19 @@ Respond ONLY with valid JSON in this exact format:
       );
     }
 
-    const result = JSON.parse(responseText);
+    // Strip markdown code blocks if present
+    let cleanedResponse = responseText.trim();
+    if (cleanedResponse.startsWith('```json')) {
+      cleanedResponse = cleanedResponse.slice(7);
+    } else if (cleanedResponse.startsWith('```')) {
+      cleanedResponse = cleanedResponse.slice(3);
+    }
+    if (cleanedResponse.endsWith('```')) {
+      cleanedResponse = cleanedResponse.slice(0, -3);
+    }
+    cleanedResponse = cleanedResponse.trim();
+
+    const result = JSON.parse(cleanedResponse);
 
     return NextResponse.json(result);
   } catch (error) {
