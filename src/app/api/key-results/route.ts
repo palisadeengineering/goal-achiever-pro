@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { db } from '@/lib/db';
-import { keyResults, keyResultUpdates, teamMembers } from '@/lib/db/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { createAdminClient } from '@/lib/supabase/admin';
 import type { CreateKeyResultInput } from '@/types/team';
 
 const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
@@ -13,54 +11,84 @@ async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
   return user?.id || DEMO_USER_ID;
 }
 
+// Transform snake_case to camelCase
+function transformKeyResult(kr: Record<string, unknown>) {
+  return {
+    id: kr.id,
+    userId: kr.user_id,
+    visionId: kr.vision_id,
+    powerGoalId: kr.power_goal_id,
+    title: kr.title,
+    description: kr.description,
+    targetValue: Number(kr.target_value),
+    currentValue: Number(kr.current_value),
+    startValue: Number(kr.start_value),
+    unit: kr.unit,
+    assigneeId: kr.assignee_id,
+    assigneeName: kr.assignee_name,
+    quarter: kr.quarter,
+    year: kr.year,
+    dueDate: kr.due_date,
+    status: kr.status,
+    progressPercentage: kr.progress_percentage,
+    confidenceLevel: kr.confidence_level,
+    successCriteria: kr.success_criteria,
+    notes: kr.notes,
+    isActive: kr.is_active,
+    createdAt: kr.created_at,
+    updatedAt: kr.updated_at,
+  };
+}
+
 // GET /api/key-results - List all key results
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
-    const userId = await getUserId(supabase);
+    const adminClient = createAdminClient();
 
+    if (!adminClient) {
+      return NextResponse.json(
+        { error: 'Database connection failed' },
+        { status: 500 }
+      );
+    }
+
+    const userId = await getUserId(supabase);
     const { searchParams } = new URL(request.url);
     const visionId = searchParams.get('visionId');
     const quarter = searchParams.get('quarter');
     const year = searchParams.get('year');
     const assigneeId = searchParams.get('assigneeId');
 
-    let query = db
-      .select({
-        keyResult: keyResults,
-        assignee: teamMembers,
-      })
-      .from(keyResults)
-      .leftJoin(teamMembers, eq(keyResults.assigneeId, teamMembers.id))
-      .where(and(
-        eq(keyResults.userId, userId),
-        eq(keyResults.isActive, true)
-      ))
-      .orderBy(desc(keyResults.createdAt))
-      .$dynamic();
+    let query = adminClient
+      .from('key_results')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
 
     // Apply filters
     if (visionId) {
-      query = query.where(eq(keyResults.visionId, visionId));
+      query = query.eq('vision_id', visionId);
     }
     if (quarter && year) {
-      query = query.where(and(
-        eq(keyResults.quarter, parseInt(quarter)),
-        eq(keyResults.year, parseInt(year))
-      ));
+      query = query.eq('quarter', parseInt(quarter)).eq('year', parseInt(year));
     }
     if (assigneeId) {
-      query = query.where(eq(keyResults.assigneeId, assigneeId));
+      query = query.eq('assignee_id', assigneeId);
     }
 
-    const results = await query;
+    const { data: keyResults, error } = await query;
 
-    // Transform to include assignee in the key result
-    const transformedResults = results.map(({ keyResult, assignee }) => ({
-      ...keyResult,
-      assignee: assignee || undefined,
-    }));
+    if (error) {
+      console.error('Error fetching key results:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch key results' },
+        { status: 500 }
+      );
+    }
 
+    const transformedResults = (keyResults || []).map(transformKeyResult);
     return NextResponse.json(transformedResults);
   } catch (error) {
     console.error('Error fetching key results:', error);
@@ -75,8 +103,16 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    const userId = await getUserId(supabase);
+    const adminClient = createAdminClient();
 
+    if (!adminClient) {
+      return NextResponse.json(
+        { error: 'Database connection failed' },
+        { status: 500 }
+      );
+    }
+
+    const userId = await getUserId(supabase);
     const body: CreateKeyResultInput = await request.json();
 
     if (!body.visionId || !body.title || !body.targetValue || !body.unit) {
@@ -87,39 +123,47 @@ export async function POST(request: NextRequest) {
     }
 
     // Calculate initial progress percentage
-    const currentValue = 0;
     const startValue = body.startValue || 0;
     const progressPercentage = body.targetValue > startValue
-      ? Math.round(((currentValue - startValue) / (body.targetValue - startValue)) * 100)
+      ? Math.round(((0 - startValue) / (body.targetValue - startValue)) * 100)
       : 0;
 
-    const [newKeyResult] = await db
-      .insert(keyResults)
-      .values({
-        userId,
-        visionId: body.visionId,
-        powerGoalId: body.powerGoalId,
+    const { data: keyResult, error } = await adminClient
+      .from('key_results')
+      .insert({
+        user_id: userId,
+        vision_id: body.visionId,
+        power_goal_id: body.powerGoalId || null,
         title: body.title,
-        description: body.description,
-        targetValue: body.targetValue.toString(),
-        currentValue: '0',
-        startValue: (body.startValue || 0).toString(),
+        description: body.description || null,
+        target_value: body.targetValue,
+        current_value: 0,
+        start_value: startValue,
         unit: body.unit,
-        assigneeId: body.assigneeId,
-        assigneeName: body.assigneeName,
-        quarter: body.quarter,
-        year: body.year,
-        dueDate: body.dueDate,
+        assignee_id: body.assigneeId || null,
+        assignee_name: body.assigneeName || null,
+        quarter: body.quarter || null,
+        year: body.year || null,
+        due_date: body.dueDate || null,
         status: 'on_track',
-        progressPercentage,
-        confidenceLevel: 70,
-        successCriteria: body.successCriteria,
-        notes: body.notes,
-        isActive: true,
+        progress_percentage: Math.max(0, progressPercentage),
+        confidence_level: 70,
+        success_criteria: body.successCriteria || null,
+        notes: body.notes || null,
+        is_active: true,
       })
-      .returning();
+      .select()
+      .single();
 
-    return NextResponse.json(newKeyResult, { status: 201 });
+    if (error) {
+      console.error('Error creating key result:', error);
+      return NextResponse.json(
+        { error: 'Failed to create key result' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(transformKeyResult(keyResult), { status: 201 });
   } catch (error) {
     console.error('Error creating key result:', error);
     return NextResponse.json(

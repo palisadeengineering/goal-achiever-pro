@@ -164,24 +164,45 @@ function EventCard({
   const isShort = durationSlots <= 2;     // 30 min (~28px)
   const isMedium = durationSlots <= 4;    // 45-60 min (~42-56px)
 
-  // Dynamic font size calculation based on height
-  // For very short events, prioritize readability over fitting everything
-  const getTitleFontSize = () => {
-    if (isVeryShort) return 11; // Readable single line
-    if (isShort) return 11;    // Slightly larger for better readability
-    if (isMedium) return 12;   // Medium events
-    return 13;                  // Larger events
+  // TRUE DYNAMIC font sizing like Google Calendar
+  // Key insight: For small events, MAXIMIZE font size to fill space
+  // The text should BE the event, not sit inside it with lots of padding
+
+  // Calculate title font size that fills the available space
+  const calculateTitleFontSize = () => {
+    if (isVeryShort) {
+      // 15min: Single line, fill the height. Use ~85% of height as font size
+      // For 14px container: 14 * 0.85 = ~12px font
+      return Math.round(Math.max(12, Math.min(14, heightPx * 0.85)));
+    }
+    if (isShort) {
+      // 30min: Title takes ~60% of space, rest for meta
+      // For 28px: title area ~17px, font ~13px
+      return Math.round(Math.max(12, Math.min(14, heightPx * 0.5)));
+    }
+    if (isMedium) {
+      // 45-60min: More breathing room but still proportional
+      // For 42-56px: font 13-14px
+      return Math.round(Math.max(13, Math.min(15, heightPx * 0.28)));
+    }
+    // Large events: comfortable reading, max out at 16px
+    return Math.round(Math.max(14, Math.min(16, heightPx * 0.18)));
   };
 
-  const getMetaFontSize = () => {
-    if (isVeryShort) return 10;
-    if (isShort) return 10;
-    if (isMedium) return 10;
-    return 11;
+  // Meta font scales proportionally but smaller
+  const calculateMetaFontSize = () => {
+    if (isVeryShort) return 0; // No meta text for very short
+    if (isShort) return Math.round(Math.max(10, Math.min(12, heightPx * 0.38)));
+    if (isMedium) return Math.round(Math.max(11, Math.min(13, heightPx * 0.22)));
+    return Math.round(Math.max(12, Math.min(14, heightPx * 0.15)));
   };
 
-  const titleFontSize = getTitleFontSize();
-  const metaFontSize = getMetaFontSize();
+  const titleFontSize = calculateTitleFontSize();
+  const metaFontSize = calculateMetaFontSize();
+
+  // Line height should match or slightly exceed font size for tight packing
+  const titleLineHeight = isVeryShort ? heightPx : Math.round(titleFontSize * 1.2);
+  const metaLineHeight = Math.round(metaFontSize * 1.15);
 
   // Check if this is a recurring event
   const isRecurring = block.isRecurring || block.isRecurrenceInstance;
@@ -237,65 +258,79 @@ function EventCard({
               className="w-full h-full text-left cursor-grab active:cursor-grabbing overflow-hidden text-white p-0"
             >
               {isVeryShort ? (
-                /* 15-min slot: ~14px height - single line, compact */
+                /* 15-min slot: ~14px height - FILL the space with text like Google Calendar */
                 <div
                   className="w-full h-full flex items-center overflow-hidden"
-                  style={{ padding: '0 4px' }}
+                  style={{ padding: '0 5px' }}
                 >
                   {isRecurring && (
-                    <Repeat className="h-2.5 w-2.5 mr-0.5 flex-shrink-0 opacity-80" />
+                    <Repeat
+                      className="mr-1 flex-shrink-0 opacity-90"
+                      style={{ width: `${titleFontSize - 2}px`, height: `${titleFontSize - 2}px` }}
+                    />
                   )}
                   <div
                     className="font-semibold flex-1 overflow-hidden whitespace-nowrap"
-                    style={{ fontSize: `${titleFontSize}px`, lineHeight: '14px', textOverflow: 'ellipsis' }}
+                    style={{
+                      fontSize: `${titleFontSize}px`,
+                      lineHeight: `${titleLineHeight}px`,
+                      textOverflow: 'ellipsis'
+                    }}
                   >
                     {block.activityName}
                   </div>
                 </div>
               ) : isShort ? (
-                /* 30-min slot: ~28px height - title wraps, time below */
+                /* 30-min slot: ~28px height - title fills most space, small time below */
                 <div
-                  className="w-full h-full flex flex-col justify-start overflow-hidden"
-                  style={{ padding: '2px 5px' }}
+                  className="w-full h-full flex flex-col justify-center overflow-hidden"
+                  style={{ padding: '1px 5px' }}
                 >
-                  <div className="flex items-start gap-0.5 min-w-0 flex-1">
-                    {isRecurring && <Repeat className="h-2.5 w-2.5 flex-shrink-0 opacity-80 mt-0.5" />}
+                  <div className="flex items-center gap-1 min-w-0">
+                    {isRecurring && (
+                      <Repeat
+                        className="flex-shrink-0 opacity-90"
+                        style={{ width: `${titleFontSize - 1}px`, height: `${titleFontSize - 1}px` }}
+                      />
+                    )}
                     <div
-                      className="font-semibold w-full overflow-hidden"
+                      className="font-semibold flex-1 overflow-hidden whitespace-nowrap"
                       style={{
                         fontSize: `${titleFontSize}px`,
-                        lineHeight: '13px',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 1,
-                        WebkitBoxOrient: 'vertical',
+                        lineHeight: `${titleLineHeight}px`,
+                        textOverflow: 'ellipsis',
                       }}
                     >
                       {block.activityName}
                     </div>
                   </div>
                   <div
-                    className="opacity-85 flex-shrink-0 flex items-center gap-1"
-                    style={{ fontSize: `${metaFontSize}px`, lineHeight: '12px' }}
+                    className="opacity-90 truncate"
+                    style={{ fontSize: `${metaFontSize}px`, lineHeight: `${metaLineHeight}px` }}
                   >
-                    <span>{startTimeDisplay}</span>
-                    <span>· {durationDisplay}</span>
+                    {startTimeDisplay} · {durationDisplay}
                   </div>
                 </div>
               ) : isMedium ? (
-                /* 45-60 min slot: ~42-56px height - more lines allowed, time and duration */
+                /* 45-60 min slot: ~42-56px height - proportional text with room to breathe */
                 <div
                   className="w-full h-full flex flex-col justify-start overflow-hidden"
                   style={{ padding: '3px 6px' }}
                 >
-                  <div className="flex items-start gap-0.5 min-w-0 flex-1">
-                    {isRecurring && <Repeat className="h-3 w-3 flex-shrink-0 opacity-80 mt-0.5" />}
+                  <div className="flex items-start gap-1 min-w-0 flex-1">
+                    {isRecurring && (
+                      <Repeat
+                        className="flex-shrink-0 opacity-90 mt-0.5"
+                        style={{ width: `${titleFontSize}px`, height: `${titleFontSize}px` }}
+                      />
+                    )}
                     <div
                       className="font-semibold w-full overflow-hidden"
                       style={{
                         fontSize: `${titleFontSize}px`,
-                        lineHeight: '14px',
+                        lineHeight: `${titleLineHeight}px`,
                         display: '-webkit-box',
-                        WebkitLineClamp: durationSlots <= 3 ? 2 : 3,
+                        WebkitLineClamp: Math.max(2, Math.floor((heightPx - metaLineHeight - 8) / titleLineHeight)),
                         WebkitBoxOrient: 'vertical',
                       }}
                     >
@@ -303,27 +338,32 @@ function EventCard({
                     </div>
                   </div>
                   <div
-                    className="opacity-85 flex-shrink-0"
-                    style={{ fontSize: `${metaFontSize}px`, lineHeight: '13px' }}
+                    className="opacity-90 flex-shrink-0 truncate"
+                    style={{ fontSize: `${metaFontSize}px`, lineHeight: `${metaLineHeight}px` }}
                   >
                     {timeRange} · {durationDisplay}
                   </div>
                 </div>
               ) : (
-                /* 1+ hour slot - full text wrap with time range and duration */
+                /* 1+ hour slot - comfortable proportional text */
                 <div
                   className="w-full h-full flex flex-col justify-start overflow-hidden"
                   style={{ padding: '4px 7px' }}
                 >
                   <div className="flex items-start gap-1 min-w-0 flex-1">
-                    {isRecurring && <Repeat className="h-3.5 w-3.5 flex-shrink-0 opacity-80 mt-0.5" />}
+                    {isRecurring && (
+                      <Repeat
+                        className="flex-shrink-0 opacity-90 mt-0.5"
+                        style={{ width: `${titleFontSize}px`, height: `${titleFontSize}px` }}
+                      />
+                    )}
                     <div
                       className="font-semibold w-full overflow-hidden"
                       style={{
                         fontSize: `${titleFontSize}px`,
-                        lineHeight: '16px',
+                        lineHeight: `${titleLineHeight}px`,
                         display: '-webkit-box',
-                        WebkitLineClamp: Math.max(2, Math.floor((durationSlots * 14 - 24) / 16)),
+                        WebkitLineClamp: Math.max(2, Math.floor((heightPx - metaLineHeight - 12) / titleLineHeight)),
                         WebkitBoxOrient: 'vertical',
                       }}
                     >
@@ -331,8 +371,8 @@ function EventCard({
                     </div>
                   </div>
                   <div
-                    className="opacity-85 flex-shrink-0"
-                    style={{ fontSize: `${metaFontSize}px`, lineHeight: '14px' }}
+                    className="opacity-90 flex-shrink-0 truncate"
+                    style={{ fontSize: `${metaFontSize}px`, lineHeight: `${metaLineHeight}px` }}
                   >
                     {timeRange} · {durationDisplay}
                   </div>

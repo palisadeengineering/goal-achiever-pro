@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { db } from '@/lib/db';
-import { teamMembers } from '@/lib/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { createAdminClient } from '@/lib/supabase/admin';
 import type { CreateTeamMemberInput } from '@/types/team';
 
 const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
@@ -17,18 +15,56 @@ async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
 export async function GET() {
   try {
     const supabase = await createClient();
+    const adminClient = createAdminClient();
+
+    if (!adminClient) {
+      return NextResponse.json(
+        { error: 'Database connection failed' },
+        { status: 500 }
+      );
+    }
+
     const userId = await getUserId(supabase);
 
-    const members = await db
-      .select()
-      .from(teamMembers)
-      .where(and(
-        eq(teamMembers.ownerId, userId),
-        eq(teamMembers.isActive, true)
-      ))
-      .orderBy(teamMembers.name);
+    const { data: members, error } = await adminClient
+      .from('team_members')
+      .select('*')
+      .eq('owner_id', userId)
+      .eq('is_active', true)
+      .order('name');
 
-    return NextResponse.json(members);
+    if (error) {
+      console.error('Error fetching team members:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch team members' },
+        { status: 500 }
+      );
+    }
+
+    // Transform snake_case to camelCase for frontend
+    const transformedMembers = (members || []).map(member => ({
+      id: member.id,
+      ownerId: member.owner_id,
+      email: member.email,
+      name: member.name,
+      avatarUrl: member.avatar_url,
+      role: member.role,
+      accessLevel: member.access_level,
+      userId: member.user_id,
+      inviteStatus: member.invite_status,
+      invitedAt: member.invited_at,
+      acceptedAt: member.accepted_at,
+      inviteToken: member.invite_token,
+      phone: member.phone,
+      title: member.title,
+      department: member.department,
+      notes: member.notes,
+      isActive: member.is_active,
+      createdAt: member.created_at,
+      updatedAt: member.updated_at,
+    }));
+
+    return NextResponse.json(transformedMembers);
   } catch (error) {
     console.error('Error fetching team members:', error);
     return NextResponse.json(
@@ -42,8 +78,16 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    const userId = await getUserId(supabase);
+    const adminClient = createAdminClient();
 
+    if (!adminClient) {
+      return NextResponse.json(
+        { error: 'Database connection failed' },
+        { status: 500 }
+      );
+    }
+
+    const userId = await getUserId(supabase);
     const body: CreateTeamMemberInput = await request.json();
 
     if (!body.name) {
@@ -53,24 +97,56 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const [newMember] = await db
-      .insert(teamMembers)
-      .values({
-        ownerId: userId,
+    const { data: member, error } = await adminClient
+      .from('team_members')
+      .insert({
+        owner_id: userId,
         name: body.name,
-        email: body.email,
+        email: body.email || null,
         role: body.role || 'member',
-        accessLevel: body.accessLevel || 'limited',
-        phone: body.phone,
-        title: body.title,
-        department: body.department,
-        notes: body.notes,
-        inviteStatus: 'pending',
-        isActive: true,
+        access_level: body.accessLevel || 'limited',
+        phone: body.phone || null,
+        title: body.title || null,
+        department: body.department || null,
+        notes: body.notes || null,
+        invite_status: 'pending',
+        is_active: true,
       })
-      .returning();
+      .select()
+      .single();
 
-    return NextResponse.json(newMember, { status: 201 });
+    if (error) {
+      console.error('Error creating team member:', error);
+      return NextResponse.json(
+        { error: 'Failed to create team member' },
+        { status: 500 }
+      );
+    }
+
+    // Transform to camelCase
+    const transformedMember = {
+      id: member.id,
+      ownerId: member.owner_id,
+      email: member.email,
+      name: member.name,
+      avatarUrl: member.avatar_url,
+      role: member.role,
+      accessLevel: member.access_level,
+      userId: member.user_id,
+      inviteStatus: member.invite_status,
+      invitedAt: member.invited_at,
+      acceptedAt: member.accepted_at,
+      inviteToken: member.invite_token,
+      phone: member.phone,
+      title: member.title,
+      department: member.department,
+      notes: member.notes,
+      isActive: member.is_active,
+      createdAt: member.created_at,
+      updatedAt: member.updated_at,
+    };
+
+    return NextResponse.json(transformedMember, { status: 201 });
   } catch (error) {
     console.error('Error creating team member:', error);
     return NextResponse.json(
