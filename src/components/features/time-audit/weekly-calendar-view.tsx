@@ -21,12 +21,18 @@ import { ChevronLeft, ChevronRight, Plus, Loader2, Palette, Repeat } from 'lucid
 import { cn, formatHour } from '@/lib/utils';
 import { DRIP_QUADRANTS } from '@/constants/drip';
 import { useLocalStorage } from '@/lib/hooks/use-local-storage';
+import { useEventSize, getAdaptiveEventStyles } from '@/lib/hooks/use-event-size';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import type { DripQuadrant, EnergyRating } from '@/types/database';
 import { describeRecurrence } from '@/lib/utils/recurrence';
 
@@ -117,12 +123,58 @@ function formatDuration(startTime: string, endTime: string): string {
   return `${hours.toFixed(1)} hrs`;
 }
 
-// Event card component with improved styling
+// Shared event details content for Tooltip and Popover
+function EventDetailsContent({
+  block,
+  timeRange,
+  durationDisplay,
+}: {
+  block: TimeBlock;
+  timeRange: string;
+  durationDisplay: string;
+}) {
+  const isRecurring = block.isRecurring || block.isRecurrenceInstance;
+
+  return (
+    <div className="space-y-2">
+      <p className="font-semibold text-sm">{block.activityName}</p>
+      <p className="text-xs text-muted-foreground">{timeRange} · {durationDisplay}</p>
+      {isRecurring && block.recurrenceRule && (
+        <p className="text-xs text-muted-foreground flex items-center gap-1">
+          <Repeat className="h-3 w-3" />
+          {describeRecurrence(block.recurrenceRule)}
+        </p>
+      )}
+      <div className="flex gap-2 mt-2">
+        <Badge
+          className="text-[10px] capitalize text-white font-medium px-2 py-0.5"
+          style={{
+            backgroundColor: DRIP_QUADRANTS[block.dripQuadrant].color,
+            borderColor: DRIP_QUADRANTS[block.dripQuadrant].color,
+          }}
+        >
+          {block.dripQuadrant === 'na' ? 'N/A' : block.dripQuadrant}
+        </Badge>
+        <Badge
+          className="text-[10px] text-white font-medium px-2 py-0.5"
+          style={{
+            backgroundColor: ENERGY_COLORS[block.energyRating],
+            borderColor: ENERGY_COLORS[block.energyRating],
+          }}
+        >
+          {block.energyRating === 'green' ? 'Energizing' : block.energyRating === 'yellow' ? 'Neutral' : 'Draining'}
+        </Badge>
+      </div>
+    </div>
+  );
+}
+
+// Event card component with adaptive sizing based on measured height
 function EventCard({
   block,
   durationSlots,
   onBlockClick,
-  getBlockColor,
+  getBlockColor: _getBlockColor,
   onResizeStart,
   isResizing,
   colorMode,
@@ -135,10 +187,28 @@ function EventCard({
   isResizing?: boolean;
   colorMode: 'drip' | 'energy';
 }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  // _getBlockColor is kept for API compatibility but we use inline styles
+  const { attributes, listeners, setNodeRef: setDragRef, transform, isDragging } = useDraggable({
     id: block.id,
     data: { block },
   });
+
+  // Use measured height for adaptive sizing
+  const fallbackHeight = durationSlots * 14;
+  const { ref: sizeRef, sizeBucket } = useEventSize(fallbackHeight);
+
+  // Combine refs for both drag and size measurement
+  const setNodeRef = useCallback((node: HTMLDivElement | null) => {
+    setDragRef(node);
+    sizeRef(node);
+  }, [setDragRef, sizeRef]);
+
+  // Mobile/touch detection - check synchronously on mount via lazy initial state
+  const [isTouchDevice] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  });
+  const [popoverOpen, setPopoverOpen] = useState(false);
 
   const style = transform
     ? {
@@ -157,52 +227,8 @@ function EventCard({
     onResizeStart?.(block, e);
   };
 
-  // Calculate responsive font sizes based on available height
-  // Each slot is ~14px, so we calculate based on total height available
-  const heightPx = durationSlots * 14;
-  const isVeryShort = durationSlots <= 1; // 15 min (~14px)
-  const isShort = durationSlots <= 2;     // 30 min (~28px)
-  const isMedium = durationSlots <= 4;    // 45-60 min (~42-56px)
-
-  // TRUE DYNAMIC font sizing like Google Calendar
-  // Key insight: For small events, MAXIMIZE font size to fill space
-  // The text should BE the event, not sit inside it with lots of padding
-
-  // Calculate title font size that fills the available space
-  const calculateTitleFontSize = () => {
-    if (isVeryShort) {
-      // 15min: Single line, fill the height. Use ~85% of height as font size
-      // For 14px container: 14 * 0.85 = ~12px font
-      return Math.round(Math.max(12, Math.min(14, heightPx * 0.85)));
-    }
-    if (isShort) {
-      // 30min: Title takes ~60% of space, rest for meta
-      // For 28px: title area ~17px, font ~13px
-      return Math.round(Math.max(12, Math.min(14, heightPx * 0.5)));
-    }
-    if (isMedium) {
-      // 45-60min: More breathing room but still proportional
-      // For 42-56px: font 13-14px
-      return Math.round(Math.max(13, Math.min(15, heightPx * 0.28)));
-    }
-    // Large events: comfortable reading, max out at 16px
-    return Math.round(Math.max(14, Math.min(16, heightPx * 0.18)));
-  };
-
-  // Meta font scales proportionally but smaller
-  const calculateMetaFontSize = () => {
-    if (isVeryShort) return 0; // No meta text for very short
-    if (isShort) return Math.round(Math.max(10, Math.min(12, heightPx * 0.38)));
-    if (isMedium) return Math.round(Math.max(11, Math.min(13, heightPx * 0.22)));
-    return Math.round(Math.max(12, Math.min(14, heightPx * 0.15)));
-  };
-
-  const titleFontSize = calculateTitleFontSize();
-  const metaFontSize = calculateMetaFontSize();
-
-  // Line height should match or slightly exceed font size for tight packing
-  const titleLineHeight = isVeryShort ? heightPx : Math.round(titleFontSize * 1.2);
-  const metaLineHeight = Math.round(metaFontSize * 1.15);
+  // Get adaptive styles based on size bucket
+  const adaptiveStyles = getAdaptiveEventStyles(sizeBucket);
 
   // Check if this is a recurring event
   const isRecurring = block.isRecurring || block.isRecurrenceInstance;
@@ -225,210 +251,152 @@ function EventCard({
     }
   };
 
+  // Truncate title for very small events
+  const getDisplayTitle = () => {
+    if (adaptiveStyles.truncateToFirstWord && block.activityName.length > 15) {
+      const firstWord = block.activityName.split(' ')[0];
+      return firstWord.length > 12 ? firstWord.slice(0, 12) + '...' : firstWord;
+    }
+    return block.activityName;
+  };
+
+  // Render event content based on size bucket
+  const renderContent = () => {
+    const titleStyle: React.CSSProperties = {
+      ...adaptiveStyles.titleStyle,
+      display: adaptiveStyles.lineClamp > 1 ? '-webkit-box' : 'block',
+      WebkitLineClamp: adaptiveStyles.lineClamp,
+      WebkitBoxOrient: 'vertical' as const,
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: adaptiveStyles.lineClamp === 1 ? 'nowrap' : 'normal',
+    };
+
+    return (
+      <div className={cn('w-full h-full flex flex-col justify-center overflow-hidden', adaptiveStyles.containerClass)}>
+        <div className="flex items-center gap-0.5 min-w-0 flex-1">
+          {isRecurring && adaptiveStyles.showRecurringIcon && (
+            <Repeat
+              className="flex-shrink-0 opacity-90"
+              style={{ width: '10px', height: '10px' }}
+            />
+          )}
+          <div className="font-semibold flex-1 min-w-0 text-white" style={titleStyle}>
+            {getDisplayTitle()}
+          </div>
+        </div>
+        {adaptiveStyles.showTime && adaptiveStyles.metaStyle && (
+          <div
+            className="opacity-90 truncate text-white/90 flex-shrink-0"
+            style={adaptiveStyles.metaStyle}
+          >
+            {startTimeDisplay}
+            {adaptiveStyles.showDuration && ` · ${durationDisplay}`}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // The main event card element
+  const cardElement = (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        'relative rounded-lg h-full w-full overflow-hidden',
+        'transition-all duration-200 ease-out',
+        'shadow-md hover:shadow-lg',
+        'ring-1 ring-white/15',
+        getBgColor(),
+        isDragging && 'opacity-80 shadow-2xl scale-[1.02] ring-2 ring-white/40',
+        isResizing && 'ring-2 ring-white/50',
+        block.syncStatus === 'pending' && 'animate-pulse',
+        block.syncStatus === 'error' && 'ring-2 ring-red-300'
+      )}
+      style={style}
+    >
+      <button
+        {...listeners}
+        {...attributes}
+        onClick={(e) => {
+          const isKeyboardClick = e.detail === 0;
+          if (isKeyboardClick) return;
+          if (!isDragging && !isResizing) {
+            e.stopPropagation();
+            // On touch devices for small events, open popover instead of edit
+            if (isTouchDevice && (sizeBucket === 'xs' || sizeBucket === 'sm')) {
+              setPopoverOpen(true);
+            } else {
+              onBlockClick?.(block);
+            }
+          }
+        }}
+        className="w-full h-full text-left cursor-grab active:cursor-grabbing overflow-hidden text-white p-0"
+      >
+        {renderContent()}
+      </button>
+
+      {block.syncStatus === 'pending' && (
+        <Loader2 className="absolute top-1 right-1 h-3 w-3 animate-spin opacity-60" />
+      )}
+
+      {sizeBucket !== 'xs' && (
+        <div
+          onMouseDown={handleResizeMouseDown}
+          className={cn(
+            "absolute bottom-0 left-0 right-0 cursor-ns-resize opacity-0 hover:opacity-100 transition-opacity",
+            sizeBucket === 'sm' ? "h-2" : "h-3",
+            "bg-gradient-to-t from-black/30 to-transparent"
+          )}
+        >
+          <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-white/70 rounded" />
+        </div>
+      )}
+    </div>
+  );
+
+  // For mobile touch devices with small events, use Popover for tap-to-expand
+  if (isTouchDevice && (sizeBucket === 'xs' || sizeBucket === 'sm')) {
+    return (
+      <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+        <PopoverTrigger asChild>
+          {cardElement}
+        </PopoverTrigger>
+        <PopoverContent side="right" className="w-64 p-3" sideOffset={8}>
+          <EventDetailsContent
+            block={block}
+            timeRange={timeRange}
+            durationDisplay={durationDisplay}
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full mt-3"
+            onClick={() => {
+              setPopoverOpen(false);
+              onBlockClick?.(block);
+            }}
+          >
+            Edit Event
+          </Button>
+        </PopoverContent>
+      </Popover>
+    );
+  }
+
+  // For desktop, use Tooltip for hover details
   return (
     <TooltipProvider delayDuration={300}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div
-            ref={setNodeRef}
-            className={cn(
-              'relative rounded-lg h-full w-full overflow-hidden',
-              'transition-all duration-200 ease-out',
-              'shadow-md hover:shadow-lg',
-              'ring-1 ring-white/15',
-              getBgColor(),
-              isDragging && 'opacity-80 shadow-2xl scale-[1.02] ring-2 ring-white/40',
-              isResizing && 'ring-2 ring-white/50',
-              block.syncStatus === 'pending' && 'animate-pulse',
-              block.syncStatus === 'error' && 'ring-2 ring-red-300'
-            )}
-            style={style}
-          >
-            <button
-              {...listeners}
-              {...attributes}
-              onClick={(e) => {
-                const isKeyboardClick = e.detail === 0;
-                if (isKeyboardClick) return;
-                if (!isDragging && !isResizing) {
-                  e.stopPropagation();
-                  onBlockClick?.(block);
-                }
-              }}
-              className="w-full h-full text-left cursor-grab active:cursor-grabbing overflow-hidden text-white p-0"
-            >
-              {isVeryShort ? (
-                /* 15-min slot: ~14px height - FILL the space with text like Google Calendar */
-                <div
-                  className="w-full h-full flex items-center overflow-hidden"
-                  style={{ padding: '0 5px' }}
-                >
-                  {isRecurring && (
-                    <Repeat
-                      className="mr-1 flex-shrink-0 opacity-90"
-                      style={{ width: `${titleFontSize - 2}px`, height: `${titleFontSize - 2}px` }}
-                    />
-                  )}
-                  <div
-                    className="font-semibold flex-1 overflow-hidden whitespace-nowrap"
-                    style={{
-                      fontSize: `${titleFontSize}px`,
-                      lineHeight: `${titleLineHeight}px`,
-                      textOverflow: 'ellipsis'
-                    }}
-                  >
-                    {block.activityName}
-                  </div>
-                </div>
-              ) : isShort ? (
-                /* 30-min slot: ~28px height - title fills most space, small time below */
-                <div
-                  className="w-full h-full flex flex-col justify-center overflow-hidden"
-                  style={{ padding: '1px 5px' }}
-                >
-                  <div className="flex items-center gap-1 min-w-0">
-                    {isRecurring && (
-                      <Repeat
-                        className="flex-shrink-0 opacity-90"
-                        style={{ width: `${titleFontSize - 1}px`, height: `${titleFontSize - 1}px` }}
-                      />
-                    )}
-                    <div
-                      className="font-semibold flex-1 overflow-hidden whitespace-nowrap"
-                      style={{
-                        fontSize: `${titleFontSize}px`,
-                        lineHeight: `${titleLineHeight}px`,
-                        textOverflow: 'ellipsis',
-                      }}
-                    >
-                      {block.activityName}
-                    </div>
-                  </div>
-                  <div
-                    className="opacity-90 truncate"
-                    style={{ fontSize: `${metaFontSize}px`, lineHeight: `${metaLineHeight}px` }}
-                  >
-                    {startTimeDisplay} · {durationDisplay}
-                  </div>
-                </div>
-              ) : isMedium ? (
-                /* 45-60 min slot: ~42-56px height - proportional text with room to breathe */
-                <div
-                  className="w-full h-full flex flex-col justify-start overflow-hidden"
-                  style={{ padding: '3px 6px' }}
-                >
-                  <div className="flex items-start gap-1 min-w-0 flex-1">
-                    {isRecurring && (
-                      <Repeat
-                        className="flex-shrink-0 opacity-90 mt-0.5"
-                        style={{ width: `${titleFontSize}px`, height: `${titleFontSize}px` }}
-                      />
-                    )}
-                    <div
-                      className="font-semibold w-full overflow-hidden"
-                      style={{
-                        fontSize: `${titleFontSize}px`,
-                        lineHeight: `${titleLineHeight}px`,
-                        display: '-webkit-box',
-                        WebkitLineClamp: Math.max(2, Math.floor((heightPx - metaLineHeight - 8) / titleLineHeight)),
-                        WebkitBoxOrient: 'vertical',
-                      }}
-                    >
-                      {block.activityName}
-                    </div>
-                  </div>
-                  <div
-                    className="opacity-90 flex-shrink-0 truncate"
-                    style={{ fontSize: `${metaFontSize}px`, lineHeight: `${metaLineHeight}px` }}
-                  >
-                    {timeRange} · {durationDisplay}
-                  </div>
-                </div>
-              ) : (
-                /* 1+ hour slot - comfortable proportional text */
-                <div
-                  className="w-full h-full flex flex-col justify-start overflow-hidden"
-                  style={{ padding: '4px 7px' }}
-                >
-                  <div className="flex items-start gap-1 min-w-0 flex-1">
-                    {isRecurring && (
-                      <Repeat
-                        className="flex-shrink-0 opacity-90 mt-0.5"
-                        style={{ width: `${titleFontSize}px`, height: `${titleFontSize}px` }}
-                      />
-                    )}
-                    <div
-                      className="font-semibold w-full overflow-hidden"
-                      style={{
-                        fontSize: `${titleFontSize}px`,
-                        lineHeight: `${titleLineHeight}px`,
-                        display: '-webkit-box',
-                        WebkitLineClamp: Math.max(2, Math.floor((heightPx - metaLineHeight - 12) / titleLineHeight)),
-                        WebkitBoxOrient: 'vertical',
-                      }}
-                    >
-                      {block.activityName}
-                    </div>
-                  </div>
-                  <div
-                    className="opacity-90 flex-shrink-0 truncate"
-                    style={{ fontSize: `${metaFontSize}px`, lineHeight: `${metaLineHeight}px` }}
-                  >
-                    {timeRange} · {durationDisplay}
-                  </div>
-                </div>
-              )}
-            </button>
-
-            {block.syncStatus === 'pending' && (
-              <Loader2 className="absolute top-1 right-1 h-3 w-3 animate-spin opacity-60" />
-            )}
-
-            {!isVeryShort && (
-              <div
-                onMouseDown={handleResizeMouseDown}
-                className={cn(
-                  "absolute bottom-0 left-0 right-0 cursor-ns-resize opacity-0 hover:opacity-100 transition-opacity",
-                  isShort ? "h-2" : "h-3",
-                  "bg-gradient-to-t from-black/30 to-transparent"
-                )}
-              >
-                <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-white/70 rounded" />
-              </div>
-            )}
-          </div>
+          {cardElement}
         </TooltipTrigger>
         <TooltipContent side="right" className="max-w-xs p-3">
-          <div className="space-y-2">
-            <p className="font-semibold text-sm">{block.activityName}</p>
-            <p className="text-xs text-muted-foreground">{timeRange} · {durationDisplay}</p>
-            {isRecurring && block.recurrenceRule && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1">
-                <Repeat className="h-3 w-3" />
-                {describeRecurrence(block.recurrenceRule)}
-              </p>
-            )}
-            <div className="flex gap-2 mt-2">
-              <Badge
-                className="text-[10px] capitalize text-white font-medium px-2 py-0.5"
-                style={{
-                  backgroundColor: DRIP_QUADRANTS[block.dripQuadrant].color,
-                  borderColor: DRIP_QUADRANTS[block.dripQuadrant].color,
-                }}
-              >
-                {block.dripQuadrant === 'na' ? 'N/A' : block.dripQuadrant}
-              </Badge>
-              <Badge
-                className="text-[10px] text-white font-medium px-2 py-0.5"
-                style={{
-                  backgroundColor: ENERGY_COLORS[block.energyRating],
-                  borderColor: ENERGY_COLORS[block.energyRating],
-                }}
-              >
-                {block.energyRating === 'green' ? 'Energizing' : block.energyRating === 'yellow' ? 'Neutral' : 'Draining'}
-              </Badge>
-            </div>
-          </div>
+          <EventDetailsContent
+            block={block}
+            timeRange={timeRange}
+            durationDisplay={durationDisplay}
+          />
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
