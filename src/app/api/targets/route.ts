@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
+
 interface DailyActionInput {
   dayOfWeek: string;
   title: string;
@@ -46,15 +48,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    // Get authenticated user or use demo user
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id || DEMO_USER_ID;
 
     const { powerGoalId, year, monthlyTargets } = await request.json() as SaveTargetsRequest;
 
@@ -77,7 +73,7 @@ export async function POST(request: NextRequest) {
       const { data: monthlyData, error: monthlyError } = await supabase
         .from('monthly_targets')
         .insert({
-          user_id: user.id,
+          user_id: userId,
           power_goal_id: powerGoalId,
           title: monthly.title,
           description: monthly.description || null,
@@ -105,7 +101,7 @@ export async function POST(request: NextRequest) {
         const { data: weeklyData, error: weeklyError } = await supabase
           .from('weekly_targets')
           .insert({
-            user_id: user.id,
+            user_id: userId,
             monthly_target_id: monthlyData.id,
             title: weekly.title,
             description: weekly.description || null,
@@ -134,7 +130,7 @@ export async function POST(request: NextRequest) {
           const { data: dailyData, error: dailyError } = await supabase
             .from('daily_actions')
             .insert({
-              user_id: user.id,
+              user_id: userId,
               weekly_target_id: weeklyData.id,
               title: daily.title,
               description: daily.description || null,
