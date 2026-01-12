@@ -18,11 +18,15 @@ interface UseEventSizeResult {
 }
 
 // Size bucket thresholds in pixels
+// Adjusted for better readability at small sizes:
+// - 15-min event = ~13px → should be readable (sm bucket)
+// - 30-min event = ~27px → title + time (md bucket)
+// - 45-min event = ~41px → full content (lg bucket)
 const SIZE_THRESHOLDS = {
-  xs: 18,   // < 18px
-  sm: 28,   // 18-28px
-  md: 44,   // 28-44px
-  // lg: >= 44px
+  xs: 12,   // < 12px (only 5-10 min events)
+  sm: 22,   // 12-22px (15-min events land here)
+  md: 38,   // 22-38px (30-min events land here)
+  // lg: >= 38px
 } as const;
 
 /**
@@ -98,11 +102,14 @@ export function useEventSize(fallbackHeight?: number): UseEventSizeResult {
 export function getAdaptiveEventStyles(sizeBucket: EventSizeBucket) {
   switch (sizeBucket) {
     case 'xs':
+      // For truly tiny events (< 12px, like 5-10 min)
+      // Show abbreviated title, no time
       return {
         containerClass: 'px-1 py-0',
         titleStyle: {
-          fontSize: 'clamp(9px, 80%, 11px)',
-          lineHeight: '1.1',
+          fontSize: '10px',
+          lineHeight: '1',
+          fontWeight: 600,
         } as React.CSSProperties,
         metaStyle: null, // No meta for xs
         showTime: false,
@@ -112,11 +119,14 @@ export function getAdaptiveEventStyles(sizeBucket: EventSizeBucket) {
         truncateToFirstWord: true,
       };
     case 'sm':
+      // For short events (12-22px, like 15-min)
+      // Show full title on single line, readable font
       return {
-        containerClass: 'px-1.5 py-0.5',
+        containerClass: 'px-1.5 py-0',
         titleStyle: {
-          fontSize: 'clamp(10px, 90%, 12px)',
-          lineHeight: '1.15',
+          fontSize: '11px',
+          lineHeight: '1.1',
+          fontWeight: 600,
         } as React.CSSProperties,
         metaStyle: null, // No meta for sm
         showTime: false,
@@ -126,15 +136,18 @@ export function getAdaptiveEventStyles(sizeBucket: EventSizeBucket) {
         truncateToFirstWord: false,
       };
     case 'md':
+      // For medium events (22-38px, like 30-min)
+      // Show title + start time
       return {
-        containerClass: 'px-1.5 py-1',
+        containerClass: 'px-1.5 py-0.5',
         titleStyle: {
-          fontSize: 'clamp(11px, 95%, 13px)',
-          lineHeight: '1.2',
+          fontSize: '12px',
+          lineHeight: '1.15',
+          fontWeight: 600,
         } as React.CSSProperties,
         metaStyle: {
-          fontSize: 'clamp(9px, 80%, 11px)',
-          lineHeight: '1.15',
+          fontSize: '10px',
+          lineHeight: '1.1',
         } as React.CSSProperties,
         showTime: true,
         showDuration: false,
@@ -144,15 +157,18 @@ export function getAdaptiveEventStyles(sizeBucket: EventSizeBucket) {
       };
     case 'lg':
     default:
+      // For large events (>= 38px, like 45+ min)
+      // Full content: title + time + duration
       return {
         containerClass: 'px-2 py-1',
         titleStyle: {
-          fontSize: 'clamp(12px, 100%, 14px)',
-          lineHeight: '1.25',
+          fontSize: '13px',
+          lineHeight: '1.2',
+          fontWeight: 600,
         } as React.CSSProperties,
         metaStyle: {
-          fontSize: 'clamp(10px, 85%, 12px)',
-          lineHeight: '1.2',
+          fontSize: '11px',
+          lineHeight: '1.15',
         } as React.CSSProperties,
         showTime: true,
         showDuration: true,

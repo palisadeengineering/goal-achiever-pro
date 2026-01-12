@@ -295,39 +295,39 @@ export default function EventCardTestPage() {
         <CardContent>
           <div className="grid grid-cols-4 gap-4">
             <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950">
-              <div className="font-semibold text-red-800 dark:text-red-200">XS (&lt;18px)</div>
+              <div className="font-semibold text-red-800 dark:text-red-200">XS (&lt;12px)</div>
               <ul className="text-sm text-red-700 dark:text-red-300 mt-2 space-y-1">
+                <li>5-10 min events</li>
                 <li>First word only for long titles</li>
                 <li>No time/duration</li>
                 <li>No recurring icon</li>
-                <li>Minimal padding</li>
               </ul>
             </div>
             <div className="p-4 rounded-lg bg-orange-50 dark:bg-orange-950">
-              <div className="font-semibold text-orange-800 dark:text-orange-200">SM (18-28px)</div>
+              <div className="font-semibold text-orange-800 dark:text-orange-200">SM (12-22px)</div>
               <ul className="text-sm text-orange-700 dark:text-orange-300 mt-2 space-y-1">
+                <li>15-min events</li>
                 <li>Single line, ellipsis</li>
                 <li>No time/duration</li>
                 <li>Recurring icon shown</li>
-                <li>Compact padding</li>
               </ul>
             </div>
             <div className="p-4 rounded-lg bg-yellow-50 dark:bg-yellow-950">
-              <div className="font-semibold text-yellow-800 dark:text-yellow-200">MD (28-44px)</div>
+              <div className="font-semibold text-yellow-800 dark:text-yellow-200">MD (22-38px)</div>
               <ul className="text-sm text-yellow-700 dark:text-yellow-300 mt-2 space-y-1">
+                <li>30-min events</li>
                 <li>2-line clamp for title</li>
                 <li>Start time shown</li>
                 <li>No duration</li>
-                <li>Standard padding</li>
               </ul>
             </div>
             <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950">
-              <div className="font-semibold text-green-800 dark:text-green-200">LG (&ge;44px)</div>
+              <div className="font-semibold text-green-800 dark:text-green-200">LG (&ge;38px)</div>
               <ul className="text-sm text-green-700 dark:text-green-300 mt-2 space-y-1">
+                <li>45+ min events</li>
                 <li>3-line clamp for title</li>
                 <li>Full time + duration</li>
                 <li>All icons shown</li>
-                <li>Comfortable padding</li>
               </ul>
             </div>
           </div>
@@ -341,9 +341,9 @@ export default function EventCardTestPage() {
 function SizeBucketInfo({ duration }: { duration: number }) {
   const heightPx = duration * 14;
   let bucket = 'lg';
-  if (heightPx < 18) bucket = 'xs';
-  else if (heightPx < 28) bucket = 'sm';
-  else if (heightPx < 44) bucket = 'md';
+  if (heightPx < 12) bucket = 'xs';
+  else if (heightPx < 22) bucket = 'sm';
+  else if (heightPx < 38) bucket = 'md';
 
   return <SizeBucketIndicator bucket={bucket} height={Math.round(heightPx)} />;
 }
