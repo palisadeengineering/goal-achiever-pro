@@ -21,7 +21,7 @@ import { ChevronLeft, ChevronRight, Plus, Loader2, Palette, Repeat } from 'lucid
 import { cn, formatHour } from '@/lib/utils';
 import { DRIP_QUADRANTS } from '@/constants/drip';
 import { useLocalStorage } from '@/lib/hooks/use-local-storage';
-import { useEventSize, getAdaptiveEventStyles } from '@/lib/hooks/use-event-size';
+import { useEventSize, getAdaptiveEventStyles, SIZE_BUCKET_CLASSES } from '@/lib/hooks/use-event-size';
 import {
   Tooltip,
   TooltipContent,
@@ -195,7 +195,7 @@ function EventCard({
 
   // Use measured height for adaptive sizing
   const fallbackHeight = durationSlots * 14;
-  const { ref: sizeRef, sizeBucket } = useEventSize(fallbackHeight);
+  const { ref: sizeRef, sizeBucket, bucketClass } = useEventSize(fallbackHeight);
 
   // Combine refs for both drag and size measurement
   const setNodeRef = useCallback((node: HTMLDivElement | null) => {
@@ -261,43 +261,79 @@ function EventCard({
   };
 
   // Render event content based on size bucket
+  // FAIL-SAFE: All text must have overflow:hidden + text-overflow:ellipsis
+  // Content is rendered inside a flex-centered button, so we just need proper width
   const renderContent = () => {
-    // Use CSS classes for line clamping
+    // Use CSS classes for line clamping - NEVER multi-line below threshold
     const lineClampClass = adaptiveStyles.lineClamp === 1
-      ? 'truncate'
+      ? 'truncate'  // Single line with ellipsis
       : adaptiveStyles.lineClamp === 2
         ? 'line-clamp-2'
         : 'line-clamp-3';
 
-    // For small events (xs/sm), show Google Calendar style: "Title, time" on one line
-    const isCompact = sizeBucket === 'xs' || sizeBucket === 'sm';
-
-    if (isCompact) {
+    // xs bucket: ONLY show title (no time, no other content)
+    // Use explicit flex centering for guaranteed vertical alignment
+    if (sizeBucket === 'xs') {
       return (
-        <div className={cn('w-full h-full flex flex-col justify-center overflow-hidden', adaptiveStyles.containerClass)}>
-          <div className={cn('text-white truncate', adaptiveStyles.titleClass)}>
+        <div
+          className={cn(
+            'w-full h-full flex items-center overflow-hidden',
+            adaptiveStyles.containerClass
+          )}
+        >
+          <div
+            className={cn('text-white truncate whitespace-nowrap leading-none', adaptiveStyles.titleClass)}
+            style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}
+          >
+            {getDisplayTitle()}
+          </div>
+        </div>
+      );
+    }
+
+    // sm bucket: Google Calendar style "Title, time" on one line
+    // Use explicit flex centering for guaranteed vertical alignment
+    if (sizeBucket === 'sm') {
+      return (
+        <div
+          className={cn(
+            'w-full h-full flex items-center overflow-hidden',
+            adaptiveStyles.containerClass
+          )}
+        >
+          <div
+            className={cn('text-white truncate whitespace-nowrap', adaptiveStyles.titleClass)}
+            style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}
+          >
             {getDisplayTitle()}, {startTimeDisplay}
           </div>
         </div>
       );
     }
 
-    // For larger events, show title and time on separate lines
+    // md/lg buckets: Show title and time on separate lines
+    // For these larger events, we want flex-col to stack title and time
     return (
       <div className={cn('w-full h-full flex flex-col justify-center overflow-hidden', adaptiveStyles.containerClass)}>
-        <div className="flex items-center gap-0.5 min-w-0 flex-1">
+        <div className="flex items-center gap-0.5 min-w-0 overflow-hidden">
           {isRecurring && adaptiveStyles.showRecurringIcon && (
             <Repeat
               className="flex-shrink-0 opacity-90"
               style={{ width: '10px', height: '10px' }}
             />
           )}
-          <div className={cn('flex-1 min-w-0 text-white', adaptiveStyles.titleClass, lineClampClass)}>
+          <div
+            className={cn('flex-1 min-w-0 text-white', adaptiveStyles.titleClass, lineClampClass)}
+            style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}
+          >
             {getDisplayTitle()}
           </div>
         </div>
         {adaptiveStyles.showTime && (
-          <div className={cn('opacity-90 truncate text-white/90 flex-shrink-0', adaptiveStyles.metaClass)}>
+          <div
+            className={cn('opacity-90 truncate text-white/90 flex-shrink-0', adaptiveStyles.metaClass)}
+            style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}
+          >
             {startTimeDisplay}
             {adaptiveStyles.showDuration && ` · ${durationDisplay}`}
           </div>
@@ -306,16 +342,33 @@ function EventCard({
     );
   };
 
+  // Determine border radius based on size - smaller events need less rounding
+  const getBorderRadius = () => {
+    if (sizeBucket === 'xs') return 'rounded-sm'; // 2px
+    if (sizeBucket === 'sm') return 'rounded';    // 4px
+    return 'rounded-lg';                          // 8px
+  };
+
   // The main event card element
+  // bucketClass is added for DOM verification (e.g., timeAuditEvent--xs, timeAuditEvent--sm, etc.)
   const cardElement = (
     <div
       ref={setNodeRef}
       className={cn(
-        'relative rounded-lg h-full w-full overflow-hidden',
+        // Base styles - 'group' enables child hover states
+        'group relative h-full w-full',
+        // Dynamic border radius based on event size
+        getBorderRadius(),
+        // FAIL-SAFE: Always overflow hidden + text ellipsis for readability
+        'overflow-hidden',
+        // Size bucket class for DOM verification
+        bucketClass,
+        // Visual styling
         'transition-all duration-200 ease-out',
         'shadow-md hover:shadow-lg',
         'ring-1 ring-white/15',
         getBgColor(),
+        // State-based styling
         isDragging && 'opacity-80 shadow-2xl scale-[1.02] ring-2 ring-white/40',
         isResizing && 'ring-2 ring-white/50',
         block.syncStatus === 'pending' && 'animate-pulse',
@@ -339,7 +392,11 @@ function EventCard({
             }
           }
         }}
-        className="w-full h-full text-left cursor-grab active:cursor-grabbing overflow-hidden text-white p-0"
+        className={cn(
+          "w-full h-full text-left cursor-grab active:cursor-grabbing overflow-hidden text-white p-0",
+          // Add flex centering to button for proper vertical alignment
+          "flex items-center"
+        )}
       >
         {renderContent()}
       </button>
@@ -348,17 +405,22 @@ function EventCard({
         <Loader2 className="absolute top-1 right-1 h-3 w-3 animate-spin opacity-60" />
       )}
 
+      {/* Resize handles - Google Calendar style (visible on hover) */}
       {sizeBucket !== 'xs' && (
-        <div
-          onMouseDown={handleResizeMouseDown}
-          className={cn(
-            "absolute bottom-0 left-0 right-0 cursor-ns-resize opacity-0 hover:opacity-100 transition-opacity",
-            sizeBucket === 'sm' ? "h-2" : "h-3",
-            "bg-gradient-to-t from-black/30 to-transparent"
-          )}
-        >
-          <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-white/70 rounded" />
-        </div>
+        <>
+          {/* Bottom resize handle */}
+          <div
+            onMouseDown={handleResizeMouseDown}
+            className={cn(
+              "absolute bottom-0 left-0 right-0 cursor-ns-resize",
+              "opacity-0 hover:opacity-100 group-hover:opacity-60 transition-opacity",
+              sizeBucket === 'sm' ? "h-2" : "h-3",
+              "bg-gradient-to-t from-black/40 to-transparent"
+            )}
+          >
+            <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-8 h-1 bg-white/80 rounded-full shadow-sm" />
+          </div>
+        </>
       )}
     </div>
   );
@@ -832,6 +894,104 @@ export function WeeklyCalendarView({
     return (eh * 60 + em) - (sh * 60 + sm);
   };
 
+  /**
+   * Google Calendar-style overlap layout algorithm.
+   * Computes column position and width for overlapping events.
+   *
+   * Returns a map of blockId -> { column, totalColumns, width, left }
+   */
+  const computeOverlapLayout = useCallback((blocks: TimeBlock[]): Map<string, { column: number; totalColumns: number; width: string; left: string }> => {
+    if (blocks.length === 0) return new Map();
+
+    // Convert blocks to time ranges
+    const timeRanges = blocks.map(block => {
+      const [sh, sm] = block.startTime.split(':').map(Number);
+      const [eh, em] = block.endTime.split(':').map(Number);
+      return {
+        id: block.id,
+        startMins: sh * 60 + sm,
+        endMins: eh * 60 + em,
+      };
+    });
+
+    // Sort by start time, then by duration (longer first)
+    timeRanges.sort((a, b) => {
+      if (a.startMins !== b.startMins) return a.startMins - b.startMins;
+      return (b.endMins - b.startMins) - (a.endMins - a.startMins);
+    });
+
+    // Find overlapping groups
+    type OverlapGroup = { ranges: typeof timeRanges; columns: Map<string, number> };
+    const groups: OverlapGroup[] = [];
+
+    for (const range of timeRanges) {
+      // Find or create a group for this range
+      let placed = false;
+
+      for (const group of groups) {
+        // Check if this range overlaps with any range in the group
+        const overlapsGroup = group.ranges.some(
+          r => range.startMins < r.endMins && range.endMins > r.startMins
+        );
+
+        if (overlapsGroup) {
+          // Find the first available column
+          const usedColumns = new Set<number>();
+          for (const r of group.ranges) {
+            if (range.startMins < r.endMins && range.endMins > r.startMins) {
+              const col = group.columns.get(r.id);
+              if (col !== undefined) usedColumns.add(col);
+            }
+          }
+
+          let column = 0;
+          while (usedColumns.has(column)) column++;
+
+          group.ranges.push(range);
+          group.columns.set(range.id, column);
+          placed = true;
+          break;
+        }
+      }
+
+      if (!placed) {
+        // Create a new group
+        const newGroup: OverlapGroup = {
+          ranges: [range],
+          columns: new Map([[range.id, 0]]),
+        };
+        groups.push(newGroup);
+      }
+    }
+
+    // Build the result map
+    const result = new Map<string, { column: number; totalColumns: number; width: string; left: string }>();
+
+    for (const group of groups) {
+      // Calculate max columns for this group
+      const maxColumn = Math.max(...Array.from(group.columns.values()));
+      const totalColumns = maxColumn + 1;
+
+      for (const range of group.ranges) {
+        const column = group.columns.get(range.id) || 0;
+
+        // Calculate width and left position
+        // Leave small gaps between events (like Google Calendar)
+        const widthPercent = (100 / totalColumns) - 0.5;
+        const leftPercent = (column * 100) / totalColumns + 0.25;
+
+        result.set(range.id, {
+          column,
+          totalColumns,
+          width: `${widthPercent}%`,
+          left: `${leftPercent}%`,
+        });
+      }
+    }
+
+    return result;
+  }, []);
+
   const handleDragStart = (event: DragStartEvent) => {
     const block = event.active.data.current?.block as TimeBlock;
     if (block) setActiveBlock(block);
@@ -1237,62 +1397,76 @@ export function WeeklyCalendarView({
                           );
                         })}
 
-                        {/* Event blocks */}
-                        {dayBlocks.map((block) => {
-                          const [startHour, startMin] = block.startTime.split(':').map(Number);
-                          const [endHour, endMin] = block.endTime.split(':').map(Number);
-                          const startMins = startHour * 60 + startMin;
-                          const endMins = endHour * 60 + endMin;
-                          const durationMins = endMins - startMins;
+                        {/* Event blocks - with Google Calendar-style overlap handling */}
+                        {(() => {
+                          // Compute overlap layout for all events in this day
+                          const overlapLayout = computeOverlapLayout(dayBlocks);
 
-                          const calendarStartMins = settings.calendarStartHour * 60;
-                          const topPosition = ((startMins - calendarStartMins) / 60) * HOUR_HEIGHT;
-                          const height = (durationMins / 60) * HOUR_HEIGHT;
-                          const durationSlots = durationMins / 15;
+                          return dayBlocks.map((block) => {
+                            const [startHour, startMin] = block.startTime.split(':').map(Number);
+                            const [endHour, endMin] = block.endTime.split(':').map(Number);
+                            const startMins = startHour * 60 + startMin;
+                            const endMins = endHour * 60 + endMin;
+                            const durationMins = endMins - startMins;
 
-                          const isBeingResized = resizingBlock?.id === block.id;
-                          let displayHeight = height;
-                          let displayDurationSlots = durationSlots;
+                            const calendarStartMins = settings.calendarStartHour * 60;
+                            const topPosition = ((startMins - calendarStartMins) / 60) * HOUR_HEIGHT;
+                            const height = (durationMins / 60) * HOUR_HEIGHT;
+                            const durationSlots = durationMins / 15;
 
-                          if (isBeingResized && resizePreviewEndTime) {
-                            const [pH, pM] = resizePreviewEndTime.split(':').map(Number);
-                            const previewDurationMins = (pH * 60 + pM) - startMins;
-                            displayHeight = (previewDurationMins / 60) * HOUR_HEIGHT;
-                            displayDurationSlots = previewDurationMins / 15;
-                          }
+                            const isBeingResized = resizingBlock?.id === block.id;
+                            let displayHeight = height;
+                            let displayDurationSlots = durationSlots;
 
-                          const isDraggingOther = activeBlock && activeBlock.id !== block.id;
+                            if (isBeingResized && resizePreviewEndTime) {
+                              const [pH, pM] = resizePreviewEndTime.split(':').map(Number);
+                              const previewDurationMins = (pH * 60 + pM) - startMins;
+                              displayHeight = (previewDurationMins / 60) * HOUR_HEIGHT;
+                              displayDurationSlots = previewDurationMins / 15;
+                            }
 
-                          // Minimum height of 22px ensures text is always readable (like Google Calendar)
-                          const MIN_EVENT_HEIGHT = 22;
+                            const isDraggingOther = activeBlock && activeBlock.id !== block.id;
 
-                          return (
-                            <div
-                              key={block.id}
-                              className={cn(
-                                "absolute left-0.5 right-0.5 z-10",
-                                isDraggingOther && "pointer-events-none"
-                              )}
-                              style={{
-                                top: `${topPosition}px`,
-                                height: `${Math.max(displayHeight - 1, MIN_EVENT_HEIGHT)}px`,
-                              }}
-                            >
-                              <EventCard
-                                block={isBeingResized && resizePreviewEndTime
-                                  ? { ...block, date: dateKey, endTime: resizePreviewEndTime }
-                                  : { ...block, date: dateKey }
-                                }
-                                durationSlots={displayDurationSlots}
-                                onBlockClick={onBlockClick}
-                                getBlockColor={(q) => getBlockColor(q, block.energyRating)}
-                                onResizeStart={handleResizeStart}
-                                isResizing={isBeingResized}
-                                colorMode={colorMode}
-                              />
-                            </div>
-                          );
-                        })}
+                            // Minimum height ensures text is always readable (like Google Calendar)
+                            const MIN_EVENT_HEIGHT = 18;
+
+                            // Get overlap layout for this block
+                            const layout = overlapLayout.get(block.id);
+                            const eventWidth = layout?.width ?? '100%';
+                            const eventLeft = layout?.left ?? '0%';
+                            const zIndex = layout ? 10 + layout.column : 10;
+
+                            return (
+                              <div
+                                key={block.id}
+                                className={cn(
+                                  "absolute z-10",
+                                  isDraggingOther && "pointer-events-none"
+                                )}
+                                style={{
+                                  top: `${topPosition}px`,
+                                  height: `${Math.max(displayHeight - 1, MIN_EVENT_HEIGHT)}px`,
+                                  width: eventWidth,
+                                  left: eventLeft,
+                                  zIndex,
+                                }}
+                              >
+                                <EventCard
+                                  block={isBeingResized && resizePreviewEndTime
+                                    ? { ...block, date: dateKey, endTime: resizePreviewEndTime }
+                                    : { ...block, date: dateKey }
+                                  }
+                                  durationSlots={displayDurationSlots}
+                                  onBlockClick={onBlockClick}
+                                  getBlockColor={(q) => getBlockColor(q, block.energyRating)}
+                                  onResizeStart={handleResizeStart}
+                                  isResizing={isBeingResized}
+                                  colorMode={colorMode}
+                                />
+                              </div>
+                            );
+                          });
+                        })()}
                       </div>
                     );
                   })}

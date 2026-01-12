@@ -48,13 +48,19 @@ export function GoogleEventCategorizer({
     suggestion?.energyRating || null
   );
 
-  // Update selections when suggestion changes
+  // Reset selections when the event changes (prevents "stuck" state from previous event)
   useEffect(() => {
-    if (suggestion) {
-      setSelectedDrip(suggestion.dripQuadrant);
-      setSelectedEnergy(suggestion.energyRating);
+    // Get fresh suggestion for the new event
+    const newSuggestion = getSuggestion(event.summary);
+    if (newSuggestion) {
+      setSelectedDrip(newSuggestion.dripQuadrant);
+      setSelectedEnergy(newSuggestion.energyRating);
+    } else {
+      // No suggestion - reset to null
+      setSelectedDrip(null);
+      setSelectedEnergy(null);
     }
-  }, [suggestion]);
+  }, [event.id, event.summary, getSuggestion]);
 
   const handleCategorize = () => {
     if (!selectedDrip || !selectedEnergy) return;

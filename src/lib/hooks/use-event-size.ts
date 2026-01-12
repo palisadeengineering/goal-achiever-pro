@@ -4,29 +4,44 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 
 /**
  * Size buckets for event cards based on rendered pixel height
- * - xs: Super compact, first word only
- * - sm: Compact single line with ellipsis
- * - md: Title + optional time, 2-line clamp
- * - lg: Full content with title + time + duration
+ *
+ * These match the requirements:
+ * - xs: <18px - ultra-compact, single-line title only
+ * - sm: 18-28px - single-line title with minimal padding
+ * - md: 28-44px - title up to 2 lines
+ * - lg: >=44px - full content
  */
 export type EventSizeBucket = 'xs' | 'sm' | 'md' | 'lg';
+
+/**
+ * CSS class names applied to events for each bucket.
+ * These can be inspected in DevTools to verify correct bucket assignment.
+ */
+export const SIZE_BUCKET_CLASSES: Record<EventSizeBucket, string> = {
+  xs: 'timeAuditEvent--xs',
+  sm: 'timeAuditEvent--sm',
+  md: 'timeAuditEvent--md',
+  lg: 'timeAuditEvent--lg',
+};
 
 interface UseEventSizeResult {
   ref: React.RefCallback<HTMLDivElement>;
   sizeBucket: EventSizeBucket;
   height: number;
+  /** CSS class name for the current bucket - use this in className for DOM verification */
+  bucketClass: string;
 }
 
-// Size bucket thresholds in pixels
-// With minimum event height of 22px (like Google Calendar):
-// - All events get at least 22px → readable title + time
-// - 30-min event = ~27px → title + time (md bucket)
-// - 45-min event = ~41px → full content (lg bucket)
+// Size bucket thresholds in pixels (from requirements)
+// xs: <18px   → ultra-compact, single-line title only
+// sm: 18–28px → single-line title, minimal padding
+// md: 28–44px → title up to 2 lines
+// lg: ≥44px   → full content
 const SIZE_THRESHOLDS = {
-  xs: 20,   // < 20px - shouldn't happen with min height
-  sm: 26,   // 20-26px (15-min events with min height)
-  md: 40,   // 26-40px (30-min events land here)
-  // lg: >= 40px
+  xs: 18,   // < 18px
+  sm: 28,   // 18-28px
+  md: 44,   // 28-44px
+  // lg: >= 44px
 } as const;
 
 /**
@@ -92,48 +107,52 @@ export function useEventSize(fallbackHeight?: number): UseEventSizeResult {
   }, [cleanup]);
 
   const sizeBucket = getSizeBucket(height);
+  const bucketClass = SIZE_BUCKET_CLASSES[sizeBucket];
 
-  return { ref, sizeBucket, height };
+  return { ref, sizeBucket, height, bucketClass };
 }
 
 /**
- * Returns adaptive styles configuration based on size bucket
+ * Returns adaptive styles configuration based on size bucket.
+ *
+ * Requirements-driven design:
+ * - Every event MUST always display at least ONE readable label
+ * - Fail-safe: overflow hidden, text-overflow ellipsis, no multi-line below threshold
+ * - Matches Google Calendar compact event styling
  */
 export function getAdaptiveEventStyles(sizeBucket: EventSizeBucket) {
   switch (sizeBucket) {
     case 'xs':
-      // Fallback for very tiny events (shouldn't happen with min height)
-      // Show title + time like Google Calendar
+      // <18px - ultra-compact, single-line title only
+      // FAIL-SAFE: Only render title, everything else hidden
       return {
-        containerClass: 'px-1 py-0.5',
-        titleClass: 'text-xs leading-tight font-semibold',
+        containerClass: 'px-0.5 py-0',
+        titleClass: 'text-[10px] leading-none font-medium',
         titleStyle: {} as React.CSSProperties,
-        metaClass: 'text-[10px] leading-tight',
-        metaStyle: {} as React.CSSProperties,
-        showTime: true,
+        metaClass: 'hidden',
+        metaStyle: { display: 'none' } as React.CSSProperties,
+        showTime: false,       // Hide time for ultra-compact
         showDuration: false,
         showRecurringIcon: false,
         lineClamp: 1,
-        truncateToFirstWord: false,
+        truncateToFirstWord: true,  // Only first word for xs
       };
     case 'sm':
-      // For short events (20-26px, like 15-min with min height)
-      // Show title + time like Google Calendar
+      // 18-28px - single-line title + time (Google Calendar style: "Title, 9am")
       return {
-        containerClass: 'px-1 py-0.5',
-        titleClass: 'text-xs leading-tight font-semibold',
+        containerClass: 'px-1 py-0',
+        titleClass: 'text-[11px] leading-tight font-semibold',
         titleStyle: {} as React.CSSProperties,
         metaClass: 'text-[10px] leading-tight',
         metaStyle: {} as React.CSSProperties,
-        showTime: true,
+        showTime: true,         // Show time inline with title
         showDuration: false,
         showRecurringIcon: false,
         lineClamp: 1,
         truncateToFirstWord: false,
       };
     case 'md':
-      // For medium events (22-38px, like 30-min)
-      // Show title + start time
+      // 28-44px - title up to 2 lines + time on separate line
       return {
         containerClass: 'px-1.5 py-0.5',
         titleClass: 'text-xs leading-tight font-semibold',
@@ -148,8 +167,7 @@ export function getAdaptiveEventStyles(sizeBucket: EventSizeBucket) {
       };
     case 'lg':
     default:
-      // For large events (>= 38px, like 45+ min)
-      // Full content: title + time + duration
+      // >=44px - full content with title + time + duration
       return {
         containerClass: 'px-2 py-1',
         titleClass: 'text-[13px] leading-snug font-semibold',

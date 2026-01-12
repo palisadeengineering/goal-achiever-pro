@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -64,6 +64,20 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
     () => events.filter((event) => !isCategorized(event.id) && !isIgnored(event.id)),
     [events, isCategorized, isIgnored]
   );
+
+  // Reset currentIndex when uncategorizedEvents changes (e.g., week navigation)
+  // This prevents the "stuck" bug where the index points to a non-existent event
+  const prevUncategorizedLength = useRef(uncategorizedEvents.length);
+  useEffect(() => {
+    // Reset to 0 if the list changed significantly or if current index is out of bounds
+    if (
+      prevUncategorizedLength.current !== uncategorizedEvents.length ||
+      currentIndex >= uncategorizedEvents.length
+    ) {
+      setCurrentIndex(0);
+    }
+    prevUncategorizedLength.current = uncategorizedEvents.length;
+  }, [uncategorizedEvents.length, currentIndex]);
 
   // Get ignored events from the current sync
   const ignoredEventsInSync = useMemo(
