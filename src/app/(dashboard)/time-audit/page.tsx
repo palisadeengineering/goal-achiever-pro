@@ -345,7 +345,8 @@ export default function TimeAuditPage() {
       });
     });
 
-    // Merge categorized Google Calendar events (skip if already imported)
+    // Merge Google Calendar events (skip if already imported)
+    // Show ALL events, even uncategorized ones (with default 'na' quadrant and 'yellow' energy)
     googleEvents.forEach((event) => {
       // Skip if this event is already imported as a time block
       if (importedGoogleEventIds.has(event.id)) {
@@ -353,32 +354,33 @@ export default function TimeAuditPage() {
       }
 
       const categorization = getCategorization(event.id);
-      if (categorization) {
-        // Extract date and times from Google event
-        const startDateTime = event.start?.dateTime || event.startTime;
-        const endDateTime = event.end?.dateTime || event.endTime;
 
-        if (startDateTime) {
-          try {
-            const startDate = new Date(startDateTime);
-            const endDate = endDateTime ? new Date(endDateTime) : startDate;
-            const dateKey = format(startDate, 'yyyy-MM-dd');
+      // Extract date and times from Google event
+      const startDateTime = event.start?.dateTime || event.startTime;
+      const endDateTime = event.end?.dateTime || event.endTime;
 
-            if (!grouped[dateKey]) {
-              grouped[dateKey] = [];
-            }
+      if (startDateTime) {
+        try {
+          const startDate = new Date(startDateTime);
+          const endDate = endDateTime ? new Date(endDateTime) : startDate;
+          const dateKey = format(startDate, 'yyyy-MM-dd');
 
-            grouped[dateKey].push({
-              id: event.id,
-              startTime: format(startDate, 'HH:mm'),
-              endTime: format(endDate, 'HH:mm'),
-              activityName: event.summary,
-              dripQuadrant: categorization.dripQuadrant,
-              energyRating: categorization.energyRating,
-            });
-          } catch {
-            // Skip events with invalid dates
+          if (!grouped[dateKey]) {
+            grouped[dateKey] = [];
           }
+
+          // Show event with categorization if available, otherwise use defaults
+          grouped[dateKey].push({
+            id: event.id,
+            startTime: format(startDate, 'HH:mm'),
+            endTime: format(endDate, 'HH:mm'),
+            activityName: event.summary,
+            // Use categorization if available, otherwise default to 'na' (neutral/uncategorized)
+            dripQuadrant: categorization?.dripQuadrant || 'na',
+            energyRating: categorization?.energyRating || 'yellow',
+          });
+        } catch {
+          // Skip events with invalid dates
         }
       }
     });
@@ -416,7 +418,7 @@ export default function TimeAuditPage() {
       }
     });
 
-    // Add categorized Google Calendar events that aren't already imported
+    // Add Google Calendar events that aren't already imported (including uncategorized)
     const importedExternalIds = new Set(
       timeBlocks.filter(b => b.externalEventId).map(b => b.externalEventId)
     );
@@ -428,30 +430,29 @@ export default function TimeAuditPage() {
       }
 
       const categorization = getCategorization(event.id);
-      if (categorization) {
-        const startDateTime = event.start?.dateTime || event.startTime;
-        const endDateTime = event.end?.dateTime || event.endTime;
+      const startDateTime = event.start?.dateTime || event.startTime;
+      const endDateTime = event.end?.dateTime || event.endTime;
 
-        if (startDateTime && endDateTime) {
-          try {
-            const startDate = new Date(startDateTime);
-            const endDate = new Date(endDateTime);
-            const eventDateStr = format(startDate, 'yyyy-MM-dd');
+      if (startDateTime && endDateTime) {
+        try {
+          const startDate = new Date(startDateTime);
+          const endDate = new Date(endDateTime);
+          const eventDateStr = format(startDate, 'yyyy-MM-dd');
 
-            // Only include events within the viewed date range
-            if (eventDateStr >= viewStartStr && eventDateStr <= viewEndStr) {
-              allBlocks.push({
-                date: eventDateStr,
-                startTime: format(startDate, 'HH:mm'),
-                endTime: format(endDate, 'HH:mm'),
-                dripQuadrant: categorization.dripQuadrant,
-                energyRating: categorization.energyRating,
-                source: 'google_calendar',
-              });
-            }
-          } catch {
-            // Skip invalid dates
+          // Only include events within the viewed date range
+          if (eventDateStr >= viewStartStr && eventDateStr <= viewEndStr) {
+            allBlocks.push({
+              date: eventDateStr,
+              startTime: format(startDate, 'HH:mm'),
+              endTime: format(endDate, 'HH:mm'),
+              // Use categorization if available, otherwise use defaults
+              dripQuadrant: categorization?.dripQuadrant || 'na',
+              energyRating: categorization?.energyRating || 'yellow',
+              source: 'google_calendar',
+            });
           }
+        } catch {
+          // Skip invalid dates
         }
       }
     });
