@@ -59,3 +59,7 @@ nul
 Dan martell assests/
 scripts/ralph/
 skills/
+
+# Test and session documentation
+docs/testing/
+docs/sessions/
