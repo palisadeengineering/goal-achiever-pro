@@ -3,6 +3,11 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import type { DripQuadrant, EnergyRating } from '@/types/database';
 
+export interface GoogleCalendarSyncConfig {
+  isConnected: boolean;
+  autoSync: boolean;
+}
+
 export interface TimeBlock {
   id: string;
   userId?: string;
@@ -42,7 +47,11 @@ interface UseTimeBlocksReturn {
   refetch: () => Promise<void>;
 }
 
-export function useTimeBlocks(initialStartDate?: string, initialEndDate?: string): UseTimeBlocksReturn {
+export function useTimeBlocks(
+  initialStartDate?: string,
+  initialEndDate?: string,
+  googleCalendarConfig?: GoogleCalendarSyncConfig
+): UseTimeBlocksReturn {
   const [timeBlocks, setTimeBlocks] = useState<TimeBlock[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -114,7 +123,57 @@ export function useTimeBlocks(initialStartDate?: string, initialEndDate?: string
       }
 
       const data = await response.json();
-      const newBlock = data.timeBlock;
+      let newBlock = data.timeBlock;
+
+      // Auto-sync to Google Calendar if enabled
+      if (
+        googleCalendarConfig?.autoSync &&
+        googleCalendarConfig?.isConnected &&
+        !block.externalEventId && // Don't sync if it already has a Google event ID
+        block.source !== 'calendar_sync' // Don't sync if it came from Google Calendar
+      ) {
+        try {
+          console.log('[Time Blocks] Auto-syncing new block to Google Calendar:', newBlock.activityName);
+
+          const googleResponse = await fetch('/api/calendar/google/events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              summary: block.activityName,
+              description: block.notes || '',
+              start: `${block.date}T${block.startTime}:00`,
+              end: `${block.date}T${block.endTime}:00`,
+            }),
+          });
+
+          if (googleResponse.ok) {
+            const googleData = await googleResponse.json();
+            console.log('[Time Blocks] Successfully synced to Google Calendar:', googleData.event.googleEventId);
+
+            // Update the block with the Google event ID
+            const updateResponse = await fetch('/api/time-blocks', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                id: newBlock.id,
+                externalEventId: googleData.event.googleEventId,
+                source: 'calendar_sync',
+              }),
+            });
+
+            if (updateResponse.ok) {
+              const updateData = await updateResponse.json();
+              newBlock = updateData.timeBlock;
+            }
+          } else {
+            const errorData = await googleResponse.json();
+            console.error('[Time Blocks] Failed to sync to Google Calendar:', errorData);
+          }
+        } catch (syncError) {
+          console.error('[Time Blocks] Google Calendar sync error:', syncError);
+          // Don't fail the whole operation if sync fails
+        }
+      }
 
       // Add to local state
       setTimeBlocks(prev => [...prev, newBlock]);
@@ -126,13 +185,16 @@ export function useTimeBlocks(initialStartDate?: string, initialEndDate?: string
       console.error('Create time block error:', err);
       return null;
     }
-  }, []);
+  }, [googleCalendarConfig]);
 
   const updateTimeBlock = useCallback(async (
     id: string,
     updates: Partial<TimeBlock>
   ): Promise<TimeBlock | null> => {
     try {
+      // Get the current block to check for Google event ID
+      const currentBlock = timeBlocks.find(b => b.id === id);
+
       const response = await fetch('/api/time-blocks', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -147,6 +209,59 @@ export function useTimeBlocks(initialStartDate?: string, initialEndDate?: string
       const data = await response.json();
       const updatedBlock = data.timeBlock;
 
+      // Auto-sync to Google Calendar if enabled and block has a Google event ID
+      if (
+        googleCalendarConfig?.autoSync &&
+        googleCalendarConfig?.isConnected &&
+        updatedBlock.externalEventId &&
+        (currentBlock?.source === 'calendar_sync' || updatedBlock.source === 'calendar_sync')
+      ) {
+        try {
+          console.log('[Time Blocks] Auto-syncing update to Google Calendar:', updatedBlock.externalEventId);
+
+          // Build the update payload - only include fields that matter for Google Calendar
+          const googleUpdatePayload: Record<string, unknown> = {};
+          if (updates.activityName !== undefined) {
+            googleUpdatePayload.summary = updates.activityName;
+          }
+          if (updates.notes !== undefined) {
+            googleUpdatePayload.description = updates.notes;
+          }
+          if (updates.date !== undefined || updates.startTime !== undefined) {
+            const date = updates.date || updatedBlock.date;
+            const startTime = updates.startTime || updatedBlock.startTime;
+            googleUpdatePayload.start = `${date}T${startTime}:00`;
+          }
+          if (updates.date !== undefined || updates.endTime !== undefined) {
+            const date = updates.date || updatedBlock.date;
+            const endTime = updates.endTime || updatedBlock.endTime;
+            googleUpdatePayload.end = `${date}T${endTime}:00`;
+          }
+
+          // Only sync if there are actual changes to sync
+          if (Object.keys(googleUpdatePayload).length > 0) {
+            const googleResponse = await fetch('/api/calendar/google/events', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                eventId: updatedBlock.externalEventId,
+                ...googleUpdatePayload,
+              }),
+            });
+
+            if (googleResponse.ok) {
+              console.log('[Time Blocks] Successfully synced update to Google Calendar');
+            } else {
+              const errorData = await googleResponse.json();
+              console.error('[Time Blocks] Failed to sync update to Google Calendar:', errorData);
+            }
+          }
+        } catch (syncError) {
+          console.error('[Time Blocks] Google Calendar sync error:', syncError);
+          // Don't fail the whole operation if sync fails
+        }
+      }
+
       // Update local state
       setTimeBlocks(prev =>
         prev.map(b => b.id === id ? updatedBlock : b)
@@ -159,10 +274,13 @@ export function useTimeBlocks(initialStartDate?: string, initialEndDate?: string
       console.error('Update time block error:', err);
       return null;
     }
-  }, []);
+  }, [googleCalendarConfig, timeBlocks]);
 
   const deleteTimeBlock = useCallback(async (id: string): Promise<boolean> => {
     try {
+      // Get the block before deleting to check for Google event ID
+      const blockToDelete = timeBlocks.find(b => b.id === id);
+
       const response = await fetch(`/api/time-blocks?id=${id}`, {
         method: 'DELETE',
       });
@@ -170,6 +288,33 @@ export function useTimeBlocks(initialStartDate?: string, initialEndDate?: string
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || 'Failed to delete time block');
+      }
+
+      // Auto-sync deletion to Google Calendar if enabled and block has a Google event ID
+      if (
+        googleCalendarConfig?.autoSync &&
+        googleCalendarConfig?.isConnected &&
+        blockToDelete?.externalEventId &&
+        blockToDelete?.source === 'calendar_sync'
+      ) {
+        try {
+          console.log('[Time Blocks] Auto-syncing deletion to Google Calendar:', blockToDelete.externalEventId);
+
+          const googleResponse = await fetch(
+            `/api/calendar/google/events?eventId=${encodeURIComponent(blockToDelete.externalEventId)}`,
+            { method: 'DELETE' }
+          );
+
+          if (googleResponse.ok) {
+            console.log('[Time Blocks] Successfully deleted from Google Calendar');
+          } else {
+            const errorData = await googleResponse.json();
+            console.error('[Time Blocks] Failed to delete from Google Calendar:', errorData);
+          }
+        } catch (syncError) {
+          console.error('[Time Blocks] Google Calendar delete error:', syncError);
+          // Don't fail the whole operation if sync fails
+        }
       }
 
       // Remove from local state
@@ -182,7 +327,7 @@ export function useTimeBlocks(initialStartDate?: string, initialEndDate?: string
       console.error('Delete time block error:', err);
       return false;
     }
-  }, []);
+  }, [googleCalendarConfig, timeBlocks]);
 
   const clearAllTimeBlocks = useCallback(async (): Promise<boolean> => {
     try {

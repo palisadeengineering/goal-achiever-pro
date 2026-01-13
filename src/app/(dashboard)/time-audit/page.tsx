@@ -94,6 +94,15 @@ export default function TimeAuditPage() {
   const weekStart = startOfWeek(today, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
 
+  // Google Calendar integration - needs to be before useTimeBlocks for 2-way sync
+  const {
+    events: googleEvents,
+    isLoading: isLoadingGoogle,
+    isConnected: isGoogleConnected,
+    fetchEvents: fetchGoogleEvents,
+    clearCache: clearGoogleCache,
+  } = useGoogleCalendar();
+
   // Database time blocks - fetch a wide range to support navigation
   // 3 months back and 6 months forward to cover most navigation scenarios
   const {
@@ -107,7 +116,11 @@ export default function TimeAuditPage() {
     fetchTimeBlocks,
   } = useTimeBlocks(
     format(addMonths(weekStart, -3), 'yyyy-MM-dd'),
-    format(addMonths(weekEnd, 6), 'yyyy-MM-dd')
+    format(addMonths(weekEnd, 6), 'yyyy-MM-dd'),
+    {
+      isConnected: isGoogleConnected,
+      autoSync: true,
+    }
   );
 
   // Local storage for backwards compatibility (will migrate to DB)
@@ -174,15 +187,6 @@ export default function TimeAuditPage() {
   // Import progress
   const [isImporting, setIsImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ imported: number; skipped: number } | null>(null);
-
-  // Google Calendar integration
-  const {
-    events: googleEvents,
-    isLoading: isLoadingGoogle,
-    isConnected: isGoogleConnected,
-    fetchEvents: fetchGoogleEvents,
-    clearCache: clearGoogleCache,
-  } = useGoogleCalendar();
 
   const { getUncategorizedEventIds, getCategorization, saveCategorization, categorizations, refreshFromStorage, clearCategorizations } = useEventPatterns();
 
