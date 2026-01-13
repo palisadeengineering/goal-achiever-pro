@@ -62,8 +62,8 @@ If no clear metrics are found, return: { "metricsFound": [], "hasMetrics": false
 Make questions specific and helpful. For revenue, ask about customer count and pricing. For users, ask about acquisition channels. For habits, ask about current baseline.`;
 
     const message = await anthropic.messages.create({
-      model: 'claude-opus-4-20250514',
-      max_tokens: 800,
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2000,
       messages: [
         {
           role: 'user',
@@ -77,13 +77,28 @@ Make questions specific and helpful. For revenue, ask about customer count and p
       throw new Error('No response from AI');
     }
 
+    // Clean the response - strip markdown code blocks
+    let cleanedResponse = content;
+
+    // Remove markdown code block markers
+    cleanedResponse = cleanedResponse.replace(/```json\s*/gi, '');
+    cleanedResponse = cleanedResponse.replace(/```\s*/g, '');
+    cleanedResponse = cleanedResponse.trim();
+
     // Parse JSON from response
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error('Could not parse AI response');
     }
 
-    const result = JSON.parse(jsonMatch[0]);
+    let result;
+    try {
+      result = JSON.parse(jsonMatch[0]);
+    } catch {
+      // If JSON is malformed, return empty result
+      console.error('Malformed JSON from AI, returning empty result');
+      result = { metricsFound: [], hasMetrics: false };
+    }
 
     return NextResponse.json(result);
   } catch (error) {
