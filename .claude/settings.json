@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Edit",
+      "Write",
+      "Bash",
+      "WebFetch",
+      "WebSearch",
+      "mcp__supabase__*",
+      "mcp__chrome-devtools__*",
+      "Skill(ralph-loop:ralph-loop)"
+    ]
+  }
+}
