@@ -14,7 +14,7 @@ A comprehensive goal-setting and time-optimization web app built on **Dan Martel
 | State | Zustand, TanStack React Query |
 | Database | Supabase (PostgreSQL) |
 | ORM | Drizzle ORM |
-| AI | OpenAI GPT-4o-mini |
+| AI | Anthropic Claude (claude-sonnet-4-20250514) |
 | Payments | Stripe |
 | Auth | Supabase Auth |
 
@@ -144,7 +144,7 @@ Vision (SMART Goals)
 - User-scoped queries via `user_id`
 
 ### AI Integration
-- OpenAI instantiated inside route handlers (not at module level)
+- Anthropic SDK instantiated inside route handlers (not at module level)
 - Structured JSON output parsing
 - Demo user fallback for development
 
@@ -184,8 +184,8 @@ SUPABASE_SERVICE_ROLE_KEY=
 # Database
 DATABASE_URL=
 
-# OpenAI
-OPENAI_API_KEY=
+# Anthropic
+ANTHROPIC_API_KEY=
 
 # Stripe
 STRIPE_SECRET_KEY=
