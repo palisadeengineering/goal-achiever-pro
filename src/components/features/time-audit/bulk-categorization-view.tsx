@@ -7,12 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import { useEventPatterns } from '@/lib/hooks/use-event-patterns';
+import { useEventPatterns, type IgnoredEvent } from '@/lib/hooks/use-event-patterns';
 import { GoogleEventCategorizer } from './google-event-categorizer';
 import { DRIP_QUADRANTS, ENERGY_RATINGS } from '@/constants/drip';
 import type { DripQuadrant, EnergyRating } from '@/types/database';
 import type { GoogleCalendarEvent } from '@/lib/hooks/use-google-calendar';
-import { CheckCircle2, ListTodo, Sparkles, EyeOff, Eye, Undo2 } from 'lucide-react';
+import { CheckCircle2, ListTodo, Sparkles, EyeOff, Eye, Undo2, Trash2 } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
 
 // Safe date parsing helper
@@ -54,6 +54,7 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
     unignoreEvent,
     isIgnored,
     ignoredEvents,
+    clearIgnoredEvents,
   } = useEventPatterns();
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -84,6 +85,35 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
     () => events.filter((event) => isIgnored(event.id)),
     [events, isIgnored]
   );
+
+  // Group ignored events by pattern for easier management
+  const groupedIgnoredEvents = useMemo(() => {
+    const groups: Map<string, { pattern: string; events: IgnoredEvent[] }> = new Map();
+
+    ignoredEvents.forEach((ignoredEvent) => {
+      // Create a normalized key for grouping
+      const normalizedName = ignoredEvent.eventName
+        .toLowerCase()
+        .trim()
+        .replace(/\d{1,2}[\/\-]\d{1,2}([\/\-]\d{2,4})?/g, '') // Remove dates
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      const existing = groups.get(normalizedName);
+
+      if (existing) {
+        existing.events.push(ignoredEvent);
+      } else {
+        groups.set(normalizedName, {
+          pattern: normalizedName,
+          events: [ignoredEvent],
+        });
+      }
+    });
+
+    // Convert to array and sort by count (largest groups first)
+    return Array.from(groups.values()).sort((a, b) => b.events.length - a.events.length);
+  }, [ignoredEvents]);
 
   // Auto-switch to ignored tab when all events are categorized but there are ignored events
   useEffect(() => {
@@ -196,6 +226,14 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
       dripQuadrant,
       energyRating
     );
+    // Notify parent to refresh its state
+    onCategorize?.();
+  };
+
+  const handleIgnoreGroup = (group: GroupedEvents) => {
+    group.events.forEach((event) => {
+      ignoreEvent(event.id, event.summary);
+    });
     // Notify parent to refresh its state
     onCategorize?.();
   };
@@ -324,6 +362,7 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
                     key={group.pattern}
                     group={group}
                     onApply={handleApplyToGroup}
+                    onIgnore={handleIgnoreGroup}
                   />
                 ))}
               </div>
@@ -332,7 +371,7 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
         </TabsContent>
 
         {/* Ignored Events */}
-        <TabsContent value="ignored" className="mt-4">
+        <TabsContent value="ignored" className="mt-4 space-y-4">
           {ignoredEvents.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
@@ -344,49 +383,42 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
               </CardContent>
             </Card>
           ) : (
-            <ScrollArea className="h-[600px]">
-              <div className="space-y-2 pr-4">
-                {ignoredEvents.map((ignoredEvent) => {
-                  // Try to find the full event details from the events prop
-                  const fullEvent = events.find(e => e.id === ignoredEvent.eventId);
-                  const startTime = fullEvent ? safeParseDate(fullEvent.start?.dateTime || fullEvent.startTime) : null;
-                  const endTime = fullEvent ? safeParseDate(fullEvent.end?.dateTime || fullEvent.endTime) : null;
-
-                  return (
-                    <Card key={ignoredEvent.eventId} className="opacity-75 hover:opacity-100 transition-opacity">
-                      <CardContent className="py-3 px-4">
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">{ignoredEvent.eventName}</p>
-                            <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                              {startTime ? (
-                                <>
-                                  <span>{format(startTime, 'MMM d, yyyy')}</span>
-                                  {endTime && (
-                                    <span>{format(startTime, 'h:mm a')} - {format(endTime, 'h:mm a')}</span>
-                                  )}
-                                </>
-                              ) : (
-                                <span>Ignored {format(new Date(ignoredEvent.ignoredAt), 'MMM d, yyyy')}</span>
-                              )}
-                            </div>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleUnignore(ignoredEvent.eventId)}
-                            className="shrink-0"
-                          >
-                            <Undo2 className="h-4 w-4 mr-2" />
-                            Unignore
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+            <>
+              {/* Header with Clear All button */}
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  {ignoredEvents.length} event{ignoredEvents.length !== 1 ? 's' : ''} ignored
+                  {groupedIgnoredEvents.length > 1 && ` • ${groupedIgnoredEvents.length} groups`}
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    clearIgnoredEvents();
+                    onCategorize?.();
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Clear All
+                </Button>
               </div>
-            </ScrollArea>
+
+              <ScrollArea className="h-[600px]">
+                <div className="space-y-4 pr-4">
+                  {groupedIgnoredEvents.map((group) => (
+                    <IgnoredGroupCard
+                      key={group.pattern}
+                      group={group}
+                      events={events}
+                      onUnignore={handleUnignore}
+                      onUnignoreGroup={(groupEvents) => {
+                        groupEvents.forEach((e) => handleUnignore(e.eventId));
+                      }}
+                    />
+                  ))}
+                </div>
+              </ScrollArea>
+            </>
           )}
         </TabsContent>
       </Tabs>
@@ -398,9 +430,10 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
 interface GroupCardProps {
   group: GroupedEvents;
   onApply: (group: GroupedEvents, dripQuadrant: DripQuadrant, energyRating: EnergyRating) => void;
+  onIgnore: (group: GroupedEvents) => void;
 }
 
-function GroupCard({ group, onApply }: GroupCardProps) {
+function GroupCard({ group, onApply, onIgnore }: GroupCardProps) {
   const [selectedDrip, setSelectedDrip] = useState<DripQuadrant | null>(
     group.suggestion?.dripQuadrant || null
   );
@@ -546,13 +579,119 @@ function GroupCard({ group, onApply }: GroupCardProps) {
           )}
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onIgnore(group)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <EyeOff className="h-4 w-4 mr-2" />
+            Ignore {group.events.length} event{group.events.length !== 1 ? 's' : ''}
+          </Button>
           <Button
             size="sm"
             onClick={handleApply}
             disabled={!selectedDrip || !selectedEnergy}
           >
             Apply to {group.events.length} event{group.events.length !== 1 ? 's' : ''}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Ignored Group Card Component
+interface IgnoredGroupCardProps {
+  group: { pattern: string; events: IgnoredEvent[] };
+  events: GoogleCalendarEvent[];
+  onUnignore: (eventId: string) => void;
+  onUnignoreGroup: (events: IgnoredEvent[]) => void;
+}
+
+function IgnoredGroupCard({ group, events, onUnignore, onUnignoreGroup }: IgnoredGroupCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <CardTitle className="text-base line-clamp-1 capitalize">
+              {group.pattern || 'Unnamed Events'}
+            </CardTitle>
+            <CardDescription>
+              {group.events.length} ignored event{group.events.length !== 1 ? 's' : ''}
+            </CardDescription>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsExpanded(!isExpanded)}
+            >
+              {isExpanded ? 'Hide' : 'Show'}
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {/* Expanded event list */}
+        {isExpanded && (
+          <div className="p-2 rounded bg-muted/50 mb-3">
+            <div className="space-y-1 max-h-48 overflow-y-auto">
+              {group.events.map((ignoredEvent) => {
+                // Try to find the full event details from the events prop
+                const fullEvent = events.find(e => e.id === ignoredEvent.eventId);
+                const startTime = fullEvent ? safeParseDate(fullEvent.start?.dateTime || fullEvent.startTime) : null;
+                const endTime = fullEvent ? safeParseDate(fullEvent.end?.dateTime || fullEvent.endTime) : null;
+
+                return (
+                  <div
+                    key={ignoredEvent.eventId}
+                    className="text-sm py-1.5 border-b border-border/50 last:border-0"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="truncate font-medium">{ignoredEvent.eventName}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onUnignore(ignoredEvent.eventId)}
+                        className="shrink-0 h-7 px-2"
+                      >
+                        <Undo2 className="h-3 w-3 mr-1" />
+                        Unignore
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
+                      {startTime ? (
+                        <>
+                          <span>{format(startTime, 'MMM d, yyyy')}</span>
+                          {endTime && (
+                            <span>{format(startTime, 'h:mm a')} - {format(endTime, 'h:mm a')}</span>
+                          )}
+                        </>
+                      ) : (
+                        <span>Ignored {format(new Date(ignoredEvent.ignoredAt), 'MMM d, yyyy')}</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex justify-end">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onUnignoreGroup(group.events)}
+          >
+            <Undo2 className="h-4 w-4 mr-2" />
+            Unignore {group.events.length} event{group.events.length !== 1 ? 's' : ''}
           </Button>
         </div>
       </CardContent>

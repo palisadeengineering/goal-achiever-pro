@@ -14,8 +14,8 @@
  * - All DRIP categories and energy levels
  */
 
-import { useState, useMemo } from 'react';
-import { format, startOfWeek, addDays } from 'date-fns';
+import { useState, useMemo, useEffect } from 'react';
+import { format, startOfWeek, addDays, endOfWeek } from 'date-fns';
 import { PageHeader } from '@/components/layout/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -374,13 +374,190 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
   return data;
 }
 
+// Generate mock Google Calendar events for testing ignore functionality
+function generateMockGoogleEvents(weekStart: Date) {
+  const events = [
+    // Team Meeting (recurring pattern - 3 instances)
+    {
+      id: 'gcal_team_meeting_1',
+      summary: 'Team Meeting',
+      start: { dateTime: `${format(addDays(weekStart, 1), 'yyyy-MM-dd')}T10:00:00` },
+      end: { dateTime: `${format(addDays(weekStart, 1), 'yyyy-MM-dd')}T11:00:00` },
+      startTime: `${format(addDays(weekStart, 1), 'yyyy-MM-dd')}T10:00:00`,
+      endTime: `${format(addDays(weekStart, 1), 'yyyy-MM-dd')}T11:00:00`,
+    },
+    {
+      id: 'gcal_team_meeting_2',
+      summary: 'Team Meeting',
+      start: { dateTime: `${format(addDays(weekStart, 2), 'yyyy-MM-dd')}T10:00:00` },
+      end: { dateTime: `${format(addDays(weekStart, 2), 'yyyy-MM-dd')}T11:00:00` },
+      startTime: `${format(addDays(weekStart, 2), 'yyyy-MM-dd')}T10:00:00`,
+      endTime: `${format(addDays(weekStart, 2), 'yyyy-MM-dd')}T11:00:00`,
+    },
+    {
+      id: 'gcal_team_meeting_3',
+      summary: 'Team Meeting',
+      start: { dateTime: `${format(addDays(weekStart, 3), 'yyyy-MM-dd')}T10:00:00` },
+      end: { dateTime: `${format(addDays(weekStart, 3), 'yyyy-MM-dd')}T11:00:00` },
+      startTime: `${format(addDays(weekStart, 3), 'yyyy-MM-dd')}T10:00:00`,
+      endTime: `${format(addDays(weekStart, 3), 'yyyy-MM-dd')}T11:00:00`,
+    },
+
+    // Client Call (recurring pattern - 2 instances)
+    {
+      id: 'gcal_client_call_1',
+      summary: 'Client Call - Project Alpha',
+      start: { dateTime: `${format(addDays(weekStart, 1), 'yyyy-MM-dd')}T14:00:00` },
+      end: { dateTime: `${format(addDays(weekStart, 1), 'yyyy-MM-dd')}T15:00:00` },
+      startTime: `${format(addDays(weekStart, 1), 'yyyy-MM-dd')}T14:00:00`,
+      endTime: `${format(addDays(weekStart, 1), 'yyyy-MM-dd')}T15:00:00`,
+    },
+    {
+      id: 'gcal_client_call_2',
+      summary: 'Client Call - Project Alpha',
+      start: { dateTime: `${format(addDays(weekStart, 4), 'yyyy-MM-dd')}T14:00:00` },
+      end: { dateTime: `${format(addDays(weekStart, 4), 'yyyy-MM-dd')}T15:00:00` },
+      startTime: `${format(addDays(weekStart, 4), 'yyyy-MM-dd')}T14:00:00`,
+      endTime: `${format(addDays(weekStart, 4), 'yyyy-MM-dd')}T15:00:00`,
+    },
+
+    // Weekly Standup (recurring pattern - 5 instances)
+    {
+      id: 'gcal_standup_1',
+      summary: 'Weekly Standup',
+      start: { dateTime: `${format(addDays(weekStart, 1), 'yyyy-MM-dd')}T09:00:00` },
+      end: { dateTime: `${format(addDays(weekStart, 1), 'yyyy-MM-dd')}T09:15:00` },
+      startTime: `${format(addDays(weekStart, 1), 'yyyy-MM-dd')}T09:00:00`,
+      endTime: `${format(addDays(weekStart, 1), 'yyyy-MM-dd')}T09:15:00`,
+    },
+    {
+      id: 'gcal_standup_2',
+      summary: 'Weekly Standup',
+      start: { dateTime: `${format(addDays(weekStart, 2), 'yyyy-MM-dd')}T09:00:00` },
+      end: { dateTime: `${format(addDays(weekStart, 2), 'yyyy-MM-dd')}T09:15:00` },
+      startTime: `${format(addDays(weekStart, 2), 'yyyy-MM-dd')}T09:00:00`,
+      endTime: `${format(addDays(weekStart, 2), 'yyyy-MM-dd')}T09:15:00`,
+    },
+    {
+      id: 'gcal_standup_3',
+      summary: 'Weekly Standup',
+      start: { dateTime: `${format(addDays(weekStart, 3), 'yyyy-MM-dd')}T09:00:00` },
+      end: { dateTime: `${format(addDays(weekStart, 3), 'yyyy-MM-dd')}T09:15:00` },
+      startTime: `${format(addDays(weekStart, 3), 'yyyy-MM-dd')}T09:00:00`,
+      endTime: `${format(addDays(weekStart, 3), 'yyyy-MM-dd')}T09:15:00`,
+    },
+    {
+      id: 'gcal_standup_4',
+      summary: 'Weekly Standup',
+      start: { dateTime: `${format(addDays(weekStart, 4), 'yyyy-MM-dd')}T09:00:00` },
+      end: { dateTime: `${format(addDays(weekStart, 4), 'yyyy-MM-dd')}T09:15:00` },
+      startTime: `${format(addDays(weekStart, 4), 'yyyy-MM-dd')}T09:00:00`,
+      endTime: `${format(addDays(weekStart, 4), 'yyyy-MM-dd')}T09:15:00`,
+    },
+    {
+      id: 'gcal_standup_5',
+      summary: 'Weekly Standup',
+      start: { dateTime: `${format(addDays(weekStart, 5), 'yyyy-MM-dd')}T09:00:00` },
+      end: { dateTime: `${format(addDays(weekStart, 5), 'yyyy-MM-dd')}T09:15:00` },
+      startTime: `${format(addDays(weekStart, 5), 'yyyy-MM-dd')}T09:00:00`,
+      endTime: `${format(addDays(weekStart, 5), 'yyyy-MM-dd')}T09:15:00`,
+    },
+
+    // Unique events (single instances)
+    {
+      id: 'gcal_lunch_break',
+      summary: 'Lunch Break',
+      start: { dateTime: `${format(addDays(weekStart, 2), 'yyyy-MM-dd')}T12:00:00` },
+      end: { dateTime: `${format(addDays(weekStart, 2), 'yyyy-MM-dd')}T13:00:00` },
+      startTime: `${format(addDays(weekStart, 2), 'yyyy-MM-dd')}T12:00:00`,
+      endTime: `${format(addDays(weekStart, 2), 'yyyy-MM-dd')}T13:00:00`,
+    },
+    {
+      id: 'gcal_brainstorm',
+      summary: 'Product Brainstorming Session',
+      start: { dateTime: `${format(addDays(weekStart, 3), 'yyyy-MM-dd')}T15:00:00` },
+      end: { dateTime: `${format(addDays(weekStart, 3), 'yyyy-MM-dd')}T16:30:00` },
+      startTime: `${format(addDays(weekStart, 3), 'yyyy-MM-dd')}T15:00:00`,
+      endTime: `${format(addDays(weekStart, 3), 'yyyy-MM-dd')}T16:30:00`,
+    },
+    {
+      id: 'gcal_dentist',
+      summary: 'Dentist Appointment',
+      start: { dateTime: `${format(addDays(weekStart, 4), 'yyyy-MM-dd')}T11:00:00` },
+      end: { dateTime: `${format(addDays(weekStart, 4), 'yyyy-MM-dd')}T12:00:00` },
+      startTime: `${format(addDays(weekStart, 4), 'yyyy-MM-dd')}T11:00:00`,
+      endTime: `${format(addDays(weekStart, 4), 'yyyy-MM-dd')}T12:00:00`,
+    },
+
+    // Social events (multiple instances)
+    {
+      id: 'gcal_coffee_1',
+      summary: 'Coffee Chat',
+      start: { dateTime: `${format(addDays(weekStart, 2), 'yyyy-MM-dd')}T15:30:00` },
+      end: { dateTime: `${format(addDays(weekStart, 2), 'yyyy-MM-dd')}T16:00:00` },
+      startTime: `${format(addDays(weekStart, 2), 'yyyy-MM-dd')}T15:30:00`,
+      endTime: `${format(addDays(weekStart, 2), 'yyyy-MM-dd')}T16:00:00`,
+    },
+    {
+      id: 'gcal_coffee_2',
+      summary: 'Coffee Chat',
+      start: { dateTime: `${format(addDays(weekStart, 5), 'yyyy-MM-dd')}T15:30:00` },
+      end: { dateTime: `${format(addDays(weekStart, 5), 'yyyy-MM-dd')}T16:00:00` },
+      startTime: `${format(addDays(weekStart, 5), 'yyyy-MM-dd')}T15:30:00`,
+      endTime: `${format(addDays(weekStart, 5), 'yyyy-MM-dd')}T16:00:00`,
+    },
+  ];
+
+  return events;
+}
+
 export default function TimeAuditFixturePage() {
   const [colorMode, setColorMode] = useState<'drip' | 'energy'>('drip');
   const [weekStart, setWeekStart] = useState(() =>
-    startOfWeek(new Date(), { weekStartsOn: 0 })
+    startOfWeek(new Date(), { weekStartsOn: 1 }) // Monday start for consistency
   );
+  const [fixtureLoaded, setFixtureLoaded] = useState(false);
 
   const fixtureData = useMemo(() => generateFixtureData(weekStart), [weekStart]);
+
+  // Load mock Google Calendar events for testing ignore functionality
+  const loadGoogleCalendarFixture = () => {
+    const mockEvents = generateMockGoogleEvents(weekStart);
+    const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
+    const cacheKey = `google-calendar-events-${format(weekStart, 'yyyy-MM-dd')}-${format(weekEnd, 'yyyy-MM-dd')}`;
+
+    // Store events in localStorage
+    localStorage.setItem(cacheKey, JSON.stringify(mockEvents));
+
+    // Clear categorizations and ignored events to start fresh
+    localStorage.removeItem('event-categorizations');
+    localStorage.removeItem('ignored-events');
+    localStorage.removeItem('google-calendar-patterns');
+
+    setFixtureLoaded(true);
+    console.log(`[Fixture] Loaded ${mockEvents.length} mock Google Calendar events`);
+  };
+
+  // Clear all Google Calendar fixture data
+  const clearGoogleCalendarFixture = () => {
+    // Remove all Google Calendar cache keys
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('google-calendar-events-')) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+
+    // Clear categorizations and ignored events
+    localStorage.removeItem('event-categorizations');
+    localStorage.removeItem('ignored-events');
+    localStorage.removeItem('google-calendar-patterns');
+
+    setFixtureLoaded(false);
+    console.log('[Fixture] Cleared all Google Calendar fixture data');
+  };
 
   // Mock handlers (no-op for fixture)
   const handleAddBlock = (date: Date, startTime: string, endTime?: string) => {
@@ -407,10 +584,50 @@ export default function TimeAuditFixturePage() {
         description="Dev-only test page for calendar event rendering scenarios"
       />
 
+      {/* Google Calendar Fixture Controls */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Google Calendar Event Fixtures (for Ignore Testing)</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-4">
+            <Button
+              onClick={loadGoogleCalendarFixture}
+              variant={fixtureLoaded ? 'outline' : 'default'}
+            >
+              Load Mock Google Events
+            </Button>
+            <Button
+              onClick={clearGoogleCalendarFixture}
+              variant="outline"
+            >
+              Clear Mock Events
+            </Button>
+          </div>
+          {fixtureLoaded && (
+            <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded">
+              <p className="text-sm text-green-800 dark:text-green-200">
+                ✓ Mock events loaded! Navigate to the main Time Audit page to test categorization and ignore features.
+              </p>
+            </div>
+          )}
+          <div className="text-sm text-muted-foreground space-y-2">
+            <p><strong>Mock Event Groups:</strong></p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>Team Meeting (3 instances) - Test group ignore</li>
+              <li>Weekly Standup (5 instances) - Test large group ignore</li>
+              <li>Client Call (2 instances) - Test small group ignore</li>
+              <li>Coffee Chat (2 instances) - Test casual event grouping</li>
+              <li>3 Unique events - Test individual ignore</li>
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Test Scenario Guide */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Test Scenarios</CardTitle>
+          <CardTitle className="text-base">Calendar Fixture Test Scenarios</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
