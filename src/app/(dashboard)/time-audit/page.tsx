@@ -258,6 +258,9 @@ export default function TimeAuditPage() {
       setSyncTimeframe(timeframe);
     }
 
+    // Clear cache before fetching to ensure fresh data
+    clearGoogleCache();
+
     // Calculate sync range based on the currently viewed week and selected timeframe
     const syncStart = startOfWeek(viewedDateRange.start, { weekStartsOn: 1 });
     const syncEnd = calculateSyncEndDate(viewedDateRange.start, selectedTimeframe);
@@ -266,7 +269,7 @@ export default function TimeAuditPage() {
     console.log(`[Google Sync] Syncing ${selectedTimeframe}: ${format(syncStart, 'yyyy-MM-dd')} to ${format(syncEnd, 'yyyy-MM-dd')}`);
 
     fetchGoogleEvents(syncStart, syncEnd);
-  }, [syncTimeframe, setSyncTimeframe, viewedDateRange.start, fetchGoogleEvents, calculateSyncEndDate]);
+  }, [syncTimeframe, setSyncTimeframe, viewedDateRange.start, fetchGoogleEvents, calculateSyncEndDate, clearGoogleCache]);
 
   const getTimeframeLabel = (tf: string) => {
     switch (tf) {
@@ -383,7 +386,7 @@ export default function TimeAuditPage() {
     });
 
     return grouped;
-  }, [timeBlocks, googleEvents, getCategorization]);
+  }, [timeBlocks, googleEvents, getCategorization, categorizations]);
 
   // Get all data sources for stats: time blocks + categorized Google events
   // FILTERED by currently viewed date range
@@ -455,7 +458,7 @@ export default function TimeAuditPage() {
     });
 
     return allBlocks;
-  }, [timeBlocks, googleEvents, getCategorization, viewedDateRange]);
+  }, [timeBlocks, googleEvents, getCategorization, categorizations, viewedDateRange]);
 
   // Calculate stats from ALL time data (time blocks + categorized Google events)
   const stats = useMemo(() => {
