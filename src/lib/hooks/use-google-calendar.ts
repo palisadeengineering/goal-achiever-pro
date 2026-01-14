@@ -58,6 +58,9 @@ interface UseGoogleCalendarReturn {
   clearCache: () => void;
 }
 
+// Note: fetchEvents replaces all events with the fetched range.
+// The calendar should accumulate events or filter by current view.
+
 const GOOGLE_EVENTS_CACHE_KEY = 'google-calendar-events-cache';
 const CACHE_DURATION_MS = 30 * 60 * 1000; // 30 minutes
 
@@ -74,13 +77,18 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
     try {
       const cached = localStorage.getItem(GOOGLE_EVENTS_CACHE_KEY);
       if (cached) {
-        const { events: cachedEvents, cachedAt } = JSON.parse(cached) as GoogleEventsCache;
+        const { events: cachedEvents, cachedAt, dateRange } = JSON.parse(cached) as GoogleEventsCache;
         const cacheAge = Date.now() - new Date(cachedAt).getTime();
         const isFresh = cacheAge < CACHE_DURATION_MS;
 
         if (isFresh && cachedEvents && cachedEvents.length > 0) {
+          console.log(`[useGoogleCalendar] Restoring ${cachedEvents.length} events from cache (range: ${dateRange?.start?.slice(0, 10)} to ${dateRange?.end?.slice(0, 10)}, age: ${Math.round(cacheAge / 1000)}s)`);
           setEvents(cachedEvents);
+        } else {
+          console.log(`[useGoogleCalendar] Cache expired or empty (age: ${Math.round(cacheAge / 1000)}s, events: ${cachedEvents?.length || 0})`);
         }
+      } else {
+        console.log('[useGoogleCalendar] No cached events found');
       }
     } catch (err) {
       console.error('Failed to restore events from cache:', err);
@@ -109,6 +117,7 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
   // Clear cache helper
   const clearCache = useCallback(() => {
     try {
+      console.log('[useGoogleCalendar] Clearing cache and events');
       localStorage.removeItem(GOOGLE_EVENTS_CACHE_KEY);
       setEvents([]);
     } catch (err) {
@@ -116,7 +125,7 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
     }
   }, []);
 
-  const fetchEvents = useCallback(async (startDate: Date, endDate: Date) => {
+  const fetchEvents = useCallback(async (startDate: Date, endDate: Date): Promise<void> => {
     setIsLoading(true);
     setError(null);
 
@@ -163,6 +172,16 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
           recurringEventId: event.recurringEventId,
           isRecurringInstance: event.isRecurringInstance,
         }));
+
+      // Log details about what we're setting
+      const eventDates = transformedEvents.map(e => {
+        const startDt = e.start?.dateTime || e.startTime;
+        return startDt ? new Date(startDt).toISOString().slice(0, 10) : 'unknown';
+      });
+      const uniqueDates = [...new Set(eventDates)].sort();
+      console.log(`[useGoogleCalendar] Fetched ${transformedEvents.length} events for ${startDate.toISOString().slice(0, 10)} to ${endDate.toISOString().slice(0, 10)}`);
+      console.log(`[useGoogleCalendar] Event dates in response: ${uniqueDates.join(', ')}`);
+
       setEvents(transformedEvents);
       setIsConnected(true);
 

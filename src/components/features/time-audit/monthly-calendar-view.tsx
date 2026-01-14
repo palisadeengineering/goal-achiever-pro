@@ -62,14 +62,15 @@ export function MonthlyCalendarView({
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   // Memoize date calculations to prevent infinite re-renders
+  // Use weekStartsOn: 0 (Sunday) to match WeeklyCalendarView
   const { monthStart, monthEnd, calendarStart, calendarEnd } = useMemo(() => {
     const mStart = startOfMonth(currentMonth);
     const mEnd = endOfMonth(currentMonth);
     return {
       monthStart: mStart,
       monthEnd: mEnd,
-      calendarStart: startOfWeek(mStart, { weekStartsOn: 1 }),
-      calendarEnd: endOfWeek(mEnd, { weekStartsOn: 1 }),
+      calendarStart: startOfWeek(mStart, { weekStartsOn: 0 }),
+      calendarEnd: endOfWeek(mEnd, { weekStartsOn: 0 }),
     };
   }, [currentMonth]);
 

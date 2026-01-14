@@ -92,9 +92,10 @@ export default function TimeAuditPage() {
   const hasEliteAccess = checkEliteAccess(userTier);
 
   // Get current week date range for initial fetch
+  // Use weekStartsOn: 0 (Sunday) to match WeeklyCalendarView's default
   const today = new Date();
-  const weekStart = startOfWeek(today, { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
+  const weekStart = startOfWeek(today, { weekStartsOn: 0 });
+  const weekEnd = endOfWeek(today, { weekStartsOn: 0 });
 
   // Google Calendar integration - needs to be before useTimeBlocks for 2-way sync
   const {
@@ -217,55 +218,102 @@ export default function TimeAuditPage() {
   const [calendarColorMode, setCalendarColorMode] = useState<'drip' | 'energy'>('drip');
 
   // Track currently viewed date range from calendar views
+  // Use weekStartsOn: 0 (Sunday) to match WeeklyCalendarView's default
   const [viewedDateRange, setViewedDateRange] = useState<{ start: Date; end: Date }>(() => ({
-    start: startOfWeek(new Date(), { weekStartsOn: 1 }),
-    end: endOfWeek(new Date(), { weekStartsOn: 1 }),
+    start: startOfWeek(new Date(), { weekStartsOn: 0 }),
+    end: endOfWeek(new Date(), { weekStartsOn: 0 }),
   }));
+
+  // Use a ref to always have the latest viewedDateRange for async operations
+  // This prevents stale closures in the debounced fetch
+  const viewedDateRangeRef = useRef(viewedDateRange);
+  useEffect(() => {
+    viewedDateRangeRef.current = viewedDateRange;
+  }, [viewedDateRange]);
+
+  // Track what date range we last fetched to avoid duplicate fetches
+  const lastFetchedRangeRef = useRef<{ start: string; end: string } | null>(null);
 
   // Callback for calendar views to report their current date range
   const handleDateRangeChange = useCallback((start: Date, end: Date) => {
+    const startStr = format(start, 'yyyy-MM-dd');
+    const endStr = format(end, 'yyyy-MM-dd');
+    console.log(`[handleDateRangeChange] Setting viewedDateRange: ${startStr} to ${endStr}`);
     setViewedDateRange({ start, end });
   }, []);
 
   // Helper function to calculate sync end date based on timeframe
   // This ensures consistent date calculations across manual sync and auto-sync
+  // Use weekStartsOn: 0 (Sunday) to match WeeklyCalendarView's default
   const calculateSyncEndDate = useCallback((startDate: Date, timeframe: '1week' | '2weeks' | '1month'): Date => {
-    // Always start from the beginning of the week
-    const weekStart = startOfWeek(startDate, { weekStartsOn: 1 });
+    // Always start from the beginning of the week (Sunday)
+    const weekStart = startOfWeek(startDate, { weekStartsOn: 0 });
 
     switch (timeframe) {
       case '2weeks':
         // Sync current week + next week (14 days total)
-        return endOfWeek(addWeeks(weekStart, 1), { weekStartsOn: 1 });
+        return endOfWeek(addWeeks(weekStart, 1), { weekStartsOn: 0 });
       case '1month':
         // Sync from week start for approximately 1 month (4-5 weeks)
-        return endOfWeek(addWeeks(weekStart, 4), { weekStartsOn: 1 });
+        return endOfWeek(addWeeks(weekStart, 4), { weekStartsOn: 0 });
       case '1week':
       default:
         // Sync just the current week
-        return endOfWeek(weekStart, { weekStartsOn: 1 });
+        return endOfWeek(weekStart, { weekStartsOn: 0 });
     }
   }, []);
 
   // Auto-sync Google Calendar events when navigating to different weeks
-  const prevViewedRangeRef = useRef<{ start: number; end: number } | null>(null);
+  // Uses ref to always get the LATEST viewedDateRange when the timeout fires
+  // This prevents stale closure issues during rapid navigation
   useEffect(() => {
-    if (!isGoogleConnected || isLoadingGoogle) return;
-
-    const startTime = viewedDateRange.start.getTime();
-    const endTime = viewedDateRange.end.getTime();
-
-    // Only fetch if the date range actually changed (and not on initial mount)
-    if (prevViewedRangeRef.current &&
-        (prevViewedRangeRef.current.start !== startTime ||
-         prevViewedRangeRef.current.end !== endTime)) {
-      const syncStart = startOfWeek(viewedDateRange.start, { weekStartsOn: 1 });
-      const syncEnd = calculateSyncEndDate(viewedDateRange.start, syncTimeframe);
-      fetchGoogleEvents(syncStart, syncEnd);
+    if (!isGoogleConnected) {
+      console.log('[Auto-Sync] Not connected, skipping');
+      return;
     }
 
-    prevViewedRangeRef.current = { start: startTime, end: endTime };
-  }, [viewedDateRange, isGoogleConnected, isLoadingGoogle, syncTimeframe, fetchGoogleEvents, calculateSyncEndDate]);
+    // Get string representations for comparison
+    const currentStartStr = format(viewedDateRange.start, 'yyyy-MM-dd');
+    const currentEndStr = format(viewedDateRange.end, 'yyyy-MM-dd');
+
+    // Skip if we already fetched this exact range
+    if (lastFetchedRangeRef.current?.start === currentStartStr &&
+        lastFetchedRangeRef.current?.end === currentEndStr) {
+      console.log(`[Auto-Sync] Already fetched this range, skipping: ${currentStartStr} to ${currentEndStr}`);
+      return;
+    }
+
+    console.log(`[Auto-Sync] Scheduling fetch for: ${currentStartStr} to ${currentEndStr}`);
+
+    // Debounce: wait 300ms after last navigation before fetching
+    const timeoutId = setTimeout(() => {
+      // Use the REF to get the LATEST viewedDateRange at execution time
+      // This is crucial - it ensures we fetch for the week the user ACTUALLY landed on
+      const latestRange = viewedDateRangeRef.current;
+      const latestStartStr = format(latestRange.start, 'yyyy-MM-dd');
+      const latestEndStr = format(latestRange.end, 'yyyy-MM-dd');
+
+      // Double-check we haven't already fetched this range (might have happened via manual sync)
+      if (lastFetchedRangeRef.current?.start === latestStartStr &&
+          lastFetchedRangeRef.current?.end === latestEndStr) {
+        console.log(`[Auto-Sync] Already fetched (double-check), skipping: ${latestStartStr} to ${latestEndStr}`);
+        return;
+      }
+
+      console.log(`[Auto-Sync] FETCHING for week: ${latestStartStr} to ${latestEndStr}`);
+
+      // Mark this range as fetched BEFORE the async call to prevent duplicate requests
+      lastFetchedRangeRef.current = { start: latestStartStr, end: latestEndStr };
+
+      fetchGoogleEvents(latestRange.start, latestRange.end);
+    }, 300);
+
+    // Cleanup: cancel pending fetch if viewedDateRange changes again
+    return () => {
+      console.log(`[Auto-Sync] Cancelled pending fetch (navigation changed from ${currentStartStr})`);
+      clearTimeout(timeoutId);
+    };
+  }, [viewedDateRange, isGoogleConnected, fetchGoogleEvents]);
 
   // Fetch Google events when connected - uses the currently viewed date range
   const handleSyncGoogle = useCallback((timeframe?: '1week' | '2weeks' | '1month') => {
@@ -278,11 +326,18 @@ export default function TimeAuditPage() {
     clearGoogleCache();
 
     // Calculate sync range based on the currently viewed week and selected timeframe
-    const syncStart = startOfWeek(viewedDateRange.start, { weekStartsOn: 1 });
+    // Use weekStartsOn: 0 (Sunday) to match WeeklyCalendarView's default
+    const syncStart = startOfWeek(viewedDateRange.start, { weekStartsOn: 0 });
     const syncEnd = calculateSyncEndDate(viewedDateRange.start, selectedTimeframe);
 
     // Log for debugging
-    console.log(`[Google Sync] Syncing ${selectedTimeframe}: ${format(syncStart, 'yyyy-MM-dd')} to ${format(syncEnd, 'yyyy-MM-dd')}`);
+    console.log(`[Google Sync] Manual sync ${selectedTimeframe}: ${format(syncStart, 'yyyy-MM-dd')} to ${format(syncEnd, 'yyyy-MM-dd')}`);
+
+    // Update the lastFetchedRangeRef so auto-sync knows we've fetched this range
+    lastFetchedRangeRef.current = {
+      start: format(syncStart, 'yyyy-MM-dd'),
+      end: format(syncEnd, 'yyyy-MM-dd'),
+    };
 
     fetchGoogleEvents(syncStart, syncEnd);
   }, [syncTimeframe, setSyncTimeframe, viewedDateRange.start, fetchGoogleEvents, calculateSyncEndDate, clearGoogleCache]);
@@ -1020,6 +1075,8 @@ export default function TimeAuditPage() {
     clearCategorizations();
     setLocalTimeBlocks([]); // Clear localStorage blocks
     await clearAllTimeBlocks(); // Clear database blocks
+    // Reset lastFetchedRange so next navigation triggers a fresh fetch
+    lastFetchedRangeRef.current = null;
   }, [clearGoogleCache, clearCategorizations, setLocalTimeBlocks, clearAllTimeBlocks]);
 
   // Handle deleting a time block (and optionally from Google Calendar)
@@ -1479,6 +1536,25 @@ export default function TimeAuditPage() {
                   {sidebarCollapsed ? <PanelRight className="h-4 w-4" /> : <PanelRightClose className="h-4 w-4" />}
                 </Button>
               </div>
+
+              {/* Quick Debug Strip for Calendar Tab */}
+              {showDebugPanel && (
+                <div className="mt-2 p-2 bg-muted rounded-md text-xs font-mono flex flex-wrap gap-4 items-center">
+                  <span>📊 DB: <strong className="text-blue-600">{timeBlocks.length}</strong></span>
+                  <span>🌐 Google: <strong className="text-purple-600">{googleEvents.length}</strong></span>
+                  <span>📅 On Calendar: <strong className="text-green-600">
+                    {Object.entries(calendarTimeBlocks)
+                      .filter(([date]) => {
+                        const viewStartStr = format(viewedDateRange.start, 'yyyy-MM-dd');
+                        const viewEndStr = format(viewedDateRange.end, 'yyyy-MM-dd');
+                        return date >= viewStartStr && date <= viewEndStr;
+                      })
+                      .reduce((sum, [, blocks]) => sum + blocks.length, 0)}
+                  </strong></span>
+                  <span>⏳ Loading: <strong className={isLoadingGoogle ? 'text-orange-600' : 'text-green-600'}>{isLoadingGoogle ? 'Yes' : 'No'}</strong></span>
+                  <span>📆 Range: {format(viewedDateRange.start, 'MMM d')} - {format(viewedDateRange.end, 'MMM d')}</span>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="biweekly">
@@ -1889,18 +1965,67 @@ export default function TimeAuditPage() {
                     </div>
                   </div>
 
+                  {/* Calendar Data Stats */}
+                  <div>
+                    <h4 className="font-semibold mb-2 text-sm">Calendar Data</h4>
+                    <div className="space-y-1 bg-muted p-3 rounded-md">
+                      <p>Time Blocks (DB): <span className="text-blue-600">{timeBlocks.length}</span></p>
+                      <p>Google Events (state): <span className="text-purple-600">{googleEvents.length}</span></p>
+                      <p>Uncategorized Events: <span className={uncategorizedCount > 0 ? 'text-orange-600' : 'text-green-600'}>{uncategorizedCount}</span></p>
+                      <p>All Time Data (for stats): <span className="text-green-600">{allTimeData.length}</span></p>
+                      <p className="mt-2 font-semibold">Events on Calendar by Date:</p>
+                      {Object.entries(calendarTimeBlocks).length === 0 ? (
+                        <p className="text-red-600">No events in calendarTimeBlocks!</p>
+                      ) : (
+                        <div className="pl-2 max-h-32 overflow-y-auto">
+                          {Object.entries(calendarTimeBlocks)
+                            .filter(([date]) => {
+                              const viewStartStr = format(viewedDateRange.start, 'yyyy-MM-dd');
+                              const viewEndStr = format(viewedDateRange.end, 'yyyy-MM-dd');
+                              return date >= viewStartStr && date <= viewEndStr;
+                            })
+                            .sort(([a], [b]) => a.localeCompare(b))
+                            .map(([date, blocks]) => (
+                              <p key={date}>
+                                {date}: <span className="text-green-600">{blocks.length} events</span>
+                              </p>
+                            ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Google Events Sample */}
+                  <div>
+                    <h4 className="font-semibold mb-2 text-sm">Google Events Sample (first 5)</h4>
+                    <div className="bg-muted p-3 rounded-md max-h-40 overflow-y-auto">
+                      {googleEvents.length === 0 ? (
+                        <p className="text-red-600">No Google events in state</p>
+                      ) : (
+                        googleEvents.slice(0, 5).map((event, i) => (
+                          <div key={event.id} className="mb-2 pb-2 border-b border-muted-foreground/20 last:border-0">
+                            <p className="font-semibold">{i + 1}. {event.summary}</p>
+                            <p className="text-muted-foreground">
+                              {event.start?.dateTime ? format(new Date(event.start.dateTime), 'yyyy-MM-dd HH:mm') : 'No date'}
+                            </p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
                   {/* API Debug Info */}
                   {googleDebugInfo && (
                     <div>
                       <h4 className="font-semibold mb-2 text-sm">Last API Response Debug</h4>
-                      <div className="bg-muted p-3 rounded-md overflow-x-auto">
+                      <div className="bg-muted p-3 rounded-md overflow-x-auto max-h-48 overflow-y-auto">
                         <pre className="whitespace-pre-wrap break-all">{JSON.stringify(googleDebugInfo, null, 2)}</pre>
                       </div>
                     </div>
                   )}
 
                   {/* Sync Actions */}
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     <Button
                       size="sm"
                       variant="outline"
@@ -1915,6 +2040,19 @@ export default function TimeAuditPage() {
                       onClick={() => clearGoogleCache()}
                     >
                       Clear Cache
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        console.log('[Debug] googleEvents:', googleEvents);
+                        console.log('[Debug] calendarTimeBlocks:', calendarTimeBlocks);
+                        console.log('[Debug] timeBlocks:', timeBlocks);
+                        console.log('[Debug] allTimeData:', allTimeData);
+                        console.log('[Debug] viewedDateRange:', viewedDateRange);
+                      }}
+                    >
+                      Log to Console
                     </Button>
                   </div>
                 </div>

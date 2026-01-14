@@ -85,8 +85,9 @@ export function BiweeklyCalendarView({
   onDayClick,
   onDateRangeChange,
 }: BiweeklyCalendarViewProps) {
+  // Use weekStartsOn: 0 (Sunday) to match WeeklyCalendarView
   const [startDate, setStartDate] = useState(() =>
-    startOfWeek(addWeeks(new Date(), -1), { weekStartsOn: 1 })
+    startOfWeek(addWeeks(new Date(), -1), { weekStartsOn: 0 })
   );
 
   // Memoize date calculations to prevent infinite re-renders
@@ -132,7 +133,8 @@ export function BiweeklyCalendarView({
   };
 
   const goToCurrentBiweek = () => {
-    setStartDate(startOfWeek(addWeeks(new Date(), -1), { weekStartsOn: 1 }));
+    // Use weekStartsOn: 0 (Sunday) to match WeeklyCalendarView
+    setStartDate(startOfWeek(addWeeks(new Date(), -1), { weekStartsOn: 0 }));
   };
 
   // Calculate week totals

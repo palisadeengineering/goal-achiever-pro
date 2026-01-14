@@ -81,18 +81,19 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
   const [selectedEnergy, setSelectedEnergy] = useState<EnergyRating[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
+  // Use weekStartsOn: 0 (Sunday) to match WeeklyCalendarView
   const { startDate, endDate } = useMemo(() => {
     const now = new Date();
     switch (dateRangePreset) {
       case 'lastWeek':
         return {
-          startDate: startOfWeek(subWeeks(now, 1), { weekStartsOn: 1 }),
-          endDate: endOfWeek(subWeeks(now, 1), { weekStartsOn: 1 })
+          startDate: startOfWeek(subWeeks(now, 1), { weekStartsOn: 0 }),
+          endDate: endOfWeek(subWeeks(now, 1), { weekStartsOn: 0 })
         };
       case 'week':
         return {
-          startDate: startOfWeek(now, { weekStartsOn: 1 }),
-          endDate: endOfWeek(now, { weekStartsOn: 1 })
+          startDate: startOfWeek(now, { weekStartsOn: 0 }),
+          endDate: endOfWeek(now, { weekStartsOn: 0 })
         };
       case 'month':
         return { startDate: startOfMonth(now), endDate: endOfMonth(now) };

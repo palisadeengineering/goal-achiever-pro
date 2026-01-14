@@ -736,6 +736,7 @@ export function WeeklyCalendarView({
     if (!prevWeekRef.current ||
         prevWeekRef.current.start !== startTime ||
         prevWeekRef.current.end !== endTime) {
+      console.log(`[WeeklyCalendarView] Week changed! Calling onWeekChange: ${currentWeekStart.toISOString().slice(0, 10)} to ${weekEnd.toISOString().slice(0, 10)}`);
       prevWeekRef.current = { start: startTime, end: endTime };
       onWeekChange?.(currentWeekStart, weekEnd);
     }
