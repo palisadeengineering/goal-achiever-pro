@@ -1,5 +1,5 @@
 import { Sidebar } from '@/components/layout/sidebar';
-import { Header } from '@/components/layout/header';
+import { DashboardHeader } from '@/components/layout/dashboard-header';
 import { Providers } from '@/components/providers';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
@@ -66,7 +66,7 @@ export default async function DashboardLayout({
     <div className="flex h-screen overflow-hidden">
       <Sidebar userTier={subscriptionTier} isAdmin={isAdmin} />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <Header
+        <DashboardHeader
           user={userProfile}
           subscriptionTier={subscriptionTier}
         />

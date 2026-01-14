@@ -14,6 +14,12 @@ import { RevenueMathSection } from './category-sections/revenue-math-section';
 import { PositioningSection } from './category-sections/positioning-section';
 import { ProductSection } from './category-sections/product-section';
 import { AcquisitionSection } from './category-sections/acquisition-section';
+import {
+  DEFAULT_REVENUE_MATH,
+  DEFAULT_POSITIONING,
+  DEFAULT_PRODUCT,
+  DEFAULT_ACQUISITION,
+} from '@/types/strategic-discovery';
 import type {
   StrategicDiscoveryData,
   DiscoveryCategory,
@@ -80,36 +86,10 @@ export function StrategicDiscoveryWizard({
     ...initialData,
     visionId: initialData?.visionId || '',
     userId: initialData?.userId || '',
-    revenueMath: initialData?.revenueMath || {
-      revenueTarget: 0,
-      revenueType: 'arr',
-      targetTimeframe: '',
-      pricingModel: 'prosumer',
-      basePrice: 29,
-      targetCustomerCount: 0,
-      arpu: 29,
-      calculatedOptions: [],
-    },
-    positioning: initialData?.positioning || {
-      targetCustomer: '',
-      problemSolved: '',
-      competitors: '',
-      differentiator: '',
-      marketSize: 'medium',
-    },
-    product: initialData?.product || {
-      coreFeatures: [],
-      pricingTiers: [],
-      retentionStrategy: '',
-      upgradePath: '',
-    },
-    acquisition: initialData?.acquisition || {
-      primaryChannels: [],
-      estimatedCAC: 0,
-      milestones: [],
-      launchDate: '',
-      criticalPath: [],
-    },
+    revenueMath: initialData?.revenueMath || DEFAULT_REVENUE_MATH,
+    positioning: initialData?.positioning || DEFAULT_POSITIONING,
+    product: initialData?.product || DEFAULT_PRODUCT,
+    acquisition: initialData?.acquisition || DEFAULT_ACQUISITION,
     aiConversation: initialData?.aiConversation || [],
     completionScore: initialData?.completionScore || 0,
     sectionsCompleted: initialData?.sectionsCompleted || [],
@@ -388,6 +368,8 @@ export function StrategicDiscoveryWizard({
               <RevenueCalculator
                 data={data.revenueMath!}
                 onUpdate={updateRevenueMath}
+                positioning={data.positioning}
+                visionContext={visionTitle + (visionDescription ? ` - ${visionDescription}` : '')}
               />
               <RevenueMathSection
                 data={data.revenueMath!}

@@ -6,6 +6,38 @@ export type PricingModel = 'mass_market' | 'prosumer' | 'enterprise' | 'hybrid';
 export type MarketSize = 'niche' | 'medium' | 'large' | 'massive';
 export type BillingCycle = 'monthly' | 'yearly' | 'one-time';
 
+// AI-Driven Pricing Model Types
+export type BusinessType =
+  | 'saas'           // Software as a Service
+  | 'service'        // Professional services (consulting, engineering, etc.)
+  | 'ecommerce'      // Product sales
+  | 'agency'         // Marketing/creative agency
+  | 'marketplace'    // Platform connecting buyers/sellers
+  | 'hybrid';        // Combination
+
+export type PricingStructure =
+  | 'subscription'   // Monthly/yearly recurring
+  | 'project'        // Per-project pricing
+  | 'hourly'         // Time-based billing
+  | 'retainer'       // Monthly retainer fees
+  | 'value_based'    // % of value delivered
+  | 'tiered'         // Volume-based pricing
+  | 'freemium';      // Free + premium
+
+export type PricingModelMode = 'standard' | 'ai_generated';
+
+export interface DynamicPricingOption {
+  name: string;
+  structure: PricingStructure;
+  baseAmount: number;          // Could be hourly rate, project min, or monthly fee
+  maxAmount?: number;          // For ranges (project $5K-$50K)
+  unit: string;               // "per month", "per project", "per hour", etc.
+  clientsNeeded: number;       // Number of clients/projects/hours needed
+  description: string;
+  recommended: boolean;
+  rationale: string;           // Why this works for their business
+}
+
 // Revenue Math Section
 export interface RevenueOption {
   name: string;
@@ -25,6 +57,10 @@ export interface RevenueMathData {
   targetCustomerCount: number;
   arpu: number;
   calculatedOptions: RevenueOption[];
+  // AI-Generated pricing fields
+  pricingModelMode: PricingModelMode;
+  detectedBusinessType?: BusinessType;
+  dynamicOptions?: DynamicPricingOption[];
 }
 
 // Positioning Section
@@ -213,6 +249,28 @@ export interface CalculateRevenueResponse {
   mathBreakdown: string;
 }
 
+// AI-Generated Pricing Models API Types
+export interface GeneratePricingModelsRequest {
+  targetRevenue: number;
+  revenueType: RevenueType;
+  targetDate: string;
+  positioning: {
+    targetCustomer: string;
+    problemSolved: string;
+    competitors?: string;
+    differentiator?: string;
+  };
+  visionContext?: string;
+}
+
+export interface GeneratePricingModelsResponse {
+  detectedBusinessType: BusinessType;
+  businessTypeRationale: string;
+  pricingOptions: DynamicPricingOption[];
+  recommendation: string;
+  mathBreakdown: string;
+}
+
 // Default/Initial Values
 export const DEFAULT_REVENUE_MATH: RevenueMathData = {
   revenueTarget: 0,
@@ -223,6 +281,7 @@ export const DEFAULT_REVENUE_MATH: RevenueMathData = {
   targetCustomerCount: 0,
   arpu: 29,
   calculatedOptions: [],
+  pricingModelMode: 'standard',
 };
 
 export const DEFAULT_POSITIONING: PositioningData = {
