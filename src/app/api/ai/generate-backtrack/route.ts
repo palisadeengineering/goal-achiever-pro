@@ -129,7 +129,8 @@ export async function POST(request: NextRequest) {
     const hoursPerQuarter = Math.round(totalHours / numQuarters);
     const hoursPerPowerGoal = Math.round(totalHours / Math.min(numQuarters * 3, 12));
     const dailyMinutes = Math.round(availableHoursPerWeek / 5 * 60);
-    const targetDailyActions = Math.min(totalWeeks * 3, 50);
+    // Reduce daily actions to avoid massive JSON and parsing errors
+    const targetDailyActions = Math.min(Math.ceil(totalWeeks * 2), 25);
 
     const anthropic = new Anthropic({
       apiKey: process.env.ANTHROPIC_API_KEY,
@@ -178,14 +179,14 @@ Vision → Quarterly Targets → Power Goals → Monthly Targets → Weekly Targ
    - Link each to a monthly target via monthlyTargetIndex (0-based)
    - Specific weekly focus
 
-5. **Daily Actions** (at least ${targetDailyActions} actions for first ${Math.min(totalWeeks, 8)} weeks):
+5. **Daily Actions** (${targetDailyActions} actions for the first few weeks):
    - CRITICAL: Make each action SPECIFIC and ACTIONABLE
    - Good: "Write 500 words for blog post on productivity"
    - Bad: "Work on content"
    - dayOfWeek: 1=Monday through 5=Friday
    - estimatedMinutes: 15-60 minutes each
    - Link to weekly target via weeklyTargetIndex (0-based)
-   - Total daily minutes should be ~${dailyMinutes} per day
+   - Keep this section CONCISE - quality over quantity
 
 ## OUTPUT FORMAT
 
@@ -249,11 +250,13 @@ Return ONLY valid JSON with this exact structure:
   ]
 }
 
-IMPORTANT RULES:
+CRITICAL RULES:
+- Return ONLY valid JSON - no markdown, no explanations, no code blocks
 - Index references (powerGoalIndex, monthlyTargetIndex, weeklyTargetIndex) must be valid 0-based indices
 - Distribute daily actions evenly across weekdays (Mon-Fri)
 - Make EVERY daily action specific and measurable
-- Total hours must fit within the ${totalHours} hour budget`;
+- Total hours must fit within the ${totalHours} hour budget
+- Your entire response must be a single JSON object starting with { and ending with }`;
 
     const message = await anthropic.messages.create({
       model: 'claude-opus-4-20250514',
@@ -293,28 +296,78 @@ IMPORTANT RULES:
     try {
       let jsonText = responseText;
 
-      // Try to extract JSON if wrapped in code blocks
-      const jsonMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-      if (jsonMatch) {
-        jsonText = jsonMatch[1];
+      // Log the raw response for debugging (first 1000 chars)
+      console.log('Raw AI response (first 1000 chars):', responseText.substring(0, 1000));
+
+      // Try to extract JSON if wrapped in code blocks (multiple patterns)
+      const codeBlockMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      if (codeBlockMatch) {
+        jsonText = codeBlockMatch[1];
+        console.log('Extracted JSON from code block');
       } else {
         // Try to find JSON object by looking for first { and last }
         const firstBrace = responseText.indexOf('{');
         const lastBrace = responseText.lastIndexOf('}');
         if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
           jsonText = responseText.substring(firstBrace, lastBrace + 1);
+          console.log('Extracted JSON by brace matching');
         }
       }
 
       // Clean up any potential issues
       jsonText = jsonText.trim();
 
+      // Remove any trailing commas before } or ]
+      jsonText = jsonText.replace(/,\s*([\]}])/g, '$1');
+
+      // Remove any BOM or invisible characters
+      jsonText = jsonText.replace(/^\uFEFF/, '');
+
+      // Try to repair truncated JSON by closing open brackets
+      const openBraces = (jsonText.match(/\{/g) || []).length;
+      const closeBraces = (jsonText.match(/\}/g) || []).length;
+      const openBrackets = (jsonText.match(/\[/g) || []).length;
+      const closeBrackets = (jsonText.match(/\]/g) || []).length;
+
+      // If JSON appears truncated, try to close it
+      if (openBrackets > closeBrackets || openBraces > closeBraces) {
+        console.log('Attempting to repair truncated JSON...');
+        // Remove any trailing incomplete object/array
+        jsonText = jsonText.replace(/,\s*$/, '');
+        jsonText = jsonText.replace(/,\s*\{[^}]*$/, '');
+        jsonText = jsonText.replace(/:\s*$/, ': null');
+
+        // Close remaining open brackets
+        for (let i = 0; i < openBrackets - closeBrackets; i++) {
+          jsonText += ']';
+        }
+        for (let i = 0; i < openBraces - closeBraces; i++) {
+          jsonText += '}';
+        }
+      }
+
+      console.log('JSON text to parse (first 500 chars):', jsonText.substring(0, 500));
+      console.log('JSON text to parse (last 500 chars):', jsonText.substring(Math.max(0, jsonText.length - 500)));
+
       plan = JSON.parse(jsonText);
+      console.log('Successfully parsed JSON with', {
+        quarterlyTargets: plan.quarterlyTargets?.length || 0,
+        powerGoals: plan.powerGoals?.length || 0,
+        monthlyTargets: plan.monthlyTargets?.length || 0,
+        weeklyTargets: plan.weeklyTargets?.length || 0,
+        dailyActions: plan.dailyActions?.length || 0,
+      });
     } catch (parseError) {
-      console.error('Failed to parse AI response:', responseText.substring(0, 500));
+      console.error('Failed to parse AI response. Full response:', responseText);
       console.error('Parse error:', parseError);
+
+      // Return more detailed error for debugging
       return NextResponse.json(
-        { error: 'Failed to parse AI response' },
+        {
+          error: 'Failed to parse AI response',
+          details: parseError instanceof Error ? parseError.message : 'Unknown parse error',
+          responsePreview: responseText.substring(0, 500),
+        },
         { status: 500 }
       );
     }
