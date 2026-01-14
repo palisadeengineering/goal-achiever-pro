@@ -179,27 +179,27 @@ async function markIntegrationInactive(userId: string, reason: string) {
 
 // GET: Fetch calendar events
 export async function GET(request: NextRequest) {
+  // Debug info object
+  const debug: Record<string, unknown> = {
+    timestamp: new Date().toISOString(),
+    demoModeEnv: IS_DEMO_MODE,
+  };
+
   const supabase = await createClient();
-  const userId = supabase ? await getUserId(supabase) : DEMO_USER_ID;
-
-  // In demo mode with demo user, return demo events
-  if (IS_DEMO_MODE && userId === DEMO_USER_ID) {
-    const searchParams = request.nextUrl.searchParams;
-    const timeMin = searchParams.get('timeMin') || new Date().toISOString();
-    const timeMax = searchParams.get('timeMax') || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-
-    const demoEvents = generateDemoEvents(new Date(timeMin), new Date(timeMax));
-    return NextResponse.json({ events: demoEvents, demo: true });
-  }
 
   if (!supabase) {
     return NextResponse.json(
-      { error: 'Database connection failed' },
+      { error: 'Database connection failed', debug },
       { status: 500 }
     );
   }
 
-  // Get tokens from database
+  const userId = await getUserId(supabase);
+  debug.userId = userId;
+  debug.isDemoUser = userId === DEMO_USER_ID;
+
+  // Check for Google Calendar integration FIRST before falling back to demo mode
+  // Authenticated users with real Google connections should ALWAYS get real data
   const { data: integration, error: integrationError } = await supabase
     .from('user_integrations')
     .select('access_token, refresh_token, token_expiry, is_active')
@@ -207,12 +207,38 @@ export async function GET(request: NextRequest) {
     .eq('provider', 'google_calendar')
     .single();
 
-  if (integrationError || !integration || !integration.is_active) {
+  debug.integrationFound = !!integration;
+  debug.integrationError = integrationError?.message || null;
+  debug.integrationActive = integration?.is_active ?? false;
+  debug.tokenExpiry = integration?.token_expiry || null;
+
+  // Only return demo events if:
+  // 1. User has NO valid Google Calendar integration, AND
+  // 2. Demo mode is enabled
+  const hasValidIntegration = !integrationError && integration && integration.is_active;
+  debug.hasValidIntegration = hasValidIntegration;
+
+  if (!hasValidIntegration) {
+    debug.reason = 'No valid integration';
+    // No integration - return demo events if demo mode is on, otherwise error
+    if (IS_DEMO_MODE) {
+      const searchParams = request.nextUrl.searchParams;
+      const timeMin = searchParams.get('timeMin') || new Date().toISOString();
+      const timeMax = searchParams.get('timeMax') || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      debug.dateRange = { timeMin, timeMax };
+      debug.source = 'demo_events';
+
+      const demoEvents = generateDemoEvents(new Date(timeMin), new Date(timeMax));
+      return NextResponse.json({ events: demoEvents, demo: true, debug });
+    }
+
     return NextResponse.json(
-      { error: 'Not connected to Google Calendar' },
+      { error: 'Not connected to Google Calendar', debug },
       { status: 401 }
     );
   }
+
+  debug.source = 'google_calendar';
 
   try {
     const refreshedTokens = await refreshTokenIfNeeded(
@@ -225,16 +251,20 @@ export async function GET(request: NextRequest) {
     );
 
     if (!refreshedTokens) {
+      debug.error = 'Token refresh failed';
       return NextResponse.json(
-        { error: 'Failed to refresh token. Please reconnect Google Calendar.' },
+        { error: 'Failed to refresh token. Please reconnect Google Calendar.', debug },
         { status: 401 }
       );
     }
+
+    debug.tokenRefreshed = true;
 
     // Get date range from query params
     const searchParams = request.nextUrl.searchParams;
     const timeMin = searchParams.get('timeMin') || new Date().toISOString();
     const timeMax = searchParams.get('timeMax') || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    debug.dateRange = { timeMin, timeMax };
 
     // Fetch events from Google Calendar
     const calendarUrl = new URL('https://www.googleapis.com/calendar/v3/calendars/primary/events');
@@ -252,22 +282,24 @@ export async function GET(request: NextRequest) {
     if (!eventsResponse.ok) {
       const error = await eventsResponse.json();
       console.error('Google Calendar API error:', error);
+      debug.googleApiError = error;
 
       // If unauthorized, the token might be invalid
       if (eventsResponse.status === 401) {
         return NextResponse.json(
-          { error: 'Google Calendar session expired. Please reconnect.' },
+          { error: 'Google Calendar session expired. Please reconnect.', debug },
           { status: 401 }
         );
       }
 
       return NextResponse.json(
-        { error: 'Failed to fetch calendar events' },
+        { error: 'Failed to fetch calendar events', debug },
         { status: eventsResponse.status }
       );
     }
 
     const data = await eventsResponse.json();
+    debug.rawEventCount = data.items?.length || 0;
 
     // Transform events to our TimeBlock format
     const timeBlocks = data.items?.map((event: {
@@ -309,11 +341,13 @@ export async function GET(request: NextRequest) {
       };
     }) || [];
 
-    return NextResponse.json({ events: timeBlocks });
+    debug.transformedEventCount = timeBlocks.length;
+    return NextResponse.json({ events: timeBlocks, debug });
   } catch (error) {
     console.error('Error fetching calendar events:', error);
+    debug.catchError = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to fetch calendar events' },
+      { error: 'Failed to fetch calendar events', debug },
       { status: 500 }
     );
   }

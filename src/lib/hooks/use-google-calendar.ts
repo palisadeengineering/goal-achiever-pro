@@ -25,12 +25,32 @@ interface GoogleEventsCache {
   dateRange: { start: string; end: string };
 }
 
+interface DebugInfo {
+  timestamp?: string;
+  demoModeEnv?: boolean;
+  userId?: string;
+  isDemoUser?: boolean;
+  integrationFound?: boolean;
+  integrationError?: string | null;
+  integrationActive?: boolean;
+  tokenExpiry?: string | null;
+  hasValidIntegration?: boolean;
+  source?: string;
+  dateRange?: { timeMin: string; timeMax: string };
+  rawEventCount?: number;
+  transformedEventCount?: number;
+  tokenRefreshed?: boolean;
+  error?: string;
+  [key: string]: unknown;
+}
+
 interface UseGoogleCalendarReturn {
   events: GoogleCalendarEvent[];
   isLoading: boolean;
   error: string | null;
   isConnected: boolean;
   isCheckingConnection: boolean;
+  debugInfo: DebugInfo | null;
   fetchEvents: (startDate: Date, endDate: Date) => Promise<void>;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
@@ -47,6 +67,7 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
   const [error, setError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isCheckingConnection, setIsCheckingConnection] = useState(true);
+  const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null);
 
   // Restore events from cache on mount
   useEffect(() => {
@@ -109,16 +130,21 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
 
       if (response.status === 401) {
         // Don't set isConnected to false - keep buttons visible so user can reconnect
+        const data = await response.json();
+        setDebugInfo(data.debug || null);
         setError('Google Calendar session expired. Please reconnect.');
         return;
       }
 
       if (!response.ok) {
         const data = await response.json();
+        setDebugInfo(data.debug || null);
         throw new Error(data.error || 'Failed to fetch calendar events');
       }
 
       const data = await response.json();
+      // Capture debug info from the API response
+      setDebugInfo(data.debug || null);
       // Transform the response to match our GoogleCalendarEvent interface
       const rawEvents = data.events || [];
       const transformedEvents: GoogleCalendarEvent[] = rawEvents
@@ -201,6 +227,7 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
     error,
     isConnected,
     isCheckingConnection,
+    debugInfo,
     fetchEvents,
     connect,
     disconnect,

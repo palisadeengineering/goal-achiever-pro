@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Calendar, CalendarDays, CalendarRange, Lock, RefreshCw, ChevronDown, Upload, ArrowUpRight, BarChart3, ListChecks, Trash2, ChevronRight, PanelRightClose, PanelRight } from 'lucide-react';
+import { Plus, Calendar, CalendarDays, CalendarRange, Lock, RefreshCw, ChevronDown, Upload, ArrowUpRight, BarChart3, ListChecks, Trash2, ChevronRight, PanelRightClose, PanelRight, Settings2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,6 +40,8 @@ import { useLocalStorage } from '@/lib/hooks/use-local-storage';
 import { useTags } from '@/lib/hooks/use-tags';
 import { useEditPatterns } from '@/lib/hooks/use-edit-patterns';
 import { EditSuggestionBanner } from '@/components/features/time-audit/edit-suggestion-banner';
+import { EventList, EventListItem } from '@/components/features/time-audit/event-list';
+import { BulkDeleteDialog, CleanupSuggestions } from '@/components/features/time-audit/bulk-delete-dialog';
 import { ROUTES } from '@/constants/routes';
 import { expandRecurringEvents } from '@/lib/utils/recurrence';
 import type { DripQuadrant, EnergyRating } from '@/types/database';
@@ -101,6 +103,7 @@ export default function TimeAuditPage() {
     isConnected: isGoogleConnected,
     fetchEvents: fetchGoogleEvents,
     clearCache: clearGoogleCache,
+    debugInfo: googleDebugInfo,
   } = useGoogleCalendar();
 
   // Database time blocks - fetch a wide range to support navigation
@@ -197,7 +200,16 @@ export default function TimeAuditPage() {
 
   const [showCategorizationDialog, setShowCategorizationDialog] = useState(false);
   const [categorizationDismissed, setCategorizationDismissed] = useState(false); // Track if user manually closed
-  const [mainTab, setMainTab] = useState<'calendar' | 'insights'>('calendar');
+  const [mainTab, setMainTab] = useState<'calendar' | 'insights' | 'manage'>('calendar');
+  const [isDeletingEvent, setIsDeletingEvent] = useState(false);
+
+  // AI cleanup suggestions state
+  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState<CleanupSuggestions | null>(null);
+  const [isLoadingAiSuggestions, setIsLoadingAiSuggestions] = useState(false);
+
+  // Debug panel state
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [syncTimeframe, setSyncTimeframe] = useLocalStorage<'1week' | '2weeks' | '1month'>('google-sync-timeframe', '1week');
 
   // Sidebar state
@@ -463,6 +475,69 @@ export default function TimeAuditPage() {
 
     return allBlocks;
   }, [timeBlocks, googleEvents, getCategorization, categorizations, viewedDateRange]);
+
+  // Combined events list for the Manage Events tab
+  const manageEventsList = useMemo((): EventListItem[] => {
+    const eventMap = new Map<string, EventListItem>();
+
+    // Add time blocks from database
+    timeBlocks.forEach((block) => {
+      eventMap.set(block.id, {
+        id: block.id,
+        date: block.date,
+        startTime: block.startTime,
+        endTime: block.endTime,
+        activityName: block.activityName,
+        dripQuadrant: block.dripQuadrant,
+        energyRating: block.energyRating,
+        source: block.source || 'manual',
+        externalEventId: block.externalEventId,
+      });
+    });
+
+    // Add Google Calendar events that aren't already in the time blocks
+    const importedExternalIds = new Set(
+      timeBlocks.filter(b => b.externalEventId).map(b => b.externalEventId)
+    );
+
+    googleEvents.forEach((event) => {
+      // Skip if already imported
+      if (importedExternalIds.has(event.id) || importedExternalIds.has(`gcal_${event.id}`)) {
+        return;
+      }
+
+      const categorization = getCategorization(event.id);
+      const startDateTime = event.start?.dateTime || event.startTime;
+      const endDateTime = event.end?.dateTime || event.endTime;
+
+      if (startDateTime && endDateTime) {
+        try {
+          const startDate = new Date(startDateTime);
+          const endDate = new Date(endDateTime);
+
+          eventMap.set(event.id, {
+            id: event.id,
+            date: format(startDate, 'yyyy-MM-dd'),
+            startTime: format(startDate, 'HH:mm'),
+            endTime: format(endDate, 'HH:mm'),
+            activityName: event.summary || 'Untitled Event',
+            dripQuadrant: categorization?.dripQuadrant || 'na',
+            energyRating: categorization?.energyRating || 'yellow',
+            source: 'google_calendar',
+            externalEventId: event.id,
+          });
+        } catch {
+          // Skip invalid dates
+        }
+      }
+    });
+
+    return Array.from(eventMap.values()).sort((a, b) => {
+      const dateCompare = a.date.localeCompare(b.date);
+      if (dateCompare !== 0) return dateCompare;
+      return a.startTime.localeCompare(b.startTime);
+    });
+  }, [timeBlocks, googleEvents, getCategorization]);
 
   // Calculate stats from ALL time data (time blocks + categorized Google events)
   const stats = useMemo(() => {
@@ -980,6 +1055,102 @@ export default function TimeAuditPage() {
     }
   }, [deleteTimeBlock, setLocalTimeBlocks, isGoogleConnected, handleSyncGoogle, dbTimeBlocks]);
 
+  // Handle deleting an event from the Manage Events tab
+  const handleEventListDelete = useCallback(async (event: EventListItem) => {
+    setIsDeletingEvent(true);
+    try {
+      // If it's a Google Calendar event, delete from Google Calendar
+      if (event.externalEventId && isGoogleConnected) {
+        const eventId = event.externalEventId.replace('gcal_', '');
+        const response = await fetch(`/api/calendar/google/events?eventId=${eventId}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok && response.status !== 404) {
+          console.error('Failed to delete from Google Calendar');
+        }
+      }
+
+      // Delete from database if it exists there
+      const existsInDb = dbTimeBlocks.some(b => b.id === event.id);
+      if (existsInDb) {
+        await deleteTimeBlock(event.id);
+      }
+
+      // Remove from local storage
+      setLocalTimeBlocks(blocks => blocks.filter(b => b.id !== event.id));
+
+      // Refresh data
+      if (event.externalEventId && isGoogleConnected) {
+        handleSyncGoogle();
+      }
+    } catch (error) {
+      console.error('Error deleting event:', error);
+    } finally {
+      setIsDeletingEvent(false);
+    }
+  }, [dbTimeBlocks, deleteTimeBlock, setLocalTimeBlocks, isGoogleConnected, handleSyncGoogle]);
+
+  // Fetch AI cleanup suggestions
+  const fetchAiCleanupSuggestions = useCallback(async () => {
+    setIsLoadingAiSuggestions(true);
+    setShowBulkDeleteDialog(true);
+    setAiSuggestions(null);
+
+    try {
+      const response = await fetch('/api/ai/suggest-event-cleanup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ events: manageEventsList }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch AI suggestions');
+      }
+
+      const data = await response.json();
+      setAiSuggestions(data.suggestions);
+    } catch (error) {
+      console.error('Error fetching AI suggestions:', error);
+    } finally {
+      setIsLoadingAiSuggestions(false);
+    }
+  }, [manageEventsList]);
+
+  // Handle bulk delete from AI suggestions
+  const handleBulkDelete = useCallback(async (eventIds: string[]) => {
+    for (const eventId of eventIds) {
+      const event = manageEventsList.find(e => e.id === eventId);
+      if (event) {
+        // If it's a Google Calendar event, delete from Google Calendar
+        if (event.externalEventId && isGoogleConnected) {
+          const googleEventId = event.externalEventId.replace('gcal_', '');
+          try {
+            await fetch(`/api/calendar/google/events?eventId=${googleEventId}`, {
+              method: 'DELETE',
+            });
+          } catch (error) {
+            console.error('Error deleting from Google Calendar:', error);
+          }
+        }
+
+        // Delete from database if it exists there
+        const existsInDb = dbTimeBlocks.some(b => b.id === event.id);
+        if (existsInDb) {
+          await deleteTimeBlock(event.id);
+        }
+
+        // Remove from local storage
+        setLocalTimeBlocks(blocks => blocks.filter(b => b.id !== event.id));
+      }
+    }
+
+    // Refresh data after bulk delete
+    if (isGoogleConnected) {
+      handleSyncGoogle();
+    }
+  }, [manageEventsList, dbTimeBlocks, deleteTimeBlock, setLocalTimeBlocks, isGoogleConnected, handleSyncGoogle]);
+
   // Handle moving/resizing a time block (drag-drop or resize)
   const handleBlockMove = useCallback(async (
     blockId: string,
@@ -1248,7 +1419,7 @@ export default function TimeAuditPage() {
       )}
 
       {/* Main Content - Top Level Tabs */}
-      <Tabs value={mainTab} onValueChange={(v) => setMainTab(v as 'calendar' | 'insights')} className="space-y-4">
+      <Tabs value={mainTab} onValueChange={(v) => setMainTab(v as 'calendar' | 'insights' | 'manage')} className="space-y-4">
         <TabsList className="w-fit">
           <TabsTrigger value="calendar" className="gap-2">
             <Calendar className="h-4 w-4" />
@@ -1257,6 +1428,10 @@ export default function TimeAuditPage() {
           <TabsTrigger value="insights" className="gap-2">
             <BarChart3 className="h-4 w-4" />
             Insights
+          </TabsTrigger>
+          <TabsTrigger value="manage" className="gap-2">
+            <Settings2 className="h-4 w-4" />
+            Manage Events
           </TabsTrigger>
         </TabsList>
 
@@ -1654,6 +1829,99 @@ export default function TimeAuditPage() {
             tags={tags}
           />
         </TabsContent>
+
+        <TabsContent value="manage" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings2 className="h-5 w-5" />
+                Manage Events
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                View and delete events from the current date range ({format(viewedDateRange.start, 'MMM d')} - {format(viewedDateRange.end, 'MMM d, yyyy')})
+              </p>
+            </CardHeader>
+            <CardContent>
+              <EventList
+                events={manageEventsList}
+                dateRange={viewedDateRange}
+                onDelete={handleEventListDelete}
+                onAISuggest={fetchAiCleanupSuggestions}
+                isLoading={isLoadingDb || isLoadingGoogle}
+                isDeleting={isDeletingEvent}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Debug Panel */}
+          <Card className="mt-4">
+            <CardHeader className="py-3">
+              <Button
+                variant="ghost"
+                className="w-full justify-between"
+                onClick={() => setShowDebugPanel(!showDebugPanel)}
+              >
+                <span className="flex items-center gap-2 text-sm font-medium">
+                  🐛 Debug Info
+                </span>
+                <ChevronRight className={`h-4 w-4 transition-transform ${showDebugPanel ? 'rotate-90' : ''}`} />
+              </Button>
+            </CardHeader>
+            {showDebugPanel && (
+              <CardContent className="pt-0">
+                <div className="space-y-4 text-xs font-mono">
+                  {/* Connection Status */}
+                  <div>
+                    <h4 className="font-semibold mb-2 text-sm">Connection Status</h4>
+                    <div className="space-y-1 bg-muted p-3 rounded-md">
+                      <p>Google Connected: <span className={isGoogleConnected ? 'text-green-600' : 'text-red-600'}>{isGoogleConnected ? 'Yes' : 'No'}</span></p>
+                      <p>Loading: {isLoadingGoogle ? 'Yes' : 'No'}</p>
+                      <p>Events in state: {googleEvents.length}</p>
+                    </div>
+                  </div>
+
+                  {/* Current View Range */}
+                  <div>
+                    <h4 className="font-semibold mb-2 text-sm">Current View Range</h4>
+                    <div className="bg-muted p-3 rounded-md">
+                      <p>Start: {format(viewedDateRange.start, 'yyyy-MM-dd HH:mm:ss')}</p>
+                      <p>End: {format(viewedDateRange.end, 'yyyy-MM-dd HH:mm:ss')}</p>
+                    </div>
+                  </div>
+
+                  {/* API Debug Info */}
+                  {googleDebugInfo && (
+                    <div>
+                      <h4 className="font-semibold mb-2 text-sm">Last API Response Debug</h4>
+                      <div className="bg-muted p-3 rounded-md overflow-x-auto">
+                        <pre className="whitespace-pre-wrap break-all">{JSON.stringify(googleDebugInfo, null, 2)}</pre>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Sync Actions */}
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleSyncGoogle()}
+                      disabled={isLoadingGoogle}
+                    >
+                      Force Sync
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => clearGoogleCache()}
+                    >
+                      Clear Cache
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            )}
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* Mobile Floating Action Buttons */}
@@ -1751,6 +2019,16 @@ export default function TimeAuditPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* AI Bulk Delete Dialog */}
+      <BulkDeleteDialog
+        open={showBulkDeleteDialog}
+        onOpenChange={setShowBulkDeleteDialog}
+        suggestions={aiSuggestions}
+        isLoading={isLoadingAiSuggestions}
+        onDelete={handleBulkDelete}
+        onRefresh={fetchAiCleanupSuggestions}
+      />
     </div>
   );
 }
