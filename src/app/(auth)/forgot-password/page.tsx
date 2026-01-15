@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { validateEmail } from '@/lib/utils/email-validation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,6 +14,7 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [emailSuggestion, setEmailSuggestion] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
   const supabase = createClient();
@@ -21,6 +23,18 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+    setEmailSuggestion(null);
+
+    // Validate email before sending to Supabase
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
+      setError(emailValidation.error || 'Please enter a valid email address.');
+      if (emailValidation.suggestion) {
+        setEmailSuggestion(emailValidation.suggestion);
+      }
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -103,7 +117,20 @@ export default function ForgotPasswordPage() {
 
           {error && (
             <div className="p-3 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-              {error}
+              <p>{error}</p>
+              {emailSuggestion && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail(emailSuggestion);
+                    setError(null);
+                    setEmailSuggestion(null);
+                  }}
+                  className="mt-2 text-primary hover:underline font-medium"
+                >
+                  Use {emailSuggestion}
+                </button>
+              )}
             </div>
           )}
 
