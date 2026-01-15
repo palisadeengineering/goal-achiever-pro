@@ -1,6 +1,7 @@
 import { Sidebar } from '@/components/layout/sidebar';
 import { DashboardHeader } from '@/components/layout/dashboard-header';
 import { Providers } from '@/components/providers';
+import { FeedbackButton } from '@/components/features/feedback/feedback-button';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 
@@ -76,6 +77,8 @@ export default async function DashboardLayout({
           </Providers>
         </main>
       </div>
+      {/* Beta feedback floating button */}
+      <FeedbackButton />
     </div>
   );
 }

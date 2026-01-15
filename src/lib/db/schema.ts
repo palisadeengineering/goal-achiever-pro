@@ -804,6 +804,7 @@ export const profilesRelations = relations(profiles, ({ many, one }) => ({
   teamMemberships: many(teamMembers, { relationName: 'teamUser' }),
   keyResults: many(keyResults),
   taskComments: many(taskComments),
+  betaFeedback: many(betaFeedback),
 }));
 
 export const visionsRelations = relations(visions, ({ one, many }) => ({
@@ -1297,4 +1298,41 @@ export const keyResultUpdatesRelations = relations(keyResultUpdates, ({ one }) =
 
 export const taskCommentsRelations = relations(taskComments, ({ one }) => ({
   user: one(profiles, { fields: [taskComments.userId], references: [profiles.id] }),
+}));
+
+// =============================================
+// BETA FEEDBACK (Bug Reports & Feature Requests)
+// =============================================
+export const betaFeedback = pgTable('beta_feedback', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  // Feedback details
+  feedbackType: text('feedback_type').notNull(), // 'bug', 'feature', 'improvement', 'general'
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  // Priority and status (for admin tracking)
+  priority: text('priority').default('medium'), // 'low', 'medium', 'high', 'critical'
+  status: text('status').default('open'), // 'open', 'in_progress', 'resolved', 'closed', 'wont_fix'
+  // Browser/context info (auto-captured)
+  currentUrl: text('current_url'),
+  userAgent: text('user_agent'),
+  screenResolution: text('screen_resolution'),
+  // Optional screenshot reference
+  screenshotUrl: text('screenshot_url'),
+  // Admin response
+  adminResponse: text('admin_response'),
+  respondedAt: timestamp('responded_at'),
+  resolvedAt: timestamp('resolved_at'),
+  // Timestamps
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  userIdx: index('beta_feedback_user_idx').on(table.userId),
+  statusIdx: index('beta_feedback_status_idx').on(table.status),
+  typeIdx: index('beta_feedback_type_idx').on(table.feedbackType),
+  createdAtIdx: index('beta_feedback_created_at_idx').on(table.createdAt),
+}));
+
+export const betaFeedbackRelations = relations(betaFeedback, ({ one }) => ({
+  user: one(profiles, { fields: [betaFeedback.userId], references: [profiles.id] }),
 }));
