@@ -21,12 +21,16 @@ async function refreshTokenIfNeeded(
     token_expiry: string;
   }
 ): Promise<{ access_token: string } | null> {
-  const expiryDate = new Date(tokens.token_expiry).getTime();
+  // Ensure UTC parsing by appending Z if not present (database stores UTC without suffix)
+  const expiryStr = tokens.token_expiry.endsWith('Z') ? tokens.token_expiry : tokens.token_expiry + 'Z';
+  const expiryDate = new Date(expiryStr).getTime();
 
   // Return existing token if not expired (with 60 second buffer)
   if (Date.now() < expiryDate - 60000) {
     return { access_token: tokens.access_token };
   }
+
+  console.log('Token expired, refreshing...');
 
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
     return null;
