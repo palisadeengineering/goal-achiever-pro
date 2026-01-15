@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -12,14 +11,21 @@ async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
   return user?.id || DEMO_USER_ID;
 }
 
-// Refresh access token if expired
-async function refreshTokenIfNeeded(tokens: {
-  access_token: string;
-  refresh_token: string;
-  expiry_date: number;
-}): Promise<{ access_token: string; refresh_token: string; expiry_date: number } | null> {
-  if (Date.now() < tokens.expiry_date - 60000) {
-    return tokens;
+// Refresh access token if expired and update in database
+async function refreshTokenIfNeeded(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  tokens: {
+    access_token: string;
+    refresh_token: string;
+    token_expiry: string;
+  }
+): Promise<{ access_token: string } | null> {
+  const expiryDate = new Date(tokens.token_expiry).getTime();
+
+  // Return existing token if not expired (with 60 second buffer)
+  if (Date.now() < expiryDate - 60000) {
+    return { access_token: tokens.access_token };
   }
 
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
@@ -43,51 +49,63 @@ async function refreshTokenIfNeeded(tokens: {
     const newTokens = await response.json();
 
     if (!response.ok) {
+      console.error('Token refresh failed:', newTokens);
       return null;
     }
 
-    return {
-      access_token: newTokens.access_token,
-      refresh_token: tokens.refresh_token,
-      expiry_date: Date.now() + (newTokens.expires_in * 1000),
-    };
-  } catch {
+    // Update tokens in database
+    const newExpiry = new Date(Date.now() + (newTokens.expires_in * 1000));
+    if (supabase) {
+      await supabase
+        .from('user_integrations')
+        .update({
+          access_token: newTokens.access_token,
+          token_expiry: newExpiry.toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId)
+        .eq('provider', 'google_calendar');
+    }
+
+    return { access_token: newTokens.access_token };
+  } catch (err) {
+    console.error('Token refresh error:', err);
     return null;
   }
 }
 
-async function getTokensFromCookie(): Promise<{
-  access_token: string;
-  refresh_token: string;
-  expiry_date: number;
-} | null> {
-  const cookieStore = await cookies();
-  const tokensCookie = cookieStore.get('google_calendar_tokens');
+// Get tokens from database
+async function getTokensFromDatabase(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string
+): Promise<{ access_token: string } | null> {
+  if (!supabase) return null;
 
-  if (!tokensCookie) {
+  const { data: integration, error } = await supabase
+    .from('user_integrations')
+    .select('access_token, refresh_token, token_expiry, is_active')
+    .eq('user_id', userId)
+    .eq('provider', 'google_calendar')
+    .single();
+
+  if (error || !integration || !integration.is_active) {
     return null;
   }
 
-  try {
-    const tokens = JSON.parse(tokensCookie.value);
-    return await refreshTokenIfNeeded(tokens);
-  } catch {
+  if (!integration.access_token || !integration.refresh_token) {
     return null;
   }
+
+  return await refreshTokenIfNeeded(supabase, userId, {
+    access_token: integration.access_token,
+    refresh_token: integration.refresh_token,
+    token_expiry: integration.token_expiry,
+  });
 }
 
 // POST: Sync daily actions to Google Calendar
 export async function POST(request: NextRequest) {
   try {
-    const tokens = await getTokensFromCookie();
-
-    if (!tokens) {
-      return NextResponse.json(
-        { error: 'Not connected to Google Calendar. Please connect first.' },
-        { status: 401 }
-      );
-    }
-
     const supabase = await createClient();
     if (!supabase) {
       return NextResponse.json(
@@ -97,6 +115,14 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = await getUserId(supabase);
+    const tokens = await getTokensFromDatabase(supabase, userId);
+
+    if (!tokens) {
+      return NextResponse.json(
+        { error: 'Not connected to Google Calendar. Please connect first.' },
+        { status: 401 }
+      );
+    }
     const body = await request.json();
     const { date, actionIds } = body;
 
