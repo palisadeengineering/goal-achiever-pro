@@ -22,6 +22,7 @@ export const ROUTES = {
   // Dashboard
   dashboard: '/dashboard',
   today: '/today',
+  progress: '/progress',
 
   // Backtrack Planning
   backtrack: '/backtrack',
@@ -101,6 +102,7 @@ export const ROUTES = {
 export const PROTECTED_ROUTES = [
   '/dashboard',
   '/today',
+  '/progress',
   '/backtrack',
   '/vision',
   '/goals',

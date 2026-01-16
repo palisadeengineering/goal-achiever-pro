@@ -211,3 +211,133 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+// PUT: Bulk complete/uncomplete today's actions
+export async function PUT(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Database connection failed' },
+        { status: 500 }
+      );
+    }
+
+    const userId = await getUserId(supabase);
+    const body = await request.json();
+    const { action, actionIds } = body;
+
+    if (!action || !['complete', 'uncomplete'].includes(action)) {
+      return NextResponse.json(
+        { error: 'Invalid action. Use "complete" or "uncomplete"' },
+        { status: 400 }
+      );
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const newStatus = action === 'complete' ? 'completed' : 'pending';
+
+    // Build query
+    let query = supabase
+      .from('daily_actions')
+      .update({ status: newStatus, updated_at: new Date().toISOString() })
+      .eq('user_id', userId)
+      .eq('action_date', today);
+
+    // If specific action IDs provided, filter to those
+    if (actionIds && Array.isArray(actionIds) && actionIds.length > 0) {
+      query = query.in('id', actionIds);
+    } else {
+      // Only complete pending or uncomplete completed
+      query = query.eq('status', action === 'complete' ? 'pending' : 'completed');
+    }
+
+    const { data, error } = await query.select('id');
+
+    if (error) {
+      console.error('Error bulk updating actions:', error);
+      return NextResponse.json(
+        { error: 'Failed to update actions' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      updated: data?.length || 0,
+      action,
+      message: `${data?.length || 0} actions ${action === 'complete' ? 'completed' : 'marked as pending'}`,
+    });
+  } catch (error) {
+    console.error('Bulk update error:', error);
+    return NextResponse.json(
+      { error: 'Failed to bulk update actions' },
+      { status: 500 }
+    );
+  }
+}
+
+// POST: Bulk sync today's actions to calendar
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Database connection failed' },
+        { status: 500 }
+      );
+    }
+
+    const userId = await getUserId(supabase);
+    const body = await request.json();
+    const { actionIds } = body;
+    const today = new Date().toISOString().split('T')[0];
+
+    // Get actions to sync
+    let query = supabase
+      .from('daily_actions')
+      .select('id, title, description, action_date, estimated_minutes, scheduled_start_time')
+      .eq('user_id', userId)
+      .eq('action_date', today)
+      .is('calendar_event_id', null)
+      .neq('status', 'completed');
+
+    if (actionIds && Array.isArray(actionIds) && actionIds.length > 0) {
+      query = query.in('id', actionIds);
+    }
+
+    const { data: actions, error } = await query;
+
+    if (error) {
+      console.error('Error fetching actions:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch actions for sync' },
+        { status: 500 }
+      );
+    }
+
+    if (!actions || actions.length === 0) {
+      return NextResponse.json({
+        success: true,
+        synced: 0,
+        message: 'No actions to sync',
+      });
+    }
+
+    // Return the action IDs that need syncing - actual sync is done by calendar endpoint
+    return NextResponse.json({
+      success: true,
+      needsSync: actions.length,
+      actionIds: actions.map(a => a.id),
+      message: `${actions.length} actions ready for calendar sync`,
+    });
+  } catch (error) {
+    console.error('Prepare sync error:', error);
+    return NextResponse.json(
+      { error: 'Failed to prepare actions for sync' },
+      { status: 500 }
+    );
+  }
+}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { PageHeader } from '@/components/layout/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import {
   CalendarCheck,
   Calendar,
+  CalendarPlus,
   Clock,
   Target,
   AlertCircle,
@@ -30,7 +31,14 @@ import {
   RefreshCw,
   Users,
   User,
+  CalendarX,
 } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { useGoogleCalendar } from '@/lib/hooks/use-google-calendar';
@@ -47,6 +55,11 @@ interface DailyAction {
   target_value?: number;
   assignee_id?: string;
   assignee_name?: string;
+  // Calendar sync fields
+  calendar_event_id?: string;
+  calendar_sync_status?: 'not_synced' | 'synced' | 'pending' | 'error';
+  calendar_synced_at?: string;
+  scheduled_start_time?: string;
   weekly_targets?: {
     id: string;
     title: string;
@@ -94,6 +107,12 @@ interface TodayData {
   completionPercentage: number;
   actionsByVision: VisionGroup[];
   upcomingDeadlines: Deadline[];
+  // Calendar sync stats
+  calendarSyncStats?: {
+    synced: number;
+    notSynced: number;
+    error: number;
+  };
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -112,10 +131,100 @@ export default function TodayPage() {
   const [completingIds, setCompletingIds] = useState<Set<string>>(new Set());
   const [expandedVisions, setExpandedVisions] = useState<Set<string>>(new Set());
   const [isSyncing, setIsSyncing] = useState(false);
+  const [syncingIds, setSyncingIds] = useState<Set<string>>(new Set());
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [assigneeFilter, setAssigneeFilter] = useState<string>('all');
+  const [focusedActionId, setFocusedActionId] = useState<string | null>(null);
+  const actionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const { isConnected, connect } = useGoogleCalendar();
+
+  // Flatten all actions for keyboard navigation
+  const allActions = useMemo(() => {
+    if (!data) return [];
+    return data.actionsByVision.flatMap((group) => group.actions);
+  }, [data]);
+
+  // Count unsynced actions
+  const unsyncedCount = data?.actionsByVision.reduce((count, group) => {
+    return count + group.actions.filter(a =>
+      a.status !== 'completed' &&
+      (!a.calendar_sync_status || a.calendar_sync_status === 'not_synced')
+    ).length;
+  }, 0) || 0;
+
+  // Keyboard shortcuts handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in an input
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        e.target instanceof HTMLSelectElement
+      ) {
+        return;
+      }
+
+      const currentIndex = focusedActionId
+        ? allActions.findIndex((a) => a.id === focusedActionId)
+        : -1;
+
+      switch (e.key) {
+        case 'ArrowDown':
+        case 'j': // vim-style navigation
+          e.preventDefault();
+          if (allActions.length > 0) {
+            const nextIndex = currentIndex < allActions.length - 1 ? currentIndex + 1 : 0;
+            const nextAction = allActions[nextIndex];
+            setFocusedActionId(nextAction.id);
+            actionRefs.current.get(nextAction.id)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+          break;
+        case 'ArrowUp':
+        case 'k': // vim-style navigation
+          e.preventDefault();
+          if (allActions.length > 0) {
+            const prevIndex = currentIndex > 0 ? currentIndex - 1 : allActions.length - 1;
+            const prevAction = allActions[prevIndex];
+            setFocusedActionId(prevAction.id);
+            actionRefs.current.get(prevAction.id)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+          break;
+        case ' ':
+          e.preventDefault();
+          if (focusedActionId) {
+            const action = allActions.find((a) => a.id === focusedActionId);
+            if (action) {
+              handleToggleComplete(action.id, action.status);
+            }
+          }
+          break;
+        case 'c':
+          e.preventDefault();
+          if (focusedActionId && isConnected) {
+            const action = allActions.find((a) => a.id === focusedActionId);
+            if (action && action.status !== 'completed' && action.calendar_sync_status !== 'synced') {
+              handleSyncSingleAction(focusedActionId);
+            }
+          }
+          break;
+        case 'a':
+          if (!e.metaKey && !e.ctrlKey) { // Don't interfere with Cmd+A/Ctrl+A
+            e.preventDefault();
+            if (isConnected && unsyncedCount > 0) {
+              handleSyncToCalendar();
+            }
+          }
+          break;
+        case 'Escape':
+          setFocusedActionId(null);
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [focusedActionId, allActions, isConnected, unsyncedCount]);
 
   // Fetch team members
   const fetchTeamMembers = useCallback(async () => {
@@ -151,11 +260,96 @@ export default function TodayPage() {
       }
 
       toast.success(result.message || `Synced ${result.synced} actions to calendar`);
+
+      // Update local state with synced status
+      if (result.results) {
+        setData((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            actionsByVision: prev.actionsByVision.map((group) => ({
+              ...group,
+              actions: group.actions.map((action) => {
+                const syncResult = result.results.find((r: { actionId: string; success: boolean; eventId?: string }) => r.actionId === action.id);
+                if (syncResult?.success) {
+                  return {
+                    ...action,
+                    calendar_sync_status: 'synced' as const,
+                    calendar_event_id: syncResult.eventId,
+                    calendar_synced_at: new Date().toISOString(),
+                  };
+                }
+                return action;
+              }),
+            })),
+          };
+        });
+      }
     } catch (err) {
       console.error('Calendar sync error:', err);
       toast.error('Failed to sync actions to calendar');
     } finally {
       setIsSyncing(false);
+    }
+  };
+
+  const handleSyncSingleAction = async (actionId: string) => {
+    if (!isConnected) {
+      connect();
+      return;
+    }
+
+    setSyncingIds((prev) => new Set(prev).add(actionId));
+    try {
+      const response = await fetch('/api/calendar/sync-actions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ actionIds: [actionId] }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to sync');
+      }
+
+      if (result.synced > 0) {
+        toast.success('Action added to calendar!');
+
+        // Update local state
+        setData((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            actionsByVision: prev.actionsByVision.map((group) => ({
+              ...group,
+              actions: group.actions.map((action) => {
+                if (action.id === actionId) {
+                  const syncResult = result.results?.[0];
+                  return {
+                    ...action,
+                    calendar_sync_status: 'synced' as const,
+                    calendar_event_id: syncResult?.eventId,
+                    calendar_synced_at: new Date().toISOString(),
+                  };
+                }
+                return action;
+              }),
+            })),
+          };
+        });
+      } else {
+        toast.error('Failed to sync action');
+      }
+    } catch (err) {
+      console.error('Calendar sync error:', err);
+      toast.error('Failed to sync action to calendar');
+    } finally {
+      setSyncingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(actionId);
+        return next;
+      });
     }
   };
 
@@ -255,6 +449,53 @@ export default function TodayPage() {
         next.delete(actionId);
         return next;
       });
+    }
+  };
+
+  const [isBulkCompleting, setIsBulkCompleting] = useState(false);
+
+  const handleBulkComplete = async () => {
+    setIsBulkCompleting(true);
+    try {
+      const response = await fetch('/api/today', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'complete' }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to complete actions');
+      }
+
+      if (result.updated > 0) {
+        toast.success(result.message);
+        // Optimistic update
+        setData((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            completedActions: prev.totalActions,
+            completionPercentage: 100,
+            actionsByVision: prev.actionsByVision.map((group) => ({
+              ...group,
+              actions: group.actions.map((action) => ({
+                ...action,
+                status: 'completed',
+              })),
+              completedCount: group.totalCount,
+            })),
+          };
+        });
+      } else {
+        toast.info('All actions already completed!');
+      }
+    } catch (err) {
+      console.error('Bulk complete error:', err);
+      toast.error('Failed to complete all actions');
+    } finally {
+      setIsBulkCompleting(false);
     }
   };
 
@@ -413,19 +654,32 @@ export default function TodayPage() {
                 ))}
               </SelectContent>
             </Select>
-            <Button
-              variant="outline"
-              onClick={handleSyncToCalendar}
-              size="sm"
-              disabled={isSyncing}
-            >
-              {isSyncing ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Calendar className="h-4 w-4 mr-2" />
-              )}
-              {isConnected ? 'Sync to Calendar' : 'Connect Calendar'}
-            </Button>
+            {isConnected ? (
+              <Button
+                variant={unsyncedCount > 0 ? 'default' : 'outline'}
+                onClick={handleSyncToCalendar}
+                size="sm"
+                disabled={isSyncing || unsyncedCount === 0}
+                className="gap-2"
+              >
+                {isSyncing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <CalendarPlus className="h-4 w-4" />
+                )}
+                {unsyncedCount > 0 ? `Sync ${unsyncedCount} to Calendar` : 'All Synced'}
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={connect}
+                size="sm"
+                className="gap-2"
+              >
+                <Calendar className="h-4 w-4" />
+                Connect Calendar
+              </Button>
+            )}
             <Button variant="outline" onClick={() => fetchTodayData()} size="sm">
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
@@ -480,8 +734,24 @@ export default function TodayPage() {
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">Today&apos;s Actions</CardTitle>
-                <div className="space-y-1">
+                <div className="flex items-center gap-3">
                   <Progress value={data.completionPercentage} className="w-32 h-2" />
+                  {data.completedActions < data.totalActions && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleBulkComplete}
+                      disabled={isBulkCompleting}
+                      className="h-7 text-xs"
+                    >
+                      {isBulkCompleting ? (
+                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                      ) : (
+                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                      )}
+                      Complete All
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardHeader>
@@ -517,11 +787,16 @@ export default function TodayPage() {
                       {group.actions.map((action) => (
                         <div
                           key={action.id}
+                          ref={(el) => {
+                            if (el) actionRefs.current.set(action.id, el);
+                          }}
+                          onClick={() => setFocusedActionId(action.id)}
                           className={cn(
-                            'flex items-start gap-3 p-4 rounded-lg border transition-all',
+                            'flex items-start gap-3 p-4 rounded-lg border transition-all cursor-pointer',
                             action.status === 'completed'
                               ? 'bg-muted/20 border-muted'
-                              : 'bg-background hover:border-primary/30'
+                              : 'bg-background hover:border-primary/30',
+                            focusedActionId === action.id && 'ring-2 ring-primary ring-offset-2 border-primary'
                           )}
                         >
                           <Checkbox
@@ -543,10 +818,39 @@ export default function TodayPage() {
                               >
                                 {action.title}
                               </p>
-                              <Badge variant="outline" className="shrink-0">
-                                <Clock className="h-3 w-3 mr-1" />
-                                {action.estimated_minutes}m
-                              </Badge>
+                              <div className="flex items-center gap-2 shrink-0">
+                                {/* Calendar Sync Status */}
+                                {action.calendar_sync_status === 'synced' ? (
+                                  <Badge variant="outline" className="text-green-600 border-green-200 dark:border-green-800">
+                                    <CalendarCheck className="h-3 w-3 mr-1" />
+                                    On Cal
+                                  </Badge>
+                                ) : action.status !== 'completed' && isConnected ? (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 px-2 text-xs text-muted-foreground hover:text-primary"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleSyncSingleAction(action.id);
+                                    }}
+                                    disabled={syncingIds.has(action.id)}
+                                  >
+                                    {syncingIds.has(action.id) ? (
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                      <>
+                                        <CalendarPlus className="h-3 w-3 mr-1" />
+                                        +Cal
+                                      </>
+                                    )}
+                                  </Button>
+                                ) : null}
+                                <Badge variant="outline">
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  {action.estimated_minutes}m
+                                </Badge>
+                              </div>
                             </div>
                             {action.description && (
                               <p
@@ -673,6 +977,40 @@ export default function TodayPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* Keyboard Shortcuts */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <span className="inline-flex items-center justify-center h-5 w-5 rounded bg-muted text-xs font-mono">⌨</span>
+                Keyboard Shortcuts
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Navigate</span>
+                  <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">↑↓ or j/k</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Toggle complete</span>
+                  <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">Space</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Sync to calendar</span>
+                  <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">C</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Sync all</span>
+                  <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">A</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Clear focus</span>
+                  <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">Esc</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Quick Links */}
           <Card>

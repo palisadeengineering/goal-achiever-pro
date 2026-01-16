@@ -25,7 +25,11 @@ import {
   GitBranch,
   Save,
   AlertCircle,
+  CalendarCheck,
+  CalendarPlus,
+  ExternalLink,
 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 
 interface Vision {
@@ -142,6 +146,16 @@ export function BacktrackPlanningWizard({
   // Generated plan
   const [generatedPlan, setGeneratedPlan] = useState<GeneratedPlan | null>(null);
 
+  // Calendar sync options
+  const [syncToCalendar, setSyncToCalendar] = useState(true);
+  const [isCalendarConnected, setIsCalendarConnected] = useState<boolean | null>(null);
+  const [isSyncingCalendar, setIsSyncingCalendar] = useState(false);
+  const [calendarSyncResult, setCalendarSyncResult] = useState<{
+    synced: number;
+    failed: number;
+    total: number;
+  } | null>(null);
+
   // New vision form (if creating)
   const [isCreatingVision, setIsCreatingVision] = useState(false);
   const [newVision, setNewVision] = useState({
@@ -167,6 +181,44 @@ export function BacktrackPlanningWizard({
       }
     }
   }, [selectedVisionId, visions]);
+
+  // Check calendar connection status when reaching confirm step
+  useEffect(() => {
+    if (currentStep === 'confirm') {
+      checkCalendarConnection();
+    }
+  }, [currentStep]);
+
+  const checkCalendarConnection = async () => {
+    try {
+      const response = await fetch('/api/calendar/google/status');
+      const data = await response.json();
+      setIsCalendarConnected(data.connected);
+    } catch {
+      setIsCalendarConnected(false);
+    }
+  };
+
+  const handleConnectCalendar = () => {
+    // Open Google Calendar OAuth in new window
+    window.open('/api/calendar/google', '_blank', 'width=600,height=700');
+    // Poll for connection status
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await fetch('/api/calendar/google/status');
+        const data = await response.json();
+        if (data.connected) {
+          setIsCalendarConnected(true);
+          clearInterval(pollInterval);
+          toast.success('Google Calendar connected!');
+        }
+      } catch {
+        // Continue polling
+      }
+    }, 2000);
+    // Stop polling after 2 minutes
+    setTimeout(() => clearInterval(pollInterval), 120000);
+  };
 
   const fetchVisions = async () => {
     try {
@@ -317,6 +369,42 @@ export function BacktrackPlanningWizard({
 
       const result = await response.json();
       toast.success('Backtrack plan saved successfully!');
+
+      // Sync to Google Calendar if enabled and connected
+      if (syncToCalendar && isCalendarConnected && result.backtrackPlanId) {
+        setIsSyncingCalendar(true);
+        try {
+          const syncResponse = await fetch('/api/calendar/sync-backtrack-plan', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              backtrackPlanId: result.backtrackPlanId,
+              onlyFuture: true,
+            }),
+          });
+
+          if (syncResponse.ok) {
+            const syncResult = await syncResponse.json();
+            setCalendarSyncResult({
+              synced: syncResult.synced,
+              failed: syncResult.failed,
+              total: syncResult.total,
+            });
+            if (syncResult.synced > 0) {
+              toast.success(`${syncResult.synced} actions synced to Google Calendar!`);
+            }
+          } else {
+            console.error('Failed to sync to calendar');
+            toast.error('Plan saved, but calendar sync failed');
+          }
+        } catch (syncErr) {
+          console.error('Calendar sync error:', syncErr);
+          toast.error('Plan saved, but calendar sync failed');
+        } finally {
+          setIsSyncingCalendar(false);
+        }
+      }
+
       onComplete(result.backtrackPlanId);
     } catch (err) {
       console.error('Error saving plan:', err);
@@ -858,6 +946,79 @@ export function BacktrackPlanningWizard({
                   </div>
                 </div>
               </div>
+
+              {/* Google Calendar Sync Option */}
+              <div className="p-4 border rounded-lg space-y-4">
+                <div className="flex items-center gap-3">
+                  <CalendarCheck className="h-6 w-6 text-blue-500" />
+                  <div>
+                    <h4 className="font-medium">Sync to Google Calendar</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Add your daily actions to Google Calendar so you never miss them
+                    </p>
+                  </div>
+                </div>
+
+                {isCalendarConnected === null ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Checking calendar connection...
+                  </div>
+                ) : isCalendarConnected ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                      <CheckCircle2 className="h-4 w-4" />
+                      Google Calendar connected
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        id="syncToCalendar"
+                        checked={syncToCalendar}
+                        onCheckedChange={(checked) => setSyncToCalendar(checked as boolean)}
+                      />
+                      <label htmlFor="syncToCalendar" className="text-sm cursor-pointer">
+                        Automatically sync {generatedPlan?.dailyActions.length} daily actions to my calendar
+                      </label>
+                    </div>
+                    {syncToCalendar && (
+                      <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm">
+                        <p className="text-blue-700 dark:text-blue-300">
+                          <CalendarPlus className="h-4 w-4 inline mr-1" />
+                          Future daily actions will be added as calendar events, spread throughout your work day (9 AM - 5 PM).
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
+                      <AlertCircle className="h-4 w-4" />
+                      Google Calendar not connected
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleConnectCalendar}
+                      className="gap-2"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      Connect Google Calendar
+                    </Button>
+                    <p className="text-xs text-muted-foreground">
+                      You can also sync your actions later from the Today page.
+                    </p>
+                  </div>
+                )}
+
+                {calendarSyncResult && (
+                  <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-sm">
+                    <p className="text-green-700 dark:text-green-300">
+                      <CheckCircle2 className="h-4 w-4 inline mr-1" />
+                      Synced {calendarSyncResult.synced} of {calendarSyncResult.total} actions to Google Calendar
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </CardContent>
@@ -875,16 +1036,21 @@ export function BacktrackPlanningWizard({
         </Button>
 
         {currentStep === 'confirm' ? (
-          <Button onClick={handleSavePlan} disabled={isSaving} className="gap-2">
+          <Button onClick={handleSavePlan} disabled={isSaving || isSyncingCalendar} className="gap-2">
             {isSaving ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Saving...
               </>
+            ) : isSyncingCalendar ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Syncing to Calendar...
+              </>
             ) : (
               <>
                 <Save className="h-4 w-4" />
-                Save & Activate Plan
+                {syncToCalendar && isCalendarConnected ? 'Save & Sync to Calendar' : 'Save & Activate Plan'}
               </>
             )}
           </Button>

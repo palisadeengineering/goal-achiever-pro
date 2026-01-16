@@ -280,10 +280,19 @@ export const dailyActions = pgTable('daily_actions', {
   status: text('status').default('pending'),
   completedAt: timestamp('completed_at'),
   sortOrder: integer('sort_order').default(0),
+  // Google Calendar sync tracking
+  calendarEventId: text('calendar_event_id'),
+  calendarSyncStatus: text('calendar_sync_status').default('not_synced'), // 'not_synced', 'synced', 'pending', 'error'
+  calendarSyncedAt: timestamp('calendar_synced_at'),
+  calendarSyncError: text('calendar_sync_error'),
+  // Scheduling (for calendar events)
+  scheduledStartTime: time('scheduled_start_time'),
+  scheduledEndTime: time('scheduled_end_time'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 }, (table) => ({
   userDateIdx: index('daily_actions_user_date_idx').on(table.userId, table.actionDate),
+  calendarEventIdx: index('daily_actions_calendar_event_idx').on(table.calendarEventId),
 }));
 
 // =============================================

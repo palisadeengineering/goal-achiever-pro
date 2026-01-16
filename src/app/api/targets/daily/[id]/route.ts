@@ -102,49 +102,133 @@ export async function PUT(
       return NextResponse.json({ error: 'Failed to update action' }, { status: 500 });
     }
 
-    // If status was updated, recalculate milestone progress
-    if (body.status !== undefined && action?.weekly_target?.monthly_target?.power_goal_id) {
-      const powerGoalId = action.weekly_target.monthly_target.power_goal_id;
+    // If status was updated, recalculate cascade progress up the hierarchy
+    if (body.status !== undefined && action?.weekly_target) {
+      const weeklyTargetId = action.weekly_target.id;
+      const monthlyTargetId = action.weekly_target.monthly_target?.id;
+      const powerGoalId = action.weekly_target.monthly_target?.power_goal_id;
 
-      // Get all monthly targets for this power goal
-      const { data: monthlyTargets } = await supabase
-        .from('monthly_targets')
-        .select(`
-          id,
-          weekly_targets(
-            id,
-            daily_actions(id, status)
-          )
-        `)
-        .eq('power_goal_id', powerGoalId)
+      // 1. Update Weekly Target progress
+      const { data: weeklyActions } = await supabase
+        .from('daily_actions')
+        .select('id, status')
+        .eq('weekly_target_id', weeklyTargetId)
         .eq('user_id', userId);
 
-      // Count total and completed daily actions
-      let totalDailyActions = 0;
-      let completedDailyActions = 0;
-
-      for (const monthly of monthlyTargets || []) {
-        for (const weekly of monthly.weekly_targets || []) {
-          for (const daily of weekly.daily_actions || []) {
-            totalDailyActions++;
-            if (daily.status === 'completed') completedDailyActions++;
-          }
-        }
-      }
-
-      // Calculate and update progress percentage
-      const progressPercentage = totalDailyActions > 0
-        ? Math.round((completedDailyActions / totalDailyActions) * 100)
-        : 0;
+      const weeklyTotal = weeklyActions?.length || 0;
+      const weeklyCompleted = weeklyActions?.filter(a => a.status === 'completed').length || 0;
+      const weeklyStatus = weeklyCompleted === weeklyTotal && weeklyTotal > 0 ? 'completed' :
+        weeklyCompleted > 0 ? 'in_progress' : 'pending';
 
       await supabase
-        .from('power_goals')
+        .from('weekly_targets')
         .update({
-          progress_percentage: progressPercentage,
+          status: weeklyStatus,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', powerGoalId)
+        .eq('id', weeklyTargetId)
         .eq('user_id', userId);
+
+      // 2. Update Monthly Target progress (average of weekly targets)
+      if (monthlyTargetId) {
+        const { data: weeklyTargets } = await supabase
+          .from('weekly_targets')
+          .select('id, status')
+          .eq('monthly_target_id', monthlyTargetId)
+          .eq('user_id', userId);
+
+        const monthlyTotal = weeklyTargets?.length || 0;
+        const monthlyCompleted = weeklyTargets?.filter(w => w.status === 'completed').length || 0;
+        const monthlyStatus = monthlyCompleted === monthlyTotal && monthlyTotal > 0 ? 'completed' :
+          monthlyCompleted > 0 ? 'in_progress' : 'pending';
+
+        await supabase
+          .from('monthly_targets')
+          .update({
+            status: monthlyStatus,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', monthlyTargetId)
+          .eq('user_id', userId);
+      }
+
+      // 3. Update Power Goal progress (from all daily actions)
+      if (powerGoalId) {
+        const { data: monthlyTargets } = await supabase
+          .from('monthly_targets')
+          .select(`
+            id,
+            weekly_targets(
+              id,
+              daily_actions(id, status)
+            )
+          `)
+          .eq('power_goal_id', powerGoalId)
+          .eq('user_id', userId);
+
+        // Count total and completed daily actions
+        let totalDailyActions = 0;
+        let completedDailyActions = 0;
+
+        for (const monthly of monthlyTargets || []) {
+          for (const weekly of monthly.weekly_targets || []) {
+            for (const daily of weekly.daily_actions || []) {
+              totalDailyActions++;
+              if (daily.status === 'completed') completedDailyActions++;
+            }
+          }
+        }
+
+        // Calculate and update progress percentage
+        const progressPercentage = totalDailyActions > 0
+          ? Math.round((completedDailyActions / totalDailyActions) * 100)
+          : 0;
+        const goalStatus = progressPercentage === 100 ? 'completed' :
+          progressPercentage > 0 ? 'active' : 'pending';
+
+        await supabase
+          .from('power_goals')
+          .update({
+            progress_percentage: progressPercentage,
+            status: goalStatus,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', powerGoalId)
+          .eq('user_id', userId);
+
+        // 4. Update Quarterly Target if linked
+        const { data: powerGoal } = await supabase
+          .from('power_goals')
+          .select('quarterly_target_id')
+          .eq('id', powerGoalId)
+          .single();
+
+        if (powerGoal?.quarterly_target_id) {
+          // Get all power goals for this quarterly target
+          const { data: quarterlyGoals } = await supabase
+            .from('power_goals')
+            .select('id, progress_percentage')
+            .eq('quarterly_target_id', powerGoal.quarterly_target_id)
+            .eq('user_id', userId);
+
+          const avgProgress = quarterlyGoals && quarterlyGoals.length > 0
+            ? Math.round(quarterlyGoals.reduce((sum, g) => sum + (g.progress_percentage || 0), 0) / quarterlyGoals.length)
+            : 0;
+
+          const quarterlyStatus = avgProgress === 100 ? 'completed' :
+            avgProgress > 0 ? 'in_progress' : 'pending';
+
+          await supabase
+            .from('quarterly_targets')
+            .update({
+              progress_percentage: avgProgress,
+              status: quarterlyStatus,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', powerGoal.quarterly_target_id)
+            .eq('user_id', userId);
+        }
+      }
     }
 
     return NextResponse.json({ action });

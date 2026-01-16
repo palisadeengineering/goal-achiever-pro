@@ -40,7 +40,8 @@ interface NavItem {
 
 const mainNavItems: NavItem[] = [
   { title: 'Dashboard', href: ROUTES.dashboard, icon: Home },
-  { title: 'Today', href: ROUTES.today, icon: CalendarCheck, badge: 'New' },
+  { title: 'Today', href: ROUTES.today, icon: CalendarCheck },
+  { title: 'Progress', href: ROUTES.progress, icon: TrendingUp, badge: 'New' },
 ];
 
 const visionPlanningItems: NavItem[] = [

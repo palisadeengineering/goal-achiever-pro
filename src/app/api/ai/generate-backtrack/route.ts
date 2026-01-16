@@ -128,9 +128,52 @@ export async function POST(request: NextRequest) {
     const numQuarters = Math.min(totalQuarters, 4);
     const hoursPerQuarter = Math.round(totalHours / numQuarters);
     const hoursPerPowerGoal = Math.round(totalHours / Math.min(numQuarters * 3, 12));
-    const dailyMinutes = Math.round(availableHoursPerWeek / 5 * 60);
     // Reduce daily actions to avoid massive JSON and parsing errors
-    const targetDailyActions = Math.min(Math.ceil(totalWeeks * 2), 25);
+    const targetDailyActions = Math.min(Math.ceil(totalWeeks * 2), 15);
+    // Reduce weekly targets to keep response smaller
+    const targetWeeklyTargets = Math.min(totalWeeks, 4);
+    // Reduce monthly targets
+    const targetMonthlyTargets = Math.min(totalMonths, 4);
+
+    // Debug info object to track what's happening
+    const debugInfo: {
+      requestParams: Record<string, unknown>;
+      calculatedLimits: Record<string, number>;
+      aiResponse?: {
+        rawLength: number;
+        firstChars: string;
+        lastChars: string;
+        tokensUsed: { input: number; output: number };
+        stopReason: string | null;
+      };
+      parseAttempt?: {
+        method: string;
+        jsonLength: number;
+        repairAttempted: boolean;
+        bracketCounts: { openBraces: number; closeBraces: number; openBrackets: number; closeBrackets: number };
+      };
+      resultCounts?: Record<string, number>;
+      errors?: string[];
+    } = {
+      requestParams: {
+        visionId,
+        visionLength: vision?.length || 0,
+        targetDate,
+        startDate,
+        availableHoursPerWeek,
+        saveToDatabase,
+      },
+      calculatedLimits: {
+        totalWeeks,
+        totalHours,
+        totalMonths,
+        numQuarters,
+        targetDailyActions,
+        targetWeeklyTargets,
+        targetMonthlyTargets,
+      },
+      errors: [],
+    };
 
     const anthropic = new Anthropic({
       apiKey: process.env.ANTHROPIC_API_KEY,
@@ -171,11 +214,11 @@ Vision → Quarterly Targets → Power Goals → Monthly Targets → Weekly Targ
    - Category: business, career, health, wealth, relationships, or personal
    - Estimated hours: ~${hoursPerPowerGoal} hours each
 
-3. **Monthly Targets** (at least ${Math.min(totalMonths, 6)} targets):
+3. **Monthly Targets** (exactly ${targetMonthlyTargets} targets):
    - Link each to a power goal via powerGoalIndex (0-based)
    - Clear monthly outcomes
 
-4. **Weekly Targets** (at least ${Math.min(totalWeeks, 8)} targets):
+4. **Weekly Targets** (exactly ${targetWeeklyTargets} targets):
    - Link each to a monthly target via monthlyTargetIndex (0-based)
    - Specific weekly focus
 
@@ -260,7 +303,7 @@ CRITICAL RULES:
 
     const message = await anthropic.messages.create({
       model: 'claude-opus-4-20250514',
-      max_tokens: 8000,
+      max_tokens: 4000,
       messages: [
         {
           role: 'user',
@@ -271,6 +314,18 @@ CRITICAL RULES:
 
     const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
     const responseTimeMs = Date.now() - startTime;
+
+    // Populate debug info with AI response details
+    debugInfo.aiResponse = {
+      rawLength: responseText.length,
+      firstChars: responseText.substring(0, 200),
+      lastChars: responseText.substring(Math.max(0, responseText.length - 200)),
+      tokensUsed: {
+        input: message.usage?.input_tokens || 0,
+        output: message.usage?.output_tokens || 0,
+      },
+      stopReason: message.stop_reason || null,
+    };
 
     // Log AI usage
     logAIUsage({
@@ -293,6 +348,8 @@ CRITICAL RULES:
 
     // Parse the JSON response
     let plan: BacktrackPlanResponse;
+    let extractionMethod = 'direct';
+
     try {
       let jsonText = responseText;
 
@@ -303,6 +360,7 @@ CRITICAL RULES:
       const codeBlockMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
       if (codeBlockMatch) {
         jsonText = codeBlockMatch[1];
+        extractionMethod = 'code_block';
         console.log('Extracted JSON from code block');
       } else {
         // Try to find JSON object by looking for first { and last }
@@ -310,6 +368,7 @@ CRITICAL RULES:
         const lastBrace = responseText.lastIndexOf('}');
         if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
           jsonText = responseText.substring(firstBrace, lastBrace + 1);
+          extractionMethod = 'brace_matching';
           console.log('Extracted JSON by brace matching');
         }
       }
@@ -329,9 +388,19 @@ CRITICAL RULES:
       const openBrackets = (jsonText.match(/\[/g) || []).length;
       const closeBrackets = (jsonText.match(/\]/g) || []).length;
 
+      // Track bracket counts in debug info
+      debugInfo.parseAttempt = {
+        method: extractionMethod,
+        jsonLength: jsonText.length,
+        repairAttempted: false,
+        bracketCounts: { openBraces, closeBraces, openBrackets, closeBrackets },
+      };
+
       // If JSON appears truncated, try to close it
       if (openBrackets > closeBrackets || openBraces > closeBraces) {
         console.log('Attempting to repair truncated JSON...');
+        debugInfo.parseAttempt.repairAttempted = true;
+
         // Remove any trailing incomplete object/array
         jsonText = jsonText.replace(/,\s*$/, '');
         jsonText = jsonText.replace(/,\s*\{[^}]*$/, '');
@@ -350,23 +419,31 @@ CRITICAL RULES:
       console.log('JSON text to parse (last 500 chars):', jsonText.substring(Math.max(0, jsonText.length - 500)));
 
       plan = JSON.parse(jsonText);
-      console.log('Successfully parsed JSON with', {
+
+      // Track result counts
+      debugInfo.resultCounts = {
         quarterlyTargets: plan.quarterlyTargets?.length || 0,
         powerGoals: plan.powerGoals?.length || 0,
         monthlyTargets: plan.monthlyTargets?.length || 0,
         weeklyTargets: plan.weeklyTargets?.length || 0,
         dailyActions: plan.dailyActions?.length || 0,
-      });
+      };
+
+      console.log('Successfully parsed JSON with', debugInfo.resultCounts);
     } catch (parseError) {
       console.error('Failed to parse AI response. Full response:', responseText);
       console.error('Parse error:', parseError);
 
-      // Return more detailed error for debugging
+      // Add error to debug info
+      debugInfo.errors?.push(parseError instanceof Error ? parseError.message : 'Unknown parse error');
+
+      // Return more detailed error for debugging with full debug info
       return NextResponse.json(
         {
           error: 'Failed to parse AI response',
           details: parseError instanceof Error ? parseError.message : 'Unknown parse error',
           responsePreview: responseText.substring(0, 500),
+          debug: debugInfo,
         },
         { status: 500 }
       );
@@ -544,6 +621,7 @@ CRITICAL RULES:
         saved: true,
         totalWeeks,
         totalHours,
+        debug: debugInfo,
       });
     }
 
@@ -552,6 +630,7 @@ CRITICAL RULES:
       saved: false,
       totalWeeks,
       totalHours,
+      debug: debugInfo,
     });
   } catch (error) {
     console.error('AI Backtrack Generation Error:', error);
