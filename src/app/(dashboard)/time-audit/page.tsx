@@ -45,6 +45,7 @@ import { BulkDeleteDialog, CleanupSuggestions } from '@/components/features/time
 import { ROUTES } from '@/constants/routes';
 import { expandRecurringEvents } from '@/lib/utils/recurrence';
 import type { DripQuadrant, EnergyRating } from '@/types/database';
+import { ShareButton } from '@/components/features/sharing';
 
 type SubscriptionTier = 'free' | 'pro' | 'elite';
 
@@ -1341,6 +1342,7 @@ export default function TimeAuditPage() {
         description="Track how you spend your time and energy across DRIP quadrants"
         actions={
           <div className="flex items-center gap-2 flex-wrap">
+            <ShareButton tabName="time_audit" />
             {/* Desktop actions - hidden on mobile where we use floating buttons */}
             {isGoogleConnected && (
               <>

@@ -4,6 +4,7 @@ import { PageHeader } from '@/components/layout/page-header';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { LayoutGrid, Columns3, Plus } from 'lucide-react';
+import { ShareButton } from '@/components/features/sharing';
 
 interface VisionPageHeaderProps {
   viewMode: 'grid' | 'kanban';
@@ -47,6 +48,8 @@ export function VisionPageHeader({
             <Columns3 className="h-4 w-4" />
           </ToggleGroupItem>
         </ToggleGroup>
+
+        <ShareButton tabName="vision" />
 
         <Button onClick={onCreateNew}>
           <Plus className="h-4 w-4 mr-2" />

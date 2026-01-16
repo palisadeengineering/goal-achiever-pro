@@ -1,11 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import {
   Target,
   ListTodo,
@@ -27,8 +33,12 @@ import {
   Cpu,
   UsersRound,
   TrendingUp,
+  Share2,
+  ChevronDown,
 } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
+import { TAB_TO_ROUTE, TAB_DISPLAY_INFO } from '@/types/sharing';
+import type { SharedContent, TabName } from '@/types/sharing';
 
 interface NavItem {
   title: string;
@@ -95,6 +105,45 @@ function SidebarContent({
 }) {
   const pathname = usePathname();
   const tierHierarchy = { free: 0, pro: 1, elite: 2 };
+  const [sharedContent, setSharedContent] = useState<SharedContent[]>([]);
+  const [expandedOwners, setExpandedOwners] = useState<Set<string>>(new Set());
+
+  // Fetch shared content
+  useEffect(() => {
+    const fetchSharedContent = async () => {
+      try {
+        const response = await fetch('/api/sharing/shared-with-me');
+        if (response.ok) {
+          const data = await response.json();
+          setSharedContent(data.sharedContent || []);
+        }
+      } catch (error) {
+        console.error('Error fetching shared content:', error);
+      }
+    };
+
+    fetchSharedContent();
+  }, []);
+
+  const toggleOwner = (ownerId: string) => {
+    const newExpanded = new Set(expandedOwners);
+    if (newExpanded.has(ownerId)) {
+      newExpanded.delete(ownerId);
+    } else {
+      newExpanded.add(ownerId);
+    }
+    setExpandedOwners(newExpanded);
+  };
+
+  const getInitials = (name: string | null) => {
+    if (!name) return 'U';
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   const hasAccess = (tier?: 'pro' | 'elite') => {
     if (!tier) return true;
@@ -202,6 +251,77 @@ function SidebarContent({
             <div className="space-y-1">
               {adminNavItems.map((item) => (
                 <NavLink key={item.href} item={item} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Shared with me Section */}
+        {sharedContent.length > 0 && (
+          <div className="pt-4 border-t mt-4">
+            <h3 className="mb-2 px-3 text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1">
+              <Share2 className="h-3 w-3" />
+              Shared with me
+            </h3>
+            <div className="space-y-1">
+              {sharedContent.map((shared) => (
+                <Collapsible
+                  key={shared.owner.id}
+                  open={expandedOwners.has(shared.owner.id)}
+                  onOpenChange={() => toggleOwner(shared.owner.id)}
+                >
+                  <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground">
+                    <Avatar className="h-5 w-5">
+                      <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                        {getInitials(shared.owner.fullName)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="flex-1 text-left truncate">
+                      {shared.owner.fullName || shared.owner.email}
+                    </span>
+                    <ChevronDown
+                      className={cn(
+                        'h-4 w-4 transition-transform',
+                        expandedOwners.has(shared.owner.id) && 'rotate-180'
+                      )}
+                    />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pl-4 space-y-1">
+                    {shared.tabs.map((tab) => {
+                      const tabInfo = TAB_DISPLAY_INFO[tab.tabName];
+                      const route = TAB_TO_ROUTE[tab.tabName];
+                      // Add owner context to the route
+                      const sharedRoute = `${route}?shared=${shared.owner.id}`;
+                      const isActive = pathname.startsWith(route);
+
+                      return (
+                        <Link
+                          key={tab.id}
+                          href={sharedRoute}
+                          onClick={onNavigate}
+                          className={cn(
+                            'flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs transition-colors',
+                            isActive
+                              ? 'bg-primary/10 text-primary'
+                              : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                          )}
+                        >
+                          <span className="flex-1">{tabInfo?.displayName || tab.tabName}</span>
+                          {tab.permissionLevel === 'edit' ? (
+                            <span className="text-[10px] text-muted-foreground">edit</span>
+                          ) : (
+                            <Eye className="h-3 w-3 text-muted-foreground" />
+                          )}
+                        </Link>
+                      );
+                    })}
+                    {shared.itemCount > 0 && (
+                      <div className="px-3 py-1.5 text-xs text-muted-foreground">
+                        + {shared.itemCount} shared items
+                      </div>
+                    )}
+                  </CollapsibleContent>
+                </Collapsible>
               ))}
             </div>
           </div>

@@ -814,6 +814,10 @@ export const profilesRelations = relations(profiles, ({ many, one }) => ({
   keyResults: many(keyResults),
   taskComments: many(taskComments),
   betaFeedback: many(betaFeedback),
+  // Sharing
+  ownedTabPermissions: many(tabPermissions),
+  ownedItemPermissions: many(itemPermissions),
+  shareInvitations: many(shareInvitations),
 }));
 
 export const visionsRelations = relations(visions, ({ one, many }) => ({
@@ -1197,6 +1201,66 @@ export const teamMembers = pgTable('team_members', {
 }));
 
 // =============================================
+// TAB PERMISSIONS (Tab-level sharing)
+// =============================================
+export const tabPermissions = pgTable('tab_permissions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  ownerId: uuid('owner_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  teamMemberId: uuid('team_member_id').notNull().references(() => teamMembers.id, { onDelete: 'cascade' }),
+  tabName: text('tab_name').notNull(), // 'vision', 'goals', 'time_audit', 'mins', etc.
+  permissionLevel: text('permission_level').notNull().default('view'), // 'view' | 'edit'
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  ownerMemberTabIdx: uniqueIndex('tab_permissions_owner_member_tab_idx').on(table.ownerId, table.teamMemberId, table.tabName),
+  memberIdx: index('tab_permissions_member_idx').on(table.teamMemberId),
+}));
+
+// =============================================
+// ITEM PERMISSIONS (Item-level sharing)
+// =============================================
+export const itemPermissions = pgTable('item_permissions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  ownerId: uuid('owner_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  teamMemberId: uuid('team_member_id').notNull().references(() => teamMembers.id, { onDelete: 'cascade' }),
+  entityType: text('entity_type').notNull(), // 'vision', 'power_goal', 'monthly_target', 'time_block', etc.
+  entityId: uuid('entity_id').notNull(),
+  permissionLevel: text('permission_level').notNull().default('view'), // 'view' | 'edit'
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  memberEntityIdx: uniqueIndex('item_permissions_member_entity_idx').on(table.teamMemberId, table.entityType, table.entityId),
+  ownerIdx: index('item_permissions_owner_idx').on(table.ownerId),
+  entityIdx: index('item_permissions_entity_idx').on(table.entityType, table.entityId),
+}));
+
+// =============================================
+// SHARE INVITATIONS (Pending invites)
+// =============================================
+export const shareInvitations = pgTable('share_invitations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  ownerId: uuid('owner_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  email: text('email').notNull(),
+  inviteToken: text('invite_token').notNull().unique(),
+  expiresAt: timestamp('expires_at').notNull(),
+  status: text('status').default('pending'), // 'pending' | 'accepted' | 'expired' | 'revoked'
+  shareType: text('share_type').notNull(), // 'tab' | 'item' | 'both'
+  // JSON data for what's being shared
+  tabPermissionsData: jsonb('tab_permissions_data').default([]), // [{tabName, permissionLevel}]
+  itemPermissionsData: jsonb('item_permissions_data').default([]), // [{entityType, entityId, permissionLevel}]
+  // Tracking
+  createdAt: timestamp('created_at').defaultNow(),
+  acceptedAt: timestamp('accepted_at'),
+  acceptedBy: uuid('accepted_by').references(() => profiles.id, { onDelete: 'set null' }),
+}, (table) => ({
+  tokenIdx: uniqueIndex('share_invitations_token_idx').on(table.inviteToken),
+  ownerEmailIdx: index('share_invitations_owner_email_idx').on(table.ownerId, table.email),
+  statusIdx: index('share_invitations_status_idx').on(table.status),
+}));
+
+// =============================================
 // KEY RESULTS (OKRs)
 // =============================================
 export const keyResults = pgTable('key_results', {
@@ -1290,6 +1354,9 @@ export const teamMembersRelations = relations(teamMembers, ({ one, many }) => ({
   owner: one(profiles, { fields: [teamMembers.ownerId], references: [profiles.id], relationName: 'teamOwner' }),
   user: one(profiles, { fields: [teamMembers.userId], references: [profiles.id], relationName: 'teamUser' }),
   keyResults: many(keyResults),
+  // Sharing permissions granted to this team member
+  tabPermissions: many(tabPermissions),
+  itemPermissions: many(itemPermissions),
 }));
 
 export const keyResultsRelations = relations(keyResults, ({ one, many }) => ({
@@ -1344,4 +1411,22 @@ export const betaFeedback = pgTable('beta_feedback', {
 
 export const betaFeedbackRelations = relations(betaFeedback, ({ one }) => ({
   user: one(profiles, { fields: [betaFeedback.userId], references: [profiles.id] }),
+}));
+
+// =============================================
+// SHARING RELATIONS
+// =============================================
+export const tabPermissionsRelations = relations(tabPermissions, ({ one }) => ({
+  owner: one(profiles, { fields: [tabPermissions.ownerId], references: [profiles.id] }),
+  teamMember: one(teamMembers, { fields: [tabPermissions.teamMemberId], references: [teamMembers.id] }),
+}));
+
+export const itemPermissionsRelations = relations(itemPermissions, ({ one }) => ({
+  owner: one(profiles, { fields: [itemPermissions.ownerId], references: [profiles.id] }),
+  teamMember: one(teamMembers, { fields: [itemPermissions.teamMemberId], references: [teamMembers.id] }),
+}));
+
+export const shareInvitationsRelations = relations(shareInvitations, ({ one }) => ({
+  owner: one(profiles, { fields: [shareInvitations.ownerId], references: [profiles.id] }),
+  acceptedByUser: one(profiles, { fields: [shareInvitations.acceptedBy], references: [profiles.id] }),
 }));

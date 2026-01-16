@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/dialog';
 import { GoalsGrid } from '@/components/features/goals/goals-grid';
 import { GoalForm, GoalFormData } from '@/components/features/goals/goal-form';
+import { ShareButton } from '@/components/features/sharing';
 
 type GoalStatus = 'active' | 'completed' | 'paused' | 'archived';
 
@@ -247,21 +248,24 @@ export default function GoalsPage() {
         title="Milestones"
         description="Your monthly and quarterly project milestones - focus on the one with the biggest impact"
         actions={
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Milestone
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <GoalForm
-                visions={visions.map(v => ({ id: v.id, title: v.title }))}
-                onSubmit={handleCreateGoal}
-                onCancel={() => setIsDialogOpen(false)}
-              />
-            </DialogContent>
-          </Dialog>
+          <div className="flex items-center gap-2">
+            <ShareButton tabName="goals" />
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Milestone
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <GoalForm
+                  visions={visions.map(v => ({ id: v.id, title: v.title }))}
+                  onSubmit={handleCreateGoal}
+                  onCancel={() => setIsDialogOpen(false)}
+                />
+              </DialogContent>
+            </Dialog>
+          </div>
         }
       />
 

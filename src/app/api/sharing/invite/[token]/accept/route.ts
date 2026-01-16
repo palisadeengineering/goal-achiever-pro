@@ -1,0 +1,174 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import type { TabPermissionData, ItemPermissionData } from '@/types/sharing';
+
+// POST /api/sharing/invite/[token]/accept - Accept an invitation
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ token: string }> }
+) {
+  try {
+    const { token } = await params;
+    const supabase = await createClient();
+
+    // Get the current user
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    // Find the invitation
+    const { data: invitation, error: inviteError } = await supabase
+      .from('share_invitations')
+      .select('*')
+      .eq('invite_token', token)
+      .eq('status', 'pending')
+      .single();
+
+    if (inviteError || !invitation) {
+      return NextResponse.json(
+        { error: 'Invitation not found or already processed' },
+        { status: 404 }
+      );
+    }
+
+    // Check if expired
+    const now = new Date();
+    const expiresAt = new Date(invitation.expires_at);
+    if (now > expiresAt) {
+      await supabase
+        .from('share_invitations')
+        .update({ status: 'expired' })
+        .eq('id', invitation.id);
+
+      return NextResponse.json(
+        { error: 'Invitation has expired' },
+        { status: 410 }
+      );
+    }
+
+    // Check if this user is accepting with the correct email (optional validation)
+    // For now, we allow any logged-in user to accept
+
+    // Find or create team member record
+    let teamMemberId: string;
+
+    const { data: existingMember } = await supabase
+      .from('team_members')
+      .select('id')
+      .eq('owner_id', invitation.owner_id)
+      .eq('user_id', user.id)
+      .single();
+
+    if (existingMember) {
+      teamMemberId = existingMember.id;
+
+      // Update the existing member to active
+      await supabase
+        .from('team_members')
+        .update({
+          is_active: true,
+          invite_status: 'accepted',
+          accepted_at: new Date().toISOString(),
+        })
+        .eq('id', teamMemberId);
+    } else {
+      // Get user profile for the name
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name, email')
+        .eq('id', user.id)
+        .single();
+
+      // Create new team member
+      const { data: newMember, error: memberError } = await supabase
+        .from('team_members')
+        .insert({
+          owner_id: invitation.owner_id,
+          user_id: user.id,
+          email: user.email,
+          name: profile?.full_name || user.email?.split('@')[0] || 'Team Member',
+          role: 'member',
+          access_level: 'limited',
+          invite_status: 'accepted',
+          accepted_at: new Date().toISOString(),
+          is_active: true,
+        })
+        .select()
+        .single();
+
+      if (memberError || !newMember) {
+        console.error('Error creating team member:', memberError);
+        return NextResponse.json(
+          { error: 'Failed to create team member' },
+          { status: 500 }
+        );
+      }
+
+      teamMemberId = newMember.id;
+    }
+
+    // Create tab permissions
+    const tabPermissions = invitation.tab_permissions_data as TabPermissionData[];
+    if (tabPermissions && tabPermissions.length > 0) {
+      const tabPermsToInsert = tabPermissions.map((tp) => ({
+        owner_id: invitation.owner_id,
+        team_member_id: teamMemberId,
+        tab_name: tp.tabName,
+        permission_level: tp.permissionLevel,
+        is_active: true,
+      }));
+
+      await supabase
+        .from('tab_permissions')
+        .upsert(tabPermsToInsert, {
+          onConflict: 'owner_id,team_member_id,tab_name',
+        });
+    }
+
+    // Create item permissions
+    const itemPermissions = invitation.item_permissions_data as ItemPermissionData[];
+    if (itemPermissions && itemPermissions.length > 0) {
+      const itemPermsToInsert = itemPermissions.map((ip) => ({
+        owner_id: invitation.owner_id,
+        team_member_id: teamMemberId,
+        entity_type: ip.entityType,
+        entity_id: ip.entityId,
+        permission_level: ip.permissionLevel,
+        is_active: true,
+      }));
+
+      await supabase
+        .from('item_permissions')
+        .upsert(itemPermsToInsert, {
+          onConflict: 'team_member_id,entity_type,entity_id',
+        });
+    }
+
+    // Update invitation status
+    await supabase
+      .from('share_invitations')
+      .update({
+        status: 'accepted',
+        accepted_at: new Date().toISOString(),
+        accepted_by: user.id,
+      })
+      .eq('id', invitation.id);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Invitation accepted successfully',
+      redirectTo: '/today', // Redirect to the main dashboard
+    });
+  } catch (error) {
+    console.error('Error in POST /api/sharing/invite/[token]/accept:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}

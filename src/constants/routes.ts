@@ -11,6 +11,7 @@ export const ROUTES = {
   signup: '/signup',
   forgotPassword: '/forgot-password',
   callback: '/callback',
+  acceptInvite: (token: string) => `/accept-invite/${token}`,
 
   // Onboarding
   onboarding: {
