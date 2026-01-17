@@ -1152,6 +1152,65 @@ export default function BacktrackDetailPage({ params }: { params: Promise<{ id: 
 
         {/* Daily Tab */}
         <TabsContent value="daily" className="space-y-6">
+          {/* Calendar Sync Controls */}
+          {metrics.todaysActions.length > 0 && (
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                {(() => {
+                  const unsyncedCount = metrics.todaysActions.filter(
+                    (a) => a.status !== 'completed' && a.calendar_sync_status !== 'synced'
+                  ).length;
+                  const syncedCount = metrics.todaysActions.filter(
+                    (a) => a.calendar_sync_status === 'synced'
+                  ).length;
+                  if (syncedCount > 0 && unsyncedCount === 0) {
+                    return `All ${syncedCount} action(s) synced to calendar`;
+                  }
+                  if (syncedCount > 0) {
+                    return `${syncedCount} synced, ${unsyncedCount} remaining`;
+                  }
+                  return `${unsyncedCount} action(s) to sync`;
+                })()}
+              </div>
+              <div className="flex items-center gap-2">
+                {isConnected ? (
+                  <>
+                    {(() => {
+                      const unsyncedIds = metrics.todaysActions
+                        .filter((a) => a.status !== 'completed' && a.calendar_sync_status !== 'synced')
+                        .map((a) => a.id);
+                      return unsyncedIds.length > 0 ? (
+                        <Button
+                          onClick={() => handleSyncToCalendar(unsyncedIds)}
+                          disabled={isSyncing}
+                          size="sm"
+                          className="gap-2"
+                        >
+                          {isSyncing ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <CalendarPlus className="h-4 w-4" />
+                          )}
+                          Sync {unsyncedIds.length} to Calendar
+                        </Button>
+                      ) : (
+                        <Button variant="outline" size="sm" disabled className="gap-2">
+                          <CalendarCheck className="h-4 w-4" />
+                          All Synced
+                        </Button>
+                      );
+                    })()}
+                  </>
+                ) : (
+                  <Button onClick={connect} variant="outline" size="sm" className="gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Connect Calendar
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -1199,9 +1258,47 @@ export default function BacktrackDetailPage({ params }: { params: Promise<{ id: 
                           )}
                         </div>
                       </div>
-                      {action.estimated_minutes && (
-                        <Badge variant="outline">{action.estimated_minutes} min</Badge>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {/* Calendar Sync Status */}
+                        {action.calendar_sync_status === 'synced' && action.calendar_event_id ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-xs text-green-600 hover:text-red-600"
+                            onClick={() => handleRemoveFromCalendar(action.id, action.calendar_event_id!)}
+                            disabled={syncingIds.has(action.id)}
+                          >
+                            {syncingIds.has(action.id) ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <>
+                                <CalendarCheck className="h-3 w-3 mr-1" />
+                                On Cal
+                              </>
+                            )}
+                          </Button>
+                        ) : action.status !== 'completed' && isConnected ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-xs text-muted-foreground hover:text-primary"
+                            onClick={() => handleSyncSingleAction(action.id)}
+                            disabled={syncingIds.has(action.id)}
+                          >
+                            {syncingIds.has(action.id) ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <>
+                                <CalendarPlus className="h-3 w-3 mr-1" />
+                                +Cal
+                              </>
+                            )}
+                          </Button>
+                        ) : null}
+                        {action.estimated_minutes && (
+                          <Badge variant="outline">{action.estimated_minutes} min</Badge>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
