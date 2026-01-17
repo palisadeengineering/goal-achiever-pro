@@ -8,7 +8,8 @@ import {
 } from './_templates/index.ts';
 
 const resend = new Resend(Deno.env.get('RESEND_API_KEY') as string);
-const hookSecret = Deno.env.get('SEND_EMAIL_HOOK_SECRET') as string;
+// Remove the v1,whsec_ prefix from the secret for standardwebhooks
+const hookSecret = (Deno.env.get('SEND_EMAIL_HOOK_SECRET') as string).replace('v1,whsec_', '');
 
 interface AuthEmailPayload {
   user: {
