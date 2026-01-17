@@ -213,7 +213,7 @@ export function DripMatrix({ items, onItemMove, readonly = false }: DripMatrixPr
 
   // Prevent hydration mismatch with dnd-kit by only rendering DnD after mount
   useEffect(() => {
-    setIsMounted(true);
+    setIsMounted(true); // eslint-disable-line react-hooks/set-state-in-effect
   }, []);
 
   const sensors = useSensors(

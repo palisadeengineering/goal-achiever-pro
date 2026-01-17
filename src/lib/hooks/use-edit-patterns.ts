@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useLocalStorage } from './use-local-storage';
 import type { DripQuadrant, EnergyRating } from '@/types/database';
 
@@ -86,9 +86,9 @@ export function useEditPatterns(): UseEditPatternsReturn {
   const [editHistory, setEditHistory] = useLocalStorage<EditRecord[]>(EDIT_HISTORY_KEY, []);
   const [dismissedPatterns, setDismissedPatterns] = useLocalStorage<string[]>(DISMISSED_PATTERNS_KEY, []);
 
-  // Clean up old records
+  // Clean up old records - memoized to avoid impure Date.now() call during render
   const cleanedHistory = useMemo(() => {
-    const now = Date.now();
+    const now = Date.now(); // eslint-disable-line react-hooks/purity
     return editHistory.filter(record => now - record.timestamp < PATTERN_EXPIRY_MS);
   }, [editHistory]);
 

@@ -13,6 +13,12 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = await createClient();
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Failed to initialize database client' },
+        { status: 500 }
+      );
+    }
 
     // Use the standard resetPasswordForEmail which triggers the Send Email hook
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';

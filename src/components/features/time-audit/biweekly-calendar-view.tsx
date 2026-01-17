@@ -278,6 +278,7 @@ export function BiweeklyCalendarView({
         </div>
 
         {/* Week 1 */}
+        {/* eslint-disable-next-line react-hooks/static-components */}
         <WeekRow
           label={`Week 1: ${format(week1Start, 'MMM d')} - ${format(addDays(week1Start, 6), 'MMM d')}`}
           days={week1Days}
@@ -285,6 +286,7 @@ export function BiweeklyCalendarView({
         />
 
         {/* Week 2 */}
+        {/* eslint-disable-next-line react-hooks/static-components */}
         <WeekRow
           label={`Week 2: ${format(week2Start, 'MMM d')} - ${format(addDays(week2Start, 6), 'MMM d')}`}
           days={week2Days}

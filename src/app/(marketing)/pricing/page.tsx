@@ -55,6 +55,8 @@ export default function PricingPage() {
 
       const data = await response.json();
       if (data.url) {
+        // External redirect to Stripe checkout - router.push doesn't work for external URLs
+        // eslint-disable-next-line react-hooks/immutability
         window.location.href = data.url;
       } else {
         console.error('Checkout error:', data.error);

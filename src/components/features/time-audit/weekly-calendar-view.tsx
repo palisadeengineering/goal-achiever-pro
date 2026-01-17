@@ -590,6 +590,12 @@ export function WeeklyCalendarView({
     return () => clearInterval(interval);
   }, []);
 
+  // Week start state (must be declared before keyboard shortcuts useEffect)
+  const weekStartsOn = settings.weekStartsOn === 'monday' ? 1 : 0;
+  const [currentWeekStart, setCurrentWeekStart] = useState(() =>
+    startOfWeek(new Date(), { weekStartsOn })
+  );
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -630,12 +636,7 @@ export function WeeklyCalendarView({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [settings.weekStartsOn, onAddBlock]);
-
-  const weekStartsOn = settings.weekStartsOn === 'monday' ? 1 : 0;
-  const [currentWeekStart, setCurrentWeekStart] = useState(() =>
-    startOfWeek(new Date(), { weekStartsOn })
-  );
+  }, [settings.weekStartsOn, onAddBlock, colorMode, handleColorModeChange, setCurrentWeekStart]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {

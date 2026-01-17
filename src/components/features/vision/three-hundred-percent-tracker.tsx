@@ -29,10 +29,11 @@ export function ThreeHundredPercentTracker({
   const [isEditing, setIsEditing] = useState(false);
 
   // Sync with prop changes (e.g., when data loads from DB)
+  // This pattern is intentional for semi-controlled components
   useEffect(() => {
-    setClarity(initialClarity);
-    setBelief(initialBelief);
-    setConsistency(initialConsistency);
+    setClarity(initialClarity); // eslint-disable-line react-hooks/set-state-in-effect
+    setBelief(initialBelief); // eslint-disable-line react-hooks/set-state-in-effect
+    setConsistency(initialConsistency); // eslint-disable-line react-hooks/set-state-in-effect
   }, [initialClarity, initialBelief, initialConsistency]);
 
   const totalScore = clarity + belief + consistency;

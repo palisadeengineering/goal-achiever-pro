@@ -456,7 +456,7 @@ export default function ProgressPage() {
               <Link href="/today">
                 <Button variant="outline" className="w-full justify-start gap-2">
                   <Calendar className="h-4 w-4" />
-                  Today's Actions
+                  Today&apos;s Actions
                 </Button>
               </Link>
               <Link href="/vision">

@@ -96,7 +96,7 @@ export function AffirmationsStep({ data, updateData }: AffirmationsStepProps) {
           className="text-lg"
         />
         <p className="text-xs text-muted-foreground">
-          Write in present tense as if you've already achieved it
+          Write in present tense as if you&apos;ve already achieved it
         </p>
       </div>
 
@@ -125,11 +125,11 @@ export function AffirmationsStep({ data, updateData }: AffirmationsStepProps) {
       <div className="bg-muted/50 rounded-lg p-4">
         <h4 className="font-medium mb-2">Affirmation Tips</h4>
         <ul className="space-y-1 text-sm text-muted-foreground">
-          <li>• Write in <strong>present tense</strong> ("I am" not "I will be")</li>
-          <li>• Be <strong>specific</strong> about what you're achieving</li>
+          <li>• Write in <strong>present tense</strong> (&ldquo;I am&rdquo; not &ldquo;I will be&rdquo;)</li>
+          <li>• Be <strong>specific</strong> about what you&apos;re achieving</li>
           <li>• Include <strong>emotions</strong> - how does success feel?</li>
           <li>• Read it <strong>aloud</strong> during your daily reviews</li>
-          <li>• <strong>Believe</strong> it as you say it - act as if it's already true</li>
+          <li>• <strong>Believe</strong> it as you say it - act as if it&apos;s already true</li>
         </ul>
       </div>
     </div>

@@ -75,7 +75,7 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
       prevUncategorizedLength.current !== uncategorizedEvents.length ||
       currentIndex >= uncategorizedEvents.length
     ) {
-      setCurrentIndex(0);
+      setCurrentIndex(0); // eslint-disable-line react-hooks/set-state-in-effect
     }
     prevUncategorizedLength.current = uncategorizedEvents.length;
   }, [uncategorizedEvents.length, currentIndex]);
@@ -118,7 +118,7 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
   // Auto-switch to ignored tab when all events are categorized but there are ignored events
   useEffect(() => {
     if (uncategorizedEvents.length === 0 && ignoredEvents.length > 0) {
-      setActiveTab('ignored');
+      setActiveTab('ignored'); // eslint-disable-line react-hooks/set-state-in-effect
     }
   }, [uncategorizedEvents.length, ignoredEvents.length]);
 

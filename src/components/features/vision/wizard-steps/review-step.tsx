@@ -159,7 +159,7 @@ export function ReviewStep({ data }: ReviewStepProps) {
           <CardContent className="text-sm">
             {data.affirmationText.trim() ? (
               <span className="text-muted-foreground italic">
-                "{data.affirmationText.substring(0, 50)}..."
+                &ldquo;{data.affirmationText.substring(0, 50)}...&rdquo;
               </span>
             ) : (
               <span className="text-muted-foreground">Not set</span>

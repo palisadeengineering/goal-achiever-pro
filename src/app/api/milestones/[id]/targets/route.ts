@@ -64,7 +64,7 @@ export async function GET(
     let completedDailyActions = 0;
     let totalWeeklyTargets = 0;
     let completedWeeklyTargets = 0;
-    let totalMonthlyTargets = monthlyTargets?.length || 0;
+    const totalMonthlyTargets = monthlyTargets?.length || 0;
     let completedMonthlyTargets = 0;
 
     for (const monthly of monthlyTargets || []) {

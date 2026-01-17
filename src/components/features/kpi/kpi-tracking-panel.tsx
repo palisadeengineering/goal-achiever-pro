@@ -126,7 +126,7 @@ export function KpiTrackingPanel({ visionId, onGenerateKpis }: KpiTrackingPanelP
 
   useEffect(() => {
     if (kpis.length > 0) {
-      fetchLogs();
+      fetchLogs(); // eslint-disable-line react-hooks/set-state-in-effect
     }
   }, [kpis, fetchLogs]);
 
@@ -181,7 +181,7 @@ export function KpiTrackingPanel({ visionId, onGenerateKpis }: KpiTrackingPanelP
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardContent className="pt-6">
-            <div className="text-sm text-muted-foreground">Today's Progress</div>
+            <div className="text-sm text-muted-foreground">Today&apos;s Progress</div>
             <div className="text-2xl font-bold">
               {completedDaily}/{totalDaily}
             </div>
@@ -242,7 +242,7 @@ export function KpiTrackingPanel({ visionId, onGenerateKpis }: KpiTrackingPanelP
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CalendarDays className="h-5 w-5" />
-                Today's KPIs
+                Today&apos;s KPIs
               </CardTitle>
               <CardDescription>
                 {format(new Date(), 'EEEE, MMMM d, yyyy')}
@@ -275,7 +275,7 @@ export function KpiTrackingPanel({ visionId, onGenerateKpis }: KpiTrackingPanelP
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CalendarRange className="h-5 w-5" />
-                This Week's KPIs
+                This Week&apos;s KPIs
               </CardTitle>
               <CardDescription>
                 {format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'MMM d')} -{' '}
@@ -323,7 +323,7 @@ export function KpiTrackingPanel({ visionId, onGenerateKpis }: KpiTrackingPanelP
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CalendarClock className="h-5 w-5" />
-                This Month's KPIs
+                This Month&apos;s KPIs
               </CardTitle>
               <CardDescription>
                 {format(new Date(), 'MMMM yyyy')}

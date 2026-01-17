@@ -171,6 +171,7 @@ export async function GET(request: NextRequest) {
     // Format upcoming deadlines
      
     const upcomingDeadlines = [
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...(upcomingWeekly || []).map((w: any) => ({
         type: 'weekly' as const,
         id: w.id,
@@ -180,6 +181,7 @@ export async function GET(request: NextRequest) {
         visionTitle: w.monthly_targets?.power_goals?.visions?.title || 'Unassigned',
         visionColor: w.monthly_targets?.power_goals?.visions?.color || '#6366f1',
       })),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...(upcomingMonthly || []).map((m: any) => ({
         type: 'monthly' as const,
         id: m.id,

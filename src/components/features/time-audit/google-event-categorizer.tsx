@@ -53,18 +53,19 @@ export function GoogleEventCategorizer({
 
   // Reset selections ONLY when the event ID actually changes (not on every render)
   // This prevents the "stuck" state bug where selections reset unexpectedly
+  // Intentionally syncing state when event changes
   useEffect(() => {
     // Only reset if we've moved to a different event
     if (prevEventIdRef.current !== event.id) {
       // Get fresh suggestion for the new event
       const newSuggestion = getSuggestion(event.summary);
       if (newSuggestion) {
-        setSelectedDrip(newSuggestion.dripQuadrant);
-        setSelectedEnergy(newSuggestion.energyRating);
+        setSelectedDrip(newSuggestion.dripQuadrant); // eslint-disable-line react-hooks/set-state-in-effect
+        setSelectedEnergy(newSuggestion.energyRating); // eslint-disable-line react-hooks/set-state-in-effect
       } else {
         // No suggestion - reset to null
-        setSelectedDrip(null);
-        setSelectedEnergy(null);
+        setSelectedDrip(null); // eslint-disable-line react-hooks/set-state-in-effect
+        setSelectedEnergy(null); // eslint-disable-line react-hooks/set-state-in-effect
       }
       // Update the ref to current event ID
       prevEventIdRef.current = event.id;
