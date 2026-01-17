@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { generateInviteToken } from '@/lib/permissions';
-import type { SendInviteRequest, TabPermissionData, ItemPermissionData } from '@/types/sharing';
+import { sendEmail, generateShareInvitationEmail } from '@/lib/email';
+import type { SendInviteRequest, TabPermissionData, ItemPermissionData, TabName } from '@/types/sharing';
 
 const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
 
@@ -77,18 +78,42 @@ export async function POST(request: NextRequest) {
       .eq('id', userId)
       .single();
 
-    // TODO: Send email notification to the invitee
-    // For now, we'll just return the invitation details
-    // In production, you'd use Supabase Edge Functions or a service like Resend
+    // Send email notification to the invitee
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const acceptUrl = `${appUrl}/accept-invite/${inviteToken}`;
+
+    const emailHtml = generateShareInvitationEmail({
+      ownerName: owner?.full_name || '',
+      ownerEmail: owner?.email || '',
+      inviteeName: '', // We don't know the invitee's name yet
+      tabs: (tabPermissions || []).map((tp: TabPermissionData) => ({
+        tabName: tp.tabName as TabName,
+        permissionLevel: tp.permissionLevel,
+      })),
+      acceptUrl,
+      expiresAt,
+    });
+
+    const emailResult = await sendEmail({
+      to: email,
+      subject: `${owner?.full_name || 'Someone'} has invited you to collaborate on Goal Achiever Pro`,
+      html: emailHtml,
+    });
+
+    if (!emailResult.success) {
+      console.warn('Failed to send invitation email:', emailResult.error);
+      // Don't fail the request if email fails - invitation is still valid
+    }
 
     return NextResponse.json({
       success: true,
+      emailSent: emailResult.success,
       invitation: {
         id: invitation.id,
         email: invitation.email,
         shareType: invitation.share_type,
         expiresAt: invitation.expires_at,
-        inviteUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/accept-invite/${inviteToken}`,
+        inviteUrl: acceptUrl,
       },
       owner: {
         name: owner?.full_name || 'A user',
