@@ -238,7 +238,21 @@ export default function SignupPage() {
 
           {error && (
             <div className="p-3 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-              <p>{error}</p>
+              {error.includes('already exists') ? (
+                <p>
+                  An account with this email already exists. Try{' '}
+                  <Link href="/login" className="font-medium underline hover:text-red-700 dark:hover:text-red-300">
+                    signing in
+                  </Link>
+                  {' '}instead, or use{' '}
+                  <Link href="/forgot-password" className="font-medium underline hover:text-red-700 dark:hover:text-red-300">
+                    Forgot password
+                  </Link>
+                  {' '}to reset your password.
+                </p>
+              ) : (
+                <p>{error}</p>
+              )}
               {emailSuggestion && (
                 <button
                   type="button"
