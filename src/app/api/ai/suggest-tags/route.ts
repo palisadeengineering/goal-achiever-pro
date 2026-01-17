@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { createClient } from '@/lib/supabase/server';
 import { logAIUsage } from '@/lib/utils/ai-usage';
-
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-
-async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  if (!supabase) return DEMO_USER_ID;
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || DEMO_USER_ID;
-}
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import {
+  applyMultipleRateLimits,
+  rateLimitExceededResponse,
+  rateLimitHeaders,
+  RateLimits,
+} from '@/lib/rate-limit';
 
 interface TagInfo {
   name: string;
@@ -19,11 +17,26 @@ interface TagInfo {
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
-  let userId = DEMO_USER_ID;
+  let userId: string | null = null;
+  let rateLimitResult: ReturnType<typeof applyMultipleRateLimits> | null = null;
 
   try {
-    const supabase = await createClient();
-    userId = await getUserId(supabase);
+    // Authenticate user
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    userId = auth.userId;
+
+    // Apply rate limiting (light operation - quick suggestion)
+    rateLimitResult = applyMultipleRateLimits(userId, [
+      RateLimits.ai.light,
+      RateLimits.ai.daily,
+    ]);
+
+    if (!rateLimitResult.success) {
+      return rateLimitExceededResponse(rateLimitResult);
+    }
 
     const { activityName, description, existingTags } = await request.json();
 
@@ -143,22 +156,27 @@ Rules:
       suggestedTagIds,
       confidence: result.confidence || 0.5,
       reasoning: result.reasoning || '',
+    }, {
+      headers: rateLimitResult ? rateLimitHeaders(rateLimitResult) : {},
     });
   } catch (error) {
     console.error('AI Tag Suggestion Error:', error);
     const responseTimeMs = Date.now() - startTime;
 
-    logAIUsage({
-      userId,
-      endpoint: '/api/ai/suggest-tags',
-      model: 'claude-opus-4-20250514',
-      promptTokens: 0,
-      completionTokens: 0,
-      requestType: 'suggest-tags',
-      success: false,
-      errorMessage: error instanceof Error ? error.message : 'Unknown error',
-      responseTimeMs,
-    });
+    // Log the failure (only if we have a userId)
+    if (userId) {
+      logAIUsage({
+        userId,
+        endpoint: '/api/ai/suggest-tags',
+        model: 'claude-opus-4-20250514',
+        promptTokens: 0,
+        completionTokens: 0,
+        requestType: 'suggest-tags',
+        success: false,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        responseTimeMs,
+      });
+    }
 
     return NextResponse.json(
       { error: 'Failed to generate tag suggestions' },

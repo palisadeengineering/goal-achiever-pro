@@ -1,19 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import { createVisionSchema, updateVisionSchema, deleteVisionSchema, parseWithErrors } from '@/lib/validations';
 
-// Demo user ID for development - replace with real auth later
+// Demo user ID - only used in development when DEMO_MODE_ENABLED=true
 const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
 
-async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  if (!supabase) return DEMO_USER_ID;
-
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || DEMO_USER_ID;
-}
-
-// Ensure the demo user profile exists (for development/demo purposes)
+// Ensure the demo user profile exists (for development/demo purposes only)
 async function ensureDemoUserProfile(adminClient: ReturnType<typeof createAdminClient>) {
+  // Only run in development with demo mode enabled
+  if (process.env.NODE_ENV === 'production' || process.env.DEMO_MODE_ENABLED !== 'true') {
+    return;
+  }
+
   if (!adminClient) return;
 
   const { data: existingProfile } = await adminClient
@@ -37,7 +36,13 @@ async function ensureDemoUserProfile(adminClient: ReturnType<typeof createAdminC
 
 export async function GET() {
   try {
-    const supabase = await createClient();
+    // Authenticate user
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
+
     const adminClient = createAdminClient();
 
     if (!adminClient) {
@@ -46,8 +51,6 @@ export async function GET() {
         { status: 500 }
       );
     }
-
-    const userId = await getUserId(supabase);
 
     // Fetch user's visions using admin client to bypass RLS (active one first)
     const { data: visions, error } = await adminClient
@@ -78,7 +81,13 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    // Authenticate user
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
+
     const adminClient = createAdminClient();
 
     if (!adminClient) {
@@ -88,14 +97,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userId = await getUserId(supabase);
-
-    // Ensure the demo user profile exists if using demo mode
+    // Ensure the demo user profile exists if using demo mode (dev only)
     if (userId === DEMO_USER_ID) {
       await ensureDemoUserProfile(adminClient);
     }
 
+    // Validate request body
     const body = await request.json();
+    const validation = parseWithErrors(createVisionSchema, body);
+
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error, validationErrors: validation.errors },
+        { status: 400 }
+      );
+    }
+
     const {
       title,
       description,
@@ -110,14 +127,7 @@ export async function POST(request: NextRequest) {
       consistencyScore,
       color,
       affirmationText,
-    } = body;
-
-    if (!title) {
-      return NextResponse.json(
-        { error: 'Vision title is required' },
-        { status: 400 }
-      );
-    }
+    } = validation.data;
 
     // If this is the first vision, or we want to set it as active,
     // deactivate other visions first
@@ -169,7 +179,13 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    // Authenticate user
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
+
     const adminClient = createAdminClient();
 
     if (!adminClient) {
@@ -179,9 +195,17 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const userId = await getUserId(supabase);
-
+    // Validate request body
     const body = await request.json();
+    const validation = parseWithErrors(updateVisionSchema, body);
+
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error, validationErrors: validation.errors },
+        { status: 400 }
+      );
+    }
+
     const {
       id,
       title,
@@ -197,14 +221,7 @@ export async function PUT(request: NextRequest) {
       consistencyScore,
       color,
       affirmationText,
-    } = body;
-
-    if (!id) {
-      return NextResponse.json(
-        { error: 'Vision ID is required' },
-        { status: 400 }
-      );
-    }
+    } = validation.data;
 
     // Update vision using admin client to bypass RLS
     // Note: time_bound is a date column, use targetDate or timeBound (YYYY-MM-DD format)
@@ -250,7 +267,13 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    // Authenticate user
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
+
     const adminClient = createAdminClient();
 
     if (!adminClient) {
@@ -260,17 +283,20 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const userId = await getUserId(supabase);
-
+    // Validate query params
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
+    const validation = parseWithErrors(deleteVisionSchema, {
+      id: searchParams.get('id'),
+    });
 
-    if (!id) {
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Vision ID is required' },
+        { error: validation.error, validationErrors: validation.errors },
         { status: 400 }
       );
     }
+
+    const { id } = validation.data;
 
     // Archive the vision using admin client to bypass RLS
     const { error } = await adminClient

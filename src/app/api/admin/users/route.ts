@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { createClient as createServerClient } from '@/lib/supabase/server';
 
 // Admin endpoint to manage users
-// Requires SUPABASE_SERVICE_ROLE_KEY
+// Requires SUPABASE_SERVICE_ROLE_KEY and authenticated admin user
 
 function getAdminClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -20,8 +21,49 @@ function getAdminClient() {
   });
 }
 
-// GET - List all users
+// Verify the requesting user is an authenticated admin
+async function verifyAdmin(): Promise<{ isAdmin: boolean; error?: string }> {
+  const supabase = await createServerClient();
+
+  if (!supabase) {
+    return { isAdmin: false, error: 'Database connection failed' };
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { isAdmin: false, error: 'Authentication required' };
+  }
+
+  // Check if user has admin role in profiles table
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('is_admin')
+    .eq('id', user.id)
+    .single();
+
+  if (error || !profile) {
+    return { isAdmin: false, error: 'Failed to verify admin status' };
+  }
+
+  if (!profile.is_admin) {
+    return { isAdmin: false, error: 'Admin access required' };
+  }
+
+  return { isAdmin: true };
+}
+
+// GET - List all users (admin only)
 export async function GET() {
+  // Verify admin access
+  const { isAdmin, error: authError } = await verifyAdmin();
+  if (!isAdmin) {
+    return NextResponse.json(
+      { error: authError || 'Unauthorized' },
+      { status: 403 }
+    );
+  }
+
   const supabase = getAdminClient();
 
   if (!supabase) {
@@ -51,8 +93,17 @@ export async function GET() {
   });
 }
 
-// DELETE - Delete a user by email
+// DELETE - Delete a user by email (admin only)
 export async function DELETE(request: Request) {
+  // Verify admin access
+  const { isAdmin, error: authError } = await verifyAdmin();
+  if (!isAdmin) {
+    return NextResponse.json(
+      { error: authError || 'Unauthorized' },
+      { status: 403 }
+    );
+  }
+
   const supabase = getAdminClient();
 
   if (!supabase) {

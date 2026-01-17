@@ -2,29 +2,37 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { generateInviteToken } from '@/lib/permissions';
 import { sendEmail, generateShareInvitationEmail } from '@/lib/email';
-import type { SendInviteRequest, TabPermissionData, ItemPermissionData, TabName } from '@/types/sharing';
-
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import { createInvitationSchema, parseWithErrors } from '@/lib/validations';
+import type { TabName } from '@/types/sharing';
 
 // POST /api/sharing/invite - Send a share invitation
 export async function POST(request: NextRequest) {
   try {
+    // Authenticate user
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
+
     const supabase = await createClient();
     if (!supabase) {
       return NextResponse.json({ error: 'Failed to initialize database' }, { status: 500 });
     }
-    const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id || DEMO_USER_ID;
 
-    const body: SendInviteRequest = await request.json();
-    const { email, shareType, tabPermissions, itemPermissions } = body;
+    // Validate request body
+    const body = await request.json();
+    const validation = parseWithErrors(createInvitationSchema, body);
 
-    if (!email || !shareType) {
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Email and shareType are required' },
+        { error: validation.error, validationErrors: validation.errors },
         { status: 400 }
       );
     }
+
+    const { email, shareType, tabPermissions, itemPermissions } = validation.data;
 
     // Check if there's already a pending invitation for this email
     const { data: existingInvite } = await supabase
@@ -86,7 +94,7 @@ export async function POST(request: NextRequest) {
       ownerName: owner?.full_name || '',
       ownerEmail: owner?.email || '',
       inviteeName: '', // We don't know the invitee's name yet
-      tabs: (tabPermissions || []).map((tp: TabPermissionData) => ({
+      tabs: tabPermissions.map((tp) => ({
         tabName: tp.tabName as TabName,
         permissionLevel: tp.permissionLevel,
       })),

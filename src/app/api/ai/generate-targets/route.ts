@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { createClient } from '@/lib/supabase/server';
 import { logAIUsage } from '@/lib/utils/ai-usage';
-
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-
-async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  if (!supabase) return DEMO_USER_ID;
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || DEMO_USER_ID;
-}
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import {
+  applyMultipleRateLimits,
+  rateLimitExceededResponse,
+  rateLimitHeaders,
+  RateLimits,
+} from '@/lib/rate-limit';
 
 interface PowerGoalInput {
   id: string;
@@ -29,11 +27,26 @@ interface SmartGoalsInput {
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
-  let userId = DEMO_USER_ID;
+  let userId: string | null = null;
+  let rateLimitResult: ReturnType<typeof applyMultipleRateLimits> | null = null;
 
   try {
-    const supabase = await createClient();
-    userId = await getUserId(supabase);
+    // Authenticate user
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    userId = auth.userId;
+
+    // Apply rate limiting (heavy operation - generates a lot of content)
+    rateLimitResult = applyMultipleRateLimits(userId, [
+      RateLimits.ai.heavy,
+      RateLimits.ai.daily,
+    ]);
+
+    if (!rateLimitResult.success) {
+      return rateLimitExceededResponse(rateLimitResult);
+    }
 
     const { powerGoal, vision, smartGoals, targetDate } = await request.json() as {
       powerGoal: PowerGoalInput;
@@ -190,22 +203,27 @@ Respond ONLY with valid JSON in this exact format:
       powerGoalId: powerGoal.id,
       powerGoalTitle: powerGoal.title,
       quarter: powerGoal.quarter,
+    }, {
+      headers: rateLimitResult ? rateLimitHeaders(rateLimitResult) : {},
     });
   } catch (error) {
     console.error('AI Target Generation Error:', error);
     const responseTimeMs = Date.now() - startTime;
 
-    logAIUsage({
-      userId,
-      endpoint: '/api/ai/generate-targets',
-      model: 'claude-opus-4-20250514',
-      promptTokens: 0,
-      completionTokens: 0,
-      requestType: 'generate-targets',
-      success: false,
-      errorMessage: error instanceof Error ? error.message : 'Unknown error',
-      responseTimeMs,
-    });
+    // Log the failure (only if we have a userId)
+    if (userId) {
+      logAIUsage({
+        userId,
+        endpoint: '/api/ai/generate-targets',
+        model: 'claude-opus-4-20250514',
+        promptTokens: 0,
+        completionTokens: 0,
+        requestType: 'generate-targets',
+        success: false,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        responseTimeMs,
+      });
+    }
 
     if (error instanceof SyntaxError) {
       return NextResponse.json(

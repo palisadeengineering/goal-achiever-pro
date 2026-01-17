@@ -54,8 +54,19 @@ export async function POST(
       );
     }
 
-    // Check if this user is accepting with the correct email (optional validation)
-    // For now, we allow any logged-in user to accept
+    // SECURITY: Verify the accepting user's email matches the invitation
+    // This prevents unauthorized users from accepting invitations meant for others
+    if (invitation.email && user.email) {
+      const invitedEmail = invitation.email.toLowerCase().trim();
+      const userEmail = user.email.toLowerCase().trim();
+
+      if (invitedEmail !== userEmail) {
+        return NextResponse.json(
+          { error: 'This invitation was sent to a different email address. Please sign in with the correct account.' },
+          { status: 403 }
+        );
+      }
+    }
 
     // Find or create team member record
     let teamMemberId: string;

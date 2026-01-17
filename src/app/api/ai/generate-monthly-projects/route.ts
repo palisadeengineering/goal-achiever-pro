@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { createClient } from '@/lib/supabase/server';
 import { logAIUsage } from '@/lib/utils/ai-usage';
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import {
+  applyMultipleRateLimits,
+  rateLimitExceededResponse,
+  rateLimitHeaders,
+  RateLimits,
+} from '@/lib/rate-limit';
 import { differenceInMonths, parseISO, format, addMonths } from 'date-fns';
-
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-
-async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  if (!supabase) return DEMO_USER_ID;
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || DEMO_USER_ID;
-}
 
 interface MonthlyProject {
   month: number;
@@ -25,11 +23,26 @@ interface MonthlyProject {
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
-  let userId = DEMO_USER_ID;
+  let userId: string | null = null;
+  let rateLimitResult: ReturnType<typeof applyMultipleRateLimits> | null = null;
 
   try {
-    const supabase = await createClient();
-    userId = await getUserId(supabase);
+    // Authenticate user
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    userId = auth.userId;
+
+    // Apply rate limiting (heavy operation - generates monthly projects)
+    rateLimitResult = applyMultipleRateLimits(userId, [
+      RateLimits.ai.heavy,
+      RateLimits.ai.daily,
+    ]);
+
+    if (!rateLimitResult.success) {
+      return rateLimitExceededResponse(rateLimitResult);
+    }
 
     const body = await request.json();
     const {
@@ -200,22 +213,27 @@ Respond ONLY with valid JSON in this exact format:
       projects,
       summary: result.summary,
       criticalPath: result.criticalPath,
+    }, {
+      headers: rateLimitResult ? rateLimitHeaders(rateLimitResult) : {},
     });
   } catch (error) {
     console.error('AI Monthly Projects Generation Error:', error);
     const responseTimeMs = Date.now() - startTime;
 
-    logAIUsage({
-      userId,
-      endpoint: '/api/ai/generate-monthly-projects',
-      model: 'claude-sonnet-4-20250514',
-      promptTokens: 0,
-      completionTokens: 0,
-      requestType: 'generate-monthly-projects',
-      success: false,
-      errorMessage: error instanceof Error ? error.message : 'Unknown error',
-      responseTimeMs,
-    });
+    // Log the failure (only if we have a userId)
+    if (userId) {
+      logAIUsage({
+        userId,
+        endpoint: '/api/ai/generate-monthly-projects',
+        model: 'claude-sonnet-4-20250514',
+        promptTokens: 0,
+        completionTokens: 0,
+        requestType: 'generate-monthly-projects',
+        success: false,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        responseTimeMs,
+      });
+    }
 
     return NextResponse.json(
       { error: 'Failed to generate monthly projects' },

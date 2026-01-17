@@ -1,37 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-// Demo user ID for development
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
+// Verify the requesting user is an authenticated admin
+async function verifyAdmin(): Promise<{ userId: string | null; isAdmin: boolean; error?: string }> {
+  const supabase = await createClient();
 
-async function getUserIdAndCheckAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
-  if (!supabase) return { userId: DEMO_USER_ID, isAdmin: true }; // Dev mode
+  if (!supabase) {
+    return { userId: null, isAdmin: false, error: 'Database connection failed' };
+  }
 
   const { data: { user } } = await supabase.auth.getUser();
-  const userId = user?.id || DEMO_USER_ID;
 
-  // Check if user is admin
-  const { data: profile } = await supabase
+  if (!user) {
+    return { userId: null, isAdmin: false, error: 'Authentication required' };
+  }
+
+  // Check if user has admin role in profiles table
+  const { data: profile, error } = await supabase
     .from('profiles')
     .select('is_admin')
-    .eq('id', userId)
+    .eq('id', user.id)
     .single();
 
-  return { userId, isAdmin: profile?.is_admin || userId === DEMO_USER_ID };
+  if (error || !profile) {
+    return { userId: user.id, isAdmin: false, error: 'Failed to verify admin status' };
+  }
+
+  if (!profile.is_admin) {
+    return { userId: user.id, isAdmin: false, error: 'Admin access required' };
+  }
+
+  return { userId: user.id, isAdmin: true };
 }
 
 // GET - Fetch AI usage statistics (admin only)
 export async function GET(request: NextRequest) {
   try {
+    // Verify admin access first
+    const { isAdmin, error: authError } = await verifyAdmin();
+    if (!isAdmin) {
+      return NextResponse.json(
+        { error: authError || 'Unauthorized - Admin access required' },
+        { status: 403 }
+      );
+    }
+
     const supabase = await createClient();
     if (!supabase) {
       return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
-    }
-
-    const { userId, isAdmin } = await getUserIdAndCheckAdmin(supabase);
-
-    if (!isAdmin) {
-      return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);

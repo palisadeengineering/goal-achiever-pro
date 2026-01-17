@@ -2,14 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
 import { logAIUsage } from '@/lib/utils/ai-usage';
-
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-
-async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  if (!supabase) return DEMO_USER_ID;
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || DEMO_USER_ID;
-}
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import {
+  applyMultipleRateLimits,
+  rateLimitExceededResponse,
+  rateLimitHeaders,
+  RateLimits,
+} from '@/lib/rate-limit';
 
 interface QuarterlyTarget {
   quarter: number;
@@ -72,12 +71,29 @@ interface BacktrackPlanResponse {
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
-  let userId = DEMO_USER_ID;
+  let userId: string | null = null;
+  let rateLimitResult: ReturnType<typeof applyMultipleRateLimits> | null = null;
 
   try {
-    // Get user ID early for logging
+    // Authenticate user
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    userId = auth.userId;
+
+    // Apply rate limiting (heavy operation - generates lots of content)
+    rateLimitResult = applyMultipleRateLimits(userId, [
+      RateLimits.ai.heavy,
+      RateLimits.ai.daily,
+    ]);
+
+    if (!rateLimitResult.success) {
+      return rateLimitExceededResponse(rateLimitResult);
+    }
+
+    // Get supabase client for database operations
     const supabase = await createClient();
-    userId = await getUserId(supabase);
 
     const body = await request.json();
     const {
@@ -622,6 +638,8 @@ CRITICAL RULES:
         totalWeeks,
         totalHours,
         debug: debugInfo,
+      }, {
+        headers: rateLimitResult ? rateLimitHeaders(rateLimitResult) : {},
       });
     }
 
@@ -631,22 +649,27 @@ CRITICAL RULES:
       totalWeeks,
       totalHours,
       debug: debugInfo,
+    }, {
+      headers: rateLimitResult ? rateLimitHeaders(rateLimitResult) : {},
     });
   } catch (error) {
     console.error('AI Backtrack Generation Error:', error);
     const responseTimeMs = Date.now() - startTime;
 
-    logAIUsage({
-      userId,
-      endpoint: '/api/ai/generate-backtrack',
-      model: 'claude-opus-4-20250514',
-      promptTokens: 0,
-      completionTokens: 0,
-      requestType: 'generate-backtrack',
-      success: false,
-      errorMessage: error instanceof Error ? error.message : 'Unknown error',
-      responseTimeMs,
-    });
+    // Log the failure (only if we have a userId)
+    if (userId) {
+      logAIUsage({
+        userId,
+        endpoint: '/api/ai/generate-backtrack',
+        model: 'claude-opus-4-20250514',
+        promptTokens: 0,
+        completionTokens: 0,
+        requestType: 'generate-backtrack',
+        success: false,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        responseTimeMs,
+      });
+    }
 
     if (error instanceof SyntaxError) {
       return NextResponse.json(

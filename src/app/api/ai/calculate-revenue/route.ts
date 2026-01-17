@@ -1,4 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import {
+  applyMultipleRateLimits,
+  rateLimitExceededResponse,
+  rateLimitHeaders,
+  RateLimits,
+} from '@/lib/rate-limit';
 import type {
   CalculateRevenueRequest,
   CalculateRevenueResponse,
@@ -7,7 +14,24 @@ import type {
 
 // Pure math endpoint - no AI needed, just calculations
 export async function POST(request: NextRequest) {
+  let rateLimitResult: ReturnType<typeof applyMultipleRateLimits> | null = null;
+
   try {
+    // Authenticate user
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
+    // Apply rate limiting (use standard API limit since this is just math)
+    rateLimitResult = applyMultipleRateLimits(auth.userId, [
+      RateLimits.api.standard,
+    ]);
+
+    if (!rateLimitResult.success) {
+      return rateLimitExceededResponse(rateLimitResult);
+    }
+
     const body: CalculateRevenueRequest = await request.json();
     const { targetRevenue, revenueType, targetDate, currentRevenue = 0 } = body;
 
@@ -134,7 +158,9 @@ export async function POST(request: NextRequest) {
       mathBreakdown,
     };
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, {
+      headers: rateLimitResult ? rateLimitHeaders(rateLimitResult) : {},
+    });
   } catch (error) {
     console.error('Revenue Calculation Error:', error);
     return NextResponse.json(

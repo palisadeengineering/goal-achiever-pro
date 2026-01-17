@@ -1,21 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { createClient } from '@/lib/supabase/server';
 import { logAIUsage } from '@/lib/utils/ai-usage';
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import {
+  applyMultipleRateLimits,
+  rateLimitExceededResponse,
+  rateLimitHeaders,
+  RateLimits,
+} from '@/lib/rate-limit';
 import type {
   GeneratePricingModelsRequest,
   GeneratePricingModelsResponse,
   BusinessType,
   DynamicPricingOption,
 } from '@/types/strategic-discovery';
-
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-
-async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  if (!supabase) return DEMO_USER_ID;
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || DEMO_USER_ID;
-}
 
 function buildPrompt(request: GeneratePricingModelsRequest): string {
   const { targetRevenue, revenueType, targetDate, positioning, visionContext } = request;
@@ -112,11 +110,26 @@ Respond ONLY with valid JSON in this exact structure:
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
-  let userId = DEMO_USER_ID;
+  let userId: string | null = null;
+  let rateLimitResult: ReturnType<typeof applyMultipleRateLimits> | null = null;
 
   try {
-    const supabase = await createClient();
-    userId = await getUserId(supabase);
+    // Authenticate user
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    userId = auth.userId;
+
+    // Apply rate limiting (standard operation - generates pricing analysis)
+    rateLimitResult = applyMultipleRateLimits(userId, [
+      RateLimits.ai.standard,
+      RateLimits.ai.daily,
+    ]);
+
+    if (!rateLimitResult.success) {
+      return rateLimitExceededResponse(rateLimitResult);
+    }
 
     const body: GeneratePricingModelsRequest = await request.json();
     const { targetRevenue, revenueType, targetDate, positioning } = body;
@@ -227,23 +240,27 @@ export async function POST(request: NextRequest) {
       mathBreakdown: aiResult.mathBreakdown || '',
     };
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, {
+      headers: rateLimitResult ? rateLimitHeaders(rateLimitResult) : {},
+    });
   } catch (error) {
     console.error('Generate Pricing Models AI Error:', error);
     const responseTimeMs = Date.now() - startTime;
 
-    // Log the failure
-    logAIUsage({
-      userId,
-      endpoint: '/api/ai/generate-pricing-models',
-      model: 'claude-opus-4-20250514',
-      promptTokens: 0,
-      completionTokens: 0,
-      requestType: 'generate-pricing-models',
-      success: false,
-      errorMessage: error instanceof Error ? error.message : 'Unknown error',
-      responseTimeMs,
-    });
+    // Log the failure (only if we have a userId)
+    if (userId) {
+      logAIUsage({
+        userId,
+        endpoint: '/api/ai/generate-pricing-models',
+        model: 'claude-opus-4-20250514',
+        promptTokens: 0,
+        completionTokens: 0,
+        requestType: 'generate-pricing-models',
+        success: false,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        responseTimeMs,
+      });
+    }
 
     if (error instanceof SyntaxError) {
       return NextResponse.json(

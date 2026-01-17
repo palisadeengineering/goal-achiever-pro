@@ -1,44 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-
-interface DailyActionInput {
-  dayOfWeek: string;
-  title: string;
-  description?: string;
-  estimatedMinutes: number;
-  keyMetric?: string;
-  targetValue?: number;
-}
-
-interface WeeklyTargetInput {
-  weekNumber: number;
-  title: string;
-  description?: string;
-  keyMetric?: string;
-  targetValue?: number;
-  dailyActions: DailyActionInput[];
-}
-
-interface MonthlyTargetInput {
-  month: number;
-  monthName: string;
-  title: string;
-  description?: string;
-  keyMetric?: string;
-  targetValue?: number;
-  weeklyTargets: WeeklyTargetInput[];
-}
-
-interface SaveTargetsRequest {
-  powerGoalId: string;
-  year: number;
-  monthlyTargets: MonthlyTargetInput[];
-}
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import { bulkSaveTargetsSchema, parseWithErrors } from '@/lib/validations';
 
 export async function POST(request: NextRequest) {
   try {
+    // Authenticate user
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
+
     const supabase = await createClient();
 
     if (!supabase) {
@@ -48,18 +21,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get authenticated user or use demo user
-    const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id || DEMO_USER_ID;
+    // Validate request body
+    const body = await request.json();
+    const validation = parseWithErrors(bulkSaveTargetsSchema, body);
 
-    const { powerGoalId, year, monthlyTargets } = await request.json() as SaveTargetsRequest;
-
-    if (!powerGoalId || !monthlyTargets?.length) {
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Power Goal ID and monthly targets are required' },
+        { error: validation.error, validationErrors: validation.errors },
         { status: 400 }
       );
     }
+
+    const { powerGoalId, year, monthlyTargets } = validation.data;
 
     // Start a transaction-like operation
     const savedTargets = {

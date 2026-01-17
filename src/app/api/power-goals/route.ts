@@ -1,27 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-
-// Demo user ID for development - replace with real auth later
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-
-async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  if (!supabase) return DEMO_USER_ID;
-
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || DEMO_USER_ID;
-}
-
-interface PowerGoalInput {
-  title: string;
-  description?: string;
-  quarter: number;
-  category?: string;
-  targetDate?: string;
-  visionId?: string;
-}
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import {
+  bulkCreatePowerGoalsSchema,
+  updatePowerGoalSchema,
+  deletePowerGoalSchema,
+  parseWithErrors,
+} from '@/lib/validations';
 
 export async function GET() {
   try {
+    // Authenticate user
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
+
     const supabase = await createClient();
 
     if (!supabase) {
@@ -30,8 +25,6 @@ export async function GET() {
         { status: 500 }
       );
     }
-
-    const userId = await getUserId(supabase);
 
     const currentYear = new Date().getFullYear();
 
@@ -63,6 +56,13 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    // Authenticate user
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
+
     const supabase = await createClient();
 
     if (!supabase) {
@@ -72,17 +72,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userId = await getUserId(supabase);
-
+    // Validate request body
     const body = await request.json();
-    const { powerGoals, visionId } = body as { powerGoals: PowerGoalInput[]; visionId?: string };
+    const validation = parseWithErrors(bulkCreatePowerGoalsSchema, body);
 
-    if (!powerGoals || !Array.isArray(powerGoals) || powerGoals.length === 0) {
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Power goals array is required' },
+        { error: validation.error, validationErrors: validation.errors },
         { status: 400 }
       );
     }
+
+    const { powerGoals, visionId } = validation.data;
 
     const currentYear = new Date().getFullYear();
     const savedGoals = [];
@@ -141,6 +142,13 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    // Authenticate user
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
+
     const supabase = await createClient();
 
     if (!supabase) {
@@ -150,17 +158,18 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const userId = await getUserId(supabase);
-
+    // Validate request body
     const body = await request.json();
-    const { id, title, description, quarter, category, targetDate, progressPercentage, status } = body;
+    const validation = parseWithErrors(updatePowerGoalSchema, body);
 
-    if (!id) {
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Power goal ID is required' },
+        { error: validation.error, validationErrors: validation.errors },
         { status: 400 }
       );
     }
+
+    const { id, title, description, quarter, category, targetDate, progressPercentage, status } = validation.data;
 
     const { data: powerGoal, error } = await supabase
       .from('power_goals')
@@ -199,6 +208,13 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    // Authenticate user
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
+
     const supabase = await createClient();
 
     if (!supabase) {
@@ -208,17 +224,20 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const userId = await getUserId(supabase);
-
+    // Validate query params
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
+    const validation = parseWithErrors(deletePowerGoalSchema, {
+      id: searchParams.get('id'),
+    });
 
-    if (!id) {
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Power goal ID is required' },
+        { error: validation.error, validationErrors: validation.errors },
         { status: 400 }
       );
     }
+
+    const { id } = validation.data;
 
     const { error } = await supabase
       .from('power_goals')

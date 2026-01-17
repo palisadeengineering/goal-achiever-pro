@@ -8,13 +8,21 @@ export async function updateSession(request: NextRequest) {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   // If Supabase is not configured, skip auth checks and allow all requests
+  // WARNING: This should only happen during build time or when env vars are missing
   if (!supabaseUrl || !supabaseAnonKey) {
+    // In production, log a warning if Supabase is not configured
+    if (process.env.NODE_ENV === 'production') {
+      console.error('SECURITY WARNING: Supabase not configured in production!');
+    }
     return NextResponse.next({ request });
   }
 
-  // Demo mode: Skip auth in development or when DEMO_MODE is enabled
-  const isDemoMode = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+  // SECURITY: Demo mode is controlled ONLY by a server-side env var (not NEXT_PUBLIC_)
+  // This ensures it cannot be enabled by client-side manipulation
+  // NEVER enable demo mode in production - it bypasses all authentication
+  const isDemoMode = process.env.DEMO_MODE_ENABLED === 'true' && process.env.NODE_ENV !== 'production';
   if (isDemoMode) {
+    console.warn('SECURITY WARNING: Demo mode is enabled - authentication bypassed');
     return NextResponse.next({ request });
   }
 

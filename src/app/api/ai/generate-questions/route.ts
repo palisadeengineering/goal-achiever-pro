@@ -1,8 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { logAIUsage } from '@/lib/utils/ai-usage';
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import {
+  applyMultipleRateLimits,
+  rateLimitExceededResponse,
+  rateLimitHeaders,
+  RateLimits,
+} from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  let userId: string | null = null;
+  let rateLimitResult: ReturnType<typeof applyMultipleRateLimits> | null = null;
+
   try {
+    // Authenticate user
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    userId = auth.userId;
+
+    // Apply rate limiting (standard operation)
+    rateLimitResult = applyMultipleRateLimits(userId, [
+      RateLimits.ai.standard,
+      RateLimits.ai.daily,
+    ]);
+
+    if (!rateLimitResult.success) {
+      return rateLimitExceededResponse(rateLimitResult);
+    }
+
     const body = await request.json();
     const { vision, description } = body;
 
@@ -73,9 +102,23 @@ Make questions specific and helpful. For revenue, ask about customer count and p
     });
 
     const content = message.content[0].type === 'text' ? message.content[0].text : '';
+    const responseTimeMs = Date.now() - startTime;
+
     if (!content) {
       throw new Error('No response from AI');
     }
+
+    // Log AI usage
+    logAIUsage({
+      userId,
+      endpoint: '/api/ai/generate-questions',
+      model: 'claude-sonnet-4-20250514',
+      promptTokens: message.usage?.input_tokens || 0,
+      completionTokens: message.usage?.output_tokens || 0,
+      requestType: 'generate-questions',
+      success: true,
+      responseTimeMs,
+    });
 
     // Clean the response - strip markdown code blocks
     let cleanedResponse = content;
@@ -100,9 +143,28 @@ Make questions specific and helpful. For revenue, ask about customer count and p
       result = { metricsFound: [], hasMetrics: false };
     }
 
-    return NextResponse.json(result);
+    return NextResponse.json(result, {
+      headers: rateLimitResult ? rateLimitHeaders(rateLimitResult) : {},
+    });
   } catch (error) {
     console.error('AI question generation error:', error);
+    const responseTimeMs = Date.now() - startTime;
+
+    // Log the failure (only if we have a userId)
+    if (userId) {
+      logAIUsage({
+        userId,
+        endpoint: '/api/ai/generate-questions',
+        model: 'claude-sonnet-4-20250514',
+        promptTokens: 0,
+        completionTokens: 0,
+        requestType: 'generate-questions',
+        success: false,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        responseTimeMs,
+      });
+    }
+
     return NextResponse.json(
       { error: 'Failed to generate questions' },
       { status: 500 }

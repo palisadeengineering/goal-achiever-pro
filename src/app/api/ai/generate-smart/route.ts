@@ -1,33 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { createClient } from '@/lib/supabase/server';
 import { logAIUsage } from '@/lib/utils/ai-usage';
-
-// Demo user ID for development
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-
-async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  if (!supabase) return DEMO_USER_ID;
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || DEMO_USER_ID;
-}
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import { generateSmartSchema, parseWithErrors } from '@/lib/validations';
+import {
+  applyMultipleRateLimits,
+  rateLimitExceededResponse,
+  rateLimitHeaders,
+  RateLimits,
+} from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
-  let userId = DEMO_USER_ID;
+  let userId: string | null = null;
 
   try {
-    const supabase = await createClient();
-    userId = await getUserId(supabase);
+    // Authenticate user
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    userId = auth.userId;
 
-    const { vision, context } = await request.json();
+    // Apply rate limiting (per-minute and daily limits)
+    const rateLimitResult = applyMultipleRateLimits(userId, [
+      RateLimits.ai.standard,
+      RateLimits.ai.daily,
+    ]);
 
-    if (!vision) {
+    if (!rateLimitResult.success) {
+      return rateLimitExceededResponse(rateLimitResult);
+    }
+
+    // Validate request body
+    const body = await request.json();
+    const validation = parseWithErrors(generateSmartSchema, body);
+
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Vision statement is required' },
+        { error: validation.error, validationErrors: validation.errors },
         { status: 400 }
       );
     }
+
+    const { vision, context } = validation.data;
 
     if (!process.env.ANTHROPIC_API_KEY) {
       return NextResponse.json(
@@ -115,23 +131,27 @@ Respond ONLY with valid JSON in this exact format:
 
     const smartGoals = JSON.parse(cleanedResponse);
 
-    return NextResponse.json(smartGoals);
+    return NextResponse.json(smartGoals, {
+      headers: rateLimitHeaders(rateLimitResult),
+    });
   } catch (error) {
     console.error('AI Generation Error:', error);
     const responseTimeMs = Date.now() - startTime;
 
-    // Log the failure
-    logAIUsage({
-      userId,
-      endpoint: '/api/ai/generate-smart',
-      model: 'claude-opus-4-20250514',
-      promptTokens: 0,
-      completionTokens: 0,
-      requestType: 'generate-smart',
-      success: false,
-      errorMessage: error instanceof Error ? error.message : 'Unknown error',
-      responseTimeMs,
-    });
+    // Log the failure (only if we have a userId)
+    if (userId) {
+      logAIUsage({
+        userId,
+        endpoint: '/api/ai/generate-smart',
+        model: 'claude-opus-4-20250514',
+        promptTokens: 0,
+        completionTokens: 0,
+        requestType: 'generate-smart',
+        success: false,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        responseTimeMs,
+      });
+    }
 
     if (error instanceof SyntaxError) {
       return NextResponse.json(

@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { createClient } from '@/lib/supabase/server';
 import { logAIUsage } from '@/lib/utils/ai-usage';
-
-// Demo user ID for development
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-
-async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  if (!supabase) return DEMO_USER_ID;
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || DEMO_USER_ID;
-}
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import {
+  applyMultipleRateLimits,
+  rateLimitExceededResponse,
+  rateLimitHeaders,
+  RateLimits,
+} from '@/lib/rate-limit';
 
 interface EventInput {
   id: string;
@@ -38,11 +35,26 @@ interface CleanupSuggestions {
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
-  let userId = DEMO_USER_ID;
+  let userId: string | null = null;
+  let rateLimitResult: ReturnType<typeof applyMultipleRateLimits> | null = null;
 
   try {
-    const supabase = await createClient();
-    userId = await getUserId(supabase);
+    // Authenticate user
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    userId = auth.userId;
+
+    // Apply rate limiting (standard operation - analyzing events)
+    rateLimitResult = applyMultipleRateLimits(userId, [
+      RateLimits.ai.standard,
+      RateLimits.ai.daily,
+    ]);
+
+    if (!rateLimitResult.success) {
+      return rateLimitExceededResponse(rateLimitResult);
+    }
 
     const { events } = await request.json() as { events: EventInput[] };
 
@@ -149,7 +161,7 @@ Only include categories that have at least 1 event. If no cleanup suggestions ar
 
     // Log AI usage
     const durationMs = Date.now() - startTime;
-    await logAIUsage({
+    logAIUsage({
       userId,
       endpoint: '/api/ai/suggest-event-cleanup',
       model: 'claude-3-5-haiku-20241022',
@@ -164,9 +176,28 @@ Only include categories that have at least 1 event. If no cleanup suggestions ar
       suggestions,
       eventCount: events.length,
       categoriesFound: suggestions.categories.length,
+    }, {
+      headers: rateLimitResult ? rateLimitHeaders(rateLimitResult) : {},
     });
   } catch (error) {
     console.error('Error generating cleanup suggestions:', error);
+    const responseTimeMs = Date.now() - startTime;
+
+    // Log the failure (only if we have a userId)
+    if (userId) {
+      logAIUsage({
+        userId,
+        endpoint: '/api/ai/suggest-event-cleanup',
+        model: 'claude-3-5-haiku-20241022',
+        promptTokens: 0,
+        completionTokens: 0,
+        requestType: 'suggest-event-cleanup',
+        success: false,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        responseTimeMs,
+      });
+    }
+
     return NextResponse.json(
       { error: 'Failed to generate cleanup suggestions' },
       { status: 500 }
