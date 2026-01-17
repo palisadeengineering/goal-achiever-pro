@@ -87,7 +87,8 @@ Deno.serve(async (req: Request) => {
   const verifyType = normalizeType(email_action_type);
 
   // Build verification URL with normalized type
-  const verifyUrl = `${supabaseUrl}/auth/v1/verify?token=${token_hash}&type=${verifyType}&redirect_to=${encodeURIComponent(redirect_to)}`;
+  // Use token_hash parameter name to match the hashed token value
+  const verifyUrl = `${supabaseUrl}/auth/v1/verify?token_hash=${token_hash}&type=${verifyType}&redirect_to=${encodeURIComponent(redirect_to)}`;
 
   console.log(`Building verify URL for ${email_action_type} (normalized: ${verifyType}) to ${user.email}`);
 
