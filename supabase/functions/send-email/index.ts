@@ -67,8 +67,29 @@ Deno.serve(async (req: Request) => {
   const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? site_url;
   const userName = user.user_metadata?.full_name || user.user_metadata?.name || '';
 
-  // Build verification URL
-  const verifyUrl = `${supabaseUrl}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${encodeURIComponent(redirect_to)}`;
+  // Normalize email_action_type to what /verify endpoint expects
+  // The hook may send variations like 'password_recovery' but /verify expects 'recovery'
+  const normalizeType = (type: string): string => {
+    switch (type) {
+      case 'password_recovery':
+        return 'recovery';
+      case 'email_confirmation':
+        return 'signup';
+      case 'magic_link':
+        return 'magiclink';
+      case 'email_change_new':
+        return 'email_change';
+      default:
+        return type;
+    }
+  };
+
+  const verifyType = normalizeType(email_action_type);
+
+  // Build verification URL with normalized type
+  const verifyUrl = `${supabaseUrl}/auth/v1/verify?token=${token_hash}&type=${verifyType}&redirect_to=${encodeURIComponent(redirect_to)}`;
+
+  console.log(`Building verify URL for ${email_action_type} (normalized: ${verifyType}) to ${user.email}`);
 
   let html: string;
   let subject: string;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -18,17 +18,62 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isValidSession, setIsValidSession] = useState<boolean | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const supabase = createClient();
 
-  useEffect(() => {
-    // Check if user has a valid session from the reset link
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsValidSession(!!session);
-    };
-    checkSession();
+  const checkAndSetSession = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      setIsValidSession(true);
+      setIsInitialized(true);
+    }
   }, [supabase.auth]);
+
+  useEffect(() => {
+    // Listen for auth state changes - this catches the session from URL hash tokens
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state change:', event, !!session);
+
+        if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+          // User has a valid recovery session
+          setIsValidSession(true);
+          setIsInitialized(true);
+        } else if (event === 'INITIAL_SESSION') {
+          // Check if there's already a valid session
+          if (session) {
+            setIsValidSession(true);
+          }
+          setIsInitialized(true);
+        } else if (event === 'SIGNED_OUT') {
+          setIsValidSession(false);
+          setIsInitialized(true);
+        }
+      }
+    );
+
+    // Also check for existing session on mount
+    checkAndSetSession();
+
+    // Set a timeout to show error if no session after 5 seconds
+    const timeout = setTimeout(() => {
+      if (!isInitialized) {
+        setIsInitialized(true);
+        // Final session check before giving up
+        checkAndSetSession().then(() => {
+          if (!isValidSession) {
+            setIsValidSession(false);
+          }
+        });
+      }
+    }, 5000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
+  }, [supabase.auth, checkAndSetSession, isInitialized, isValidSession]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,7 +122,7 @@ export default function ResetPasswordPage() {
   };
 
   // Still checking session
-  if (isValidSession === null) {
+  if (!isInitialized) {
     return (
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
