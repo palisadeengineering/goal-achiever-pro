@@ -23,6 +23,9 @@ export async function hasTabAccess(
   }
 
   const supabase = await createClient();
+  if (!supabase) {
+    return false;
+  }
 
   // First, find the team member record for this user under the owner
   const { data: teamMember } = await supabase
@@ -77,6 +80,9 @@ export async function hasItemAccess(
   }
 
   const supabase = await createClient();
+  if (!supabase) {
+    return { hasAccess: false, permissionLevel: null };
+  }
 
   // First, find the team member record for this user under the owner
   const { data: teamMember } = await supabase
@@ -139,6 +145,9 @@ export async function hasItemAccess(
  */
 export async function getSharedWithMe(userId: string): Promise<SharedContent[]> {
   const supabase = await createClient();
+  if (!supabase) {
+    return [];
+  }
 
   // Find all team memberships where this user is linked
   const { data: memberships } = await supabase
@@ -220,6 +229,9 @@ export async function getTabShares(
   tabName: TabName
 ): Promise<TabPermission[]> {
   const supabase = await createClient();
+  if (!supabase) {
+    return [];
+  }
 
   const { data: permissions } = await supabase
     .from('tab_permissions')
@@ -277,6 +289,9 @@ export async function getPermissionLevel(
   }
 
   const supabase = await createClient();
+  if (!supabase) {
+    return null;
+  }
 
   // Find team membership
   const { data: teamMember } = await supabase

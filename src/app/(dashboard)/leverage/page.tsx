@@ -36,6 +36,7 @@ import {
   Lightbulb,
   Loader2,
 } from 'lucide-react';
+import { ShareButton } from '@/components/features/sharing';
 
 type LeverageType = 'code' | 'content' | 'capital' | 'collaboration';
 type LeverageStatus = 'idea' | 'planning' | 'implementing' | 'active' | 'archived';
@@ -229,10 +230,13 @@ export default function LeveragePage() {
         title="Leverage & 4 C's"
         description="Multiply your impact with Code, Content, Capital, and Collaboration"
         actions={
-          <Button onClick={() => openForm()}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Leverage
-          </Button>
+          <div className="flex items-center gap-2">
+            <ShareButton tabName="leverage" />
+            <Button onClick={() => openForm()}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Leverage
+            </Button>
+          </div>
         }
       />
 

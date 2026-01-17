@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { ROUTES } from '@/constants/routes';
+import { ShareButton } from '@/components/features/sharing';
 
 interface DailyReview {
   id: string;
@@ -142,6 +143,7 @@ export default function ReviewsPage() {
       <PageHeader
         title="Daily Reviews"
         description="Check in with yourself 3x daily to maintain clarity, belief, and consistency"
+        actions={<ShareButton tabName="reviews" />}
       />
 
       {/* Today's Status */}

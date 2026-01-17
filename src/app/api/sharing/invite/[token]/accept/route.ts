@@ -10,6 +10,9 @@ export async function POST(
   try {
     const { token } = await params;
     const supabase = await createClient();
+    if (!supabase) {
+      return NextResponse.json({ error: 'Failed to initialize database' }, { status: 500 });
+    }
 
     // Get the current user
     const { data: { user } } = await supabase.auth.getUser();

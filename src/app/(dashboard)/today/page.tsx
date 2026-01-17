@@ -44,6 +44,7 @@ import Link from 'next/link';
 import { useGoogleCalendar } from '@/lib/hooks/use-google-calendar';
 import { Daily300Checkin } from '@/components/features/reviews/daily-300-checkin';
 import type { TeamMember } from '@/types/team';
+import { ShareButton } from '@/components/features/sharing';
 
 interface DailyAction {
   id: string;
@@ -623,6 +624,7 @@ export default function TodayPage() {
         icon={<CalendarCheck className="h-6 w-6" />}
         actions={
           <div className="flex items-center gap-2">
+            <ShareButton tabName="today" />
             {/* Team Filter */}
             <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
               <SelectTrigger className="w-[160px] h-9">

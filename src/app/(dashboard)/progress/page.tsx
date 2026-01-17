@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { ShareButton } from '@/components/features/sharing';
 
 interface KpiSummary {
   id: string;
@@ -193,10 +194,13 @@ export default function ProgressPage() {
         description={format(new Date(), 'EEEE, MMMM d, yyyy')}
         icon={<TrendingUp className="h-6 w-6" />}
         actions={
-          <Button variant="outline" onClick={fetchData} size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
+          <div className="flex items-center gap-2">
+            <ShareButton tabName="progress" />
+            <Button variant="outline" onClick={fetchData} size="sm">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
         }
       />
 

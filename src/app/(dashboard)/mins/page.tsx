@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { MinsList } from '@/components/features/mins/mins-list';
 import { MinForm, MinFormData } from '@/components/features/mins/min-form';
+import { ShareButton } from '@/components/features/sharing';
 import type { DripQuadrant } from '@/types/database';
 
 type MinStatus = 'pending' | 'in_progress' | 'completed';
@@ -188,10 +189,13 @@ export default function MinsPage() {
         title="Daily & Weekly MINS"
         description="Most Important Next Steps - your daily & weekly action items"
         actions={
-          <Button onClick={() => setIsFormOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add MIN
-          </Button>
+          <div className="flex items-center gap-2">
+            <ShareButton tabName="mins" />
+            <Button onClick={() => setIsFormOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add MIN
+            </Button>
+          </div>
         }
       />
 

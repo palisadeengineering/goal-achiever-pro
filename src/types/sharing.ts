@@ -20,7 +20,8 @@ export type TabName =
   | 'reviews'
   | 'leverage'
   | 'network'
-  | 'analytics';
+  | 'analytics'
+  | 'backtrack';
 
 // All shareable entity types
 export type EntityType =
@@ -173,6 +174,7 @@ export const TAB_DISPLAY_INFO: Record<TabName, { displayName: string; descriptio
   leverage: { displayName: 'Leverage', description: '4 C\'s tracking' },
   network: { displayName: 'Network', description: 'Friend inventory' },
   analytics: { displayName: 'Analytics', description: 'Dashboard and charts' },
+  backtrack: { displayName: 'Backtrack Plans', description: 'Vision planning and progress' },
 };
 
 // Map routes to tab names
@@ -192,6 +194,7 @@ export const ROUTE_TO_TAB: Record<string, TabName> = {
   '/leverage': 'leverage',
   '/network': 'network',
   '/analytics': 'analytics',
+  '/backtrack': 'backtrack',
 };
 
 // Map tab names to routes
@@ -211,4 +214,5 @@ export const TAB_TO_ROUTE: Record<TabName, string> = {
   leverage: '/leverage',
   network: '/network',
   analytics: '/analytics',
+  backtrack: '/backtrack',
 };

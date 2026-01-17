@@ -37,6 +37,7 @@ import {
   Shield,
   Loader2,
 } from 'lucide-react';
+import { ShareButton } from '@/components/features/sharing';
 
 type EnergyImpact = 'energizing' | 'neutral' | 'draining';
 type ConnectionFrequency = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
@@ -217,10 +218,13 @@ export default function NetworkPage() {
         title="Network & Relationships"
         description="Audit your relationships - spend time with those who energize you"
         actions={
-          <Button onClick={() => openForm()}>
-            <UserPlus className="h-4 w-4 mr-2" />
-            Add Contact
-          </Button>
+          <div className="flex items-center gap-2">
+            <ShareButton tabName="network" />
+            <Button onClick={() => openForm()}>
+              <UserPlus className="h-4 w-4 mr-2" />
+              Add Contact
+            </Button>
+          </div>
         }
       />
 

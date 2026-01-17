@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { ShareButton } from '@/components/features/sharing';
 
 interface Vision {
   id: string;
@@ -188,6 +189,7 @@ export default function BacktrackPage() {
         icon={<Eye className="h-6 w-6" />}
         actions={
           <div className="flex gap-2">
+            <ShareButton tabName="backtrack" />
             <Button variant="outline" asChild>
               <Link href="/vision">
                 <Plus className="h-4 w-4 mr-2" />

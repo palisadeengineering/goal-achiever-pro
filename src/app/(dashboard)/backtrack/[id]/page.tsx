@@ -31,6 +31,8 @@ import { cn } from '@/lib/utils';
 import {
   GitBranch,
   Calendar,
+  CalendarCheck,
+  CalendarPlus,
   Clock,
   Target,
   Loader2,
@@ -56,6 +58,7 @@ import {
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useGoogleCalendar } from '@/lib/hooks/use-google-calendar';
 
 interface BacktrackPlan {
   id: string;
@@ -136,6 +139,9 @@ interface PlanData {
     action_date: string;
     estimated_minutes?: number;
     status: string;
+    calendar_event_id?: string;
+    calendar_sync_status?: 'not_synced' | 'synced' | 'pending' | 'error';
+    calendar_synced_at?: string;
   }>;
 }
 
@@ -189,6 +195,11 @@ export default function BacktrackDetailPage({ params }: { params: Promise<{ id: 
   const [streakData, setStreakData] = useState<StreakData[]>([]);
   const [completionStatus, setCompletionStatus] = useState<CompletionStatus>({});
   const [loadingCompletions, setLoadingCompletions] = useState<Set<string>>(new Set());
+
+  // Calendar sync state
+  const { isConnected, connect } = useGoogleCalendar();
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncingIds, setSyncingIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchPlanData();
@@ -291,11 +302,16 @@ export default function BacktrackDetailPage({ params }: { params: Promise<{ id: 
     }
   };
 
-  const handleStatusChange = async (newStatus: string) => {
+  const handleStatusChange = async (newStatus: string, removeFromCalendar = false) => {
     if (!data) return;
     setIsUpdating(true);
 
     try {
+      // If pausing and user chose to remove from calendar, do that first
+      if (newStatus === 'paused' && removeFromCalendar) {
+        await handleUnsyncAllFromCalendar();
+      }
+
       const response = await fetch(`/api/backtrack/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -315,6 +331,21 @@ export default function BacktrackDetailPage({ params }: { params: Promise<{ id: 
       toast.error('Failed to update plan status');
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handlePauseWithPrompt = () => {
+    const syncedCount = data?.dailyActions.filter(
+      (a) => a.calendar_sync_status === 'synced'
+    ).length || 0;
+
+    if (syncedCount > 0) {
+      const removeFromCal = confirm(
+        `This plan has ${syncedCount} action(s) synced to Google Calendar.\n\nDo you want to remove them from your calendar when pausing?\n\nClick OK to remove, Cancel to keep them.`
+      );
+      handleStatusChange('paused', removeFromCal);
+    } else {
+      handleStatusChange('paused', false);
     }
   };
 
@@ -342,6 +373,224 @@ export default function BacktrackDetailPage({ params }: { params: Promise<{ id: 
       toast.error('Failed to delete plan');
       setIsDeleting(false);
     }
+  };
+
+  // Calendar sync functions
+  const handleSyncToCalendar = async (actionIds?: string[]) => {
+    if (!isConnected) {
+      connect();
+      return;
+    }
+
+    setIsSyncing(true);
+    try {
+      const response = await fetch('/api/calendar/sync-actions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ actionIds }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to sync');
+      }
+
+      toast.success(result.message || `Synced ${result.synced} actions to calendar`);
+
+      // Update local state with synced status
+      if (result.results) {
+        setData((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            dailyActions: prev.dailyActions.map((action) => {
+              const syncResult = result.results.find(
+                (r: { actionId: string; success: boolean; eventId?: string }) => r.actionId === action.id
+              );
+              if (syncResult?.success) {
+                return {
+                  ...action,
+                  calendar_sync_status: 'synced' as const,
+                  calendar_event_id: syncResult.eventId,
+                  calendar_synced_at: new Date().toISOString(),
+                };
+              }
+              return action;
+            }),
+          };
+        });
+      }
+    } catch (err) {
+      console.error('Calendar sync error:', err);
+      toast.error('Failed to sync actions to calendar');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleSyncSingleAction = async (actionId: string) => {
+    if (!isConnected) {
+      connect();
+      return;
+    }
+
+    setSyncingIds((prev) => new Set(prev).add(actionId));
+    try {
+      const response = await fetch('/api/calendar/sync-actions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ actionIds: [actionId] }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to sync');
+      }
+
+      if (result.synced > 0) {
+        toast.success('Action added to calendar!');
+
+        // Update local state
+        setData((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            dailyActions: prev.dailyActions.map((action) => {
+              if (action.id === actionId) {
+                const syncResult = result.results?.[0];
+                return {
+                  ...action,
+                  calendar_sync_status: 'synced' as const,
+                  calendar_event_id: syncResult?.eventId,
+                  calendar_synced_at: new Date().toISOString(),
+                };
+              }
+              return action;
+            }),
+          };
+        });
+      } else {
+        toast.error('Failed to sync action');
+      }
+    } catch (err) {
+      console.error('Calendar sync error:', err);
+      toast.error('Failed to sync action to calendar');
+    } finally {
+      setSyncingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(actionId);
+        return next;
+      });
+    }
+  };
+
+  const handleRemoveFromCalendar = async (actionId: string, eventId: string) => {
+    setSyncingIds((prev) => new Set(prev).add(actionId));
+    try {
+      const response = await fetch(`/api/calendar/google/events?eventId=${encodeURIComponent(eventId)}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || 'Failed to remove from calendar');
+      }
+
+      toast.success('Removed from calendar');
+
+      // Update local state
+      setData((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          dailyActions: prev.dailyActions.map((action) => {
+            if (action.id === actionId) {
+              return {
+                ...action,
+                calendar_sync_status: 'not_synced' as const,
+                calendar_event_id: undefined,
+                calendar_synced_at: undefined,
+              };
+            }
+            return action;
+          }),
+        };
+      });
+    } catch (err) {
+      console.error('Calendar remove error:', err);
+      toast.error('Failed to remove from calendar');
+    } finally {
+      setSyncingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(actionId);
+        return next;
+      });
+    }
+  };
+
+  // Unsync all actions from calendar (used when pausing plan)
+  const handleUnsyncAllFromCalendar = async () => {
+    if (!data) return;
+
+    const syncedActions = data.dailyActions.filter(
+      (a) => a.calendar_sync_status === 'synced' && a.calendar_event_id
+    );
+
+    if (syncedActions.length === 0) {
+      toast.info('No synced actions to remove');
+      return;
+    }
+
+    setIsSyncing(true);
+    let removedCount = 0;
+    let failedCount = 0;
+
+    for (const action of syncedActions) {
+      try {
+        const response = await fetch(
+          `/api/calendar/google/events?eventId=${encodeURIComponent(action.calendar_event_id!)}`,
+          { method: 'DELETE' }
+        );
+
+        if (response.ok) {
+          removedCount++;
+        } else {
+          failedCount++;
+        }
+      } catch {
+        failedCount++;
+      }
+    }
+
+    // Update local state
+    setData((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        dailyActions: prev.dailyActions.map((action) => {
+          if (action.calendar_sync_status === 'synced') {
+            return {
+              ...action,
+              calendar_sync_status: 'not_synced' as const,
+              calendar_event_id: undefined,
+              calendar_synced_at: undefined,
+            };
+          }
+          return action;
+        }),
+      };
+    });
+
+    if (removedCount > 0) {
+      toast.success(`Removed ${removedCount} events from calendar`);
+    }
+    if (failedCount > 0) {
+      toast.error(`Failed to remove ${failedCount} events`);
+    }
+
+    setIsSyncing(false);
   };
 
   // Calculate metrics
@@ -495,13 +744,13 @@ export default function BacktrackDetailPage({ params }: { params: Promise<{ id: 
             )}
             {data.plan.status === 'active' && (
               <Button
-                onClick={() => handleStatusChange('paused')}
-                disabled={isUpdating}
+                onClick={handlePauseWithPrompt}
+                disabled={isUpdating || isSyncing}
                 variant="outline"
                 size="sm"
                 className="gap-2"
               >
-                <Pause className="h-4 w-4" />
+                {isSyncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Pause className="h-4 w-4" />}
                 Pause
               </Button>
             )}

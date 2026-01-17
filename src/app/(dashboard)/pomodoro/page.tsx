@@ -20,6 +20,7 @@ import {
   Volume2,
   VolumeX,
 } from 'lucide-react';
+import { ShareButton } from '@/components/features/sharing';
 
 type TimerMode = 'work' | 'shortBreak' | 'longBreak';
 
@@ -237,10 +238,13 @@ export default function PomodoroPage() {
         title="Pomodoro Timer"
         description="25-minute focused sprints to maximize productivity"
         actions={
-          <Button variant="outline" onClick={() => setShowSettings(!showSettings)}>
-            <Settings className="h-4 w-4 mr-2" />
-            Settings
-          </Button>
+          <div className="flex items-center gap-2">
+            <ShareButton tabName="pomodoro" />
+            <Button variant="outline" onClick={() => setShowSettings(!showSettings)}>
+              <Settings className="h-4 w-4 mr-2" />
+              Settings
+            </Button>
+          </div>
         }
       />
 

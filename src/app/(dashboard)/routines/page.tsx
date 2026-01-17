@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { ROUTES } from '@/constants/routes';
+import { ShareButton } from '@/components/features/sharing';
 
 interface RoutineStep {
   id: string;
@@ -225,10 +226,13 @@ export default function RoutinesPage() {
         title="Daily Routines"
         description="Build consistent habits with morning and evening routines"
         actions={
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Create Routine
-          </Button>
+          <div className="flex items-center gap-2">
+            <ShareButton tabName="routines" />
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Routine
+            </Button>
+          </div>
         }
       />
 

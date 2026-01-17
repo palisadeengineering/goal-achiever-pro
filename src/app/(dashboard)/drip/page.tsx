@@ -5,6 +5,7 @@ import { DripMatrix } from '@/components/features/drip/drip-matrix';
 import { DripPieChart } from '@/components/features/time-audit/drip-pie-chart';
 import { Plus, Lightbulb } from 'lucide-react';
 import type { DripQuadrant } from '@/types/database';
+import { ShareButton } from '@/components/features/sharing';
 
 // Mock data - will be replaced with actual data fetching
 const mockItems = [
@@ -40,10 +41,13 @@ export default function DripPage() {
         title="DRIP Matrix"
         description="Categorize your activities by money potential and energy to optimize your time"
         actions={
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Activity
-          </Button>
+          <div className="flex items-center gap-2">
+            <ShareButton tabName="drip" />
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Activity
+            </Button>
+          </div>
         }
       />
 

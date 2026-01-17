@@ -27,6 +27,7 @@ import {
   BarChart3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ShareButton } from '@/components/features/sharing';
 
 type DateRangeOption = '1week' | '2weeks' | '1month' | '3months';
 
@@ -72,20 +73,23 @@ export default function AnalyticsPage() {
         title="Analytics"
         description="Insights into your time usage and productivity patterns"
         actions={
-          <Select
-            value={dateRangeOption}
-            onValueChange={(v) => setDateRangeOption(v as DateRangeOption)}
-          >
-            <SelectTrigger className="w-36">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1week">This Week</SelectItem>
-              <SelectItem value="2weeks">2 Weeks</SelectItem>
-              <SelectItem value="1month">1 Month</SelectItem>
-              <SelectItem value="3months">3 Months</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <ShareButton tabName="analytics" />
+            <Select
+              value={dateRangeOption}
+              onValueChange={(v) => setDateRangeOption(v as DateRangeOption)}
+            >
+              <SelectTrigger className="w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1week">This Week</SelectItem>
+                <SelectItem value="2weeks">2 Weeks</SelectItem>
+                <SelectItem value="1month">1 Month</SelectItem>
+                <SelectItem value="3months">3 Months</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         }
       />
 

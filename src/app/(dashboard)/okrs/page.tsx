@@ -41,6 +41,7 @@ import {
   User,
 } from 'lucide-react';
 import type { KeyResult, KeyResultStatus, CreateKeyResultInput, TeamMember } from '@/types/team';
+import { ShareButton } from '@/components/features/sharing';
 
 const STATUS_CONFIG: Record<KeyResultStatus, { label: string; color: string; icon: React.ReactNode }> = {
   on_track: { label: 'On Track', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200', icon: <CheckCircle2 className="h-3 w-3" /> },
@@ -244,6 +245,7 @@ export default function OKRsPage() {
       <PageHeader
         title="Key Results"
         description="Track measurable outcomes and progress toward your vision"
+        actions={<ShareButton tabName="okrs" />}
       />
 
       {/* Stats Summary */}

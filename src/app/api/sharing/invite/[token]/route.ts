@@ -9,6 +9,9 @@ export async function GET(
   try {
     const { token } = await params;
     const supabase = await createClient();
+    if (!supabase) {
+      return NextResponse.json({ error: 'Failed to initialize database' }, { status: 500 });
+    }
 
     // Find the invitation
     const { data: invitation, error } = await supabase
