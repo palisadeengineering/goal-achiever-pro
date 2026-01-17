@@ -25,6 +25,8 @@ export const STRIPE_PRICES = {
     monthly: process.env.STRIPE_ELITE_MONTHLY_PRICE_ID || 'price_elite_monthly',
     yearly: process.env.STRIPE_ELITE_YEARLY_PRICE_ID || 'price_elite_yearly',
   },
+  // One-time Founding Member offer
+  foundingMember: process.env.STRIPE_FOUNDING_MEMBER_PRICE_ID || 'price_founding_member',
 };
 
 // Helper to get price ID

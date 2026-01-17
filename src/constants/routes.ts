@@ -5,6 +5,7 @@ export const ROUTES = {
   home: '/',
   pricing: '/pricing',
   features: '/features',
+  offer: '/offer',
 
   // Auth
   login: '/login',

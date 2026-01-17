@@ -190,9 +190,9 @@ export default function HomePage() {
                 Sign in
               </Button>
             </Link>
-            <Link href={ROUTES.signup}>
+            <Link href={ROUTES.offer}>
               <Button size="sm" className="btn-lift font-semibold">
-                Get Started
+                Get Access
               </Button>
             </Link>
           </nav>
@@ -240,9 +240,9 @@ export default function HomePage() {
 
                 <ScrollReveal animation="fade-up" delay={300}>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                    <Link href={ROUTES.signup}>
+                    <Link href={ROUTES.offer}>
                       <Button size="lg" className="btn-lift gap-2 font-semibold text-base px-8 w-full sm:w-auto">
-                        Start Free <ArrowRight className="h-4 w-4" />
+                        Get Founding Member Access <ArrowRight className="h-4 w-4" />
                       </Button>
                     </Link>
                     <Link href="#how-it-works">
@@ -833,12 +833,11 @@ export default function HomePage() {
                 Ready to Make 2026 Your Best Year Ever?
               </h2>
               <p className="text-primary-foreground/80 mb-8 text-lg">
-                Join thousands of goal achievers using this system to transform their lives.
-                Start free, upgrade when you&apos;re ready.
+                Join as a Founding Member and get the complete goal achievement system for just $99.
               </p>
-              <Link href={ROUTES.signup}>
+              <Link href={ROUTES.offer}>
                 <Button size="lg" variant="secondary" className="btn-lift gap-2 font-semibold text-base px-8">
-                  Get Started Free <ArrowRight className="h-4 w-4" />
+                  Get Founding Member Access <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
             </div>
