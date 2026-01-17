@@ -154,3 +154,80 @@ await sendEmail({
   html: generateWelcomeEmail({ userName: 'John' }),
 });
 ```
+
+## API Endpoints
+
+These endpoints use the custom email templates instead of Supabase's default emails.
+
+### POST `/api/auth/signup`
+Creates a new user and sends welcome email with confirmation link.
+
+**Request:**
+```json
+{
+  "email": "user@example.com",
+  "password": "securepassword",
+  "fullName": "John Doe"
+}
+```
+
+**Response:**
+```json
+{ "success": true, "needsConfirmation": true }
+```
+
+**Email sent:** Welcome email with "Confirm Your Email" button
+
+---
+
+### POST `/api/auth/forgot-password`
+Sends password reset email.
+
+**Request:**
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+**Response:**
+```json
+{ "success": true }
+```
+
+**Email sent:** Reset password email with "Reset Password" button (24h expiry)
+
+---
+
+### POST `/api/auth/magic-link`
+Sends passwordless sign-in link.
+
+**Request:**
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+**Response:**
+```json
+{ "success": true }
+```
+
+**Email sent:** Magic link email with "Sign In" button (60min expiry)
+
+---
+
+### POST `/api/sharing/invite`
+Sends team sharing invitation (existing endpoint).
+
+**Email sent:** Share invitation email with "Accept Invitation" button
+
+## Auth Flow Summary
+
+| Action | Endpoint | Email Template | Redirect |
+|--------|----------|----------------|----------|
+| Sign up | `/api/auth/signup` | Welcome | `/callback` |
+| Forgot password | `/api/auth/forgot-password` | Reset Password | `/reset-password` |
+| Magic link login | `/api/auth/magic-link` | Magic Link | `/callback` |
+| Share invitation | `/api/sharing/invite` | Share Invitation | `/accept-invite/[token]` |
