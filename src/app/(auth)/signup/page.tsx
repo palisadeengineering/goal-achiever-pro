@@ -32,7 +32,7 @@ export default function SignupPage() {
     setError(null);
     setEmailSuggestion(null);
 
-    // Validate email before sending to Supabase
+    // Validate email before sending
     const emailValidation = validateEmail(email);
     if (!emailValidation.isValid) {
       setError(emailValidation.error || 'Please enter a valid email address.');
@@ -44,33 +44,21 @@ export default function SignupPage() {
     }
 
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-          emailRedirectTo: `${window.location.origin}/callback`,
-        },
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, fullName }),
       });
 
-      if (error) {
-        // Map Supabase errors to user-friendly messages
-        const errorMessages: Record<string, string> = {
-          'User already registered': 'An account with this email already exists. Try signing in instead.',
-          'Password should be at least 6 characters': 'Password must be at least 8 characters long.',
-          'Invalid email': 'Please enter a valid email address.',
-          'Signup is disabled': 'New registrations are currently disabled. Please try again later.',
-          'Email rate limit exceeded': 'Too many sign-up attempts. Please wait a moment and try again.',
-        };
-        setError(errorMessages[error.message] || error.message);
-        return;
-      }
+      const data = await response.json();
 
-      // Check if user already exists (Supabase returns user with empty identities for existing users)
-      if (data?.user?.identities?.length === 0) {
-        setError('An account with this email already exists. Try signing in instead, or use "Forgot password" to reset your password.');
+      if (!response.ok) {
+        if (response.status === 409) {
+          // Account already exists
+          setError('An account with this email already exists');
+        } else {
+          setError(data.error || 'Unable to create account. Please try again.');
+        }
         return;
       }
 
