@@ -44,7 +44,7 @@ export default function SignupPage() {
     }
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -65,6 +65,12 @@ export default function SignupPage() {
           'Email rate limit exceeded': 'Too many sign-up attempts. Please wait a moment and try again.',
         };
         setError(errorMessages[error.message] || error.message);
+        return;
+      }
+
+      // Check if user already exists (Supabase returns user with empty identities for existing users)
+      if (data?.user?.identities?.length === 0) {
+        setError('An account with this email already exists. Try signing in instead, or use "Forgot password" to reset your password.');
         return;
       }
 
