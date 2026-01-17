@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
 import { validateEmail } from '@/lib/utils/email-validation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,15 +16,13 @@ export default function ForgotPasswordPage() {
   const [emailSuggestion, setEmailSuggestion] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const supabase = createClient();
-
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
     setEmailSuggestion(null);
 
-    // Validate email before sending to Supabase
+    // Validate email before sending
     const emailValidation = validateEmail(email);
     if (!emailValidation.isValid) {
       setError(emailValidation.error || 'Please enter a valid email address.');
@@ -37,17 +34,16 @@ export default function ForgotPasswordPage() {
     }
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
       });
 
-      if (error) {
-        // Map Supabase errors to user-friendly messages
-        const errorMessages: Record<string, string> = {
-          'Email rate limit exceeded': 'Too many reset attempts. Please wait a moment and try again.',
-          'User not found': 'If an account exists with this email, you will receive a reset link.',
-        };
-        setError(errorMessages[error.message] || error.message);
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || 'Unable to send reset email. Please try again.');
         return;
       }
 
