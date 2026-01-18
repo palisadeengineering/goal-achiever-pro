@@ -25,6 +25,7 @@ import {
   Zap,
   Loader2,
   ChevronDown,
+  Star,
 } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
 import { createClient } from '@/lib/supabase/client';
@@ -203,72 +204,84 @@ export default function FoundingMemberOfferPage() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative py-16 md:py-24 px-4 overflow-hidden">
+        <section className="relative py-20 md:py-32 px-4 overflow-hidden">
           <div className="absolute inset-0 bg-dot-pattern opacity-50" />
           <div className="absolute inset-0 bg-hero-gradient" />
 
+          {/* Decorative circles */}
+          <div className="absolute top-20 left-1/4 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
+
           <div className="container max-w-4xl relative">
             <ScrollReveal animation="fade-up">
-              <div className="text-center">
-                <Badge className="mb-6 bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 px-4 py-1.5">
-                  <Gift className="h-3.5 w-3.5 mr-1.5" />
+              <div className="flex flex-col items-center text-center">
+                <Badge className="mb-8 bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 px-5 py-2 text-sm">
+                  <Gift className="h-4 w-4 mr-2" />
                   Founding Member Offer
                 </Badge>
 
-                <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight mb-6">
+                <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-8 leading-tight">
                   Goal Achiever Pro
-                  <br />
-                  <span className="text-gradient-primary">The System To Actually Achieve Your Goals By 2026</span>
                 </h1>
 
-                <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
+                <p className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-gradient-primary mb-8">
+                  The System To Actually Achieve Your Goals By 2026
+                </p>
+
+                <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl leading-relaxed">
                   Turn proven time audits, vision planning, and daily execution frameworks into one simple app that keeps you on track, even when motivation fades.
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
+                <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
                   <Button
                     size="lg"
-                    className="btn-lift gap-2 font-semibold text-base px-8"
+                    className="btn-lift gap-2 font-semibold text-base px-10 py-6 text-lg"
                     onClick={handleGetAccess}
                     disabled={loading}
                   >
                     {loading ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <Loader2 className="h-5 w-5 animate-spin" />
                         Processing...
                       </>
                     ) : (
                       <>
                         Start Your 2026 Goal System
-                        <ArrowRight className="h-4 w-4" />
+                        <ArrowRight className="h-5 w-5" />
                       </>
                     )}
                   </Button>
                   <Link href="#walkthrough">
-                    <Button size="lg" variant="outline" className="gap-2 font-semibold text-base group">
-                      <Play className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                      Watch a 3-minute walkthrough
+                    <Button size="lg" variant="outline" className="gap-2 font-semibold text-base px-8 py-6 group">
+                      <Play className="h-5 w-5 group-hover:scale-110 transition-transform" />
+                      Watch Walkthrough
                     </Button>
                   </Link>
                 </div>
 
-                <p className="text-sm text-muted-foreground mb-8">
+                <p className="text-sm text-muted-foreground mb-10">
                   Founding Member access, backed by a 30-day money-back guarantee.
                 </p>
 
                 {/* Credibility strip */}
-                <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="h-4 w-4 text-primary" />
-                    <span>Time audit & energy management</span>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-6 md:gap-10">
+                  <div className="flex flex-col items-center gap-2 text-center">
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Clock className="h-6 w-6 text-primary" />
+                    </div>
+                    <span className="text-sm text-muted-foreground">Time audit & energy management</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Target className="h-4 w-4 text-primary" />
-                    <span>Vision to daily actions</span>
+                  <div className="flex flex-col items-center gap-2 text-center">
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Target className="h-6 w-6 text-primary" />
+                    </div>
+                    <span className="text-sm text-muted-foreground">Vision to daily actions</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <BarChart3 className="h-4 w-4 text-primary" />
-                    <span>Accountability & progress tracking</span>
+                  <div className="flex flex-col items-center gap-2 text-center">
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                      <BarChart3 className="h-6 w-6 text-primary" />
+                    </div>
+                    <span className="text-sm text-muted-foreground">Accountability & tracking</span>
                   </div>
                 </div>
               </div>
@@ -277,40 +290,34 @@ export default function FoundingMemberOfferPage() {
         </section>
 
         {/* 3 Quick Benefits */}
-        <section className="py-12 px-4 bg-muted/30 border-y">
+        <section className="py-16 px-4 bg-muted/30 border-y">
           <div className="container max-w-4xl">
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-3 gap-8 md:gap-12">
               <ScrollReveal animation="fade-up" delay={0}>
-                <div className="flex gap-4">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <CheckCircle2 className="h-5 w-5 text-primary" />
+                <div className="flex flex-col items-center text-center">
+                  <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-5 shadow-lg shadow-primary/20">
+                    <CheckCircle2 className="h-8 w-8 text-primary-foreground" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Get clear on what you want</h3>
-                    <p className="text-sm text-muted-foreground">Turn it into 1-3 concrete, measurable goals for 2026.</p>
-                  </div>
+                  <h3 className="font-display font-semibold text-lg mb-2">Get clear on what you want</h3>
+                  <p className="text-muted-foreground">Turn it into 1-3 concrete, measurable goals for 2026.</p>
                 </div>
               </ScrollReveal>
               <ScrollReveal animation="fade-up" delay={100}>
-                <div className="flex gap-4">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <CheckCircle2 className="h-5 w-5 text-primary" />
+                <div className="flex flex-col items-center text-center">
+                  <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-5 shadow-lg shadow-primary/20">
+                    <CheckCircle2 className="h-8 w-8 text-primary-foreground" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Audit and redesign your time</h3>
-                    <p className="text-sm text-muted-foreground">So your calendar finally matches your priorities.</p>
-                  </div>
+                  <h3 className="font-display font-semibold text-lg mb-2">Audit and redesign your time</h3>
+                  <p className="text-muted-foreground">So your calendar finally matches your priorities.</p>
                 </div>
               </ScrollReveal>
               <ScrollReveal animation="fade-up" delay={200}>
-                <div className="flex gap-4">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <CheckCircle2 className="h-5 w-5 text-primary" />
+                <div className="flex flex-col items-center text-center">
+                  <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-5 shadow-lg shadow-primary/20">
+                    <CheckCircle2 className="h-8 w-8 text-primary-foreground" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Install daily systems</h3>
-                    <p className="text-sm text-muted-foreground">Progress happens automatically, not just on &ldquo;good&rdquo; days.</p>
-                  </div>
+                  <h3 className="font-display font-semibold text-lg mb-2">Install daily systems</h3>
+                  <p className="text-muted-foreground">Progress happens automatically, not just on &ldquo;good&rdquo; days.</p>
                 </div>
               </ScrollReveal>
             </div>
@@ -318,49 +325,49 @@ export default function FoundingMemberOfferPage() {
         </section>
 
         {/* What You Get Section */}
-        <section className="py-20 px-4">
+        <section className="py-24 px-4">
           <div className="container max-w-5xl">
             <ScrollReveal>
-              <div className="text-center mb-14">
-                <Badge className="mb-4 bg-primary/10 text-primary border-0">What You Get</Badge>
-                <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
+              <div className="flex flex-col items-center text-center mb-16">
+                <Badge className="mb-5 bg-primary/10 text-primary border-0 px-4 py-1.5">What You Get</Badge>
+                <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold mb-6">
                   Inside Goal Achiever Pro
                 </h2>
-                <p className="text-muted-foreground max-w-2xl mx-auto">
+                <p className="text-muted-foreground max-w-2xl text-lg leading-relaxed">
                   Goal Achiever Pro isn&apos;t another to-do app. It&apos;s a complete goal execution system that walks you from &ldquo;no clear plan&rdquo; to &ldquo;I know exactly what to do today&rdquo; and keeps you there.
                 </p>
               </div>
             </ScrollReveal>
 
             {/* Core System */}
-            <div className="mb-16">
+            <div className="mb-20">
               <ScrollReveal>
-                <h3 className="font-display text-xl font-semibold mb-8 text-center">
-                  <span className="px-4 py-2 bg-primary/10 rounded-full">Core Goal Achiever System</span>
-                </h3>
+                <div className="flex justify-center mb-10">
+                  <span className="px-6 py-3 bg-primary/10 rounded-full font-display text-lg font-semibold">
+                    Core Goal Achiever System
+                  </span>
+                </div>
               </ScrollReveal>
 
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid md:grid-cols-2 gap-8">
                 {coreFeatures.map((feature, index) => (
                   <ScrollReveal key={feature.title} animation="fade-up" delay={index * 75}>
-                    <Card className="h-full border-2 hover:border-primary/30 transition-colors">
-                      <CardContent className="pt-6">
-                        <div className="flex items-start gap-4">
-                          <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                            <feature.icon className="h-6 w-6 text-primary" />
+                    <Card className="h-full border-2 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300">
+                      <CardContent className="p-8">
+                        <div className="flex flex-col items-center text-center">
+                          <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-6">
+                            <feature.icon className="h-8 w-8 text-primary" />
                           </div>
-                          <div>
-                            <h4 className="font-display font-semibold text-lg mb-1">{feature.title}</h4>
-                            <p className="text-sm text-muted-foreground mb-3">{feature.description}</p>
-                            <ul className="space-y-1.5">
-                              {feature.items.map((item, i) => (
-                                <li key={i} className="flex items-start gap-2 text-sm">
-                                  <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 flex-shrink-0" />
-                                  <span>{item}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
+                          <h4 className="font-display font-bold text-xl mb-3">{feature.title}</h4>
+                          <p className="text-muted-foreground mb-5">{feature.description}</p>
+                          <ul className="space-y-3 w-full">
+                            {feature.items.map((item, i) => (
+                              <li key={i} className="flex items-center gap-3 text-sm">
+                                <CheckCircle2 className="h-5 w-5 text-emerald-500 flex-shrink-0" />
+                                <span className="text-left">{item}</span>
+                              </li>
+                            ))}
+                          </ul>
                         </div>
                       </CardContent>
                     </Card>
@@ -372,32 +379,34 @@ export default function FoundingMemberOfferPage() {
             {/* Bonuses */}
             <div>
               <ScrollReveal>
-                <h3 className="font-display text-xl font-semibold mb-8 text-center">
-                  <span className="px-4 py-2 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-full">
-                    <Gift className="h-4 w-4 inline mr-2" />
+                <div className="flex justify-center mb-10">
+                  <span className="px-6 py-3 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-full font-display text-lg font-semibold inline-flex items-center gap-2">
+                    <Gift className="h-5 w-5" />
                     Founding Member Bonuses
                   </span>
-                </h3>
+                </div>
               </ScrollReveal>
 
               <div className="grid md:grid-cols-3 gap-6">
                 {bonuses.map((bonus, index) => (
                   <ScrollReveal key={bonus.title} animation="fade-up" delay={index * 75}>
-                    <Card className="h-full border-2 border-amber-500/20 bg-amber-50/30 dark:bg-amber-950/10">
-                      <CardContent className="pt-6">
-                        <div className="h-10 w-10 rounded-lg bg-amber-500/10 flex items-center justify-center mb-4">
-                          <bonus.icon className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                    <Card className="h-full border-2 border-amber-500/20 bg-gradient-to-b from-amber-50/50 to-transparent dark:from-amber-950/20 dark:to-transparent hover:shadow-xl hover:shadow-amber-500/5 transition-all duration-300">
+                      <CardContent className="p-6">
+                        <div className="flex flex-col items-center text-center">
+                          <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-500/5 flex items-center justify-center mb-5">
+                            <bonus.icon className="h-7 w-7 text-amber-600 dark:text-amber-400" />
+                          </div>
+                          <h4 className="font-display font-bold text-lg mb-3">{bonus.title}</h4>
+                          <p className="text-sm text-muted-foreground mb-4">{bonus.description}</p>
+                          <ul className="space-y-2 w-full">
+                            {bonus.items.map((item, i) => (
+                              <li key={i} className="flex items-center gap-2 text-sm">
+                                <CheckCircle2 className="h-4 w-4 text-amber-500 flex-shrink-0" />
+                                <span className="text-left">{item}</span>
+                              </li>
+                            ))}
+                          </ul>
                         </div>
-                        <h4 className="font-display font-semibold mb-2">{bonus.title}</h4>
-                        <p className="text-sm text-muted-foreground mb-3">{bonus.description}</p>
-                        <ul className="space-y-1.5">
-                          {bonus.items.map((item, i) => (
-                            <li key={i} className="flex items-start gap-2 text-sm">
-                              <CheckCircle2 className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />
-                              <span>{item}</span>
-                            </li>
-                          ))}
-                        </ul>
                       </CardContent>
                     </Card>
                   </ScrollReveal>
@@ -408,26 +417,29 @@ export default function FoundingMemberOfferPage() {
         </section>
 
         {/* Pricing & Guarantee Block */}
-        <section className="py-20 px-4 bg-gradient-to-br from-primary to-primary/90 text-primary-foreground relative overflow-hidden">
+        <section className="py-24 px-4 bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-50" />
 
+          {/* Decorative elements */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-white/5 rounded-full blur-3xl" />
+
           <ScrollReveal animation="fade-up">
-            <div className="container max-w-2xl relative text-center">
-              <Badge className="mb-6 bg-white/20 text-white border-0">
-                <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+            <div className="container max-w-2xl relative flex flex-col items-center text-center">
+              <Badge className="mb-8 bg-white/20 text-white border-0 px-5 py-2">
+                <Sparkles className="h-4 w-4 mr-2" />
                 Limited Founding Member Spots
               </Badge>
 
-              <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
+              <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold mb-6">
                 Founding Member 2026 Access
               </h2>
 
-              <div className="mb-6">
-                <div className="flex items-baseline justify-center gap-2">
-                  <span className="font-display text-6xl md:text-7xl font-bold">$99</span>
-                  <span className="text-primary-foreground/70">one-time</span>
+              <div className="mb-8">
+                <div className="flex items-baseline justify-center gap-3">
+                  <span className="font-display text-7xl md:text-8xl font-bold">$99</span>
+                  <span className="text-xl text-primary-foreground/70">one-time</span>
                 </div>
-                <p className="text-primary-foreground/80 mt-2">
+                <p className="text-primary-foreground/80 mt-3 text-lg">
                   All features and updates through <strong>December 31, 2026</strong>
                 </p>
               </div>
@@ -435,30 +447,32 @@ export default function FoundingMemberOfferPage() {
               <Button
                 size="lg"
                 variant="secondary"
-                className="btn-lift gap-2 font-semibold text-base px-8 mb-8"
+                className="btn-lift gap-2 font-semibold text-lg px-10 py-6 mb-10"
                 onClick={handleGetAccess}
                 disabled={loading}
               >
                 {loading ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-5 w-5 animate-spin" />
                     Processing...
                   </>
                 ) : (
                   <>
                     Get Founding Member Access
-                    <ArrowRight className="h-4 w-4" />
+                    <ArrowRight className="h-5 w-5" />
                   </>
                 )}
               </Button>
 
               {/* Guarantee */}
-              <div className="bg-white/10 rounded-xl p-6 backdrop-blur-sm">
-                <div className="flex items-center justify-center gap-3 mb-3">
-                  <Shield className="h-6 w-6" />
-                  <span className="font-display font-semibold text-lg">30-Day Money-Back Guarantee</span>
+              <div className="bg-white/10 rounded-2xl p-8 backdrop-blur-sm max-w-xl w-full">
+                <div className="flex flex-col items-center gap-4 mb-4">
+                  <div className="h-14 w-14 rounded-full bg-white/20 flex items-center justify-center">
+                    <Shield className="h-7 w-7" />
+                  </div>
+                  <span className="font-display font-bold text-xl">30-Day Money-Back Guarantee</span>
                 </div>
-                <p className="text-primary-foreground/80 text-sm leading-relaxed">
+                <p className="text-primary-foreground/80 leading-relaxed">
                   Try Goal Achiever Pro for 30 days. If you don&apos;t feel at least 2x clearer on your goals and more in control of your week, email us and we&apos;ll refund you in full. No questions asked.
                 </p>
               </div>
@@ -467,33 +481,33 @@ export default function FoundingMemberOfferPage() {
         </section>
 
         {/* FAQ Section */}
-        <section className="py-20 px-4">
+        <section className="py-24 px-4">
           <div className="container max-w-2xl">
             <ScrollReveal>
-              <div className="text-center mb-10">
-                <Badge className="mb-4" variant="outline">FAQ</Badge>
-                <h2 className="font-display text-2xl md:text-3xl font-bold">
+              <div className="flex flex-col items-center text-center mb-12">
+                <Badge className="mb-5" variant="outline">FAQ</Badge>
+                <h2 className="font-display text-3xl md:text-4xl font-bold">
                   Frequently Asked Questions
                 </h2>
               </div>
             </ScrollReveal>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
               {faqs.map((faq, index) => (
                 <ScrollReveal key={index} animation="fade-up" delay={index * 50}>
-                  <Card className="border-2">
+                  <Card className="border-2 overflow-hidden">
                     <button
-                      className="w-full text-left p-5 flex items-center justify-between gap-4"
+                      className="w-full p-6 flex items-center justify-between gap-4 hover:bg-muted/30 transition-colors"
                       onClick={() => setOpenFaq(openFaq === index ? null : index)}
                     >
-                      <h3 className="font-display font-semibold">{faq.q}</h3>
-                      <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform flex-shrink-0 ${openFaq === index ? 'rotate-180' : ''}`} />
+                      <h3 className="font-display font-semibold text-left">{faq.q}</h3>
+                      <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform duration-200 flex-shrink-0 ${openFaq === index ? 'rotate-180' : ''}`} />
                     </button>
-                    {openFaq === index && (
-                      <div className="px-5 pb-5 pt-0">
-                        <p className="text-muted-foreground leading-relaxed">{faq.a}</p>
+                    <div className={`overflow-hidden transition-all duration-300 ${openFaq === index ? 'max-h-48' : 'max-h-0'}`}>
+                      <div className="px-6 pb-6 pt-0">
+                        <p className="text-muted-foreground leading-relaxed text-center">{faq.a}</p>
                       </div>
-                    )}
+                    </div>
                   </Card>
                 </ScrollReveal>
               ))}
@@ -502,57 +516,64 @@ export default function FoundingMemberOfferPage() {
         </section>
 
         {/* Final CTA */}
-        <section className="py-16 px-4 bg-muted/30 border-t">
-          <div className="container max-w-2xl text-center">
+        <section className="py-20 px-4 bg-muted/30 border-t">
+          <div className="container max-w-2xl">
             <ScrollReveal animation="fade-up">
-              <h2 className="font-display text-2xl md:text-3xl font-bold mb-4">
-                Ready to Make 2026 Your Year?
-              </h2>
-              <p className="text-muted-foreground mb-6">
-                Join as a Founding Member and get the complete system to achieve your goals.
-              </p>
-              <Button
-                size="lg"
-                className="btn-lift gap-2 font-semibold text-base px-8"
-                onClick={handleGetAccess}
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    Get Founding Member Access - $99
-                    <ArrowRight className="h-4 w-4" />
-                  </>
-                )}
-              </Button>
-              <p className="text-sm text-muted-foreground mt-4">
-                One-time payment. 30-day money-back guarantee.
-              </p>
+              <div className="flex flex-col items-center text-center">
+                <div className="flex gap-1 mb-6">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-6 w-6 fill-amber-400 text-amber-400" />
+                  ))}
+                </div>
+                <h2 className="font-display text-3xl md:text-4xl font-bold mb-5">
+                  Ready to Make 2026 Your Year?
+                </h2>
+                <p className="text-muted-foreground text-lg mb-8 max-w-lg">
+                  Join as a Founding Member and get the complete system to achieve your goals.
+                </p>
+                <Button
+                  size="lg"
+                  className="btn-lift gap-2 font-semibold text-lg px-10 py-6"
+                  onClick={handleGetAccess}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      Get Founding Member Access - $99
+                      <ArrowRight className="h-5 w-5" />
+                    </>
+                  )}
+                </Button>
+                <p className="text-sm text-muted-foreground mt-6">
+                  One-time payment. 30-day money-back guarantee.
+                </p>
+              </div>
             </ScrollReveal>
           </div>
         </section>
       </main>
 
       {/* Footer */}
-      <footer className="border-t py-8">
-        <div className="container px-4 flex flex-col md:flex-row items-center justify-between gap-4">
+      <footer className="border-t py-10">
+        <div className="container px-4 flex flex-col items-center gap-6">
           <div className="flex items-center gap-2.5">
-            <div className="h-6 w-6 rounded-md bg-primary flex items-center justify-center">
-              <Target className="h-3.5 w-3.5 text-primary-foreground" />
+            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+              <Target className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-display font-semibold text-sm">Goal Achiever Pro</span>
+            <span className="font-display font-bold">Goal Achiever Pro</span>
           </div>
-          <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} Goal Achiever Pro. All rights reserved.
-          </p>
-          <nav className="flex gap-6 text-sm text-muted-foreground">
+          <nav className="flex gap-8 text-sm text-muted-foreground">
             <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
           </nav>
+          <p className="text-sm text-muted-foreground">
+            &copy; {new Date().getFullYear()} Goal Achiever Pro. All rights reserved.
+          </p>
         </div>
       </footer>
     </div>
