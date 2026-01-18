@@ -46,14 +46,18 @@ const graphics = {
     'day1-smart-vision.html',
     'day2-300-rule.html',
     'day3-power-goals.html',
-    'day4-drip-matrix.html'
+    'day4-drip-matrix.html',
+    'day5-drip-deep-dive.html',
+    'day7-weekly-recap.html'
   ],
   // LinkedIn Posts - Week 2
   'linkedin-posts/week2': [
     'day8-time-tracking.html',
     'day9-energy-tracking.html',
     'day10-mins.html',
-    'day11-app-reveal.html'
+    'day11-app-reveal.html',
+    'day12-300-deep-dive.html',
+    'day14-weekly-recap.html'
   ],
   // LinkedIn Posts - Week 3
   'linkedin-posts/week3': [
