@@ -1,6 +1,5 @@
 {
   "permissions": {
-    "defaultMode": "acceptEdits",
     "allow": [
       "Edit",
       "Write",
@@ -10,6 +9,10 @@
       "mcp__supabase__*",
       "mcp__chrome-devtools__*",
       "Skill(ralph-loop:ralph-loop)"
-    ]
+    ],
+    "defaultMode": "acceptEdits"
+  },
+  "enabledPlugins": {
+    "superpowers@superpowers-marketplace": true
   }
 }
