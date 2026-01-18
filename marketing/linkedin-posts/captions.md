@@ -139,6 +139,93 @@ What quadrant do you spend most of your time in?
 
 ---
 
+### Day 5 - DRIP Deep Dive
+
+**Caption:**
+
+Yesterday I introduced the DRIP Matrix.
+
+Today, let's get specific.
+
+Every task you do falls into one of these quadrants. Here's how to categorize them:
+
+D - DELEGATION ($25/hr)
+• Email management
+• Data entry
+• Scheduling
+• Basic admin
+• Research tasks
+
+R - REPLACEMENT ($50/hr)
+• Customer support
+• Bookkeeping
+• Social media posting
+• Content formatting
+• Basic reporting
+
+I - INVESTMENT ($500/hr)
+• Building systems
+• Creating SOPs
+• Training team members
+• Process optimization
+• Strategic planning
+
+P - PRODUCTION ($5,000/hr)
+• Closing deals
+• High-level partnerships
+• Vision and strategy
+• Key hiring decisions
+• Revenue-generating activities
+
+Here's the exercise:
+
+Track your time for one week. At the end of each day, put every task in a quadrant.
+
+Most people discover they spend 70%+ of their time in D and R.
+
+The goal? Flip that ratio.
+
+80% in I and P. 20% in D and R (that you're actively delegating).
+
+What would change if you spent 80% of your time on $500+/hr activities?
+
+#productivity #delegation #timemanagement #entrepreneurship #leadership
+
+---
+
+### Day 7 - Week 1 Recap
+
+**Caption:**
+
+Week 1 complete.
+
+Here's everything we covered - your foundation for achieving any goal:
+
+01 | SMART VISION
+Your GPS coordinates. Specific, Measurable, Achievable, Relevant, Time-bound. Not a wish - a destination.
+
+02 | 300% RULE
+Clarity + Belief + Consistency = 300%. Your lowest score is your biggest bottleneck.
+
+03 | 12 POWER GOALS
+3 goals per quarter. Forced focus. The constraint creates the results.
+
+04 | DRIP MATRIX
+D ($25/hr) → R ($50/hr) → I ($500/hr) → P ($5,000/hr)
+Know your task values. Protect your high-value time.
+
+If you implemented just ONE of these this week, you're ahead of 90% of people who just read and move on.
+
+Next week: Time & Energy tracking systems.
+
+We're going from theory to tactical.
+
+Which of these four concepts resonated most with you?
+
+#productivity #goalsetting #entrepreneurship #weeklyreview #success
+
+---
+
 ## WEEK 2: Time & Energy
 
 ### Day 8 - Time Tracking
@@ -278,6 +365,95 @@ Building in public. Sharing the journey.
 If you've read "Buy Back Your Time" - what was your biggest takeaway?
 
 #buildinpublic #productivity #entrepreneurship #startup #goalsetting
+
+---
+
+### Day 12 - 300% Rule Deep Dive
+
+**Caption:**
+
+On Day 2, I introduced the 300% Rule.
+
+Today, let's actually use it.
+
+Clarity + Belief + Consistency = 300%
+
+Rate yourself honestly on each (0-100):
+
+CLARITY (How specific is your goal?)
+• 20% = "I want to be successful"
+• 40% = "I want to grow my business"
+• 60% = "I want to double revenue"
+• 80% = "I want $500K ARR by December"
+• 100% = "$1M ARR via 500 customers at $167/mo by Dec 31, 2025"
+
+BELIEF (Do you believe you'll achieve it?)
+• 20% = "Impossible for someone like me"
+• 40% = "Maybe if everything goes right"
+• 60% = "I think I can do it"
+• 80% = "I'm confident I'll get there"
+• 100% = "It's not IF, but WHEN"
+
+CONSISTENCY (How often do you take action?)
+• 20% = "I think about it sometimes"
+• 40% = "Weekly effort when motivated"
+• 60% = "Daily thought, occasional action"
+• 80% = "Daily action, some gaps"
+• 100% = "Non-negotiable daily execution"
+
+Add your scores: ___/300
+
+Your lowest score? That's your bottleneck.
+
+Most people have high clarity but low belief.
+Or high belief but low consistency.
+Or they're consistently working on the wrong things (low clarity).
+
+The breakthrough comes when all three hit 80+.
+
+What's your current score?
+
+#goalsetting #mindset #productivity #success #selfimprovement
+
+---
+
+### Day 14 - Week 2 Recap
+
+**Caption:**
+
+Week 2 complete.
+
+This week was about getting tactical with your time and energy:
+
+08 | 15-MINUTE TIME TRACKING
+Track every 15 minutes for 2 weeks. Find the 10+ hidden hours you didn't know you had.
+
+09 | ENERGY TRACKING
+Rate your energy (1-10) throughout the day. Schedule important work during peaks, not valleys.
+
+10 | DAILY MINs
+3 Most Important Next Steps. Set them the night before. Morning is for execution, not decisions.
+
+11 | GOAL ACHIEVER PRO
+The system from "Buy Back Your Time," digitized. Everything in one place.
+
+12 | 300% DEEP DIVE
+Clarity + Belief + Consistency. Your lowest score is your biggest opportunity.
+
+If you've been following along, you now have:
+- A SMART Vision with 300% scoring
+- 12 Power Goals mapped to quarters
+- Time tracking revealing your true patterns
+- Energy data showing your peak hours
+- Daily MINs focusing your effort
+
+Next week: Routines & Systems.
+
+We're going to lock these practices into automatic daily habits.
+
+What was your biggest insight from Week 2?
+
+#productivity #timemanagement #weeklyreview #entrepreneurship #success
 
 ---
 
