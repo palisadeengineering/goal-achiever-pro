@@ -193,7 +193,7 @@ export default function TimeAuditPage() {
   const [isImporting, setIsImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ imported: number; skipped: number } | null>(null);
 
-  const { getUncategorizedEventIds, getCategorization, saveCategorization, categorizations, refreshFromStorage, clearCategorizations } = useEventPatterns();
+  const { getUncategorizedEventIds, getCategorization, saveCategorization, categorizations, refreshFromStorage, clearCategorizations, ignoreEvent, removeCategorization } = useEventPatterns();
 
   const { tags } = useTags();
 
@@ -531,6 +531,76 @@ export default function TimeAuditPage() {
 
     return allBlocks;
   }, [timeBlocks, googleEvents, getCategorization, categorizations, viewedDateRange]);
+
+  // Combined data for InsightsView - includes ALL time blocks + Google Calendar events (unfiltered by date)
+  // The InsightsView handles its own date filtering internally
+  const insightsTimeBlocks = useMemo(() => {
+    const allBlocks: Array<{
+      id: string;
+      date: string;
+      startTime: string;
+      endTime: string;
+      activityName: string;
+      dripQuadrant: DripQuadrant;
+      energyRating: EnergyRating;
+      tagIds?: string[];
+      durationMinutes: number;
+    }> = [];
+
+    // Add time blocks from database and local storage
+    timeBlocks.forEach((block) => {
+      allBlocks.push({
+        id: block.id,
+        date: block.date,
+        startTime: block.startTime,
+        endTime: block.endTime,
+        activityName: block.activityName,
+        dripQuadrant: block.dripQuadrant,
+        energyRating: block.energyRating,
+        tagIds: 'tagIds' in block ? (block.tagIds as string[]) : undefined,
+        durationMinutes: calculateDuration(block.startTime, block.endTime),
+      });
+    });
+
+    // Add Google Calendar events that aren't already imported
+    const importedExternalIds = new Set(
+      timeBlocks.filter(b => b.externalEventId).map(b => b.externalEventId)
+    );
+
+    googleEvents.forEach((event) => {
+      // Skip if already imported as a time block
+      if (importedExternalIds.has(event.id) || importedExternalIds.has(`gcal_${event.id}`)) {
+        return;
+      }
+
+      const categorization = getCategorization(event.id);
+      const startDateTime = event.start?.dateTime || event.startTime;
+      const endDateTime = event.end?.dateTime || event.endTime;
+
+      if (startDateTime && endDateTime) {
+        try {
+          const startDate = new Date(startDateTime);
+          const endDate = new Date(endDateTime);
+          const durationMinutes = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60));
+
+          allBlocks.push({
+            id: event.id,
+            date: format(startDate, 'yyyy-MM-dd'),
+            startTime: format(startDate, 'HH:mm'),
+            endTime: format(endDate, 'HH:mm'),
+            activityName: event.summary || 'Untitled Event',
+            dripQuadrant: categorization?.dripQuadrant || 'na',
+            energyRating: categorization?.energyRating || 'yellow',
+            durationMinutes,
+          });
+        } catch {
+          // Skip invalid dates
+        }
+      }
+    });
+
+    return allBlocks;
+  }, [timeBlocks, googleEvents, getCategorization, categorizations]);
 
   // Combined events list for the Manage Events tab
   const manageEventsList = useMemo((): EventListItem[] => {
@@ -1113,6 +1183,28 @@ export default function TimeAuditPage() {
     }
   }, [deleteTimeBlock, setLocalTimeBlocks, isGoogleConnected, handleSyncGoogle, dbTimeBlocks]);
 
+  // Handle skipping (uncategorizing) a time block - keeps event in Google Calendar but removes from tracking
+  const handleSkipBlock = useCallback(async (block: TimeBlock) => {
+    // Add to ignored events list (prevents it from appearing in categorization dialog)
+    if (block.externalEventId) {
+      ignoreEvent(block.externalEventId, block.activityName);
+      // Also remove any existing categorization
+      removeCategorization(block.externalEventId);
+    }
+
+    // Remove from database if it exists there
+    const existsInDb = dbTimeBlocks.some(b => b.id === block.id);
+    if (existsInDb) {
+      await deleteTimeBlock(block.id);
+    }
+
+    // Also remove from local storage
+    setLocalTimeBlocks(blocks => blocks.filter(b => b.id !== block.id));
+
+    // Refresh the view
+    await fetchTimeBlocks();
+  }, [ignoreEvent, removeCategorization, deleteTimeBlock, setLocalTimeBlocks, dbTimeBlocks, fetchTimeBlocks]);
+
   // Handle deleting an event from the Manage Events tab
   const handleEventListDelete = useCallback(async (event: EventListItem) => {
     setIsDeletingEvent(true);
@@ -1431,6 +1523,7 @@ export default function TimeAuditPage() {
         onOpenChange={setIsFormOpen}
         onSave={handleSaveBlock}
         onDelete={handleDeleteBlock}
+        onSkip={handleSkipBlock}
         initialDate={initialDate}
         initialTime={initialTime}
         initialEndTime={initialEndTime}
@@ -1893,17 +1986,7 @@ export default function TimeAuditPage() {
 
         <TabsContent value="insights" className="mt-4">
           <InsightsView
-            timeBlocks={timeBlocks.map(block => ({
-              id: block.id,
-              date: block.date,
-              startTime: block.startTime,
-              endTime: block.endTime,
-              activityName: block.activityName,
-              dripQuadrant: block.dripQuadrant,
-              energyRating: block.energyRating,
-              tagIds: 'tagIds' in block ? (block.tagIds as string[]) : undefined,
-              durationMinutes: calculateDuration(block.startTime, block.endTime),
-            }))}
+            timeBlocks={insightsTimeBlocks}
             tags={tags}
           />
         </TabsContent>

@@ -26,7 +26,7 @@ import { TagSelector } from './tag-selector';
 import { TagManager } from './tag-manager';
 import { useTags, type Tag } from '@/lib/hooks/use-tags';
 import { useTagPatterns } from '@/lib/hooks/use-tag-patterns';
-import { Sparkles, Check, X, Loader2, Trash2, Repeat } from 'lucide-react';
+import { Sparkles, Check, X, Loader2, Trash2, Repeat, SkipForward } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import type { DripQuadrant, EnergyRating } from '@/types/database';
 
@@ -66,6 +66,7 @@ interface TimeBlockFormProps {
   onOpenChange: (open: boolean) => void;
   onSave: (block: Omit<TimeBlock, 'id' | 'createdAt' | 'parentBlockId' | 'isRecurrenceException' | 'originalDate'>) => void;
   onDelete?: (block: TimeBlock) => Promise<void>;
+  onSkip?: (block: TimeBlock) => Promise<void>;
   initialDate?: string;
   initialTime?: string;
   initialEndTime?: string;
@@ -91,6 +92,7 @@ export function TimeBlockForm({
   onOpenChange,
   onSave,
   onDelete,
+  onSkip,
   initialDate,
   initialTime,
   initialEndTime,
@@ -108,6 +110,7 @@ export function TimeBlockForm({
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [showTagManager, setShowTagManager] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isSkipping, setIsSkipping] = useState(false);
 
   // Recurring event states
   const [isRecurring, setIsRecurring] = useState(false);
@@ -274,6 +277,23 @@ export function TimeBlockForm({
       setIsDeleting(false);
     }
   };
+
+  const handleSkip = async () => {
+    if (!editBlock || !onSkip) return;
+
+    setIsSkipping(true);
+    try {
+      await onSkip(editBlock);
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Skip error:', error);
+    } finally {
+      setIsSkipping(false);
+    }
+  };
+
+  // Check if this is a Google Calendar event
+  const isGoogleCalendarEvent = editBlock?.source === 'google_calendar' || editBlock?.externalEventId;
 
   return (
     <>
@@ -523,27 +543,49 @@ export function TimeBlockForm({
           </div>
 
           <DialogFooter className="flex-col sm:flex-row gap-2">
-            {editBlock && onDelete && (
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="w-full sm:w-auto sm:mr-auto"
-              >
-                {isDeleting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Deleting...
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
-                  </>
-                )}
-              </Button>
-            )}
+            <div className="flex gap-2 w-full sm:w-auto sm:mr-auto">
+              {editBlock && onDelete && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={isDeleting || isSkipping}
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </>
+                  )}
+                </Button>
+              )}
+              {editBlock && onSkip && isGoogleCalendarEvent && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleSkip}
+                  disabled={isDeleting || isSkipping}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  {isSkipping ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Skipping...
+                    </>
+                  ) : (
+                    <>
+                      <SkipForward className="h-4 w-4 mr-2" />
+                      Skip
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
             <div className="flex gap-2 w-full sm:w-auto">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1 sm:flex-none">
                 Cancel
