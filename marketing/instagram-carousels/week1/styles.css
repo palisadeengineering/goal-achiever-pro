@@ -28,11 +28,11 @@ body {
 
 /* ===========================================
    BRAND COLORS - Goal Achiever Pro
-   Primary: Emerald Green #10b981
+   Primary: Emerald Green #00BEFF
    =========================================== */
 
 .bg-brand-primary {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #00BEFF 0%, #0891B2 100%);
 }
 
 .bg-brand-dark {
@@ -40,7 +40,7 @@ body {
 }
 
 .bg-brand-gradient {
-  background: linear-gradient(135deg, #10b981 0%, #0ea5e9 100%);
+  background: linear-gradient(135deg, #00BEFF 0%, #0ea5e9 100%);
 }
 
 /* DRIP Colors matching your app */
@@ -57,7 +57,7 @@ body {
 }
 
 .bg-drip-production {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #00BEFF 0%, #0891B2 100%);
 }
 
 /* Legacy gradient backgrounds */
@@ -78,7 +78,7 @@ body {
 }
 
 .bg-gradient-teal {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #00BEFF 0%, #0891B2 100%);
 }
 
 .bg-gradient-sunset {
@@ -86,7 +86,7 @@ body {
 }
 
 .bg-gradient-ocean {
-  background: linear-gradient(135deg, #0ea5e9 0%, #10b981 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #00BEFF 100%);
 }
 
 .bg-gradient-fire {
@@ -278,7 +278,7 @@ body {
 .smart-letter {
   font-size: 48px;
   font-weight: 800;
-  color: #10b981; /* Brand emerald */
+  color: #00BEFF; /* Brand emerald */
   display: inline-block;
   width: 60px;
 }
@@ -286,7 +286,7 @@ body {
 /* Highlight box */
 .highlight-box {
   background: rgba(16, 185, 129, 0.2); /* Brand emerald with transparency */
-  border-left: 6px solid #10b981;
+  border-left: 6px solid #00BEFF;
   padding: 30px 40px;
   border-radius: 0 16px 16px 0;
   margin: 30px 0;
@@ -314,7 +314,7 @@ body {
 
 /* CTA styling - Brand emerald */
 .cta {
-  background: #10b981;
+  background: #00BEFF;
   color: white;
   padding: 24px 48px;
   border-radius: 100px;
@@ -343,7 +343,7 @@ body {
 }
 
 .dot.active {
-  background: #10b981;
+  background: #00BEFF;
   width: 36px;
   border-radius: 6px;
 }
@@ -352,7 +352,7 @@ body {
 .drip-d { color: #a855f7; } /* Purple */
 .drip-r { color: #f59e0b; } /* Amber */
 .drip-i { color: #3b82f6; } /* Blue */
-.drip-p { color: #10b981; } /* Emerald */
+.drip-p { color: #00BEFF; } /* Emerald */
 
 .drip-badge {
   display: inline-flex;
@@ -382,7 +382,7 @@ body {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #10b981, #0ea5e9);
+  background: linear-gradient(90deg, #00BEFF, #0ea5e9);
   border-radius: 12px;
 }
 
@@ -391,7 +391,7 @@ body {
   width: 80px;
   height: 80px;
   background: rgba(16, 185, 129, 0.3);
-  border: 2px solid #10b981;
+  border: 2px solid #00BEFF;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -457,7 +457,7 @@ body {
 
 .app-mockup-dot.red { background: #ef4444; }
 .app-mockup-dot.yellow { background: #f59e0b; }
-.app-mockup-dot.green { background: #10b981; }
+.app-mockup-dot.green { background: #00BEFF; }
 
 .app-mockup-title {
   font-size: 14px;
@@ -491,7 +491,7 @@ body {
 
 .sidebar-mockup-item.active {
   background: rgba(16, 185, 129, 0.2);
-  color: #10b981;
+  color: #00BEFF;
 }
 
 .sidebar-mockup-icon {
@@ -513,7 +513,7 @@ body {
 .stat-value {
   font-size: 48px;
   font-weight: 800;
-  color: #10b981;
+  color: #00BEFF;
 }
 
 .stat-label {

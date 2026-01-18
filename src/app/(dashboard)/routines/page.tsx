@@ -301,7 +301,7 @@ export default function RoutinesPage() {
                     <div
                       key={step.id}
                       className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${
-                        step.completed ? 'bg-green-50' : 'hover:bg-muted/50'
+                        step.completed ? 'bg-cyan-50' : 'hover:bg-muted/50'
                       }`}
                     >
                       <Checkbox

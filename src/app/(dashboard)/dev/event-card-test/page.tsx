@@ -67,7 +67,7 @@ function MockEventCard({
       : 'line-clamp-3';
 
   const bgColors: Record<string, string> = {
-    production: 'bg-green-600',
+    production: 'bg-cyan-600',
     investment: 'bg-purple-600',
     replacement: 'bg-amber-500',
     delegation: 'bg-red-500',
@@ -135,7 +135,7 @@ function SizeBucketIndicator({ bucket, height }: { bucket: string; height: numbe
     xs: 'bg-red-100 text-red-800',
     sm: 'bg-orange-100 text-orange-800',
     md: 'bg-yellow-100 text-yellow-800',
-    lg: 'bg-green-100 text-green-800',
+    lg: 'bg-cyan-100 text-cyan-800',
   };
 
   return (
@@ -315,9 +315,9 @@ export default function EventCardTestPage() {
                 <li>No duration</li>
               </ul>
             </div>
-            <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950">
-              <div className="font-semibold text-green-800 dark:text-green-200">LG (&ge;38px)</div>
-              <ul className="text-sm text-green-700 dark:text-green-300 mt-2 space-y-1">
+            <div className="p-4 rounded-lg bg-cyan-50 dark:bg-cyan-950">
+              <div className="font-semibold text-cyan-800 dark:text-cyan-200">LG (&ge;38px)</div>
+              <ul className="text-sm text-cyan-700 dark:text-cyan-300 mt-2 space-y-1">
                 <li>45+ min events</li>
                 <li>3-line clamp for title</li>
                 <li>Full time + duration</li>

@@ -44,13 +44,13 @@ const dripColors: Record<DripQuadrant, string> = {
   delegation: 'bg-red-100 text-red-700 border-red-200',
   replacement: 'bg-amber-100 text-amber-700 border-amber-200',
   investment: 'bg-purple-100 text-purple-700 border-purple-200',
-  production: 'bg-green-100 text-green-700 border-green-200',
+  production: 'bg-cyan-100 text-cyan-700 border-cyan-200',
   na: 'bg-blue-100 text-blue-700 border-blue-200',
 };
 
 // Energy rating colors
 const energyColors: Record<EnergyRating, string> = {
-  green: 'bg-green-100 text-green-700 border-green-200',
+  green: 'bg-cyan-100 text-cyan-700 border-cyan-200',
   yellow: 'bg-yellow-100 text-yellow-700 border-yellow-200',
   red: 'bg-red-100 text-red-700 border-red-200',
 };

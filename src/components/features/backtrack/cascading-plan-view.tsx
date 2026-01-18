@@ -89,14 +89,14 @@ interface CascadingPlanViewProps {
 const CATEGORY_COLORS: Record<string, string> = {
   business: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200',
   career: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200',
-  health: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200',
+  health: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-200',
   wealth: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200',
   relationships: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-200',
   personal: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-200',
 };
 
 const STATUS_ICONS: Record<string, React.ReactNode> = {
-  completed: <CheckCircle2 className="h-4 w-4 text-green-500" />,
+  completed: <CheckCircle2 className="h-4 w-4 text-cyan-500" />,
   in_progress: <Circle className="h-4 w-4 text-blue-500 fill-blue-500/20" />,
   pending: <Circle className="h-4 w-4 text-muted-foreground" />,
 };
@@ -297,7 +297,7 @@ export function CascadingPlanView({
                                           className={cn(
                                             'flex items-center justify-between p-1.5 rounded text-xs',
                                             da.status === 'completed'
-                                              ? 'bg-green-50 dark:bg-green-900/10'
+                                              ? 'bg-cyan-50 dark:bg-cyan-900/10'
                                               : 'bg-muted/30'
                                           )}
                                         >

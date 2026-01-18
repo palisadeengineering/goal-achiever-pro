@@ -94,7 +94,7 @@ interface AIUsageData {
   }>;
 }
 
-const COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4', '#84cc16'];
+const COLORS = ['#8b5cf6', '#3b82f6', '#00BEFF', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4', '#84cc16'];
 
 export default function AdminAIUsagePage() {
   const [data, setData] = useState<AIUsageData | null>(null);
@@ -190,7 +190,7 @@ export default function AdminAIUsagePage() {
                   {data?.totals.totalRequests.toLocaleString() || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  <span className="text-green-600">{data?.totals.successfulRequests || 0}</span>
+                  <span className="text-cyan-600">{data?.totals.successfulRequests || 0}</span>
                   {' '}successful, {' '}
                   <span className="text-red-600">{data?.totals.failedRequests || 0}</span>
                   {' '}failed
@@ -474,7 +474,7 @@ export default function AdminAIUsagePage() {
                       </TableCell>
                       <TableCell>
                         {log.success ? (
-                          <Badge variant="default" className="bg-green-600">
+                          <Badge variant="default" className="bg-cyan-600">
                             <CheckCircle className="h-3 w-3 mr-1" />
                             OK
                           </Badge>

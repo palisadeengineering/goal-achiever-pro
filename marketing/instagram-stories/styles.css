@@ -24,7 +24,7 @@ body {
 
 /* Background Gradients */
 .bg-brand {
-  background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
+  background: linear-gradient(135deg, #0891B2 0%, #00BEFF 50%, #34d399 100%);
 }
 
 .bg-ocean {
@@ -342,7 +342,7 @@ body {
 /* CTA Button */
 .cta-button {
   background: white;
-  color: #059669;
+  color: #0891B2;
   font-size: 32px;
   font-weight: 700;
   padding: 28px 48px;

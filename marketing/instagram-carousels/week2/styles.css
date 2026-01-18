@@ -17,7 +17,7 @@
 .time-block.delegation { border-color: #a855f7; }
 .time-block.replacement { border-color: #f59e0b; }
 .time-block.investment { border-color: #3b82f6; }
-.time-block.production { border-color: #10b981; }
+.time-block.production { border-color: #00BEFF; }
 .time-block.wasted { border-color: #ef4444; }
 
 .time-block-time {
@@ -46,7 +46,7 @@
 }
 
 .energy-pip.filled {
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: linear-gradient(135deg, #00BEFF, #0891B2);
 }
 
 .energy-pip.filled.low {
@@ -58,7 +58,7 @@
 }
 
 .energy-pip.filled.high {
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: linear-gradient(135deg, #00BEFF, #0891B2);
 }
 
 /* App mockup styles */
@@ -99,7 +99,7 @@
 .stat-number {
   font-size: 56px;
   font-weight: 800;
-  color: #10b981;
+  color: #00BEFF;
   min-width: 120px;
 }
 
@@ -141,7 +141,7 @@
 .min-number {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: linear-gradient(135deg, #00BEFF, #0891B2);
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -210,7 +210,7 @@
 .testimonial-avatar {
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, #10b981, #0ea5e9);
+  background: linear-gradient(135deg, #00BEFF, #0ea5e9);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -269,7 +269,7 @@
 }
 
 .result-before .result-value { color: #ef4444; }
-.result-after .result-value { color: #10b981; }
+.result-after .result-value { color: #00BEFF; }
 
 .result-unit {
   font-size: 24px;

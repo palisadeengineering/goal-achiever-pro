@@ -25,7 +25,7 @@ export function TimeSummaryStats({
   };
 
   const getEnergyLabel = (balance: number) => {
-    if (balance >= 30) return { label: 'High Energy', color: 'text-green-600' };
+    if (balance >= 30) return { label: 'High Energy', color: 'text-cyan-600' };
     if (balance >= 0) return { label: 'Balanced', color: 'text-yellow-600' };
     if (balance >= -30) return { label: 'Low Energy', color: 'text-orange-600' };
     return { label: 'Draining', color: 'text-red-600' };
@@ -48,10 +48,10 @@ export function TimeSummaryStats({
       <Card>
         <CardContent className="pt-4">
           <div className="flex items-center gap-2">
-            <Zap className="h-4 w-4 text-green-600" />
+            <Zap className="h-4 w-4 text-cyan-600" />
             <span className="text-sm text-muted-foreground">Production</span>
           </div>
-          <p className="text-2xl font-bold mt-1 text-green-600">{productionPercent}%</p>
+          <p className="text-2xl font-bold mt-1 text-cyan-600">{productionPercent}%</p>
         </CardContent>
       </Card>
 

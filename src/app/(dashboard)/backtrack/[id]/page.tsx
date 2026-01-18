@@ -173,7 +173,7 @@ interface CompletionStatus {
 
 const STATUS_COLORS: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
-  active: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200',
+  active: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-200',
   paused: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200',
   completed: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200',
   pending: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
@@ -1021,7 +1021,7 @@ export default function BacktrackDetailPage({ params }: { params: Promise<{ id: 
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
-                  <CheckSquare className="h-5 w-5 text-green-500" />
+                  <CheckSquare className="h-5 w-5 text-cyan-500" />
                   <span className="text-2xl font-bold">
                     {streakData.reduce((sum, s) => sum + s.thisWeekCompletions, 0)}
                   </span>
@@ -1062,7 +1062,7 @@ export default function BacktrackDetailPage({ params }: { params: Promise<{ id: 
                         className={cn(
                           'flex items-center justify-between p-4 rounded-lg border transition-colors',
                           isCompletedToday
-                            ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800'
+                            ? 'bg-cyan-50 border-cyan-200 dark:bg-cyan-900/20 dark:border-cyan-800'
                             : 'bg-background'
                         )}
                       >
@@ -1234,13 +1234,13 @@ export default function BacktrackDetailPage({ params }: { params: Promise<{ id: 
                       className={cn(
                         'flex items-center justify-between p-4 rounded-lg border',
                         action.status === 'completed'
-                          ? 'bg-green-50 border-green-200 dark:bg-green-900/20'
+                          ? 'bg-cyan-50 border-cyan-200 dark:bg-cyan-900/20'
                           : 'bg-background'
                       )}
                     >
                       <div className="flex items-center gap-3">
                         {action.status === 'completed' ? (
-                          <CheckCircle2 className="h-5 w-5 text-green-600" />
+                          <CheckCircle2 className="h-5 w-5 text-cyan-600" />
                         ) : (
                           <Circle className="h-5 w-5 text-muted-foreground" />
                         )}
@@ -1264,7 +1264,7 @@ export default function BacktrackDetailPage({ params }: { params: Promise<{ id: 
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-6 px-2 text-xs text-green-600 hover:text-red-600"
+                            className="h-6 px-2 text-xs text-cyan-600 hover:text-red-600"
                             onClick={() => handleRemoveFromCalendar(action.id, action.calendar_event_id!)}
                             disabled={syncingIds.has(action.id)}
                           >

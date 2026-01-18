@@ -44,7 +44,7 @@ import type { KeyResult, KeyResultStatus, CreateKeyResultInput, TeamMember } fro
 import { ShareButton } from '@/components/features/sharing';
 
 const STATUS_CONFIG: Record<KeyResultStatus, { label: string; color: string; icon: React.ReactNode }> = {
-  on_track: { label: 'On Track', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200', icon: <CheckCircle2 className="h-3 w-3" /> },
+  on_track: { label: 'On Track', color: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200', icon: <CheckCircle2 className="h-3 w-3" /> },
   at_risk: { label: 'At Risk', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200', icon: <AlertTriangle className="h-3 w-3" /> },
   behind: { label: 'Behind', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200', icon: <ArrowDown className="h-3 w-3" /> },
   achieved: { label: 'Achieved', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200', icon: <Target className="h-3 w-3" /> },
@@ -261,7 +261,7 @@ export default function OKRsPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-2xl font-bold text-green-600">{stats.onTrack}</p>
+              <p className="text-2xl font-bold text-cyan-600">{stats.onTrack}</p>
               <p className="text-sm text-muted-foreground">On Track</p>
             </div>
           </CardContent>

@@ -127,7 +127,7 @@ interface MinItem {
 }
 
 const statusColors = {
-  active: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200',
+  active: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-200',
   completed: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200',
   paused: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200',
   archived: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
@@ -793,8 +793,8 @@ export default function MilestoneDetailPage() {
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                <ListTodo className="h-5 w-5 text-green-600" />
+              <div className="h-10 w-10 rounded-lg bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center">
+                <ListTodo className="h-5 w-5 text-cyan-600" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">MINS Done</p>
@@ -1151,7 +1151,7 @@ export default function MilestoneDetailPage() {
                       className="flex items-center gap-3 p-3 rounded-lg bg-muted/50"
                     >
                       {min.status === 'completed' ? (
-                        <CheckCircle2 className="h-5 w-5 text-green-600" />
+                        <CheckCircle2 className="h-5 w-5 text-cyan-600" />
                       ) : min.status === 'in_progress' ? (
                         <Circle className="h-5 w-5 text-blue-600 fill-blue-600" />
                       ) : (
@@ -1170,7 +1170,7 @@ export default function MilestoneDetailPage() {
                         variant="outline"
                         className={
                           min.status === 'completed'
-                            ? 'bg-green-50 text-green-700 dark:bg-green-900/20'
+                            ? 'bg-cyan-50 text-cyan-700 dark:bg-cyan-900/20'
                             : min.status === 'in_progress'
                             ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20'
                             : 'bg-gray-50 text-gray-700 dark:bg-gray-800'

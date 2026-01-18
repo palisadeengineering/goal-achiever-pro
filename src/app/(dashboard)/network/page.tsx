@@ -56,7 +56,7 @@ interface Contact {
 }
 
 const ENERGY_OPTIONS = {
-  energizing: { label: 'Energizing', icon: Zap, color: 'text-green-500', bgColor: 'bg-green-100' },
+  energizing: { label: 'Energizing', icon: Zap, color: 'text-cyan-500', bgColor: 'bg-cyan-100' },
   neutral: { label: 'Neutral', icon: Battery, color: 'text-yellow-500', bgColor: 'bg-yellow-100' },
   draining: { label: 'Draining', icon: BatteryLow, color: 'text-red-500', bgColor: 'bg-red-100' },
 };
@@ -231,13 +231,13 @@ export default function NetworkPage() {
       {/* Energy Distribution */}
       <div className="grid grid-cols-3 gap-4">
         <Card
-          className={`cursor-pointer transition-all ${filter === 'energizing' ? 'ring-2 ring-green-500' : ''}`}
+          className={`cursor-pointer transition-all ${filter === 'energizing' ? 'ring-2 ring-cyan-500' : ''}`}
           onClick={() => setFilter(filter === 'energizing' ? 'all' : 'energizing')}
         >
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-100">
-                <Zap className="h-5 w-5 text-green-500" />
+              <div className="p-2 rounded-lg bg-cyan-100">
+                <Zap className="h-5 w-5 text-cyan-500" />
               </div>
               <div>
                 <div className="text-2xl font-bold">{energizingCount}</div>

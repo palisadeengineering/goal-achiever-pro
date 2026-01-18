@@ -226,8 +226,8 @@ export default function ProgressPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+              <div className="h-10 w-10 rounded-full bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center">
+                <CheckCircle2 className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
               </div>
               <div>
                 <div className="text-2xl font-bold">
@@ -312,12 +312,12 @@ export default function ProgressPage() {
                         className={cn(
                           'flex items-center gap-2 p-2 rounded-lg border text-sm',
                           kpi.isCompletedToday
-                            ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800'
+                            ? 'bg-cyan-50 dark:bg-cyan-900/10 border-cyan-200 dark:border-cyan-800'
                             : 'bg-background'
                         )}
                       >
                         {kpi.isCompletedToday ? (
-                          <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
+                          <CheckCircle2 className="h-4 w-4 text-cyan-600 shrink-0" />
                         ) : (
                           <Circle className="h-4 w-4 text-muted-foreground shrink-0" />
                         )}

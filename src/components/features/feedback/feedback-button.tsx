@@ -151,7 +151,7 @@ export function FeedbackButton() {
 
           {isSuccess ? (
             <div className="py-8 text-center">
-              <CheckCircle2 className="mx-auto h-12 w-12 text-green-500 mb-4" />
+              <CheckCircle2 className="mx-auto h-12 w-12 text-cyan-500 mb-4" />
               <h3 className="text-lg font-semibold mb-2">Thank you!</h3>
               <p className="text-muted-foreground">
                 Your feedback has been submitted successfully.

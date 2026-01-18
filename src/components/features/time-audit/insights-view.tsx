@@ -493,7 +493,7 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
               <div className="text-3xl font-bold">{productivityMetrics.score}</div>
               <span className="text-lg text-muted-foreground">/100</span>
               {productivityMetrics.weeklyChange !== 0 && (
-                <div className={`flex items-center text-xs ${productivityMetrics.weeklyChange > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <div className={`flex items-center text-xs ${productivityMetrics.weeklyChange > 0 ? 'text-cyan-600' : 'text-red-600'}`}>
                   {productivityMetrics.weeklyChange > 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
                   {Math.abs(productivityMetrics.weeklyChange).toFixed(1)}%
                 </div>
@@ -544,20 +544,20 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Energy Balance</CardTitle>
             {productivityMetrics.energyBalance >= 0 ? (
-              <ArrowUpRight className="h-4 w-4 text-green-500" />
+              <ArrowUpRight className="h-4 w-4 text-cyan-500" />
             ) : (
               <ArrowDownRight className="h-4 w-4 text-red-500" />
             )}
           </CardHeader>
           <CardContent>
-            <div className={`text-3xl font-bold ${productivityMetrics.energyBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className={`text-3xl font-bold ${productivityMetrics.energyBalance >= 0 ? 'text-cyan-600' : 'text-red-600'}`}>
               {productivityMetrics.energyBalance >= 0 ? '+' : ''}{productivityMetrics.energyBalance.toFixed(0)}%
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               {productivityMetrics.energyBalance >= 0 ? 'Net positive energy' : 'Net energy drain'}
             </p>
             <div className="flex items-center gap-2 mt-2">
-              <span className="h-2 w-2 rounded-full bg-green-500" />
+              <span className="h-2 w-2 rounded-full bg-cyan-500" />
               <span className="text-xs text-muted-foreground">Energizing - Draining</span>
             </div>
           </CardContent>
@@ -667,7 +667,7 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
           <EnergyFlowChart data={insightsData.energyFlowData} />
           <div className="mt-4 flex items-center justify-center gap-6 text-xs text-muted-foreground">
             <div className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full bg-green-500" />
+              <span className="h-3 w-3 rounded-full bg-cyan-500" />
               <span>High Energy (Energizing)</span>
             </div>
             <div className="flex items-center gap-2">

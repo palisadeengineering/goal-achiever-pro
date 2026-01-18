@@ -72,14 +72,14 @@ export function VisionKanbanColumn({
 
   const scoreColor =
     threeHundredPercent >= 240
-      ? 'text-green-600 bg-green-50'
+      ? 'text-cyan-600 bg-cyan-50'
       : threeHundredPercent >= 180
       ? 'text-yellow-600 bg-yellow-50'
       : 'text-red-600 bg-red-50';
 
   const progressColor =
     threeHundredPercent >= 240
-      ? 'bg-green-500'
+      ? 'bg-cyan-500'
       : threeHundredPercent >= 180
       ? 'bg-yellow-500'
       : 'bg-red-500';

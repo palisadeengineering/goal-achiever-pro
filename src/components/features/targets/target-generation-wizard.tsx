@@ -370,7 +370,7 @@ export function TargetGenerationWizard({
                                   className={cn(
                                     'text-xs shrink-0',
                                     daily.dayOfWeek === 'Monday' && 'bg-blue-50 dark:bg-blue-900/20',
-                                    daily.dayOfWeek === 'Friday' && 'bg-green-50 dark:bg-green-900/20'
+                                    daily.dayOfWeek === 'Friday' && 'bg-cyan-50 dark:bg-cyan-900/20'
                                   )}
                                 >
                                   {daily.dayOfWeek.slice(0, 3)}

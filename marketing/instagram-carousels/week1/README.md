@@ -71,13 +71,13 @@ captureSlides('day1-smart-vision.html', 'day1-slide');
 - `assets/logo-white.svg` - White logo for dark backgrounds
 
 ### Brand Colors (matching your app)
-- **Primary (Emerald)**: `#10b981`
+- **Primary (Emerald)**: `#00BEFF`
 - **Dark Background**: `#0f172a` to `#1e293b`
 - **DRIP Colors**:
   - Delegation (Purple): `#a855f7`
   - Replacement (Amber): `#f59e0b`
   - Investment (Blue): `#3b82f6`
-  - Production (Green): `#10b981`
+  - Production (Green): `#00BEFF`
 
 ## Customization
 

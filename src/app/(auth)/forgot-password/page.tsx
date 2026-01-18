@@ -60,8 +60,8 @@ export default function ForgotPasswordPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="p-3 rounded-full bg-green-100 dark:bg-green-900/30">
-              <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
+            <div className="p-3 rounded-full bg-cyan-100 dark:bg-cyan-900/30">
+              <CheckCircle2 className="h-8 w-8 text-cyan-600 dark:text-cyan-400" />
             </div>
           </div>
           <CardTitle className="text-2xl">Check your email</CardTitle>

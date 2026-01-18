@@ -94,7 +94,7 @@
 }
 
 .friend-category.energizer {
-  border-left: 6px solid #10b981;
+  border-left: 6px solid #00BEFF;
 }
 
 .friend-category.investor {
@@ -189,7 +189,7 @@
 .week-recap-num {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: linear-gradient(135deg, #00BEFF, #0891B2);
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -218,7 +218,7 @@
 
 /* CTA final */
 .final-cta {
-  background: linear-gradient(135deg, #10b981 0%, #0ea5e9 100%);
+  background: linear-gradient(135deg, #00BEFF 0%, #0ea5e9 100%);
   border-radius: 100px;
   padding: 28px 56px;
   font-size: 32px;
@@ -259,7 +259,7 @@
 }
 
 .pick-one-card:hover {
-  border-color: #10b981;
+  border-color: #00BEFF;
   background: rgba(16, 185, 129, 0.1);
 }
 

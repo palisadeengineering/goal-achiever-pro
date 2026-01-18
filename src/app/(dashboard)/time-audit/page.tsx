@@ -1637,7 +1637,7 @@ export default function TimeAuditPage() {
                 <div className="mt-2 p-2 bg-muted rounded-md text-xs font-mono flex flex-wrap gap-4 items-center">
                   <span>📊 DB: <strong className="text-blue-600">{timeBlocks.length}</strong></span>
                   <span>🌐 Google: <strong className="text-purple-600">{googleEvents.length}</strong></span>
-                  <span>📅 On Calendar: <strong className="text-green-600">
+                  <span>📅 On Calendar: <strong className="text-cyan-600">
                     {Object.entries(calendarTimeBlocks)
                       .filter(([date]) => {
                         const viewStartStr = format(viewedDateRange.start, 'yyyy-MM-dd');
@@ -1646,7 +1646,7 @@ export default function TimeAuditPage() {
                       })
                       .reduce((sum, [, blocks]) => sum + blocks.length, 0)}
                   </strong></span>
-                  <span>⏳ Loading: <strong className={isLoadingGoogle ? 'text-orange-600' : 'text-green-600'}>{isLoadingGoogle ? 'Yes' : 'No'}</strong></span>
+                  <span>⏳ Loading: <strong className={isLoadingGoogle ? 'text-orange-600' : 'text-cyan-600'}>{isLoadingGoogle ? 'Yes' : 'No'}</strong></span>
                   <span>📆 Range: {format(viewedDateRange.start, 'MMM d')} - {format(viewedDateRange.end, 'MMM d')}</span>
                 </div>
               )}
@@ -1717,10 +1717,10 @@ export default function TimeAuditPage() {
                         <div className="mt-2 space-y-1 text-xs">
                           <div className="flex justify-between items-center">
                             <span className="flex items-center gap-1.5 text-muted-foreground">
-                              <span className="h-2 w-2 rounded-sm bg-green-500" />
+                              <span className="h-2 w-2 rounded-sm bg-cyan-500" />
                               Production
                             </span>
-                            <span className="font-medium text-green-600">
+                            <span className="font-medium text-cyan-600">
                               {totalHours > 0 ? Math.round((dripData.production / totalHours) * 100) : 0}%
                             </span>
                           </div>
@@ -1782,10 +1782,10 @@ export default function TimeAuditPage() {
                         <div className="mt-2 space-y-1 text-xs">
                           <div className="flex justify-between items-center">
                             <span className="flex items-center gap-1.5 text-muted-foreground">
-                              <span className="h-2 w-2 rounded-sm bg-green-500" />
+                              <span className="h-2 w-2 rounded-sm bg-cyan-500" />
                               Energizing
                             </span>
-                            <span className="font-medium text-green-600">
+                            <span className="font-medium text-cyan-600">
                               {totalHours > 0 ? Math.round((energyData.green / totalHours) * 100) : 0}%
                             </span>
                           </div>
@@ -1834,10 +1834,10 @@ export default function TimeAuditPage() {
                         <div className="mt-2 space-y-1 text-xs">
                           <div className="flex justify-between items-center">
                             <span className="flex items-center gap-1.5 text-muted-foreground">
-                              <span className="h-2 w-2 rounded-sm bg-green-500" />
+                              <span className="h-2 w-2 rounded-sm bg-cyan-500" />
                               Energizing
                             </span>
-                            <span className="font-medium text-green-600">
+                            <span className="font-medium text-cyan-600">
                               {totalHours > 0 ? Math.round((energyData.green / totalHours) * 100) : 0}%
                             </span>
                           </div>
@@ -1881,10 +1881,10 @@ export default function TimeAuditPage() {
                         <div className="mt-2 space-y-1 text-xs">
                           <div className="flex justify-between items-center">
                             <span className="flex items-center gap-1.5 text-muted-foreground">
-                              <span className="h-2 w-2 rounded-sm bg-green-500" />
+                              <span className="h-2 w-2 rounded-sm bg-cyan-500" />
                               Production
                             </span>
-                            <span className="font-medium text-green-600">
+                            <span className="font-medium text-cyan-600">
                               {totalHours > 0 ? Math.round((dripData.production / totalHours) * 100) : 0}%
                             </span>
                           </div>
@@ -1970,9 +1970,9 @@ export default function TimeAuditPage() {
 
             {/* Import Result Notification */}
             {importResult && (
-              <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 p-0">
+              <Card className="bg-cyan-50 dark:bg-cyan-900/20 border-cyan-200 dark:border-cyan-800 p-0">
                 <CardContent className="p-2">
-                  <p className="text-xs text-green-800 dark:text-green-200">
+                  <p className="text-xs text-cyan-800 dark:text-cyan-200">
                     Imported {importResult.imported}
                     {importResult.skipped > 0 && ` (${importResult.skipped} skipped)`}
                   </p>
@@ -2035,7 +2035,7 @@ export default function TimeAuditPage() {
                   <div>
                     <h4 className="font-semibold mb-2 text-sm">Connection Status</h4>
                     <div className="space-y-1 bg-muted p-3 rounded-md">
-                      <p>Google Connected: <span className={isGoogleConnected ? 'text-green-600' : 'text-red-600'}>{isGoogleConnected ? 'Yes' : 'No'}</span></p>
+                      <p>Google Connected: <span className={isGoogleConnected ? 'text-cyan-600' : 'text-red-600'}>{isGoogleConnected ? 'Yes' : 'No'}</span></p>
                       <p>Loading: {isLoadingGoogle ? 'Yes' : 'No'}</p>
                       <p>Events in state: {googleEvents.length}</p>
                     </div>
@@ -2056,8 +2056,8 @@ export default function TimeAuditPage() {
                     <div className="space-y-1 bg-muted p-3 rounded-md">
                       <p>Time Blocks (DB): <span className="text-blue-600">{timeBlocks.length}</span></p>
                       <p>Google Events (state): <span className="text-purple-600">{googleEvents.length}</span></p>
-                      <p>Uncategorized Events: <span className={uncategorizedCount > 0 ? 'text-orange-600' : 'text-green-600'}>{uncategorizedCount}</span></p>
-                      <p>All Time Data (for stats): <span className="text-green-600">{allTimeData.length}</span></p>
+                      <p>Uncategorized Events: <span className={uncategorizedCount > 0 ? 'text-orange-600' : 'text-cyan-600'}>{uncategorizedCount}</span></p>
+                      <p>All Time Data (for stats): <span className="text-cyan-600">{allTimeData.length}</span></p>
                       <p className="mt-2 font-semibold">Events on Calendar by Date:</p>
                       {Object.entries(calendarTimeBlocks).length === 0 ? (
                         <p className="text-red-600">No events in calendarTimeBlocks!</p>
@@ -2072,7 +2072,7 @@ export default function TimeAuditPage() {
                             .sort(([a], [b]) => a.localeCompare(b))
                             .map(([date, blocks]) => (
                               <p key={date}>
-                                {date}: <span className="text-green-600">{blocks.length} events</span>
+                                {date}: <span className="text-cyan-600">{blocks.length} events</span>
                               </p>
                             ))}
                         </div>
@@ -2201,7 +2201,7 @@ export default function TimeAuditPage() {
                     variant="outline"
                     className={
                       blockToPush.energyRating === 'green'
-                        ? 'text-green-600 border-green-300'
+                        ? 'text-cyan-600 border-cyan-300'
                         : blockToPush.energyRating === 'red'
                         ? 'text-red-600 border-red-300'
                         : 'text-yellow-600 border-yellow-300'

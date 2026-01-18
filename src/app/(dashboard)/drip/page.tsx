@@ -53,11 +53,11 @@ export default function DripPage() {
 
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="border-green-200 dark:border-green-700 bg-green-50 dark:bg-green-900/20">
+        <Card className="border-cyan-200 dark:border-cyan-700 bg-cyan-50 dark:bg-cyan-900/20">
           <CardContent className="pt-4">
-            <p className="text-sm text-green-800 dark:text-green-200">Production Time</p>
-            <p className="text-2xl font-bold text-green-600 dark:text-green-400">{productionPercent}%</p>
-            <p className="text-xs text-green-700 dark:text-green-300">Your sweet spot activities</p>
+            <p className="text-sm text-cyan-800 dark:text-cyan-200">Production Time</p>
+            <p className="text-2xl font-bold text-cyan-600 dark:text-cyan-400">{productionPercent}%</p>
+            <p className="text-xs text-cyan-700 dark:text-cyan-300">Your sweet spot activities</p>
           </CardContent>
         </Card>
 
@@ -116,8 +116,8 @@ export default function DripPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               {productionPercent >= 40 ? (
-                <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700">
-                  <p className="text-sm text-green-800 dark:text-green-200">
+                <div className="p-3 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg border border-cyan-200 dark:border-cyan-700">
+                  <p className="text-sm text-cyan-800 dark:text-cyan-200">
                     <strong>Great job!</strong> You&apos;re spending {productionPercent}% of your time in Production - your sweet spot.
                   </p>
                 </div>

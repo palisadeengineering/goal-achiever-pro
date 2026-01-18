@@ -67,7 +67,7 @@ interface StreakData {
 
 const STATUS_COLORS: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
-  active: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200',
+  active: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-200',
   paused: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200',
   completed: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200',
 };
@@ -223,8 +223,8 @@ export default function BacktrackPage() {
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                  <GitBranch className="h-5 w-5 text-green-600" />
+                <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg">
+                  <GitBranch className="h-5 w-5 text-cyan-600" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{plans.filter(p => p.status === 'active').length}</p>
@@ -352,7 +352,7 @@ export default function BacktrackPage() {
                           <span className="text-muted-foreground">300% Score</span>
                           <span className={cn(
                             'font-semibold',
-                            threeHundredPercent >= 240 ? 'text-green-600' :
+                            threeHundredPercent >= 240 ? 'text-cyan-600' :
                             threeHundredPercent >= 180 ? 'text-yellow-600' :
                             'text-red-600'
                           )}>
@@ -387,7 +387,7 @@ export default function BacktrackPage() {
                             {visionStreaks.length} rule{visionStreaks.length !== 1 ? 's' : ''}
                           </span>
                           <span className="text-muted-foreground">•</span>
-                          <span className="text-green-600">
+                          <span className="text-cyan-600">
                             {visionStreaks.filter(s => s.currentStreak > 0).length} on streak
                           </span>
                         </div>
@@ -397,13 +397,13 @@ export default function BacktrackPage() {
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
                         {vision.specific && (
                           <div className="flex items-center gap-1">
-                            <CheckCircle2 className="h-3 w-3 text-green-600" />
+                            <CheckCircle2 className="h-3 w-3 text-cyan-600" />
                             SMART
                           </div>
                         )}
                         {vision.affirmation_text && (
                           <div className="flex items-center gap-1">
-                            <CheckCircle2 className="h-3 w-3 text-green-600" />
+                            <CheckCircle2 className="h-3 w-3 text-cyan-600" />
                             Affirmation
                           </div>
                         )}

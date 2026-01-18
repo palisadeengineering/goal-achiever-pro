@@ -237,13 +237,13 @@ function EventCard({
   const getBgColor = () => {
     if (colorMode === 'energy') {
       switch (block.energyRating) {
-        case 'green': return 'bg-green-600 hover:bg-green-700';
+        case 'green': return 'bg-cyan-600 hover:bg-cyan-700';
         case 'yellow': return 'bg-yellow-500 hover:bg-yellow-600';
         case 'red': return 'bg-red-500 hover:bg-red-600';
       }
     }
     switch (block.dripQuadrant) {
-      case 'production': return 'bg-green-600 hover:bg-green-700';
+      case 'production': return 'bg-cyan-600 hover:bg-cyan-700';
       case 'investment': return 'bg-purple-600 hover:bg-purple-700';
       case 'replacement': return 'bg-amber-500 hover:bg-amber-600';
       case 'delegation': return 'bg-red-500 hover:bg-red-600';
@@ -1490,7 +1490,7 @@ export function WeeklyCalendarView({
               ) : (
                 <>
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <span className="h-2.5 w-2.5 rounded-sm bg-green-500" />
+                    <span className="h-2.5 w-2.5 rounded-sm bg-cyan-500" />
                     Energizing
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">

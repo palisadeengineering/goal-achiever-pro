@@ -60,8 +60,8 @@ Graphics reference logo assets from:
 
 ## Color Palette
 
-- **Primary (Emerald):** #10b981
+- **Primary (Emerald):** #00BEFF
 - **DRIP Delegation:** #a855f7 (purple)
 - **DRIP Replacement:** #f59e0b (amber)
 - **DRIP Investment:** #3b82f6 (blue)
-- **DRIP Production:** #10b981 (green)
+- **DRIP Production:** #00BEFF (green)

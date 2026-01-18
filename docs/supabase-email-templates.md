@@ -32,7 +32,7 @@ Copy and paste these templates into your Supabase Dashboard under **Authenticati
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                       <tr>
                         <td align="center" valign="middle">
-                          <div style="display: inline-block; vertical-align: middle; width: 44px; height: 44px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 12px; margin-right: 12px;">
+                          <div style="display: inline-block; vertical-align: middle; width: 44px; height: 44px; background: linear-gradient(135deg, #00BEFF 0%, #0891B2 100%); border-radius: 12px; margin-right: 12px;">
                             <table role="presentation" width="44" height="44" cellspacing="0" cellpadding="0" border="0">
                               <tr>
                                 <td align="center" valign="middle" style="color: #ffffff; font-size: 22px; font-weight: bold;">&#10003;</td>
@@ -60,12 +60,12 @@ Copy and paste these templates into your Supabase Dashboard under **Authenticati
                     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin: 24px 0;">
                       <tr>
                         <td align="center">
-                          <a href="{{ .ConfirmationURL }}" style="display: inline-block; padding: 14px 32px; background-color: #10b981; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 10px;">Confirm Your Email</a>
+                          <a href="{{ .ConfirmationURL }}" style="display: inline-block; padding: 14px 32px; background-color: #00BEFF; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 10px;">Confirm Your Email</a>
                         </td>
                       </tr>
                     </table>
 
-                    <div style="background-color: #d1fae5; border-radius: 12px; padding: 20px; margin: 24px 0; border-left: 4px solid #10b981;">
+                    <div style="background-color: #d1fae5; border-radius: 12px; padding: 20px; margin: 24px 0; border-left: 4px solid #00BEFF;">
                       <p style="margin: 0 0 16px 0; color: #065f46; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Here's what you can do:</p>
                       <ul style="margin: 0; padding-left: 20px; color: #64748b; font-size: 14px; line-height: 1.8;">
                         <li><strong style="color: #1e293b;">Set Your Vision</strong> — Define your SMART goals with AI assistance</li>
@@ -132,7 +132,7 @@ Copy and paste these templates into your Supabase Dashboard under **Authenticati
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                       <tr>
                         <td align="center" valign="middle">
-                          <div style="display: inline-block; vertical-align: middle; width: 44px; height: 44px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 12px; margin-right: 12px;">
+                          <div style="display: inline-block; vertical-align: middle; width: 44px; height: 44px; background: linear-gradient(135deg, #00BEFF 0%, #0891B2 100%); border-radius: 12px; margin-right: 12px;">
                             <table role="presentation" width="44" height="44" cellspacing="0" cellpadding="0" border="0">
                               <tr>
                                 <td align="center" valign="middle" style="color: #ffffff; font-size: 22px; font-weight: bold;">&#10003;</td>
@@ -162,7 +162,7 @@ Copy and paste these templates into your Supabase Dashboard under **Authenticati
                     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin: 24px 0;">
                       <tr>
                         <td align="center">
-                          <a href="{{ .ConfirmationURL }}" style="display: inline-block; padding: 14px 32px; background-color: #10b981; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 10px;">Sign In to Goal Achiever Pro</a>
+                          <a href="{{ .ConfirmationURL }}" style="display: inline-block; padding: 14px 32px; background-color: #00BEFF; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 10px;">Sign In to Goal Achiever Pro</a>
                         </td>
                       </tr>
                     </table>
@@ -229,7 +229,7 @@ Copy and paste these templates into your Supabase Dashboard under **Authenticati
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                       <tr>
                         <td align="center" valign="middle">
-                          <div style="display: inline-block; vertical-align: middle; width: 44px; height: 44px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 12px; margin-right: 12px;">
+                          <div style="display: inline-block; vertical-align: middle; width: 44px; height: 44px; background: linear-gradient(135deg, #00BEFF 0%, #0891B2 100%); border-radius: 12px; margin-right: 12px;">
                             <table role="presentation" width="44" height="44" cellspacing="0" cellpadding="0" border="0">
                               <tr>
                                 <td align="center" valign="middle" style="color: #ffffff; font-size: 22px; font-weight: bold;">&#10003;</td>
@@ -259,7 +259,7 @@ Copy and paste these templates into your Supabase Dashboard under **Authenticati
                     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin: 24px 0;">
                       <tr>
                         <td align="center">
-                          <a href="{{ .ConfirmationURL }}" style="display: inline-block; padding: 14px 32px; background-color: #10b981; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 10px;">Reset Password</a>
+                          <a href="{{ .ConfirmationURL }}" style="display: inline-block; padding: 14px 32px; background-color: #00BEFF; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 10px;">Reset Password</a>
                         </td>
                       </tr>
                     </table>
@@ -326,7 +326,7 @@ Copy and paste these templates into your Supabase Dashboard under **Authenticati
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                       <tr>
                         <td align="center" valign="middle">
-                          <div style="display: inline-block; vertical-align: middle; width: 44px; height: 44px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 12px; margin-right: 12px;">
+                          <div style="display: inline-block; vertical-align: middle; width: 44px; height: 44px; background: linear-gradient(135deg, #00BEFF 0%, #0891B2 100%); border-radius: 12px; margin-right: 12px;">
                             <table role="presentation" width="44" height="44" cellspacing="0" cellpadding="0" border="0">
                               <tr>
                                 <td align="center" valign="middle" style="color: #ffffff; font-size: 22px; font-weight: bold;">&#10003;</td>
@@ -356,12 +356,12 @@ Copy and paste these templates into your Supabase Dashboard under **Authenticati
                     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin: 24px 0;">
                       <tr>
                         <td align="center">
-                          <a href="{{ .ConfirmationURL }}" style="display: inline-block; padding: 14px 32px; background-color: #10b981; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 10px;">Accept Invitation</a>
+                          <a href="{{ .ConfirmationURL }}" style="display: inline-block; padding: 14px 32px; background-color: #00BEFF; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 10px;">Accept Invitation</a>
                         </td>
                       </tr>
                     </table>
 
-                    <div style="background-color: #d1fae5; border-radius: 12px; padding: 20px; margin: 24px 0; border-left: 4px solid #10b981;">
+                    <div style="background-color: #d1fae5; border-radius: 12px; padding: 20px; margin: 24px 0; border-left: 4px solid #00BEFF;">
                       <p style="margin: 0 0 16px 0; color: #065f46; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">What you'll get:</p>
                       <ul style="margin: 0; padding-left: 20px; color: #64748b; font-size: 14px; line-height: 1.8;">
                         <li><strong style="color: #1e293b;">Vision & SMART Goals</strong> — AI-assisted goal setting</li>
@@ -427,7 +427,7 @@ Copy and paste these templates into your Supabase Dashboard under **Authenticati
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                       <tr>
                         <td align="center" valign="middle">
-                          <div style="display: inline-block; vertical-align: middle; width: 44px; height: 44px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 12px; margin-right: 12px;">
+                          <div style="display: inline-block; vertical-align: middle; width: 44px; height: 44px; background: linear-gradient(135deg, #00BEFF 0%, #0891B2 100%); border-radius: 12px; margin-right: 12px;">
                             <table role="presentation" width="44" height="44" cellspacing="0" cellpadding="0" border="0">
                               <tr>
                                 <td align="center" valign="middle" style="color: #ffffff; font-size: 22px; font-weight: bold;">&#10003;</td>
@@ -457,7 +457,7 @@ Copy and paste these templates into your Supabase Dashboard under **Authenticati
                     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin: 24px 0;">
                       <tr>
                         <td align="center">
-                          <a href="{{ .ConfirmationURL }}" style="display: inline-block; padding: 14px 32px; background-color: #10b981; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 10px;">Confirm Email Change</a>
+                          <a href="{{ .ConfirmationURL }}" style="display: inline-block; padding: 14px 32px; background-color: #00BEFF; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 10px;">Confirm Email Change</a>
                         </td>
                       </tr>
                     </table>

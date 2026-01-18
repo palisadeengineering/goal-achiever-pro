@@ -38,7 +38,7 @@ export interface GoalCardProps {
 }
 
 const statusColors = {
-  active: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200',
+  active: 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-800 dark:text-cyan-200',
   completed: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200',
   paused: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200',
   archived: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200',
@@ -46,7 +46,7 @@ const statusColors = {
 
 const categoryColors: Record<string, string> = {
   health: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200',
-  wealth: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200',
+  wealth: 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-800 dark:text-cyan-200',
   relationships: 'bg-pink-100 dark:bg-pink-900/30 text-pink-800 dark:text-pink-200',
   career: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200',
   personal: 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200',

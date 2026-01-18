@@ -114,7 +114,7 @@ const STEPS: { id: WizardStep; title: string; description: string }[] = [
 const CATEGORY_COLORS: Record<string, string> = {
   business: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200',
   career: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200',
-  health: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200',
+  health: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-200',
   wealth: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200',
   relationships: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-200',
   personal: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-200',
@@ -925,23 +925,23 @@ export function BacktrackPlanningWizard({
                 </p>
                 <div className="grid gap-2 max-w-md mx-auto text-sm text-left">
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <CheckCircle2 className="h-4 w-4 text-cyan-500" />
                     <span>{generatedPlan?.quarterlyTargets.length} quarterly targets</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <CheckCircle2 className="h-4 w-4 text-cyan-500" />
                     <span>{generatedPlan?.powerGoals.length} power goals</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <CheckCircle2 className="h-4 w-4 text-cyan-500" />
                     <span>{generatedPlan?.monthlyTargets.length} monthly targets</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <CheckCircle2 className="h-4 w-4 text-cyan-500" />
                     <span>{generatedPlan?.weeklyTargets.length} weekly targets</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <CheckCircle2 className="h-4 w-4 text-cyan-500" />
                     <span>{generatedPlan?.dailyActions.length} daily actions</span>
                   </div>
                 </div>
@@ -966,7 +966,7 @@ export function BacktrackPlanningWizard({
                   </div>
                 ) : isCalendarConnected ? (
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                    <div className="flex items-center gap-2 text-sm text-cyan-600 dark:text-cyan-400">
                       <CheckCircle2 className="h-4 w-4" />
                       Google Calendar connected
                     </div>
@@ -1011,8 +1011,8 @@ export function BacktrackPlanningWizard({
                 )}
 
                 {calendarSyncResult && (
-                  <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-sm">
-                    <p className="text-green-700 dark:text-green-300">
+                  <div className="p-3 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg text-sm">
+                    <p className="text-cyan-700 dark:text-cyan-300">
                       <CheckCircle2 className="h-4 w-4 inline mr-1" />
                       Synced {calendarSyncResult.synced} of {calendarSyncResult.total} actions to Google Calendar
                     </p>

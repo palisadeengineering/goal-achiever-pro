@@ -36,13 +36,13 @@ export function DiscoverySummaryCard({
 
   // Determine success probability color
   const getSuccessColor = (probability: number) => {
-    if (probability >= 70) return 'text-green-600 dark:text-green-400';
+    if (probability >= 70) return 'text-cyan-600 dark:text-cyan-400';
     if (probability >= 40) return 'text-yellow-600 dark:text-yellow-400';
     return 'text-red-600 dark:text-red-400';
   };
 
   const getSuccessBadge = (probability: number) => {
-    if (probability >= 70) return 'bg-green-100 text-green-700';
+    if (probability >= 70) return 'bg-cyan-100 text-cyan-700';
     if (probability >= 40) return 'bg-yellow-100 text-yellow-700';
     return 'bg-red-100 text-red-700';
   };
@@ -128,16 +128,16 @@ export function DiscoverySummaryCard({
         {insights.strengthAreas?.length > 0 && (
           <div className="space-y-2">
             <h4 className="font-medium flex items-center gap-2">
-              <ThumbsUp className="h-4 w-4 text-green-500" />
+              <ThumbsUp className="h-4 w-4 text-cyan-500" />
               Strengths
             </h4>
             <div className="space-y-1">
               {insights.strengthAreas.map((strength, i) => (
                 <div
                   key={i}
-                  className="flex items-start gap-2 text-sm bg-green-50 dark:bg-green-950/30 p-2 rounded"
+                  className="flex items-start gap-2 text-sm bg-cyan-50 dark:bg-cyan-950/30 p-2 rounded"
                 >
-                  <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                  <CheckCircle2 className="h-4 w-4 text-cyan-500 mt-0.5 flex-shrink-0" />
                   <span>{strength}</span>
                 </div>
               ))}
@@ -215,7 +215,7 @@ export function DiscoverySummaryCard({
           </div>
           <div className="flex gap-2">
             {data.sectionsCompleted.map((section) => (
-              <Badge key={section} variant="secondary" className="bg-green-100 text-green-700">
+              <Badge key={section} variant="secondary" className="bg-cyan-100 text-cyan-700">
                 <CheckCircle2 className="h-3 w-3 mr-1" />
                 {section}
               </Badge>

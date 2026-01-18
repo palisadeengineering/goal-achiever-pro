@@ -54,7 +54,7 @@ const SMART_FIELDS = [
     key: 'measurable' as const,
     label: 'Measurable',
     letter: 'M',
-    color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-300 dark:border-green-700',
+    color: 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-800 dark:text-cyan-200 border-cyan-300 dark:border-cyan-700',
     placeholder: 'How will you measure progress and success?',
     hint: 'What metrics will you track? How will you know when you\'ve achieved it?',
   },

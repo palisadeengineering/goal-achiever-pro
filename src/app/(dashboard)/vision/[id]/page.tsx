@@ -348,7 +348,7 @@ export default function VisionDetailPage({ params }: { params: Promise<{ id: str
     const totalScore = vision.clarity_score + vision.belief_score + vision.consistency_score;
     const scoreColor =
       totalScore >= 240
-        ? 'text-green-600'
+        ? 'text-cyan-600'
         : totalScore >= 180
         ? 'text-yellow-600'
         : 'text-red-600';
@@ -655,7 +655,7 @@ export default function VisionDetailPage({ params }: { params: Promise<{ id: str
           <Card>
             <CardContent className="pt-6">
               <h3 className="font-semibold flex items-center gap-2 mb-4">
-                <Calendar className="h-5 w-5 text-green-500" />
+                <Calendar className="h-5 w-5 text-cyan-500" />
                 Timeline
               </h3>
               <div className="grid grid-cols-2 gap-4">
@@ -691,7 +691,7 @@ export default function VisionDetailPage({ params }: { params: Promise<{ id: str
                       className={cn(
                         'mt-1',
                         backtrackPlan.status === 'active'
-                          ? 'bg-green-100 text-green-800'
+                          ? 'bg-cyan-100 text-cyan-800'
                           : 'bg-gray-100 text-gray-800'
                       )}
                     >
@@ -817,7 +817,7 @@ export default function VisionDetailPage({ params }: { params: Promise<{ id: str
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-2">
-                  <CheckSquare className="h-5 w-5 text-green-500" />
+                  <CheckSquare className="h-5 w-5 text-cyan-500" />
                   <span className="text-sm text-muted-foreground">This Week</span>
                 </div>
                 <div className="text-2xl font-bold">
@@ -856,7 +856,7 @@ export default function VisionDetailPage({ params }: { params: Promise<{ id: str
                         className={cn(
                           'flex items-center justify-between p-4 rounded-lg border transition-colors',
                           isCompletedToday
-                            ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800'
+                            ? 'bg-cyan-50 border-cyan-200 dark:bg-cyan-900/20 dark:border-cyan-800'
                             : 'bg-background'
                         )}
                       >

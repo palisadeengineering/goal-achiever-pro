@@ -24,8 +24,8 @@ The foundation for all email templates with consistent styling.
 **Brand Colors:**
 ```typescript
 colors = {
-  primary: '#10b981',      // Emerald green
-  primaryDark: '#059669',
+  primary: '#00BEFF',      // Emerald green
+  primaryDark: '#0891B2',
   primaryLight: '#d1fae5',
   background: '#fafaf9',   // Warm off-white
   cardBackground: '#ffffff',
@@ -40,7 +40,7 @@ colors = {
   danger: '#ef4444',
   dangerBg: '#fee2e2',
   dangerText: '#991b1b',
-  success: '#10b981',
+  success: '#00BEFF',
   successBg: '#d1fae5',
   successText: '#065f46',
 }

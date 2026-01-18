@@ -39,7 +39,7 @@ export function PositioningSection({ data, onUpdate }: PositioningSectionProps) 
           {completedFields} of 3 required fields completed
         </span>
         {completedFields === 3 && (
-          <Badge className="bg-green-100 text-green-700">Complete</Badge>
+          <Badge className="bg-cyan-100 text-cyan-700">Complete</Badge>
         )}
       </div>
 

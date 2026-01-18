@@ -354,7 +354,7 @@ export default function HomePage() {
                           <ul className="space-y-1.5">
                             {feature.items.map((item, i) => (
                               <li key={i} className="flex items-center justify-center gap-2 text-sm">
-                                <CheckCircle2 className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                                <CheckCircle2 className="h-4 w-4 text-cyan-500 flex-shrink-0" />
                                 <span>{item}</span>
                               </li>
                             ))}

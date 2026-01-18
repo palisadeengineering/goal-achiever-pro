@@ -226,7 +226,7 @@ export default function PomodoroPage() {
       case 'work':
         return 'bg-red-500';
       case 'shortBreak':
-        return 'bg-green-500';
+        return 'bg-cyan-500';
       case 'longBreak':
         return 'bg-blue-500';
     }

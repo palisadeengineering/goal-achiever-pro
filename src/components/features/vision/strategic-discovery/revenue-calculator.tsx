@@ -304,14 +304,14 @@ export function RevenueCalculator({ data, onUpdate, positioning, visionContext }
 
       {/* MRR Breakdown */}
       {monthlyTarget > 0 && (
-        <Card className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-green-200 dark:border-green-800">
+        <Card className="bg-gradient-to-r from-cyan-50 to-cyan-50 dark:from-cyan-950/20 dark:to-cyan-950/20 border-cyan-200 dark:border-cyan-800">
           <CardContent className="pt-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">
                   {formatCurrency(data.revenueTarget || 0)} {data.revenueType.toUpperCase()} breaks down to:
                 </p>
-                <p className="text-2xl font-bold text-green-700 dark:text-green-400">
+                <p className="text-2xl font-bold text-cyan-700 dark:text-cyan-400">
                   {formatCurrency(monthlyTarget)} / month
                 </p>
               </div>
@@ -368,7 +368,7 @@ export function RevenueCalculator({ data, onUpdate, positioning, visionContext }
                     isSelected
                       ? 'ring-2 ring-primary border-primary'
                       : option.recommended
-                      ? 'border-green-300 dark:border-green-700'
+                      ? 'border-cyan-300 dark:border-cyan-700'
                       : ''
                   }`}
                   onClick={() => selectPricingModel(option)}
@@ -379,7 +379,7 @@ export function RevenueCalculator({ data, onUpdate, positioning, visionContext }
                         <div className="flex items-center gap-2">
                           <span className="font-semibold">{option.name}</span>
                           {option.recommended && (
-                            <Badge variant="secondary" className="bg-green-100 text-green-700">
+                            <Badge variant="secondary" className="bg-cyan-100 text-cyan-700">
                               <Star className="h-3 w-3 mr-1" />
                               Recommended
                             </Badge>

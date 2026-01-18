@@ -300,8 +300,8 @@ export function BiweeklyCalendarView({
             <div className="flex items-center justify-center gap-2 mt-1">
               {productionTrend.direction === 'up' && (
                 <>
-                  <TrendingUp className="h-5 w-5 text-green-600" />
-                  <span className="text-lg font-bold text-green-600">
+                  <TrendingUp className="h-5 w-5 text-cyan-600" />
+                  <span className="text-lg font-bold text-cyan-600">
                     +{productionTrend.percent}%
                   </span>
                 </>

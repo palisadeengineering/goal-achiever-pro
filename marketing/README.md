@@ -216,11 +216,11 @@ Vertical format at 1080x1920px with interactive elements:
 |-------|-----|-------|
 | Brand Cyan | `#0891B2` | Primary brand color |
 | Bright Cyan | `#00BEFF` | Accents, CTAs |
-| Emerald | `#10b981` | Success, highlights |
+| Cyan | `#00BEFF` | Success, highlights |
 | Purple | `#a855f7` | DRIP Delegation |
 | Amber | `#f59e0b` | DRIP Replacement |
 | Blue | `#3b82f6` | DRIP Investment |
-| Green | `#10b981` | DRIP Production |
+| Green | `#00BEFF` | DRIP Production |
 
 ### Gradients
 

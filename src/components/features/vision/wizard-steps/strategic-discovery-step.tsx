@@ -117,7 +117,7 @@ export function StrategicDiscoveryStep({ data, updateData }: StrategicDiscoveryS
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                     <div className="flex items-center gap-2 text-muted-foreground">
-                      <DollarSign className="h-4 w-4 text-green-500" />
+                      <DollarSign className="h-4 w-4 text-cyan-500" />
                       Revenue Math
                     </div>
                     <div className="flex items-center gap-2 text-muted-foreground">
@@ -143,7 +143,7 @@ export function StrategicDiscoveryStep({ data, updateData }: StrategicDiscoveryS
                 <div className="space-y-4">
                   {/* Completion Badge */}
                   <div className="flex items-center gap-2">
-                    <Badge className="bg-green-100 text-green-700">
+                    <Badge className="bg-cyan-100 text-cyan-700">
                       {discoveryData.completionScore}% Complete
                     </Badge>
                     {discoveryData.sectionsCompleted?.map((section) => (
@@ -201,7 +201,7 @@ export function StrategicDiscoveryStep({ data, updateData }: StrategicDiscoveryS
             </p>
             <ul className="space-y-2 ml-4">
               <li className="flex items-start gap-2">
-                <DollarSign className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                <DollarSign className="h-4 w-4 text-cyan-500 mt-0.5 flex-shrink-0" />
                 <span>
                   <strong>Revenue Math:</strong> $500K ARR = $41.7K MRR = 1,440 customers at $29/mo
                 </span>

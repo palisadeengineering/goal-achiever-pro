@@ -114,7 +114,7 @@ export function DailyKpiCheckoff({
       className={cn(
         'flex items-center justify-between p-4 rounded-lg border transition-colors',
         isCompleted
-          ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800'
+          ? 'bg-cyan-50 border-cyan-200 dark:bg-cyan-900/20 dark:border-cyan-800'
           : 'bg-background'
       )}
     >

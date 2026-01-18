@@ -47,8 +47,8 @@ export const DRIP_QUADRANTS: Record<DripQuadrant, {
     description: 'High earning, high energy tasks',
     action: 'Focus here! Your sweet spot',
     color: '#22c55e', // Green (variant of Energizing energy color)
-    bgColor: 'bg-green-100 dark:bg-green-900/30',
-    borderColor: 'border-green-500 dark:border-green-400',
+    bgColor: 'bg-cyan-100 dark:bg-cyan-900/30',
+    borderColor: 'border-cyan-500 dark:border-cyan-400',
     moneyLevel: 'high',
     energyLevel: 'high',
   },
@@ -74,7 +74,7 @@ export const ENERGY_RATINGS: Record<EnergyRating, {
     name: 'Energizing',
     description: 'Gives you energy (amplifier)',
     color: '#22c55e',
-    bgColor: 'bg-green-500',
+    bgColor: 'bg-cyan-500',
   },
   yellow: {
     name: 'Neutral',

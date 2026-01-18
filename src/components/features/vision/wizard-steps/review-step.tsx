@@ -43,7 +43,7 @@ export function ReviewStep({ data }: ReviewStepProps) {
               <div
                 key={check.label}
                 className={`flex items-center gap-2 text-sm ${
-                  check.complete ? 'text-green-600' : 'text-muted-foreground'
+                  check.complete ? 'text-cyan-600' : 'text-muted-foreground'
                 }`}
               >
                 {check.complete ? (

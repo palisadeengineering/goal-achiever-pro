@@ -59,7 +59,7 @@ export function VisionCard({
 
   const scoreColor =
     threeHundredPercent >= 240
-      ? 'text-green-600'
+      ? 'text-cyan-600'
       : threeHundredPercent >= 180
       ? 'text-yellow-600'
       : 'text-red-600';

@@ -235,7 +235,7 @@ export function MilestoneKpiPanel({
                       key={milestoneKpi.id}
                       className={cn(
                         'p-3 rounded-lg border transition-colors',
-                        kpi?.isCompleted ? 'bg-green-50 border-green-200 dark:bg-green-900/10' : 'bg-card'
+                        kpi?.isCompleted ? 'bg-cyan-50 border-cyan-200 dark:bg-cyan-900/10' : 'bg-card'
                       )}
                     >
                       <div className="flex items-start gap-3">

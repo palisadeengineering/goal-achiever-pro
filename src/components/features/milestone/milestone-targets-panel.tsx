@@ -267,7 +267,7 @@ export function MilestoneTargetsPanel({
               >
                 <div className={cn(
                   'rounded-lg border transition-colors',
-                  monthly.status === 'completed' && 'bg-green-50/50 border-green-200 dark:bg-green-900/10'
+                  monthly.status === 'completed' && 'bg-cyan-50/50 border-cyan-200 dark:bg-cyan-900/10'
                 )}>
                   {/* Monthly Target Header */}
                   <CollapsibleTrigger asChild>
@@ -282,7 +282,7 @@ export function MilestoneTargetsPanel({
                       ) : (
                         <div onClick={(e) => { e.stopPropagation(); handleToggleStatus('monthly', monthly.id, monthly.status); }}>
                           {monthly.status === 'completed' ? (
-                            <CheckCircle2 className="h-5 w-5 text-green-600 cursor-pointer" />
+                            <CheckCircle2 className="h-5 w-5 text-cyan-600 cursor-pointer" />
                           ) : (
                             <Circle className="h-5 w-5 text-muted-foreground cursor-pointer hover:text-primary" />
                           )}
@@ -330,7 +330,7 @@ export function MilestoneTargetsPanel({
                           >
                             <div className={cn(
                               'rounded-lg border bg-card',
-                              weekly.status === 'completed' && 'bg-green-50/30 border-green-200 dark:bg-green-900/5'
+                              weekly.status === 'completed' && 'bg-cyan-50/30 border-cyan-200 dark:bg-cyan-900/5'
                             )}>
                               <CollapsibleTrigger asChild>
                                 <button className="w-full p-2 flex items-center gap-2 hover:bg-muted/20 transition-colors text-sm">
@@ -344,7 +344,7 @@ export function MilestoneTargetsPanel({
                                   ) : (
                                     <div onClick={(e) => { e.stopPropagation(); handleToggleStatus('weekly', weekly.id, weekly.status); }}>
                                       {weekly.status === 'completed' ? (
-                                        <CheckCircle2 className="h-4 w-4 text-green-600 cursor-pointer" />
+                                        <CheckCircle2 className="h-4 w-4 text-cyan-600 cursor-pointer" />
                                       ) : (
                                         <Circle className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-primary" />
                                       )}
@@ -396,7 +396,7 @@ export function MilestoneTargetsPanel({
                                         key={daily.id}
                                         className={cn(
                                           'flex items-center gap-2 p-2 rounded text-xs',
-                                          daily.status === 'completed' ? 'bg-green-50 dark:bg-green-900/10' : 'bg-muted/30'
+                                          daily.status === 'completed' ? 'bg-cyan-50 dark:bg-cyan-900/10' : 'bg-muted/30'
                                         )}
                                       >
                                         {loadingItems.has(daily.id) ? (

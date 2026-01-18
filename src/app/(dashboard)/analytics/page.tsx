@@ -135,7 +135,7 @@ export default function AnalyticsPage() {
           <CardContent>
             <div className={cn(
               "text-2xl font-bold flex items-center gap-1",
-              analytics.energyBalance > 0 ? 'text-green-600' : analytics.energyBalance < 0 ? 'text-red-600' : ''
+              analytics.energyBalance > 0 ? 'text-cyan-600' : analytics.energyBalance < 0 ? 'text-red-600' : ''
             )}>
               {analytics.energyBalance > 0 ? (
                 <TrendingUp className="h-5 w-5" />
@@ -206,7 +206,7 @@ export default function AnalyticsPage() {
             <div className="mt-4 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Production (Sweet Spot)</span>
-                <span className="font-medium text-green-600">
+                <span className="font-medium text-cyan-600">
                   {analytics.productionPercentage}%
                 </span>
               </div>
@@ -256,10 +256,10 @@ export default function AnalyticsPage() {
             <div className="mt-4 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-green-500" />
+                  <span className="h-2 w-2 rounded-full bg-cyan-500" />
                   Energizing
                 </span>
-                <span className="font-medium text-green-600">
+                <span className="font-medium text-cyan-600">
                   {analytics.totalHours > 0
                     ? Math.round((analytics.energyBreakdown.green / (analytics.totalHours * 60)) * 100)
                     : 0}%

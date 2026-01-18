@@ -69,7 +69,7 @@ export function MinItem({
     1: 'bg-red-100 text-red-800 border-red-200',
     2: 'bg-orange-100 text-orange-800 border-orange-200',
     3: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    4: 'bg-green-100 text-green-800 border-green-200',
+    4: 'bg-cyan-100 text-cyan-800 border-cyan-200',
   };
 
   return (

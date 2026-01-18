@@ -344,7 +344,7 @@ export function StrategicDiscoveryWizard({
               className="flex items-center gap-2"
             >
               {isCategoryComplete(cat.id) ? (
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <CheckCircle2 className="h-4 w-4 text-cyan-500" />
               ) : (
                 cat.icon
               )}

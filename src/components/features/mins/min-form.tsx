@@ -59,7 +59,7 @@ const priorities = [
   { value: 1, label: 'P1 - Critical', color: 'text-red-600' },
   { value: 2, label: 'P2 - High', color: 'text-orange-600' },
   { value: 3, label: 'P3 - Medium', color: 'text-yellow-600' },
-  { value: 4, label: 'P4 - Low', color: 'text-green-600' },
+  { value: 4, label: 'P4 - Low', color: 'text-cyan-600' },
 ];
 
 export function MinForm({

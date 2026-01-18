@@ -19,7 +19,7 @@ const badgeVariants = cva(
           "text-foreground border-border [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
         // New variants for the design system
         success:
-          "border-transparent bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+          "border-transparent bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400",
         warning:
           "border-transparent bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
         info:

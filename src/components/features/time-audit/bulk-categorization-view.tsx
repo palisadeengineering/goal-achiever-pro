@@ -243,7 +243,7 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
     return (
       <Card>
         <CardContent className="py-12 text-center">
-          <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-4" />
+          <CheckCircle2 className="h-12 w-12 mx-auto text-cyan-500 mb-4" />
           <h3 className="text-lg font-semibold mb-2">All events categorized!</h3>
           <p className="text-muted-foreground">
             All your Google Calendar events have been categorized.
@@ -305,7 +305,7 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
           {uncategorizedEvents.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
-                <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-4" />
+                <CheckCircle2 className="h-12 w-12 mx-auto text-cyan-500 mb-4" />
                 <h3 className="text-lg font-semibold mb-2">All events categorized!</h3>
                 <p className="text-muted-foreground">
                   Check the Ignored tab to view or unignore events.
@@ -347,7 +347,7 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
           {groupedEvents.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
-                <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-4" />
+                <CheckCircle2 className="h-12 w-12 mx-auto text-cyan-500 mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No groups to categorize</h3>
                 <p className="text-muted-foreground">
                   Check the Ignored tab to view or unignore events.

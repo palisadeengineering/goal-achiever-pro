@@ -259,7 +259,7 @@ export function MonthlyCalendarView({
           </div>
           <div className="text-center">
             <p className="text-xs text-muted-foreground">Production</p>
-            <p className="text-lg font-bold text-green-600">
+            <p className="text-lg font-bold text-cyan-600">
               {monthTotals.totalMinutes > 0
                 ? Math.round((monthTotals.production / monthTotals.totalMinutes) * 100)
                 : 0}%

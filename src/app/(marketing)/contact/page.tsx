@@ -105,8 +105,8 @@ export default function ContactPage() {
             <CardContent>
               {formState === 'success' ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="h-16 w-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-4">
-                    <CheckCircle2 className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
+                  <div className="h-16 w-16 rounded-full bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center mb-4">
+                    <CheckCircle2 className="h-8 w-8 text-cyan-600 dark:text-cyan-400" />
                   </div>
                   <h3 className="font-display font-semibold text-lg mb-2">Message Sent!</h3>
                   <p className="text-muted-foreground">
@@ -217,8 +217,8 @@ export default function ContactPage() {
             <Card className="bg-muted/30 border-dashed">
               <CardContent className="pt-6">
                 <div className="flex items-start gap-3">
-                  <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  <div className="h-8 w-8 rounded-full bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
                   </div>
                   <div>
                     <h3 className="font-display font-semibold mb-1">Quick Response Time</h3>

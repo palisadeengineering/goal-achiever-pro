@@ -148,7 +148,7 @@ export function SmartQuestions({ vision, description, onAnswersChange, className
         {metrics.length > 0 && (
           <div className="flex items-center gap-2">
             {answeredCount === totalQuestions && totalQuestions > 0 && (
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
+              <CheckCircle2 className="h-4 w-4 text-cyan-600" />
             )}
             {isExpanded ? (
               <ChevronUp className="h-4 w-4 text-muted-foreground" />
@@ -203,7 +203,7 @@ export function SmartQuestions({ vision, description, onAnswersChange, className
                   <div className="flex items-center gap-2">
                     <Target className="h-4 w-4 text-purple-600" />
                     <span className="text-sm font-medium">Strategic Discovery</span>
-                    <Badge className="bg-green-100 text-green-700">
+                    <Badge className="bg-cyan-100 text-cyan-700">
                       {discoveryData.completionScore}% Complete
                     </Badge>
                   </div>

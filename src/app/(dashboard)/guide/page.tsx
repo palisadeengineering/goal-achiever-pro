@@ -244,13 +244,13 @@ export default function GuidePage() {
                 </div>
 
                 {/* Production */}
-                <div className="border-2 border-green-500/30 rounded-lg p-4 bg-green-500/5">
+                <div className="border-2 border-cyan-500/30 rounded-lg p-4 bg-cyan-500/5">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="p-2 rounded-lg bg-green-500/20">
-                      <Zap className="h-5 w-5 text-green-600" />
+                    <div className="p-2 rounded-lg bg-cyan-500/20">
+                      <Zap className="h-5 w-5 text-cyan-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-green-600">Production</h3>
+                      <h3 className="font-semibold text-cyan-600">Production</h3>
                       <p className="text-xs text-muted-foreground">High skill, Energizing</p>
                     </div>
                   </div>
@@ -267,7 +267,7 @@ export default function GuidePage() {
                       <li>Innovation & problem-solving</li>
                     </ul>
                   </div>
-                  <div className="mt-3 p-2 bg-green-500/10 rounded text-xs">
+                  <div className="mt-3 p-2 bg-cyan-500/10 rounded text-xs">
                     <strong>Action:</strong> Maximize and protect this time
                   </div>
                 </div>
@@ -288,8 +288,8 @@ export default function GuidePage() {
                 this?&quot; If no, it&apos;s probably not Production work.
               </p>
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="bg-green-500/10 p-4 rounded-lg">
-                  <p className="font-medium text-green-600 mb-2">$1000/Hour Activities</p>
+                <div className="bg-cyan-500/10 p-4 rounded-lg">
+                  <p className="font-medium text-cyan-600 mb-2">$1000/Hour Activities</p>
                   <ul className="text-sm text-muted-foreground space-y-1">
                     <li>Closing major deals</li>
                     <li>Strategic partnerships</li>
@@ -451,9 +451,9 @@ export default function GuidePage() {
                       </div>
                     </div>
                     <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                    <div className="flex-1 p-3 bg-green-500/10 rounded-lg">
+                    <div className="flex-1 p-3 bg-cyan-500/10 rounded-lg">
                       <div className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        <CheckCircle2 className="h-4 w-4 text-cyan-500" />
                         <span className="text-sm">{item.right}</span>
                       </div>
                     </div>
@@ -480,10 +480,10 @@ export default function GuidePage() {
               </p>
 
               <div className="grid gap-4 md:grid-cols-3">
-                <div className="border-2 border-green-500/30 rounded-lg p-4">
+                <div className="border-2 border-cyan-500/30 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-3">
-                    <Battery className="h-5 w-5 text-green-500" />
-                    <h3 className="font-semibold text-green-600">Energizing (Green)</h3>
+                    <Battery className="h-5 w-5 text-cyan-500" />
+                    <h3 className="font-semibold text-cyan-600">Energizing (Green)</h3>
                   </div>
                   <p className="text-sm text-muted-foreground mb-3">
                     Activities that fill your cup. You feel more alive after doing them.
@@ -551,7 +551,7 @@ export default function GuidePage() {
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="p-4 border rounded-lg">
-                  <p className="font-medium text-green-600 mb-2">Positive Balance (+20% or more)</p>
+                  <p className="font-medium text-cyan-600 mb-2">Positive Balance (+20% or more)</p>
                   <p className="text-sm text-muted-foreground">
                     Great! You&apos;re spending most time on activities that fuel you.
                     Keep protecting this.
@@ -596,7 +596,7 @@ export default function GuidePage() {
                   },
                 ].map((tip, i) => (
                   <div key={i} className="flex gap-3 items-start p-3 bg-muted/50 rounded-lg">
-                    <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
+                    <CheckCircle2 className="h-5 w-5 text-cyan-500 mt-0.5" />
                     <div>
                       <p className="font-medium">{tip.title}</p>
                       <p className="text-sm text-muted-foreground">{tip.description}</p>
@@ -673,8 +673,8 @@ export default function GuidePage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="p-4 bg-green-500/10 rounded-lg">
-                  <p className="font-medium text-green-600">Green Flags</p>
+                <div className="p-4 bg-cyan-500/10 rounded-lg">
+                  <p className="font-medium text-cyan-600">Green Flags</p>
                   <ul className="text-sm text-muted-foreground mt-2 space-y-1">
                     <li>Production % increasing week over week</li>
                     <li>Energy balance consistently positive</li>
@@ -1030,7 +1030,7 @@ export default function GuidePage() {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <TrendingUp className="h-4 w-4 text-green-500" />
+                  <TrendingUp className="h-4 w-4 text-cyan-500" />
                   Business Growth & Scaling
                 </CardTitle>
               </CardHeader>

@@ -252,15 +252,15 @@ function SettingsContent() {
 
       {/* Status Message */}
       {statusMessage && (
-        <Card className={statusMessage.type === 'success' ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'}>
+        <Card className={statusMessage.type === 'success' ? 'border-cyan-500 bg-cyan-50' : 'border-red-500 bg-red-50'}>
           <CardContent className="py-3">
             <div className="flex items-center gap-2">
               {statusMessage.type === 'success' ? (
-                <Check className="h-4 w-4 text-green-600" />
+                <Check className="h-4 w-4 text-cyan-600" />
               ) : (
                 <X className="h-4 w-4 text-red-600" />
               )}
-              <span className={statusMessage.type === 'success' ? 'text-green-800' : 'text-red-800'}>
+              <span className={statusMessage.type === 'success' ? 'text-cyan-800' : 'text-red-800'}>
                 {statusMessage.message}
               </span>
               <Button

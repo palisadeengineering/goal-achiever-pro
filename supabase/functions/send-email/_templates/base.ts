@@ -6,8 +6,8 @@
 // Brand colors (converted from OKLCH to hex for email compatibility)
 export const colors = {
   // Primary emerald green
-  primary: '#10b981',
-  primaryDark: '#059669',
+  primary: '#00BEFF',
+  primaryDark: '#0891B2',
   primaryLight: '#d1fae5',
 
   // Backgrounds
@@ -30,7 +30,7 @@ export const colors = {
   danger: '#ef4444',
   dangerBg: '#fee2e2',
   dangerText: '#991b1b',
-  success: '#10b981',
+  success: '#00BEFF',
   successBg: '#d1fae5',
   successText: '#065f46',
 };

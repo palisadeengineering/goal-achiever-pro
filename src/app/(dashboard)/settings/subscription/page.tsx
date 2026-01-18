@@ -126,9 +126,9 @@ export default function SubscriptionPage() {
 
       {/* Success Alert */}
       {typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('success') && (
-        <Alert className="bg-green-50 border-green-200">
-          <CheckCircle2 className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-800">
+        <Alert className="bg-cyan-50 border-cyan-200">
+          <CheckCircle2 className="h-4 w-4 text-cyan-600" />
+          <AlertDescription className="text-cyan-800">
             Your subscription has been activated! Welcome to Pro.
           </AlertDescription>
         </Alert>
@@ -196,7 +196,7 @@ export default function SubscriptionPage() {
           <ul className="grid md:grid-cols-2 gap-3">
             {currentTier?.features.map((feature, index) => (
               <li key={index} className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-green-500" />
+                <Check className="h-4 w-4 text-cyan-500" />
                 <span className="text-sm">{feature}</span>
               </li>
             ))}
@@ -230,7 +230,7 @@ export default function SubscriptionPage() {
                   <ul className="space-y-2 mb-4">
                     {tier.features.slice(0, 5).map((feature, index) => (
                       <li key={index} className="flex items-center gap-2 text-sm">
-                        <Check className="h-4 w-4 text-green-500" />
+                        <Check className="h-4 w-4 text-cyan-500" />
                         {feature}
                       </li>
                     ))}

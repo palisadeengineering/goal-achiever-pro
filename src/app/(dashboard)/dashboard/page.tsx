@@ -232,12 +232,12 @@ export default function DashboardPage() {
               <div className="space-y-1">
                 <div className="flex justify-between text-sm">
                   <span className="flex items-center gap-2">
-                    <span className="h-3 w-3 rounded bg-green-500" />
+                    <span className="h-3 w-3 rounded bg-cyan-500" />
                     Production
                   </span>
                   <span className="font-medium">{dripDistribution.production}%</span>
                 </div>
-                <Progress value={dripDistribution.production} className="h-2 bg-green-100" />
+                <Progress value={dripDistribution.production} className="h-2 bg-cyan-100" />
               </div>
 
               <div className="space-y-1">

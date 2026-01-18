@@ -82,7 +82,7 @@ const DRIP_OPTIONS = [
 ];
 
 const ENERGY_OPTIONS = [
-  { value: 'green', label: 'Energizing', description: 'This activity gives me energy', color: 'bg-green-500' },
+  { value: 'green', label: 'Energizing', description: 'This activity gives me energy', color: 'bg-cyan-500' },
   { value: 'yellow', label: 'Neutral', description: 'Neither draining nor energizing', color: 'bg-yellow-500' },
   { value: 'red', label: 'Draining', description: 'This activity drains my energy', color: 'bg-red-500' },
 ];
@@ -524,9 +524,9 @@ export function TimeBlockForm({
                     variant="ghost"
                     size="sm"
                     onClick={acceptSuggestions}
-                    className="h-6 w-6 p-0 hover:bg-green-500/20"
+                    className="h-6 w-6 p-0 hover:bg-cyan-500/20"
                   >
-                    <Check className="h-3 w-3 text-green-600" />
+                    <Check className="h-3 w-3 text-cyan-600" />
                   </Button>
                   <Button
                     type="button"

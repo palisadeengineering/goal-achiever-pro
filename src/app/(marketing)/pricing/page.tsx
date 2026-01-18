@@ -334,8 +334,8 @@ export default function PricingPage() {
 function renderFeatureValue(value: boolean | string) {
   if (value === true) {
     return (
-      <div className="h-6 w-6 rounded-full bg-emerald-100 flex items-center justify-center mx-auto">
-        <Check className="h-3.5 w-3.5 text-emerald-600" />
+      <div className="h-6 w-6 rounded-full bg-cyan-100 flex items-center justify-center mx-auto">
+        <Check className="h-3.5 w-3.5 text-cyan-600" />
       </div>
     );
   }

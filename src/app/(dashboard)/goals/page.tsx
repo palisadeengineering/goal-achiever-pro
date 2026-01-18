@@ -288,8 +288,8 @@ export default function GoalsPage() {
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 text-green-600" />
+              <div className="h-10 w-10 rounded-lg bg-cyan-100 flex items-center justify-center">
+                <TrendingUp className="h-5 w-5 text-cyan-600" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Active Milestones</p>

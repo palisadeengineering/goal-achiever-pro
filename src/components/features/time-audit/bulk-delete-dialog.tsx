@@ -230,7 +230,7 @@ export function BulkDeleteDialog({
         {/* Delete complete state */}
         {deleteComplete && (
           <div className="flex flex-col items-center justify-center py-12">
-            <CheckCircle2 className="h-12 w-12 text-green-500 mb-4" />
+            <CheckCircle2 className="h-12 w-12 text-cyan-500 mb-4" />
             <p className="text-lg font-medium">Events deleted successfully!</p>
           </div>
         )}
@@ -251,7 +251,7 @@ export function BulkDeleteDialog({
           <>
             {suggestions.categories.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <CheckCircle2 className="h-12 w-12 text-green-500 mb-4" />
+                <CheckCircle2 className="h-12 w-12 text-cyan-500 mb-4" />
                 <h3 className="text-lg font-semibold mb-2">Your calendar looks great!</h3>
                 <p className="text-muted-foreground max-w-md">
                   No cleanup suggestions found. Your events appear to be well-organized.

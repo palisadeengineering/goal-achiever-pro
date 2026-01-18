@@ -160,7 +160,7 @@ export default function ReviewsPage() {
             >
               <Sun className="h-4 w-4" />
               Morning
-              {morningDone && <CheckCircle2 className="h-4 w-4 text-green-500" />}
+              {morningDone && <CheckCircle2 className="h-4 w-4 text-cyan-500" />}
             </Button>
             <Button
               variant={middayDone ? 'default' : activeReview === 'midday' ? 'secondary' : 'outline'}
@@ -169,7 +169,7 @@ export default function ReviewsPage() {
             >
               <Clock className="h-4 w-4" />
               Midday
-              {middayDone && <CheckCircle2 className="h-4 w-4 text-green-500" />}
+              {middayDone && <CheckCircle2 className="h-4 w-4 text-cyan-500" />}
               <Badge variant="secondary" className="ml-1 text-xs">Pro</Badge>
             </Button>
             <Button
@@ -179,7 +179,7 @@ export default function ReviewsPage() {
             >
               <Moon className="h-4 w-4" />
               Evening
-              {eveningDone && <CheckCircle2 className="h-4 w-4 text-green-500" />}
+              {eveningDone && <CheckCircle2 className="h-4 w-4 text-cyan-500" />}
             </Button>
           </div>
         </CardContent>
@@ -258,7 +258,7 @@ export default function ReviewsPage() {
                   <div>
                     <div className="flex justify-between mb-2">
                       <Label className="flex items-center gap-2">
-                        <Zap className="h-4 w-4 text-green-500" />
+                        <Zap className="h-4 w-4 text-cyan-500" />
                         Consistency
                       </Label>
                       <span className="text-sm font-medium">{consistencyScore[0]}%</span>

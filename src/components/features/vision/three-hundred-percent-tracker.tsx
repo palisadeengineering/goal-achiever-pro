@@ -40,14 +40,14 @@ export function ThreeHundredPercentTracker({
   const percentage = Math.round((totalScore / 300) * 100);
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600 dark:text-green-400';
+    if (score >= 80) return 'text-cyan-600 dark:text-cyan-400';
     if (score >= 60) return 'text-yellow-600 dark:text-yellow-400';
     if (score >= 40) return 'text-orange-600 dark:text-orange-400';
     return 'text-red-600 dark:text-red-400';
   };
 
   const getTotalColor = () => {
-    if (totalScore >= 240) return 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20';
+    if (totalScore >= 240) return 'text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-900/20';
     if (totalScore >= 180) return 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20';
     if (totalScore >= 120) return 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20';
     return 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20';

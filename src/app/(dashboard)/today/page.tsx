@@ -119,7 +119,7 @@ interface TodayData {
 const CATEGORY_COLORS: Record<string, string> = {
   business: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200',
   career: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200',
-  health: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200',
+  health: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-200',
   wealth: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200',
   relationships: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-200',
   personal: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-200',
@@ -823,7 +823,7 @@ export default function TodayPage() {
                               <div className="flex items-center gap-2 shrink-0">
                                 {/* Calendar Sync Status */}
                                 {action.calendar_sync_status === 'synced' ? (
-                                  <Badge variant="outline" className="text-green-600 border-green-200 dark:border-green-800">
+                                  <Badge variant="outline" className="text-cyan-600 border-cyan-200 dark:border-cyan-800">
                                     <CalendarCheck className="h-3 w-3 mr-1" />
                                     On Cal
                                   </Badge>

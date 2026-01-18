@@ -309,7 +309,7 @@ export function EnergyFlowChart({ data }: EnergyFlowChartProps) {
                   {getEnergyLabel(dataPoint.avgEnergy)}
                 </p>
                 <div className="mt-2 space-y-1 text-xs">
-                  <p className="text-green-600">
+                  <p className="text-cyan-600">
                     Energizing: {Math.round(dataPoint.energizingMinutes)} min
                   </p>
                   <p className="text-yellow-600">

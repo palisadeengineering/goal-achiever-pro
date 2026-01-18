@@ -203,7 +203,7 @@ export function SmartGoalStep({ data, updateData }: SmartGoalStepProps) {
             <div className="flex items-center gap-2">
               <Label htmlFor={field.key}>{field.label}</Label>
               {data[field.key]?.trim() && (
-                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                <span className="text-xs bg-cyan-100 text-cyan-700 px-2 py-0.5 rounded-full">
                   Complete
                 </span>
               )}

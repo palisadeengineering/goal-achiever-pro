@@ -605,8 +605,8 @@ export default function TimeAuditFixturePage() {
             </Button>
           </div>
           {fixtureLoaded && (
-            <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded">
-              <p className="text-sm text-green-800 dark:text-green-200">
+            <div className="p-3 bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 rounded">
+              <p className="text-sm text-cyan-800 dark:text-cyan-200">
                 ✓ Mock events loaded! Navigate to the main Time Audit page to test categorization and ignore features.
               </p>
             </div>

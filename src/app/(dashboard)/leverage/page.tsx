@@ -72,7 +72,7 @@ const LEVERAGE_TYPES = {
     name: 'Capital',
     description: 'Money working for you (hiring, investing)',
     icon: DollarSign,
-    color: 'bg-green-500',
+    color: 'bg-cyan-500',
     examples: ['Hire assistants', 'Outsource tasks', 'Invest in tools'],
   },
   collaboration: {
@@ -88,7 +88,7 @@ const STATUS_OPTIONS = [
   { value: 'idea', label: 'Idea', color: 'bg-gray-500' },
   { value: 'planning', label: 'Planning', color: 'bg-blue-500' },
   { value: 'implementing', label: 'Implementing', color: 'bg-amber-500' },
-  { value: 'active', label: 'Active', color: 'bg-green-500' },
+  { value: 'active', label: 'Active', color: 'bg-cyan-500' },
   { value: 'archived', label: 'Archived', color: 'bg-gray-400' },
 ];
 
@@ -268,7 +268,7 @@ export default function LeveragePage() {
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Clock className="h-8 w-8 text-green-500" />
+              <Clock className="h-8 w-8 text-cyan-500" />
               <div>
                 <div className="text-3xl font-bold">{totalEstimatedHours} hours/week</div>
                 <div className="text-sm text-muted-foreground">Estimated time savings from active leverage</div>
@@ -349,7 +349,7 @@ export default function LeveragePage() {
                               </p>
                             )}
                             {item.estimatedHoursSaved > 0 && (
-                              <p className="text-xs text-green-600 mt-1">
+                              <p className="text-xs text-cyan-600 mt-1">
                                 ~{item.estimatedHoursSaved} hrs/week saved
                               </p>
                             )}
