@@ -63,3 +63,6 @@ skills/
 # Test and session documentation
 docs/testing/
 docs/sessions/
+
+# Email template previews (generated)
+email-previews/
