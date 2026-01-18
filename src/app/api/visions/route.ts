@@ -80,9 +80,11 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  console.log('[Vision API] POST request received');
   try {
     // Authenticate user
     const auth = await getAuthenticatedUser();
+    console.log('[Vision API] Auth result:', { isAuthenticated: auth.isAuthenticated, userId: auth.isAuthenticated ? auth.userId : null });
     if (!auth.isAuthenticated) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
@@ -91,6 +93,7 @@ export async function POST(request: NextRequest) {
     const adminClient = createAdminClient();
 
     if (!adminClient) {
+      console.error('[Vision API] Admin client creation failed');
       return NextResponse.json(
         { error: 'Database connection failed' },
         { status: 500 }
@@ -104,7 +107,9 @@ export async function POST(request: NextRequest) {
 
     // Validate request body
     const body = await request.json();
+    console.log('[Vision API] Request body:', { title: body.title, hasDescription: !!body.description });
     const validation = parseWithErrors(createVisionSchema, body);
+    console.log('[Vision API] Validation result:', { success: validation.success, errors: validation.success ? null : validation.errors });
 
     if (!validation.success) {
       return NextResponse.json(
@@ -160,13 +165,14 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error creating vision:', error);
+      console.error('[Vision API] Database insert error:', error);
       return NextResponse.json(
         { error: 'Failed to create vision' },
         { status: 500 }
       );
     }
 
+    console.log('[Vision API] Vision created successfully:', { id: vision?.id, title: vision?.title });
     return NextResponse.json({ vision });
   } catch (error) {
     console.error('Create vision error:', error);

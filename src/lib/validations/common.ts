@@ -10,12 +10,13 @@ export const dateStringSchema = z.string().regex(
   'Date must be in YYYY-MM-DD format'
 );
 
-// Optional date that can be null or undefined
+// Optional date that can be null, undefined, or empty string
 export const optionalDateSchema = z.union([
   dateStringSchema,
+  z.literal(''),  // Allow empty string
   z.null(),
   z.undefined(),
-]).transform(val => val || null);
+]).transform(val => val && val !== '' ? val : null);  // Transform empty string to null
 
 // Time string validation (HH:MM or HH:MM:SS)
 export const timeStringSchema = z.string().regex(

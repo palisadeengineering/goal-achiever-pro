@@ -126,27 +126,35 @@ export default function VisionPage() {
       const method = isUpdate ? 'PUT' : 'POST';
 
       // Save vision
+      const payload = {
+        id: visionId,
+        title: data.title,
+        description: data.description,
+        specific: data.specific,
+        measurable: data.measurable,
+        attainable: data.attainable,
+        realistic: data.realistic,
+        timeBound: data.targetDate,
+        clarityScore: data.clarityScore,
+        beliefScore: data.beliefScore,
+        consistencyScore: data.consistencyScore,
+        color: data.color,
+        affirmationText: data.affirmationText,
+      };
+
+      console.log('[Vision Save] Sending request:', { endpoint, method, payload });
+
       const response = await fetch(endpoint, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: visionId,
-          title: data.title,
-          description: data.description,
-          specific: data.specific,
-          measurable: data.measurable,
-          attainable: data.attainable,
-          realistic: data.realistic,
-          timeBound: data.targetDate,
-          clarityScore: data.clarityScore,
-          beliefScore: data.beliefScore,
-          consistencyScore: data.consistencyScore,
-          color: data.color,
-          affirmationText: data.affirmationText,
-        }),
+        body: JSON.stringify(payload),
       });
 
-      if (!response.ok) throw new Error('Failed to save vision');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('[Vision Save] API Error:', response.status, errorData);
+        throw new Error(errorData.error || 'Failed to save vision');
+      }
 
       const result = await response.json();
       const savedVisionId = result.vision.id;
