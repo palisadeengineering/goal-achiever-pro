@@ -4,9 +4,18 @@ import { useState, useEffect, useRef } from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Loader2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Sparkles, Loader2, Check, X } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import type { VisionWizardData } from '../vision-wizard';
+
+interface SmartPreview {
+  specific: string;
+  measurable: string;
+  attainable: string;
+  realistic: string;
+  timeBound: string;
+}
 
 interface SmartGoalStepProps {
   data: VisionWizardData;
@@ -16,6 +25,7 @@ interface SmartGoalStepProps {
 export function SmartGoalStep({ data, updateData }: SmartGoalStepProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [wasAutoFilled, setWasAutoFilled] = useState(false);
+  const [preview, setPreview] = useState<SmartPreview | null>(null);
   const previousTargetDate = useRef(data.targetDate);
 
   // Auto-populate Time-Bound from target date in Step 1
@@ -50,12 +60,13 @@ export function SmartGoalStep({ data, updateData }: SmartGoalStepProps) {
 
       if (response.ok) {
         const result = await response.json();
-        updateData({
-          specific: result.specific || data.specific,
-          measurable: result.measurable || data.measurable,
-          attainable: result.attainable || data.attainable,
-          realistic: result.realistic || data.realistic,
-          timeBound: result.timeBound || data.timeBound,
+        // Store in preview instead of directly applying
+        setPreview({
+          specific: result.specific || '',
+          measurable: result.measurable || '',
+          attainable: result.attainable || '',
+          realistic: result.realistic || '',
+          timeBound: result.timeBound || '',
         });
       }
     } catch (error) {
@@ -63,6 +74,23 @@ export function SmartGoalStep({ data, updateData }: SmartGoalStepProps) {
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleAcceptPreview = () => {
+    if (preview) {
+      updateData({
+        specific: preview.specific || data.specific,
+        measurable: preview.measurable || data.measurable,
+        attainable: preview.attainable || data.attainable,
+        realistic: preview.realistic || data.realistic,
+        timeBound: preview.timeBound || data.timeBound,
+      });
+      setPreview(null);
+    }
+  };
+
+  const handleDiscardPreview = () => {
+    setPreview(null);
   };
 
   const smartFields = [
@@ -117,7 +145,7 @@ export function SmartGoalStep({ data, updateData }: SmartGoalStepProps) {
           variant="outline"
           size="sm"
           onClick={handleGenerateSmart}
-          disabled={isGenerating || (!data.title && !data.description)}
+          disabled={isGenerating || preview !== null || (!data.title && !data.description)}
         >
           {isGenerating ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -127,6 +155,47 @@ export function SmartGoalStep({ data, updateData }: SmartGoalStepProps) {
           AI Generate
         </Button>
       </div>
+
+      {/* AI Generated Preview Panel */}
+      {preview && (
+        <Card className="border-primary/50 bg-primary/5">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                AI Generated SMART Goals
+              </CardTitle>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleDiscardPreview}
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Discard
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleAcceptPreview}
+                >
+                  <Check className="h-4 w-4 mr-1" />
+                  Accept All
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {smartFields.map((field) => (
+              <div key={`preview-${field.key}`} className="space-y-1">
+                <Label className="text-xs font-semibold text-primary">{field.label}</Label>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                  {preview[field.key] || <span className="italic">Not generated</span>}
+                </p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="space-y-6">
         {smartFields.map((field) => (
