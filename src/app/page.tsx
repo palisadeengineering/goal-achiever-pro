@@ -175,7 +175,7 @@ export default function HomePage() {
     <div className="flex flex-col min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md">
-        <div className="container flex h-16 items-center justify-between px-4">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-2.5 font-semibold group">
             <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center group-hover:scale-105 transition-transform">
               <Target className="h-4.5 w-4.5 text-primary-foreground" />
@@ -207,7 +207,7 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-dot-pattern opacity-50" />
           <div className="absolute inset-0 bg-hero-gradient" />
 
-          <div className="container max-w-4xl relative">
+          <div className="container max-w-4xl mx-auto relative">
             <ScrollReveal animation="fade-up">
               <div className="text-center">
                 <Badge className="mb-6 bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 px-4 py-1.5">
@@ -278,7 +278,7 @@ export default function HomePage() {
 
         {/* 3 Quick Benefits */}
         <section className="py-12 px-4 bg-muted/30 border-y">
-          <div className="container max-w-4xl">
+          <div className="container max-w-4xl mx-auto">
             <div className="grid md:grid-cols-3 gap-6">
               <ScrollReveal animation="fade-up" delay={0}>
                 <div className="flex flex-col items-center text-center gap-3">
@@ -319,7 +319,7 @@ export default function HomePage() {
 
         {/* What You Get Section */}
         <section className="py-20 px-4">
-          <div className="container max-w-5xl">
+          <div className="container max-w-5xl mx-auto">
             <ScrollReveal>
               <div className="text-center mb-14">
                 <Badge className="mb-4 bg-primary/10 text-primary border-0">What You Get</Badge>
@@ -412,7 +412,7 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-50" />
 
           <ScrollReveal animation="fade-up">
-            <div className="container max-w-2xl relative text-center">
+            <div className="container max-w-2xl mx-auto relative text-center">
               <Badge className="mb-6 bg-white/20 text-white border-0">
                 <Sparkles className="h-3.5 w-3.5 mr-1.5" />
                 Limited Founding Member Spots
@@ -468,7 +468,7 @@ export default function HomePage() {
 
         {/* FAQ Section */}
         <section className="py-20 px-4">
-          <div className="container max-w-2xl">
+          <div className="container max-w-2xl mx-auto">
             <ScrollReveal>
               <div className="text-center mb-10">
                 <Badge className="mb-4" variant="outline">FAQ</Badge>
@@ -539,7 +539,7 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="border-t py-8">
-        <div className="container px-4 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
             <div className="h-6 w-6 rounded-md bg-primary flex items-center justify-center">
               <Target className="h-3.5 w-3.5 text-primary-foreground" />
