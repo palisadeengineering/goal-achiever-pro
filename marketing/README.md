@@ -220,7 +220,7 @@ Vertical format at 1080x1920px with interactive elements:
 | Purple | `#a855f7` | DRIP Delegation |
 | Amber | `#f59e0b` | DRIP Replacement |
 | Blue | `#3b82f6` | DRIP Investment |
-| Green | `#00BEFF` | DRIP Production |
+| Cyan | `#00BEFF` | DRIP Production |
 
 ### Gradients
 

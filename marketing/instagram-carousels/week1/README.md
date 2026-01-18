@@ -67,17 +67,18 @@ captureSlides('day1-smart-vision.html', 'day1-slide');
 ## Brand Assets
 
 ### Logo Files
-- `assets/logo.svg` - Full color logo (green background)
+- `assets/logo.svg` - Full color logo (cyan background)
 - `assets/logo-white.svg` - White logo for dark backgrounds
 
 ### Brand Colors (matching your app)
-- **Primary (Emerald)**: `#00BEFF`
+- **Primary (Cyan)**: `#0891B2`
+- **Bright Cyan**: `#00BEFF`
 - **Dark Background**: `#0f172a` to `#1e293b`
 - **DRIP Colors**:
   - Delegation (Purple): `#a855f7`
   - Replacement (Amber): `#f59e0b`
   - Investment (Blue): `#3b82f6`
-  - Production (Green): `#00BEFF`
+  - Production (Cyan): `#00BEFF`
 
 ## Customization
 

@@ -122,8 +122,8 @@
 }
 
 .min-card.good {
-  border-color: rgba(16, 185, 129, 0.5);
-  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(8, 145, 178, 0.5);
+  background: rgba(8, 145, 178, 0.1);
 }
 
 .min-card.bad {
@@ -252,7 +252,7 @@
 }
 
 .result-after {
-  border: 2px solid rgba(16, 185, 129, 0.5);
+  border: 2px solid rgba(8, 145, 178, 0.5);
 }
 
 .result-label {

@@ -28,7 +28,7 @@ body {
 
 /* ===========================================
    BRAND COLORS - Goal Achiever Pro
-   Primary: Emerald Green #00BEFF
+   Primary: Cyan #0891B2 / Bright Cyan #00BEFF
    =========================================== */
 
 .bg-brand-primary {
@@ -278,14 +278,14 @@ body {
 .smart-letter {
   font-size: 48px;
   font-weight: 800;
-  color: #00BEFF; /* Brand emerald */
+  color: #00BEFF; /* Brand cyan */
   display: inline-block;
   width: 60px;
 }
 
 /* Highlight box */
 .highlight-box {
-  background: rgba(16, 185, 129, 0.2); /* Brand emerald with transparency */
+  background: rgba(8, 145, 178, 0.2); /* Brand emerald with transparency */
   border-left: 6px solid #00BEFF;
   padding: 30px 40px;
   border-radius: 0 16px 16px 0;
@@ -312,7 +312,7 @@ body {
   font-family: Georgia, serif;
 }
 
-/* CTA styling - Brand emerald */
+/* CTA styling - Brand cyan */
 .cta {
   background: #00BEFF;
   color: white;
@@ -322,7 +322,7 @@ body {
   font-weight: 700;
   display: inline-block;
   margin-top: 40px;
-  box-shadow: 0 10px 40px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 10px 40px rgba(8, 145, 178, 0.4);
 }
 
 /* Slide indicator */
@@ -352,7 +352,7 @@ body {
 .drip-d { color: #a855f7; } /* Purple */
 .drip-r { color: #f59e0b; } /* Amber */
 .drip-i { color: #3b82f6; } /* Blue */
-.drip-p { color: #00BEFF; } /* Emerald */
+.drip-p { color: #00BEFF; } /* Cyan */
 
 .drip-badge {
   display: inline-flex;
@@ -369,7 +369,7 @@ body {
 .drip-badge.d { background: rgba(168, 85, 247, 0.3); }
 .drip-badge.r { background: rgba(245, 158, 11, 0.3); }
 .drip-badge.i { background: rgba(59, 130, 246, 0.3); }
-.drip-badge.p { background: rgba(16, 185, 129, 0.3); }
+.drip-badge.p { background: rgba(8, 145, 178, 0.3); }
 
 /* 300% Rule specific */
 .progress-bar {
@@ -390,7 +390,7 @@ body {
 .number-circle {
   width: 80px;
   height: 80px;
-  background: rgba(16, 185, 129, 0.3);
+  background: rgba(8, 145, 178, 0.3);
   border: 2px solid #00BEFF;
   border-radius: 50%;
   display: flex;
@@ -490,7 +490,7 @@ body {
 }
 
 .sidebar-mockup-item.active {
-  background: rgba(16, 185, 129, 0.2);
+  background: rgba(8, 145, 178, 0.2);
   color: #00BEFF;
 }
 
@@ -526,7 +526,7 @@ body {
 .feature-icon {
   width: 64px;
   height: 64px;
-  background: rgba(16, 185, 129, 0.2);
+  background: rgba(8, 145, 178, 0.2);
   border-radius: 16px;
   display: flex;
   align-items: center;
