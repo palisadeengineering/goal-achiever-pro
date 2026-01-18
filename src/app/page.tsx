@@ -281,7 +281,7 @@ export default function HomePage() {
           <div className="container max-w-4xl">
             <div className="grid md:grid-cols-3 gap-6">
               <ScrollReveal animation="fade-up" delay={0}>
-                <div className="flex gap-4">
+                <div className="flex flex-col items-center text-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <CheckCircle2 className="h-5 w-5 text-primary" />
                   </div>
@@ -292,7 +292,7 @@ export default function HomePage() {
                 </div>
               </ScrollReveal>
               <ScrollReveal animation="fade-up" delay={100}>
-                <div className="flex gap-4">
+                <div className="flex flex-col items-center text-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <CheckCircle2 className="h-5 w-5 text-primary" />
                   </div>
@@ -303,7 +303,7 @@ export default function HomePage() {
                 </div>
               </ScrollReveal>
               <ScrollReveal animation="fade-up" delay={200}>
-                <div className="flex gap-4">
+                <div className="flex flex-col items-center text-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <CheckCircle2 className="h-5 w-5 text-primary" />
                   </div>
@@ -345,22 +345,20 @@ export default function HomePage() {
                   <ScrollReveal key={feature.title} animation="fade-up" delay={index * 75}>
                     <Card className="h-full border-2 hover:border-primary/30 transition-colors">
                       <CardContent className="pt-6">
-                        <div className="flex items-start gap-4">
-                          <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <div className="flex flex-col items-center text-center">
+                          <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                             <feature.icon className="h-6 w-6 text-primary" />
                           </div>
-                          <div>
-                            <h4 className="font-display font-semibold text-lg mb-1">{feature.title}</h4>
-                            <p className="text-sm text-muted-foreground mb-3">{feature.description}</p>
-                            <ul className="space-y-1.5">
-                              {feature.items.map((item, i) => (
-                                <li key={i} className="flex items-start gap-2 text-sm">
-                                  <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 flex-shrink-0" />
-                                  <span>{item}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
+                          <h4 className="font-display font-semibold text-lg mb-1">{feature.title}</h4>
+                          <p className="text-sm text-muted-foreground mb-3">{feature.description}</p>
+                          <ul className="space-y-1.5">
+                            {feature.items.map((item, i) => (
+                              <li key={i} className="flex items-center justify-center gap-2 text-sm">
+                                <CheckCircle2 className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                                <span>{item}</span>
+                              </li>
+                            ))}
+                          </ul>
                         </div>
                       </CardContent>
                     </Card>
@@ -385,19 +383,21 @@ export default function HomePage() {
                   <ScrollReveal key={bonus.title} animation="fade-up" delay={index * 75}>
                     <Card className="h-full border-2 border-amber-500/20 bg-amber-50/30 dark:bg-amber-950/10">
                       <CardContent className="pt-6">
-                        <div className="h-10 w-10 rounded-lg bg-amber-500/10 flex items-center justify-center mb-4">
-                          <bonus.icon className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                        <div className="flex flex-col items-center text-center">
+                          <div className="h-10 w-10 rounded-lg bg-amber-500/10 flex items-center justify-center mb-4">
+                            <bonus.icon className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                          </div>
+                          <h4 className="font-display font-semibold mb-2">{bonus.title}</h4>
+                          <p className="text-sm text-muted-foreground mb-3">{bonus.description}</p>
+                          <ul className="space-y-1.5">
+                            {bonus.items.map((item, i) => (
+                              <li key={i} className="flex items-center justify-center gap-2 text-sm">
+                                <CheckCircle2 className="h-4 w-4 text-amber-500 flex-shrink-0" />
+                                <span>{item}</span>
+                              </li>
+                            ))}
+                          </ul>
                         </div>
-                        <h4 className="font-display font-semibold mb-2">{bonus.title}</h4>
-                        <p className="text-sm text-muted-foreground mb-3">{bonus.description}</p>
-                        <ul className="space-y-1.5">
-                          {bonus.items.map((item, i) => (
-                            <li key={i} className="flex items-start gap-2 text-sm">
-                              <CheckCircle2 className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />
-                              <span>{item}</span>
-                            </li>
-                          ))}
-                        </ul>
                       </CardContent>
                     </Card>
                   </ScrollReveal>
