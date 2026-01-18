@@ -53,9 +53,29 @@ export async function POST(request: NextRequest) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        const { userId, tier } = session.metadata || {};
+        const { userId, tier, product, accessExpires } = session.metadata || {};
 
-        if (userId && tier) {
+        // Handle founding member one-time payment
+        if (userId && product === 'founding_member_2026') {
+          console.log(`Founding member access granted for user ${userId}, expires: ${accessExpires}`);
+
+          const { error } = await supabase
+            .from('profiles')
+            .update({
+              subscription_tier: 'founding_member',
+              stripe_customer_id: session.customer as string,
+              subscription_status: 'active',
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', userId);
+
+          if (error) {
+            console.error('Error updating profile for founding member:', error);
+            throw error;
+          }
+        }
+        // Handle regular subscription checkout
+        else if (userId && tier) {
           console.log(`Subscription created for user ${userId}: ${tier}`);
 
           const { error } = await supabase

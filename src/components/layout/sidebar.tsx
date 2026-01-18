@@ -89,7 +89,7 @@ const adminNavItems: NavItem[] = [
 ];
 
 interface SidebarProps {
-  userTier?: 'free' | 'pro' | 'elite';
+  userTier?: 'free' | 'pro' | 'elite' | 'founding_member';
   isAdmin?: boolean;
 }
 
@@ -99,12 +99,12 @@ function SidebarContent({
   isAdmin = false,
   onNavigate
 }: {
-  userTier: 'free' | 'pro' | 'elite';
+  userTier: 'free' | 'pro' | 'elite' | 'founding_member';
   isAdmin?: boolean;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
-  const tierHierarchy = { free: 0, pro: 1, elite: 2 };
+  const tierHierarchy = { free: 0, pro: 1, elite: 2, founding_member: 2 };
   const [sharedContent, setSharedContent] = useState<SharedContent[]>([]);
   const [expandedOwners, setExpandedOwners] = useState<Set<string>>(new Set());
 

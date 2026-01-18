@@ -10,7 +10,7 @@ interface DashboardHeaderProps {
     fullName?: string;
     avatarUrl?: string;
   };
-  subscriptionTier: 'free' | 'pro' | 'elite';
+  subscriptionTier: 'free' | 'pro' | 'elite' | 'founding_member';
 }
 
 export function DashboardHeader({ user, subscriptionTier }: DashboardHeaderProps) {

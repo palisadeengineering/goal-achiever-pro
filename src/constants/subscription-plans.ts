@@ -133,6 +133,41 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
     },
     highlights: ['AI planning', 'Accountability', 'Priority templates'],
   },
+  founding_member: {
+    id: 'founding_member',
+    name: 'Founding Member',
+    description: 'Full access through December 31, 2026',
+    priceMonthly: 0, // One-time payment, not recurring
+    priceYearly: 99, // One-time payment
+    features: [
+      { name: 'Everything in Elite', included: true },
+      { name: 'Unlimited Power Goals', included: true },
+      { name: 'Unlimited History', included: true },
+      { name: 'AI-Powered Planning', included: true },
+      { name: 'AI Goal Suggestions', included: true },
+      { name: 'AI Weekly Review Prompts', included: true },
+      { name: 'Accountability Partners', included: true, limit: 5 },
+      { name: 'Priority Templates Library', included: true },
+      { name: 'Unlimited Routines', included: true },
+      { name: 'Unlimited Leverage Items', included: true },
+      { name: 'Unlimited Friend Inventory', included: true },
+      { name: 'PDF Reports', included: true },
+      { name: 'API Access', included: true },
+      { name: 'Founding Member Badge', included: true },
+      { name: 'Priority Support', included: true },
+    ],
+    limits: {
+      powerGoals: -1, // Unlimited
+      minsPerDay: -1,
+      timeBlockHistoryDays: -1,
+      routines: -1,
+      leverageItems: -1,
+      friendInventory: -1,
+      northStarMetrics: -1,
+      accountabilityPartners: 5,
+    },
+    highlights: ['Full access', 'One-time payment', 'Founding Member perks'],
+  },
 };
 
 // Helper to check if a tier has access to a feature
@@ -144,6 +179,7 @@ export function hasFeatureAccess(
     free: 0,
     pro: 1,
     elite: 2,
+    founding_member: 2, // Same level as elite
   };
   return tierHierarchy[userTier] >= tierHierarchy[requiredTier];
 }

@@ -4,7 +4,7 @@ import { sendEmail, generateWelcomeEmail } from '@/lib/email';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, fullName } = await request.json();
+    const { email, password, fullName, redirectTo, product } = await request.json();
 
     if (!email || typeof email !== 'string') {
       return NextResponse.json(
@@ -31,6 +31,11 @@ export async function POST(request: NextRequest) {
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
+    // Build callback URL with redirect params if provided
+    const callbackUrl = new URL('/callback', appUrl);
+    if (redirectTo) callbackUrl.searchParams.set('redirect', redirectTo);
+    if (product) callbackUrl.searchParams.set('product', product);
+
     // Check if user already exists
     const { data: existingUsers } = await supabase.auth.admin.listUsers();
     const existingUser = existingUsers?.users?.find(u => u.email === email);
@@ -51,7 +56,7 @@ export async function POST(request: NextRequest) {
         password: password,
         options: {
           data: { full_name: fullName },
-          redirectTo: `${appUrl}/callback`,
+          redirectTo: callbackUrl.toString(),
         },
       });
 
@@ -90,7 +95,7 @@ export async function POST(request: NextRequest) {
       password: password,
       options: {
         data: { full_name: fullName },
-        redirectTo: `${appUrl}/callback`,
+        redirectTo: callbackUrl.toString(),
       },
     });
 

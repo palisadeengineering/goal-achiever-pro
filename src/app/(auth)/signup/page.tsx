@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { validateEmail } from '@/lib/utils/email-validation';
 import { Button } from '@/components/ui/button';
@@ -12,8 +12,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Separator } from '@/components/ui/separator';
 import { Target, Loader2, CheckCircle2 } from 'lucide-react';
 
-export default function SignupPage() {
+function SignupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Get redirect params from URL (e.g., from /offer page)
+  const redirectTo = searchParams.get('redirect');
+  const product = searchParams.get('product');
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -47,7 +52,7 @@ export default function SignupPage() {
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, fullName }),
+        body: JSON.stringify({ email, password, fullName, redirectTo, product }),
       });
 
       const data = await response.json();
@@ -75,10 +80,14 @@ export default function SignupPage() {
     setError(null);
 
     try {
+      // Build callback URL with redirect params
+      const callbackUrl = new URL('/callback', window.location.origin);
+      if (redirectTo) callbackUrl.searchParams.set('redirect', redirectTo);
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/callback`,
+          redirectTo: callbackUrl.toString(),
         },
       });
 
@@ -294,5 +303,24 @@ export default function SignupPage() {
         </p>
       </CardFooter>
     </Card>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
+            <div className="p-3 rounded-full bg-primary/10">
+              <Loader2 className="h-8 w-8 text-primary animate-spin" />
+            </div>
+          </div>
+          <CardTitle className="text-2xl">Loading...</CardTitle>
+        </CardHeader>
+      </Card>
+    }>
+      <SignupForm />
+    </Suspense>
   );
 }
