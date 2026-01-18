@@ -1,0 +1,278 @@
+/* Week 2 - Imports shared styles from Week 1 */
+@import url('../week1/styles.css');
+
+/* Week 2 specific additions */
+
+.time-block {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+  border-left: 4px solid;
+}
+
+.time-block.delegation { border-color: #a855f7; }
+.time-block.replacement { border-color: #f59e0b; }
+.time-block.investment { border-color: #3b82f6; }
+.time-block.production { border-color: #10b981; }
+.time-block.wasted { border-color: #ef4444; }
+
+.time-block-time {
+  font-size: 18px;
+  font-weight: 600;
+  opacity: 0.7;
+  width: 100px;
+}
+
+.time-block-task {
+  font-size: 22px;
+  flex: 1;
+}
+
+.energy-bar {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.energy-pip {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.energy-pip.filled {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.energy-pip.filled.low {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.energy-pip.filled.medium {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.energy-pip.filled.high {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+/* App mockup styles */
+.phone-mockup {
+  background: #000;
+  border-radius: 40px;
+  padding: 12px;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+  width: 320px;
+}
+
+.phone-screen {
+  background: #0f172a;
+  border-radius: 32px;
+  overflow: hidden;
+  height: 640px;
+}
+
+.phone-notch {
+  width: 120px;
+  height: 28px;
+  background: #000;
+  border-radius: 0 0 20px 20px;
+  margin: 0 auto;
+}
+
+/* Stats reveal */
+.stat-reveal {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 24px 32px;
+  margin-bottom: 16px;
+}
+
+.stat-number {
+  font-size: 56px;
+  font-weight: 800;
+  color: #10b981;
+  min-width: 120px;
+}
+
+.stat-number.bad {
+  color: #ef4444;
+}
+
+.stat-description {
+  font-size: 24px;
+  opacity: 0.9;
+}
+
+/* MIN card */
+.min-card {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 32px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.min-card.good {
+  border-color: rgba(16, 185, 129, 0.5);
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.min-card.bad {
+  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.min-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.min-number {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.min-time {
+  font-size: 20px;
+  opacity: 0.7;
+  margin-left: auto;
+}
+
+.min-content {
+  font-size: 28px;
+  font-weight: 600;
+}
+
+/* Feature card for app reveal */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  max-width: 800px;
+}
+
+.feature-card {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 32px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.feature-card:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.feature-icon-large {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.feature-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.feature-desc {
+  font-size: 18px;
+  opacity: 0.7;
+}
+
+/* Testimonial styles */
+.testimonial-card {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 32px;
+  padding: 48px;
+  max-width: 850px;
+  margin: 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.testimonial-avatar {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #10b981, #0ea5e9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.testimonial-quote {
+  font-size: 36px;
+  font-weight: 500;
+  line-height: 1.5;
+  margin-bottom: 32px;
+}
+
+.testimonial-author {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.testimonial-role {
+  font-size: 20px;
+  opacity: 0.7;
+  margin-top: 8px;
+}
+
+/* Result comparison */
+.result-box {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 32px;
+  text-align: center;
+  flex: 1;
+}
+
+.result-before {
+  border: 2px solid rgba(239, 68, 68, 0.5);
+}
+
+.result-after {
+  border: 2px solid rgba(16, 185, 129, 0.5);
+}
+
+.result-label {
+  font-size: 20px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  opacity: 0.7;
+  margin-bottom: 16px;
+}
+
+.result-value {
+  font-size: 64px;
+  font-weight: 800;
+}
+
+.result-before .result-value { color: #ef4444; }
+.result-after .result-value { color: #10b981; }
+
+.result-unit {
+  font-size: 24px;
+  opacity: 0.8;
+  margin-top: 8px;
+}

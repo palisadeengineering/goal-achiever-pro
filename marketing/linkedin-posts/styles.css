@@ -1,0 +1,434 @@
+/* Goal Achiever Pro - LinkedIn Post Graphics Styles */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #1a1a2e;
+  min-height: 100vh;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 20px;
+  justify-content: center;
+}
+
+/* LinkedIn optimal: 1200x627px (1.91:1 ratio) */
+.linkedin-graphic {
+  width: 1200px;
+  height: 627px;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  color: white;
+}
+
+/* ===========================================
+   BRAND COLORS - Goal Achiever Pro
+   Primary: Emerald Green #10b981
+   =========================================== */
+
+.bg-brand-primary {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.bg-brand-dark {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+.bg-brand-gradient {
+  background: linear-gradient(135deg, #10b981 0%, #0ea5e9 100%);
+}
+
+/* DRIP Colors */
+.bg-drip-delegation {
+  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+}
+
+.bg-drip-replacement {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.bg-drip-investment {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.bg-drip-production {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+/* Additional gradients */
+.bg-gradient-dark {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+.bg-gradient-sunset {
+  background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+}
+
+.bg-gradient-ocean {
+  background: linear-gradient(135deg, #0ea5e9 0%, #10b981 100%);
+}
+
+.bg-gradient-fire {
+  background: linear-gradient(135deg, #ef4444 0%, #f59e0b 100%);
+}
+
+/* Decorative elements */
+.circle-decoration {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.1;
+}
+
+.circle-1 {
+  width: 500px;
+  height: 500px;
+  background: white;
+  top: -150px;
+  right: -100px;
+}
+
+.circle-2 {
+  width: 300px;
+  height: 300px;
+  background: white;
+  bottom: -80px;
+  left: -80px;
+}
+
+/* Grid pattern overlay */
+.grid-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+/* Content container */
+.content {
+  position: relative;
+  z-index: 10;
+  height: 100%;
+  display: flex;
+  padding: 50px 60px;
+  color: white;
+}
+
+.content-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.content-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.content-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+/* Typography */
+.headline {
+  font-size: 52px;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 20px;
+  text-shadow: 0 4px 30px rgba(0,0,0,0.3);
+}
+
+.headline-large {
+  font-size: 64px;
+}
+
+.headline-small {
+  font-size: 42px;
+}
+
+.subheadline {
+  font-size: 26px;
+  font-weight: 500;
+  opacity: 0.9;
+  line-height: 1.4;
+}
+
+.label {
+  font-size: 18px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  opacity: 0.7;
+  margin-bottom: 16px;
+}
+
+/* ===========================================
+   BRAND HEADER - Shows on every graphic
+   =========================================== */
+
+.brand-header {
+  position: absolute;
+  top: 30px;
+  left: 60px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 100;
+}
+
+.brand-logo {
+  width: 40px;
+  height: 40px;
+}
+
+.brand-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+  opacity: 0.9;
+}
+
+.brand-footer {
+  position: absolute;
+  bottom: 30px;
+  right: 60px;
+  font-size: 18px;
+  font-weight: 600;
+  opacity: 0.6;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-footer .logo-small {
+  width: 24px;
+  height: 24px;
+}
+
+/* Cards and boxes */
+.card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* List styles */
+.list {
+  list-style: none;
+  text-align: left;
+}
+
+.list li {
+  font-size: 24px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+/* Highlight box */
+.highlight-box {
+  background: rgba(16, 185, 129, 0.2);
+  border-left: 5px solid #10b981;
+  padding: 24px 32px;
+  border-radius: 0 16px 16px 0;
+}
+
+/* SMART acronym styling */
+.smart-letter {
+  font-size: 36px;
+  font-weight: 800;
+  color: #10b981;
+  display: inline-block;
+  width: 45px;
+}
+
+/* DRIP specific colors */
+.drip-d { color: #a855f7; }
+.drip-r { color: #f59e0b; }
+.drip-i { color: #3b82f6; }
+.drip-p { color: #10b981; }
+
+.drip-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  font-size: 32px;
+  font-weight: 800;
+  margin-right: 16px;
+}
+
+.drip-badge.d { background: rgba(168, 85, 247, 0.3); }
+.drip-badge.r { background: rgba(245, 158, 11, 0.3); }
+.drip-badge.i { background: rgba(59, 130, 246, 0.3); }
+.drip-badge.p { background: rgba(16, 185, 129, 0.3); }
+
+/* 300% Rule specific */
+.progress-bar {
+  height: 20px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 12px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #0ea5e9);
+  border-radius: 10px;
+}
+
+/* Number circle */
+.number-circle {
+  width: 60px;
+  height: 60px;
+  background: rgba(16, 185, 129, 0.3);
+  border: 2px solid #10b981;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+/* Feature grid */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  max-width: 500px;
+}
+
+.feature-item {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.feature-icon {
+  font-size: 36px;
+  margin-bottom: 10px;
+}
+
+.feature-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* Stats display */
+.stat-box {
+  text-align: center;
+  padding: 24px;
+}
+
+.stat-value {
+  font-size: 56px;
+  font-weight: 800;
+  color: #10b981;
+}
+
+.stat-label {
+  font-size: 18px;
+  opacity: 0.7;
+  margin-top: 8px;
+}
+
+/* CTA styling */
+.cta {
+  background: #10b981;
+  color: white;
+  padding: 18px 36px;
+  border-radius: 100px;
+  font-size: 22px;
+  font-weight: 700;
+  display: inline-block;
+  margin-top: 24px;
+  box-shadow: 0 10px 40px rgba(16, 185, 129, 0.4);
+}
+
+/* Comparison layout */
+.comparison {
+  display: flex;
+  gap: 30px;
+  align-items: center;
+}
+
+.comparison-box {
+  flex: 1;
+  padding: 24px;
+  border-radius: 16px;
+  text-align: center;
+}
+
+.comparison-box.before {
+  background: rgba(239, 68, 68, 0.2);
+  border: 2px solid rgba(239, 68, 68, 0.4);
+}
+
+.comparison-box.after {
+  background: rgba(16, 185, 129, 0.2);
+  border: 2px solid rgba(16, 185, 129, 0.4);
+}
+
+/* Quote styling */
+.quote-text {
+  font-size: 32px;
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* Icon grid for 4 C's etc */
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.icon-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 20px 24px;
+  border-radius: 16px;
+}
+
+.icon-item-icon {
+  font-size: 36px;
+}
+
+.icon-item-text {
+  font-size: 22px;
+  font-weight: 600;
+}

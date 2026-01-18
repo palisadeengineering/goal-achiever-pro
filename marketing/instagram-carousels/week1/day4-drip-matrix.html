@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Day 4 - DRIP Matrix Carousel | Goal Achiever Pro</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .drip-card {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 50px;
+      border: 2px solid;
+      text-align: left;
+      max-width: 850px;
+      margin: 0 auto;
+    }
+
+    .drip-card.delegation {
+      border-color: rgba(168, 85, 247, 0.5);
+      background: rgba(168, 85, 247, 0.1);
+    }
+
+    .drip-card.replacement {
+      border-color: rgba(245, 158, 11, 0.5);
+      background: rgba(245, 158, 11, 0.1);
+    }
+
+    .drip-card.investment {
+      border-color: rgba(59, 130, 246, 0.5);
+      background: rgba(59, 130, 246, 0.1);
+    }
+
+    .drip-card.production {
+      border-color: rgba(16, 185, 129, 0.5);
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    .drip-letter {
+      font-size: 120px;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 20px;
+    }
+
+    .drip-title {
+      font-size: 48px;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .drip-description {
+      font-size: 32px;
+      opacity: 0.9;
+      margin-bottom: 30px;
+    }
+
+    .drip-examples {
+      background: rgba(0,0,0,0.2);
+      padding: 25px;
+      border-radius: 16px;
+    }
+
+    .drip-examples p {
+      font-size: 26px;
+      margin-bottom: 10px;
+    }
+
+    .drip-examples p:last-child {
+      margin-bottom: 0;
+    }
+
+    .matrix-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      max-width: 900px;
+    }
+
+    .matrix-cell {
+      padding: 40px;
+      border-radius: 20px;
+      text-align: center;
+    }
+
+    .goal-box {
+      background: rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 30px;
+      margin-top: 40px;
+    }
+
+    .goal-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .goal-row:last-child {
+      border-bottom: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SLIDE 1: Hook -->
+  <div class="slide bg-gradient-dark">
+    <div class="circle-decoration circle-1"></div>
+    <div class="circle-decoration circle-2"></div>
+    <div class="grid-overlay"></div>
+
+    <div class="brand-header">
+      <img src="assets/logo-white.svg" alt="Goal Achiever Pro" class="brand-logo">
+      <span class="brand-name">Goal Achiever Pro</span>
+    </div>
+
+    <div class="content content-center">
+      <p class="label">Time Audit</p>
+      <h1 class="headline">The DRIP Matrix</h1>
+      <p class="subheadline" style="max-width: 700px;">
+        Where is your time <span style="color: #10b981;">actually</span> going?
+      </p>
+
+      <div class="swipe-hint">
+        <span>Swipe</span>
+        <span class="swipe-arrow">→</span>
+      </div>
+    </div>
+
+    <div class="brand-footer">
+      <img src="assets/logo-white.svg" alt="" class="logo-small">
+      @goalachieverpro
+    </div>
+  </div>
+
+  <!-- SLIDE 2: D - Delegation -->
+  <div class="slide bg-gradient-dark">
+    <div class="grid-overlay"></div>
+
+    <div class="brand-header">
+      <img src="assets/logo-white.svg" alt="Goal Achiever Pro" class="brand-logo">
+      <span class="brand-name">Goal Achiever Pro</span>
+    </div>
+
+    <div class="content" style="justify-content: center; padding-top: 100px;">
+      <div class="drip-card delegation">
+        <div class="drip-letter" style="color: #a855f7;">D</div>
+        <div class="drip-title">DELEGATION</div>
+        <div class="drip-description">
+          Tasks that <strong>drain you</strong>.
+          <br>Someone else should do these.
+        </div>
+        <div class="drip-examples">
+          <p><strong>Examples:</strong></p>
+          <p>→ Email management</p>
+          <p>→ Calendar scheduling</p>
+          <p>→ Data entry</p>
+          <p>→ Basic admin tasks</p>
+        </div>
+      </div>
+
+      <p class="body-text" style="margin-top: 40px; text-align: center; color: #a855f7;">
+        🔴 MINIMIZE these tasks
+      </p>
+    </div>
+
+    <div class="brand-footer">
+      <img src="assets/logo-white.svg" alt="" class="logo-small">
+      @goalachieverpro
+    </div>
+  </div>
+
+  <!-- SLIDE 3: R - Replacement -->
+  <div class="slide bg-gradient-dark">
+    <div class="grid-overlay"></div>
+
+    <div class="brand-header">
+      <img src="assets/logo-white.svg" alt="Goal Achiever Pro" class="brand-logo">
+      <span class="brand-name">Goal Achiever Pro</span>
+    </div>
+
+    <div class="content" style="justify-content: center; padding-top: 100px;">
+      <div class="drip-card replacement">
+        <div class="drip-letter" style="color: #f59e0b;">R</div>
+        <div class="drip-title">REPLACEMENT</div>
+        <div class="drip-description">
+          Tasks you're <strong>good at</strong>, but shouldn't do.
+          <br>Replace yourself here.
+        </div>
+        <div class="drip-examples">
+          <p><strong>Examples:</strong></p>
+          <p>→ Bookkeeping</p>
+          <p>→ Social media posting</p>
+          <p>→ Customer support</p>
+          <p>→ Graphic design</p>
+        </div>
+      </div>
+
+      <p class="body-text" style="margin-top: 40px; text-align: center; color: #f59e0b;">
+        🟡 REPLACE yourself in these
+      </p>
+    </div>
+
+    <div class="brand-footer">
+      <img src="assets/logo-white.svg" alt="" class="logo-small">
+      @goalachieverpro
+    </div>
+  </div>
+
+  <!-- SLIDE 4: I - Investment -->
+  <div class="slide bg-gradient-dark">
+    <div class="grid-overlay"></div>
+
+    <div class="brand-header">
+      <img src="assets/logo-white.svg" alt="Goal Achiever Pro" class="brand-logo">
+      <span class="brand-name">Goal Achiever Pro</span>
+    </div>
+
+    <div class="content" style="justify-content: center; padding-top: 100px;">
+      <div class="drip-card investment">
+        <div class="drip-letter" style="color: #3b82f6;">I</div>
+        <div class="drip-title">INVESTMENT</div>
+        <div class="drip-description">
+          Tasks that build <strong>future capacity</strong>.
+          <br>These compound over time.
+        </div>
+        <div class="drip-examples">
+          <p><strong>Examples:</strong></p>
+          <p>→ Learning new skills</p>
+          <p>→ Building relationships</p>
+          <p>→ Creating systems</p>
+          <p>→ Strategic planning</p>
+        </div>
+      </div>
+
+      <p class="body-text" style="margin-top: 40px; text-align: center; color: #3b82f6;">
+        🔵 PROTECT time for these
+      </p>
+    </div>
+
+    <div class="brand-footer">
+      <img src="assets/logo-white.svg" alt="" class="logo-small">
+      @goalachieverpro
+    </div>
+  </div>
+
+  <!-- SLIDE 5: P - Production -->
+  <div class="slide bg-gradient-dark">
+    <div class="grid-overlay"></div>
+
+    <div class="brand-header">
+      <img src="assets/logo-white.svg" alt="Goal Achiever Pro" class="brand-logo">
+      <span class="brand-name">Goal Achiever Pro</span>
+    </div>
+
+    <div class="content" style="justify-content: center; padding-top: 100px;">
+      <div class="drip-card production">
+        <div class="drip-letter" style="color: #10b981;">P</div>
+        <div class="drip-title">PRODUCTION</div>
+        <div class="drip-description">
+          Your <strong>highest-value</strong> work.
+          <br>Where you're 10x better than others.
+        </div>
+        <div class="drip-examples">
+          <p><strong>Examples:</strong></p>
+          <p>→ Sales calls & closing</p>
+          <p>→ Strategic decisions</p>
+          <p>→ Content creation (if that's your zone)</p>
+          <p>→ Key client relationships</p>
+        </div>
+      </div>
+
+      <p class="body-text" style="margin-top: 40px; text-align: center; color: #10b981;">
+        🟢 MAXIMIZE time here
+      </p>
+    </div>
+
+    <div class="brand-footer">
+      <img src="assets/logo-white.svg" alt="" class="logo-small">
+      @goalachieverpro
+    </div>
+  </div>
+
+  <!-- SLIDE 6: The Goal -->
+  <div class="slide bg-brand-primary">
+    <div class="circle-decoration circle-1"></div>
+    <div class="circle-decoration circle-2"></div>
+    <div class="grid-overlay"></div>
+
+    <div class="brand-header">
+      <img src="assets/logo-white.svg" alt="Goal Achiever Pro" class="brand-logo">
+      <span class="brand-name">Goal Achiever Pro</span>
+    </div>
+
+    <div class="content content-center" style="padding-top: 100px;">
+      <h2 class="headline" style="margin-bottom: 50px;">The Goal</h2>
+
+      <div class="matrix-grid">
+        <div class="matrix-cell" style="background: rgba(168, 85, 247, 0.3);">
+          <p style="font-size: 72px; margin-bottom: 10px;">🔴</p>
+          <p style="font-size: 32px; font-weight: 700;">D + R</p>
+          <p style="font-size: 48px; font-weight: 800; color: #fecaca;">MINIMIZE</p>
+        </div>
+        <div class="matrix-cell" style="background: rgba(255, 255, 255, 0.2);">
+          <p style="font-size: 72px; margin-bottom: 10px;">🟢</p>
+          <p style="font-size: 32px; font-weight: 700;">I + P</p>
+          <p style="font-size: 48px; font-weight: 800; color: white;">MAXIMIZE</p>
+        </div>
+      </div>
+
+      <div class="goal-box" style="max-width: 700px; background: rgba(255,255,255,0.15);">
+        <div class="goal-row">
+          <span style="font-size: 28px;">Most entrepreneurs spend</span>
+          <span style="font-size: 28px; font-weight: 700; color: #fecaca;">60%+ in D+R</span>
+        </div>
+        <div class="goal-row">
+          <span style="font-size: 28px;">Goal:</span>
+          <span style="font-size: 28px; font-weight: 700; color: white;">80%+ in I+P</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="brand-footer">
+      <img src="assets/logo-white.svg" alt="" class="logo-small">
+      @goalachieverpro
+    </div>
+  </div>
+
+  <!-- SLIDE 7: CTA -->
+  <div class="slide bg-gradient-dark">
+    <div class="circle-decoration circle-1"></div>
+    <div class="circle-decoration circle-2"></div>
+    <div class="grid-overlay"></div>
+
+    <div class="brand-header">
+      <img src="assets/logo-white.svg" alt="Goal Achiever Pro" class="brand-logo">
+      <span class="brand-name">Goal Achiever Pro</span>
+    </div>
+
+    <div class="content content-center" style="padding-top: 100px;">
+      <div style="font-size: 100px; margin-bottom: 30px;">📊</div>
+      <h2 class="headline" style="margin-bottom: 40px;">Quick Audit</h2>
+
+      <p class="subheadline" style="margin-bottom: 50px; max-width: 800px;">
+        Think about your last workday.
+        <br>What % was in each quadrant?
+      </p>
+
+      <div class="card" style="max-width: 600px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+          <span style="font-size: 32px; color: #a855f7;">🔴 D (Delegation)</span>
+          <span style="font-size: 32px;">____%</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+          <span style="font-size: 32px; color: #f59e0b;">🟡 R (Replacement)</span>
+          <span style="font-size: 32px;">____%</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+          <span style="font-size: 32px; color: #3b82f6;">🔵 I (Investment)</span>
+          <span style="font-size: 32px;">____%</span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="font-size: 32px; color: #10b981;">🟢 P (Production)</span>
+          <span style="font-size: 32px;">____%</span>
+        </div>
+      </div>
+
+      <p class="subheadline" style="margin-top: 40px;">
+        Share your breakdown! 👇
+      </p>
+    </div>
+
+    <div class="brand-footer">
+      <img src="assets/logo-white.svg" alt="" class="logo-small">
+      @goalachieverpro
+    </div>
+  </div>
+
+</body>
+</html>

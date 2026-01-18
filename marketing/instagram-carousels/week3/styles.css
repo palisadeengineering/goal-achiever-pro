@@ -1,0 +1,288 @@
+/* Week 3 - Imports shared styles from Week 1 */
+@import url('../week1/styles.css');
+
+/* Week 3 specific additions - Routines & Systems */
+
+/* Routine step card */
+.routine-step {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 24px 32px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 16px;
+  border-left: 4px solid #10b981;
+}
+
+.routine-step.morning { border-color: #f59e0b; }
+.routine-step.midday { border-color: #0ea5e9; }
+.routine-step.evening { border-color: #8b5cf6; }
+
+.routine-time {
+  font-size: 24px;
+  font-weight: 700;
+  color: #10b981;
+  min-width: 100px;
+}
+
+.routine-time.morning { color: #f59e0b; }
+.routine-time.midday { color: #0ea5e9; }
+.routine-time.evening { color: #8b5cf6; }
+
+.routine-task {
+  font-size: 26px;
+  flex: 1;
+}
+
+.routine-duration {
+  font-size: 18px;
+  opacity: 0.6;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 8px 16px;
+  border-radius: 20px;
+}
+
+/* Review card */
+.review-card {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 32px;
+  text-align: center;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.review-card.morning {
+  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.review-card.midday {
+  border-color: rgba(14, 165, 233, 0.4);
+  background: rgba(14, 165, 233, 0.1);
+}
+
+.review-card.evening {
+  border-color: rgba(139, 92, 246, 0.4);
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.review-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.review-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.review-time {
+  font-size: 20px;
+  opacity: 0.7;
+  margin-bottom: 20px;
+}
+
+.review-items {
+  text-align: left;
+  font-size: 22px;
+}
+
+.review-items li {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Shutdown step */
+.shutdown-step {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 24px 32px;
+  margin-bottom: 16px;
+}
+
+.shutdown-icon {
+  font-size: 40px;
+  width: 60px;
+  text-align: center;
+}
+
+.shutdown-content {
+  flex: 1;
+}
+
+.shutdown-title {
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.shutdown-desc {
+  font-size: 20px;
+  opacity: 0.7;
+}
+
+/* Pomodoro timer display */
+.pomodoro-timer {
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 6px solid #10b981;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 40px;
+}
+
+.pomodoro-time {
+  font-size: 72px;
+  font-weight: 800;
+}
+
+.pomodoro-label {
+  font-size: 24px;
+  opacity: 0.7;
+}
+
+/* Enhanced pomodoro checklist */
+.pomo-checklist {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 32px;
+  max-width: 500px;
+}
+
+.pomo-checklist-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.pomo-checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 24px;
+  margin-bottom: 16px;
+}
+
+.pomo-checkbox {
+  width: 32px;
+  height: 32px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pomo-checkbox.checked {
+  background: #10b981;
+  border-color: #10b981;
+}
+
+/* Timeline connector */
+.timeline {
+  position: relative;
+  padding-left: 40px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #f59e0b 0%, #0ea5e9 50%, #8b5cf6 100%);
+  border-radius: 2px;
+}
+
+.timeline-item {
+  position: relative;
+  padding: 20px 0;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -32px;
+  top: 26px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  border: 4px solid;
+}
+
+.timeline-dot.morning { border-color: #f59e0b; }
+.timeline-dot.midday { border-color: #0ea5e9; }
+.timeline-dot.evening { border-color: #8b5cf6; }
+
+/* Question card for Sunday planning */
+.question-card {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 28px 36px;
+  margin-bottom: 20px;
+  border-left: 4px solid #10b981;
+}
+
+.question-number {
+  font-size: 20px;
+  opacity: 0.6;
+  margin-bottom: 8px;
+}
+
+.question-text {
+  font-size: 28px;
+  font-weight: 600;
+}
+
+/* Clock visual for time-based content */
+.clock-visual {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+}
+
+/* Habit streak indicator */
+.streak-indicator {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.streak-day {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.streak-day.completed {
+  background: #10b981;
+}
+
+.streak-day.current {
+  border: 2px solid #10b981;
+}

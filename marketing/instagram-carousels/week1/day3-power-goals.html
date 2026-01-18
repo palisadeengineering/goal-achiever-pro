@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Day 3 - 12 Power Goals Carousel | Goal Achiever Pro</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .quarter-card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .quarter-header {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid rgba(255,255,255,0.2);
+    }
+
+    .quarter-list {
+      list-style: none;
+    }
+
+    .quarter-list li {
+      font-size: 22px;
+      margin-bottom: 12px;
+      padding-left: 20px;
+      position: relative;
+    }
+
+    .quarter-list li::before {
+      content: "→";
+      position: absolute;
+      left: 0;
+      color: #10b981;
+    }
+
+    .comparison {
+      display: flex;
+      gap: 40px;
+      margin: 40px 0;
+    }
+
+    .comparison-bad, .comparison-good {
+      flex: 1;
+      padding: 40px;
+      border-radius: 20px;
+    }
+
+    .comparison-bad {
+      background: rgba(239, 68, 68, 0.2);
+      border: 2px solid rgba(239, 68, 68, 0.5);
+    }
+
+    .comparison-good {
+      background: rgba(16, 185, 129, 0.2);
+      border: 2px solid rgba(16, 185, 129, 0.5);
+    }
+
+    .hierarchy {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .hierarchy-item {
+      background: rgba(255,255,255,0.1);
+      padding: 20px 40px;
+      border-radius: 12px;
+      font-size: 28px;
+      font-weight: 600;
+      position: relative;
+    }
+
+    .hierarchy-item.active {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      transform: scale(1.1);
+    }
+
+    .hierarchy-arrow {
+      font-size: 32px;
+      opacity: 0.5;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SLIDE 1: Hook -->
+  <div class="slide bg-gradient-ocean">
+    <div class="circle-decoration circle-1"></div>
+    <div class="circle-decoration circle-2"></div>
+    <div class="grid-overlay"></div>
+
+    <div class="brand-header">
+      <img src="assets/logo-white.svg" alt="Goal Achiever Pro" class="brand-logo">
+      <span class="brand-name">Goal Achiever Pro</span>
+    </div>
+
+    <div class="content content-center">
+      <p class="label">Annual Planning</p>
+      <h1 class="headline">Why 12 Power Goals</h1>
+      <h1 class="headline" style="color: rgba(255,255,255,0.8); margin-top: -20px;">> 1 Big Resolution</h1>
+
+      <div class="swipe-hint">
+        <span>Swipe</span>
+        <span class="swipe-arrow">→</span>
+      </div>
+    </div>
+
+    <div class="brand-footer">
+      <img src="assets/logo-white.svg" alt="" class="logo-small">
+      @goalachieverpro
+    </div>
+  </div>
+
+  <!-- SLIDE 2: The Problem -->
+  <div class="slide bg-gradient-dark">
+    <div class="circle-decoration circle-1"></div>
+    <div class="grid-overlay"></div>
+
+    <div class="brand-header">
+      <img src="assets/logo-white.svg" alt="Goal Achiever Pro" class="brand-logo">
+      <span class="brand-name">Goal Achiever Pro</span>
+    </div>
+
+    <div class="content content-center" style="padding-top: 120px;">
+      <h2 class="headline headline-small" style="margin-bottom: 60px;">The Resolution Problem</h2>
+
+      <div class="comparison">
+        <div class="comparison-bad">
+          <p style="font-size: 28px; font-weight: 700; margin-bottom: 20px; opacity: 0.7;">January 1st</p>
+          <p style="font-size: 42px;">"This is MY year! 🔥"</p>
+        </div>
+        <div class="comparison-bad">
+          <p style="font-size: 28px; font-weight: 700; margin-bottom: 20px; opacity: 0.7;">February 1st</p>
+          <p style="font-size: 42px;">"Wait, what was my goal again? 🤔"</p>
+        </div>
+      </div>
+
+      <p class="subheadline" style="margin-top: 40px; opacity: 0.8;">
+        92% of resolutions fail by February.
+      </p>
+    </div>
+
+    <div class="brand-footer">
+      <img src="assets/logo-white.svg" alt="" class="logo-small">
+      @goalachieverpro
+    </div>
+  </div>
+
+  <!-- SLIDE 3: The Solution -->
+  <div class="slide bg-brand-primary">
+    <div class="circle-decoration circle-2"></div>
+    <div class="grid-overlay"></div>
+
+    <div class="brand-header">
+      <img src="assets/logo-white.svg" alt="Goal Achiever Pro" class="brand-logo">
+      <span class="brand-name">Goal Achiever Pro</span>
+    </div>
+
+    <div class="content content-center" style="padding-top: 120px;">
+      <p class="label">The Solution</p>
+      <h2 class="headline" style="margin-bottom: 50px;">12 Power Goals</h2>
+
+      <div class="card" style="max-width: 700px; background: rgba(255,255,255,0.15);">
+        <ul class="list" style="font-size: 38px;">
+          <li>
+            <span class="number-circle" style="background: rgba(255,255,255,0.2); border-color: white;">3</span>
+            <span>projects per quarter</span>
+          </li>
+          <li>
+            <span class="number-circle" style="background: rgba(255,255,255,0.2); border-color: white;">6-8</span>
+            <span>weeks each project</span>
+          </li>
+          <li>
+            <span class="number-circle" style="background: rgba(255,255,255,0.2); border-color: white;">12</span>
+            <span>wins per year</span>
+          </li>
+        </ul>
+      </div>
+
+      <p class="subheadline" style="margin-top: 50px;">
+        Small enough to finish. Big enough to matter.
+      </p>
+    </div>
+
+    <div class="brand-footer">
+      <img src="assets/logo-white.svg" alt="" class="logo-small">
+      @goalachieverpro
+    </div>
+  </div>
+
+  <!-- SLIDE 4: Example -->
+  <div class="slide bg-gradient-dark">
+    <div class="circle-decoration circle-1"></div>
+    <div class="grid-overlay"></div>
+
+    <div class="brand-header">
+      <img src="assets/logo-white.svg" alt="Goal Achiever Pro" class="brand-logo">
+      <span class="brand-name">Goal Achiever Pro</span>
+    </div>
+
+    <div class="content" style="justify-content: center; padding-top: 100px;">
+      <p class="label">Real Example: Coaching Business</p>
+      <h2 class="headline headline-small" style="margin-bottom: 40px;">12 Power Goals in Action</h2>
+
+      <div style="display: flex; gap: 25px; flex-wrap: wrap;">
+        <div class="quarter-card">
+          <div class="quarter-header" style="color: #10b981;">Q1</div>
+          <ul class="quarter-list">
+            <li>Launch group program</li>
+            <li>Build list to 5,000</li>
+            <li>Create framework</li>
+          </ul>
+        </div>
+        <div class="quarter-card">
+          <div class="quarter-header" style="color: #3b82f6;">Q2</div>
+          <ul class="quarter-list">
+            <li>Hire first VA</li>
+            <li>Launch podcast</li>
+            <li>Build referral system</li>
+          </ul>
+        </div>
+        <div class="quarter-card">
+          <div class="quarter-header" style="color: #f59e0b;">Q3</div>
+          <ul class="quarter-list">
+            <li>Create course</li>
+            <li>Partner with 3 affiliates</li>
+            <li>Automate onboarding</li>
+          </ul>
+        </div>
+        <div class="quarter-card">
+          <div class="quarter-header" style="color: #a855f7;">Q4</div>
+          <ul class="quarter-list">
+            <li>Launch high-ticket offer</li>
+            <li>Hire coach #2</li>
+            <li>Plan next year</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="brand-footer">
+      <img src="assets/logo-white.svg" alt="" class="logo-small">
+      @goalachieverpro
+    </div>
+  </div>
+
+  <!-- SLIDE 5: Hierarchy -->
+  <div class="slide bg-gradient-dark">
+    <div class="circle-decoration circle-2"></div>
+    <div class="grid-overlay"></div>
+
+    <div class="brand-header">
+      <img src="assets/logo-white.svg" alt="Goal Achiever Pro" class="brand-logo">
+      <span class="brand-name">Goal Achiever Pro</span>
+    </div>
+
+    <div class="content content-center" style="padding-top: 100px;">
+      <p class="label">The Breakdown</p>
+      <h2 class="headline headline-small" style="margin-bottom: 50px;">Each Power Goal Cascades Down</h2>
+
+      <div class="hierarchy">
+        <div class="hierarchy-item" style="background: rgba(16, 185, 129, 0.3);">
+          🎯 Vision
+        </div>
+        <div class="hierarchy-arrow">↓</div>
+        <div class="hierarchy-item active">
+          ⚡ Power Goal
+        </div>
+        <div class="hierarchy-arrow">↓</div>
+        <div class="hierarchy-item">
+          📅 Monthly Target
+        </div>
+        <div class="hierarchy-arrow">↓</div>
+        <div class="hierarchy-item">
+          📆 Weekly Target
+        </div>
+        <div class="hierarchy-arrow">↓</div>
+        <div class="hierarchy-item">
+          ✅ Daily Action
+        </div>
+      </div>
+    </div>
+
+    <div class="brand-footer">
+      <img src="assets/logo-white.svg" alt="" class="logo-small">
+      @goalachieverpro
+    </div>
+  </div>
+
+  <!-- SLIDE 6: CTA -->
+  <div class="slide bg-gradient-ocean">
+    <div class="circle-decoration circle-1"></div>
+    <div class="circle-decoration circle-2"></div>
+    <div class="grid-overlay"></div>
+
+    <div class="brand-header">
+      <img src="assets/logo-white.svg" alt="Goal Achiever Pro" class="brand-logo">
+      <span class="brand-name">Goal Achiever Pro</span>
+    </div>
+
+    <div class="content content-center" style="padding-top: 100px;">
+      <div style="font-size: 100px; margin-bottom: 30px;">💡</div>
+      <h2 class="headline" style="margin-bottom: 40px;">Your Turn</h2>
+
+      <div class="card" style="max-width: 800px; margin-bottom: 40px; text-align: center; background: rgba(255,255,255,0.15);">
+        <p style="font-size: 36px;">
+          One resolution = one chance to fail
+          <br><br>
+          <span style="color: #fef3c7; font-weight: 700;">Twelve Power Goals = twelve chances to win</span>
+        </p>
+      </div>
+
+      <p class="subheadline" style="margin-bottom: 20px;">
+        What are YOUR Q1 Power Goals?
+      </p>
+
+      <div class="cta" style="background: white; color: #0ea5e9;">Share in comments 👇</div>
+
+      <p style="margin-top: 40px; font-size: 22px; opacity: 0.7;">
+        Save this post & plan your 12
+      </p>
+    </div>
+
+    <div class="brand-footer">
+      <img src="assets/logo-white.svg" alt="" class="logo-small">
+      @goalachieverpro
+    </div>
+  </div>
+
+</body>
+</html>

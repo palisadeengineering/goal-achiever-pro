@@ -1,0 +1,536 @@
+/* Goal Achiever Pro - Instagram Carousel Styles */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #1a1a2e;
+  min-height: 100vh;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 20px;
+  justify-content: center;
+}
+
+.slide {
+  width: 1080px;
+  height: 1080px;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* ===========================================
+   BRAND COLORS - Goal Achiever Pro
+   Primary: Emerald Green #10b981
+   =========================================== */
+
+.bg-brand-primary {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.bg-brand-dark {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+.bg-brand-gradient {
+  background: linear-gradient(135deg, #10b981 0%, #0ea5e9 100%);
+}
+
+/* DRIP Colors matching your app */
+.bg-drip-delegation {
+  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+}
+
+.bg-drip-replacement {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.bg-drip-investment {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.bg-drip-production {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+/* Legacy gradient backgrounds */
+.bg-gradient-purple {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.bg-gradient-dark {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+.bg-gradient-blue {
+  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+}
+
+.bg-gradient-orange {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.bg-gradient-teal {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.bg-gradient-sunset {
+  background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+}
+
+.bg-gradient-ocean {
+  background: linear-gradient(135deg, #0ea5e9 0%, #10b981 100%);
+}
+
+.bg-gradient-fire {
+  background: linear-gradient(135deg, #ef4444 0%, #f59e0b 100%);
+}
+
+/* Decorative elements */
+.circle-decoration {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.1;
+}
+
+.circle-1 {
+  width: 600px;
+  height: 600px;
+  background: white;
+  top: -200px;
+  right: -200px;
+}
+
+.circle-2 {
+  width: 400px;
+  height: 400px;
+  background: white;
+  bottom: -100px;
+  left: -100px;
+}
+
+.circle-3 {
+  width: 200px;
+  height: 200px;
+  background: white;
+  top: 50%;
+  left: 10%;
+}
+
+/* Grid pattern overlay */
+.grid-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+/* Content container */
+.content {
+  position: relative;
+  z-index: 10;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 80px;
+  color: white;
+}
+
+.content-center {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+/* Typography */
+.headline {
+  font-size: 72px;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 40px;
+  text-shadow: 0 4px 30px rgba(0,0,0,0.3);
+}
+
+.headline-large {
+  font-size: 84px;
+}
+
+.headline-small {
+  font-size: 56px;
+}
+
+.subheadline {
+  font-size: 36px;
+  font-weight: 500;
+  opacity: 0.9;
+  line-height: 1.4;
+}
+
+.body-text {
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1.6;
+  opacity: 0.9;
+}
+
+.label {
+  font-size: 24px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  opacity: 0.7;
+  margin-bottom: 20px;
+}
+
+/* ===========================================
+   BRAND HEADER - Shows on every slide
+   =========================================== */
+
+.brand-header {
+  position: absolute;
+  top: 40px;
+  left: 80px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 100;
+}
+
+.brand-logo {
+  width: 48px;
+  height: 48px;
+}
+
+.brand-name {
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  opacity: 0.9;
+}
+
+.brand-footer {
+  position: absolute;
+  bottom: 40px;
+  right: 80px;
+  font-size: 24px;
+  font-weight: 600;
+  opacity: 0.7;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-footer .logo-small {
+  width: 32px;
+  height: 32px;
+}
+
+/* Cards and boxes */
+.card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
+  padding: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.card-dark {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* List styles */
+.list {
+  list-style: none;
+  text-align: left;
+}
+
+.list li {
+  font-size: 36px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.list li:last-child {
+  margin-bottom: 0;
+}
+
+.list-icon {
+  font-size: 36px;
+  flex-shrink: 0;
+}
+
+/* SMART acronym styling */
+.smart-letter {
+  font-size: 48px;
+  font-weight: 800;
+  color: #10b981; /* Brand emerald */
+  display: inline-block;
+  width: 60px;
+}
+
+/* Highlight box */
+.highlight-box {
+  background: rgba(16, 185, 129, 0.2); /* Brand emerald with transparency */
+  border-left: 6px solid #10b981;
+  padding: 30px 40px;
+  border-radius: 0 16px 16px 0;
+  margin: 30px 0;
+}
+
+/* Quote styling */
+.quote {
+  font-size: 42px;
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.5;
+  position: relative;
+  padding-left: 40px;
+}
+
+.quote::before {
+  content: '"';
+  position: absolute;
+  left: -20px;
+  top: -20px;
+  font-size: 120px;
+  opacity: 0.3;
+  font-family: Georgia, serif;
+}
+
+/* CTA styling - Brand emerald */
+.cta {
+  background: #10b981;
+  color: white;
+  padding: 24px 48px;
+  border-radius: 100px;
+  font-size: 28px;
+  font-weight: 700;
+  display: inline-block;
+  margin-top: 40px;
+  box-shadow: 0 10px 40px rgba(16, 185, 129, 0.4);
+}
+
+/* Slide indicator */
+.slide-indicator {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+}
+
+.dot.active {
+  background: #10b981;
+  width: 36px;
+  border-radius: 6px;
+}
+
+/* DRIP specific colors - matching your app */
+.drip-d { color: #a855f7; } /* Purple */
+.drip-r { color: #f59e0b; } /* Amber */
+.drip-i { color: #3b82f6; } /* Blue */
+.drip-p { color: #10b981; } /* Emerald */
+
+.drip-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  font-size: 42px;
+  font-weight: 800;
+  margin-right: 24px;
+}
+
+.drip-badge.d { background: rgba(168, 85, 247, 0.3); }
+.drip-badge.r { background: rgba(245, 158, 11, 0.3); }
+.drip-badge.i { background: rgba(59, 130, 246, 0.3); }
+.drip-badge.p { background: rgba(16, 185, 129, 0.3); }
+
+/* 300% Rule specific */
+.progress-bar {
+  height: 24px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 16px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #0ea5e9);
+  border-radius: 12px;
+}
+
+/* Number circle */
+.number-circle {
+  width: 80px;
+  height: 80px;
+  background: rgba(16, 185, 129, 0.3);
+  border: 2px solid #10b981;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+/* Swipe indicator */
+.swipe-hint {
+  position: absolute;
+  bottom: 100px;
+  right: 80px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 24px;
+  opacity: 0.6;
+}
+
+.swipe-arrow {
+  font-size: 32px;
+  animation: swipe 1.5s infinite;
+}
+
+@keyframes swipe {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(10px); }
+}
+
+/* ===========================================
+   APP SCREENSHOT MOCKUPS
+   =========================================== */
+
+.app-mockup {
+  background: #0f172a;
+  border-radius: 24px;
+  padding: 20px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.app-mockup-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 16px;
+}
+
+.app-mockup-dots {
+  display: flex;
+  gap: 8px;
+}
+
+.app-mockup-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.app-mockup-dot.red { background: #ef4444; }
+.app-mockup-dot.yellow { background: #f59e0b; }
+.app-mockup-dot.green { background: #10b981; }
+
+.app-mockup-title {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  flex: 1;
+  text-align: center;
+}
+
+.app-mockup-content {
+  min-height: 200px;
+}
+
+/* Sidebar mockup */
+.sidebar-mockup {
+  background: #1e293b;
+  border-radius: 12px;
+  padding: 16px;
+  width: 200px;
+}
+
+.sidebar-mockup-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 4px;
+}
+
+.sidebar-mockup-item.active {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+.sidebar-mockup-icon {
+  width: 16px;
+  height: 16px;
+  background: currentColor;
+  border-radius: 4px;
+  opacity: 0.5;
+}
+
+/* Stats cards */
+.stat-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stat-value {
+  font-size: 48px;
+  font-weight: 800;
+  color: #10b981;
+}
+
+.stat-label {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 8px;
+}
+
+/* Feature icons */
+.feature-icon {
+  width: 64px;
+  height: 64px;
+  background: rgba(16, 185, 129, 0.2);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  margin-bottom: 20px;
+}
