@@ -48,6 +48,12 @@
 - Files: Every file in `src/app/api/` uses `createAdminClient()`
 - Current mitigation: Manual user_id filtering in queries
 - Recommendations: Implement proper RLS policies, use regular client for user-scoped queries
+- **PARTIAL FIX (2026-01-19):** Sharing tables now have proper RLS policies:
+  - `team_members` - owners manage their team, users view/update their memberships
+  - `share_invitations` - owners manage invitations, public view by token
+  - `tab_permissions` - owners manage, members view their permissions
+  - `item_permissions` - owners manage, members view their permissions
+  - Service role client used only for cross-user operations (accept invite flow)
 
 **Theme script uses dangerouslySetInnerHTML:**
 - Risk: Potential XSS vector (though script is static)
@@ -160,7 +166,24 @@
 - Safe modification: Add proper error handling and retry logic
 - Test coverage: None
 
+## Recently Fixed
+
+**Sharing system not working (2026-01-19):**
+- Symptoms: Team members couldn't accept share invitations
+- Root cause: `team_members` table had RLS enabled but NO policies, blocking all operations
+- Secondary issues:
+  - API routes used anon key client which couldn't bypass RLS for cross-user operations
+  - Validation schema missing tab names (`today`, `progress`, `okrs`, `milestones`, `backtrack`)
+- Fix applied:
+  - Added RLS policies for all sharing tables via migration `add_sharing_rls_policies`
+  - Added `createServiceRoleClient()` in `src/lib/supabase/server.ts`
+  - Updated all 10 sharing API routes to use service role client for admin operations
+  - Updated `src/lib/permissions/check-access.ts` to use service role client
+  - Fixed `src/lib/validations/sharing.ts` tab names to match TypeScript types
+- Commit: `46ab949`
+
 ---
 
 *Concerns audit: 2026-01-11*
 *Update as issues are fixed or new ones discovered*
+*Last updated: 2026-01-19*
