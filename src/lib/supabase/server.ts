@@ -1,6 +1,7 @@
 // Supabase client for server-side usage
 
 import { createServerClient } from '@supabase/ssr';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
 export async function createClient() {
@@ -35,4 +36,28 @@ export async function createClient() {
       },
     }
   );
+}
+
+/**
+ * Create a Supabase client with service role key for admin operations.
+ * This bypasses RLS and should only be used in server-side code for
+ * operations that require elevated privileges (e.g., accepting invitations).
+ *
+ * WARNING: Never expose this client to the frontend.
+ */
+export function createServiceRoleClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.warn('Service role client not configured - missing SUPABASE_SERVICE_ROLE_KEY');
+    return null;
+  }
+
+  return createSupabaseClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
 }

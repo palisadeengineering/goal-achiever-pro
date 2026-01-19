@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import type { GrantItemPermissionRequest } from '@/types/sharing';
 
 const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
@@ -11,6 +11,13 @@ export async function GET(request: NextRequest) {
     if (!supabase) {
       return NextResponse.json({ error: 'Failed to initialize database' }, { status: 500 });
     }
+
+    // Use service role client for queries that join with team_members (bypasses RLS)
+    const adminClient = createServiceRoleClient();
+    if (!adminClient) {
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
     const userId = user?.id || DEMO_USER_ID;
 
@@ -19,7 +26,7 @@ export async function GET(request: NextRequest) {
     const entityType = searchParams.get('entityType');
     const entityId = searchParams.get('entityId');
 
-    let query = supabase
+    let query = adminClient
       .from('item_permissions')
       .select(`
         *,
@@ -85,6 +92,13 @@ export async function POST(request: NextRequest) {
     if (!supabase) {
       return NextResponse.json({ error: 'Failed to initialize database' }, { status: 500 });
     }
+
+    // Use service role client for admin operations (bypasses RLS)
+    const adminClient = createServiceRoleClient();
+    if (!adminClient) {
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
     const userId = user?.id || DEMO_USER_ID;
 
@@ -98,8 +112,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify team member belongs to this owner
-    const { data: teamMember } = await supabase
+    // Verify team member belongs to this owner (use admin client to bypass RLS)
+    const { data: teamMember } = await adminClient
       .from('team_members')
       .select('id')
       .eq('id', teamMemberId)
@@ -113,8 +127,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Upsert the permission
-    const { data: permission, error } = await supabase
+    // Upsert the permission (use admin client to bypass RLS)
+    const { data: permission, error } = await adminClient
       .from('item_permissions')
       .upsert(
         {

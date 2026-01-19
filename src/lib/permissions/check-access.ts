@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import type {
   TabName,
   EntityType,
@@ -22,7 +22,8 @@ export async function hasTabAccess(
     return true;
   }
 
-  const supabase = await createClient();
+  // Use service role client to bypass RLS for cross-user permission checks
+  const supabase = createServiceRoleClient();
   if (!supabase) {
     return false;
   }
@@ -79,7 +80,8 @@ export async function hasItemAccess(
     return { hasAccess: true, permissionLevel: 'edit' };
   }
 
-  const supabase = await createClient();
+  // Use service role client to bypass RLS for cross-user permission checks
+  const supabase = createServiceRoleClient();
   if (!supabase) {
     return { hasAccess: false, permissionLevel: null };
   }
@@ -144,7 +146,8 @@ export async function hasItemAccess(
  * Get all content shared with a user (grouped by owner)
  */
 export async function getSharedWithMe(userId: string): Promise<SharedContent[]> {
-  const supabase = await createClient();
+  // Use service role client to bypass RLS for cross-user queries
+  const supabase = createServiceRoleClient();
   if (!supabase) {
     return [];
   }
@@ -228,7 +231,8 @@ export async function getTabShares(
   ownerId: string,
   tabName: TabName
 ): Promise<TabPermission[]> {
-  const supabase = await createClient();
+  // Use service role client to bypass RLS for cross-table joins
+  const supabase = createServiceRoleClient();
   if (!supabase) {
     return [];
   }
@@ -288,7 +292,8 @@ export async function getPermissionLevel(
     return 'edit'; // Owner has full access
   }
 
-  const supabase = await createClient();
+  // Use service role client to bypass RLS for cross-user permission checks
+  const supabase = createServiceRoleClient();
   if (!supabase) {
     return null;
   }

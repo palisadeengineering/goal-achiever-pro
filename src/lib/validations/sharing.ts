@@ -6,10 +6,14 @@ import {
   safeStringSchema,
 } from './common';
 
-// Tab names that can be shared
+// Tab names that can be shared (must match TabName type in src/types/sharing.ts)
 export const tabNameSchema = z.enum([
+  'today',
+  'progress',
   'vision',
   'goals',
+  'okrs',
+  'milestones',
   'mins',
   'time_audit',
   'drip',
@@ -19,7 +23,7 @@ export const tabNameSchema = z.enum([
   'leverage',
   'network',
   'analytics',
-  'accountability',
+  'backtrack',
 ]);
 
 // Permission level

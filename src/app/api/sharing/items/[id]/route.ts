@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import type { UpdatePermissionRequest } from '@/types/sharing';
 
 const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
@@ -15,6 +15,13 @@ export async function PUT(
     if (!supabase) {
       return NextResponse.json({ error: 'Failed to initialize database' }, { status: 500 });
     }
+
+    // Use service role client for admin operations (bypasses RLS)
+    const adminClient = createServiceRoleClient();
+    if (!adminClient) {
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
     const userId = user?.id || DEMO_USER_ID;
 
@@ -28,7 +35,7 @@ export async function PUT(
       );
     }
 
-    const { data: permission, error } = await supabase
+    const { data: permission, error } = await adminClient
       .from('item_permissions')
       .update({
         permission_level: permissionLevel,
@@ -75,10 +82,17 @@ export async function DELETE(
     if (!supabase) {
       return NextResponse.json({ error: 'Failed to initialize database' }, { status: 500 });
     }
+
+    // Use service role client for admin operations (bypasses RLS)
+    const adminClient = createServiceRoleClient();
+    if (!adminClient) {
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
     const userId = user?.id || DEMO_USER_ID;
 
-    const { error } = await supabase
+    const { error } = await adminClient
       .from('item_permissions')
       .update({ is_active: false })
       .eq('id', id)

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/server';
 
 // GET /api/sharing/invite/[token] - Get invitation details (public)
 export async function GET(
@@ -8,7 +8,9 @@ export async function GET(
 ) {
   try {
     const { token } = await params;
-    const supabase = await createClient();
+
+    // Use service role client to access invitations (bypasses RLS)
+    const supabase = createServiceRoleClient();
     if (!supabase) {
       return NextResponse.json({ error: 'Failed to initialize database' }, { status: 500 });
     }

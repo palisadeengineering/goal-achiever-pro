@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { generateInviteToken } from '@/lib/permissions';
 import { sendEmail, generateShareInvitationEmail } from '@/lib/email';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
@@ -16,7 +16,8 @@ export async function POST(request: NextRequest) {
     }
     const userId = auth.userId;
 
-    const supabase = await createClient();
+    // Use service role client for admin operations (bypasses RLS for inserting invitations)
+    const supabase = createServiceRoleClient();
     if (!supabase) {
       return NextResponse.json({ error: 'Failed to initialize database' }, { status: 500 });
     }

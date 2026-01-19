@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import type { TabPermissionData, ItemPermissionData } from '@/types/sharing';
 
 // POST /api/sharing/invite/[token]/accept - Accept an invitation
@@ -9,9 +9,18 @@ export async function POST(
 ) {
   try {
     const { token } = await params;
+
+    // Use regular client for auth check
     const supabase = await createClient();
     if (!supabase) {
       return NextResponse.json({ error: 'Failed to initialize database' }, { status: 500 });
+    }
+
+    // Use service role client for admin operations (bypasses RLS)
+    const adminClient = createServiceRoleClient();
+    if (!adminClient) {
+      console.error('Service role client not configured');
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
     }
 
     // Get the current user
@@ -24,8 +33,8 @@ export async function POST(
       );
     }
 
-    // Find the invitation
-    const { data: invitation, error: inviteError } = await supabase
+    // Find the invitation (use admin client to bypass RLS)
+    const { data: invitation, error: inviteError } = await adminClient
       .from('share_invitations')
       .select('*')
       .eq('invite_token', token)
@@ -43,7 +52,7 @@ export async function POST(
     const now = new Date();
     const expiresAt = new Date(invitation.expires_at);
     if (now > expiresAt) {
-      await supabase
+      await adminClient
         .from('share_invitations')
         .update({ status: 'expired' })
         .eq('id', invitation.id);
@@ -68,10 +77,10 @@ export async function POST(
       }
     }
 
-    // Find or create team member record
+    // Find or create team member record (use admin client to bypass RLS)
     let teamMemberId: string;
 
-    const { data: existingMember } = await supabase
+    const { data: existingMember } = await adminClient
       .from('team_members')
       .select('id')
       .eq('owner_id', invitation.owner_id)
@@ -82,7 +91,7 @@ export async function POST(
       teamMemberId = existingMember.id;
 
       // Update the existing member to active
-      await supabase
+      await adminClient
         .from('team_members')
         .update({
           is_active: true,
@@ -91,15 +100,15 @@ export async function POST(
         })
         .eq('id', teamMemberId);
     } else {
-      // Get user profile for the name
-      const { data: profile } = await supabase
+      // Get user profile for the name (can use regular client since user reads their own profile)
+      const { data: profile } = await adminClient
         .from('profiles')
         .select('full_name, email')
         .eq('id', user.id)
         .single();
 
-      // Create new team member
-      const { data: newMember, error: memberError } = await supabase
+      // Create new team member (use admin client to bypass RLS)
+      const { data: newMember, error: memberError } = await adminClient
         .from('team_members')
         .insert({
           owner_id: invitation.owner_id,
@@ -126,7 +135,7 @@ export async function POST(
       teamMemberId = newMember.id;
     }
 
-    // Create tab permissions
+    // Create tab permissions (use admin client to bypass RLS)
     const tabPermissions = invitation.tab_permissions_data as TabPermissionData[];
     if (tabPermissions && tabPermissions.length > 0) {
       const tabPermsToInsert = tabPermissions.map((tp) => ({
@@ -137,14 +146,18 @@ export async function POST(
         is_active: true,
       }));
 
-      await supabase
+      const { error: tabPermError } = await adminClient
         .from('tab_permissions')
         .upsert(tabPermsToInsert, {
           onConflict: 'owner_id,team_member_id,tab_name',
         });
+
+      if (tabPermError) {
+        console.error('Error creating tab permissions:', tabPermError);
+      }
     }
 
-    // Create item permissions
+    // Create item permissions (use admin client to bypass RLS)
     const itemPermissions = invitation.item_permissions_data as ItemPermissionData[];
     if (itemPermissions && itemPermissions.length > 0) {
       const itemPermsToInsert = itemPermissions.map((ip) => ({
@@ -156,15 +169,19 @@ export async function POST(
         is_active: true,
       }));
 
-      await supabase
+      const { error: itemPermError } = await adminClient
         .from('item_permissions')
         .upsert(itemPermsToInsert, {
           onConflict: 'team_member_id,entity_type,entity_id',
         });
+
+      if (itemPermError) {
+        console.error('Error creating item permissions:', itemPermError);
+      }
     }
 
-    // Update invitation status
-    await supabase
+    // Update invitation status (use admin client to bypass RLS)
+    await adminClient
       .from('share_invitations')
       .update({
         status: 'accepted',
