@@ -10,11 +10,49 @@ import {
   RateLimits,
 } from '@/lib/rate-limit';
 
+interface DailyKpi {
+  title: string;
+  description: string;
+  targetValue: string;
+  unit: string;
+  trackingMethod: 'checkbox' | 'numeric';
+  bestTime: 'morning' | 'afternoon' | 'evening';
+  timeRequired: string;
+  whyItMatters: string;
+}
+
+interface WeeklyKpi {
+  title: string;
+  description: string;
+  targetValue: string;
+  unit: string;
+  trackingMethod: 'checkbox' | 'numeric';
+  category: 'activity' | 'output';
+  leadsTo: string;
+}
+
+interface MonthlyKpi {
+  title: string;
+  description: string;
+  targetValue: string;
+  unit: string;
+  keyMetric: string;
+}
+
+interface QuarterlyKpi {
+  title: string;
+  description: string;
+  targetValue: string;
+  unit: string;
+  outcome: string;
+}
+
 interface GeneratedPowerGoal {
   title: string;
   description: string;
   quarter: number;
   category: string;
+  quarterlyKpi: QuarterlyKpi;
   monthlyTargets: {
     month: number;
     monthName: string;
@@ -22,12 +60,14 @@ interface GeneratedPowerGoal {
     description: string;
     keyMetric: string;
     targetValue: number;
+    monthlyKpi: MonthlyKpi;
     weeklyTargets: {
       weekNumber: number;
       title: string;
       description: string;
       keyMetric: string;
       targetValue: number;
+      weeklyKpis: WeeklyKpi[];
       dailyActions: {
         dayOfWeek: string;
         title: string;
@@ -40,8 +80,10 @@ interface GeneratedPowerGoal {
 
 interface CascadeResponse {
   powerGoals: GeneratedPowerGoal[];
+  dailyKpis: DailyKpi[];
   summary: string;
   totalEstimatedHours: number;
+  successFormula: string;
 }
 
 // POST: Generate full cascade from Vision to Daily Actions
@@ -110,7 +152,7 @@ export async function POST(
 
     const prompt = `You are an expert goal-setting coach combining methodologies from Dan Martell (Buy Back Your Time), Alex Hormozi ($100M Offers), and Grant Cardone (10X Rule).
 
-Generate a COMPLETE action plan from a vision down to daily actions.
+Generate a COMPLETE KPI-driven action plan from a vision down to daily actions. The key principle: If daily KPIs are hit → weekly KPIs are hit → monthly KPIs are hit → quarterly KPIs are hit → VISION IS ACHIEVED. Make it MATHEMATICALLY UNREASONABLE TO FAIL.
 
 VISION:
 - Title: "${vision.title}"
@@ -127,28 +169,52 @@ Target Date: ${targetDate ? targetDate.toISOString().split('T')[0] : '12 months 
 
 Generate ${goalsPerQuarter} Power Goals for each quarter (${quarters.join(', ').replace(/(\d)/g, 'Q$1')}), totaling ${quarters.length * goalsPerQuarter} Power Goals.
 
-For EACH Power Goal, generate:
-- 3 monthly targets (for the 3 months in that quarter)
-- 4 weekly targets per month
-- 5 daily actions per week (weekdays only)
+KEY REQUIREMENTS:
+1. Each level MUST have trackable KPIs with specific numeric targets
+2. KPIs must cascade: daily→weekly→monthly→quarterly→vision
+3. Daily KPIs are the atomic habits that compound into success
+4. Weekly KPIs track both Activities (inputs) and Outputs (results)
+5. Monthly KPIs are milestone markers
+6. Quarterly KPIs are major outcome checkpoints
+7. Use Grant Cardone's 10X thinking for ambitious but achievable targets
+8. Use Dan Martell's "Buy Back Your Time" focus on high-value activities
+9. Use Alex Hormozi's value equation (Dream Outcome × Perceived Likelihood ÷ Time × Effort)
 
-IMPORTANT GUIDELINES:
-1. Make daily actions SPECIFIC and ACTIONABLE (30-90 minutes each)
-2. Build progressive momentum (earlier weeks = foundation, later = execution)
-3. Use Grant Cardone's 10X thinking for ambitious targets
-4. Use Dan Martell's DRIP categorization mindset (focus on Production and Investment activities)
-5. Use Alex Hormozi's focus on value delivery and measurable outcomes
-6. Ensure each daily action directly contributes to weekly → monthly → quarterly goals
-7. Total daily time should be realistic (2-4 hours per day for this vision)
+DAILY KPIS (3-5 non-negotiable habits):
+- These are DAILY habits that DIRECTLY drive weekly targets
+- Include best time (morning/afternoon/evening), time required, and why it matters
+- Must be trackable via checkbox or numeric value
+- Example: "Complete 3 deep work sessions (90 min each)" or "Review metrics dashboard"
+
+WEEKLY KPIS:
+- Mix of Activity KPIs (inputs you control) and Output KPIs (results you measure)
+- Activity example: "Complete 20 sales calls" (you control this)
+- Output example: "Book 5 demos" (result of activity)
+- Each weekly KPI should "lead to" something specific
+
+MONTHLY KPIS:
+- Major milestones that indicate you're on track
+- Cumulative results of weekly execution
+
+QUARTERLY KPIS:
+- Big picture outcomes that prove progress toward vision
+- Should be exciting and motivating
 
 Respond ONLY with valid JSON in this exact format:
 {
   "powerGoals": [
     {
       "title": "Q1 Power Goal Title",
-      "description": "What this achieves",
+      "description": "What this achieves and why it matters",
       "quarter": 1,
       "category": "business|health|wealth|relationships|career|personal",
+      "quarterlyKpi": {
+        "title": "Q1 Success Metric",
+        "description": "What achieving this looks like",
+        "targetValue": "10000",
+        "unit": "dollars|customers|hours|count",
+        "outcome": "What this unlocks for you"
+      },
       "monthlyTargets": [
         {
           "month": 1,
@@ -157,6 +223,13 @@ Respond ONLY with valid JSON in this exact format:
           "description": "What to achieve this month",
           "keyMetric": "Metric name",
           "targetValue": 10,
+          "monthlyKpi": {
+            "title": "January KPI",
+            "description": "Monthly success metric",
+            "targetValue": "3000",
+            "unit": "dollars|customers|count",
+            "keyMetric": "Primary metric to track"
+          },
           "weeklyTargets": [
             {
               "weekNumber": 1,
@@ -164,6 +237,26 @@ Respond ONLY with valid JSON in this exact format:
               "description": "What to achieve this week",
               "keyMetric": "Metric name",
               "targetValue": 3,
+              "weeklyKpis": [
+                {
+                  "title": "Activity KPI",
+                  "description": "Input metric you control",
+                  "targetValue": "20",
+                  "unit": "calls|sessions|hours",
+                  "trackingMethod": "numeric",
+                  "category": "activity",
+                  "leadsTo": "What this activity produces"
+                },
+                {
+                  "title": "Output KPI",
+                  "description": "Result metric you measure",
+                  "targetValue": "5",
+                  "unit": "demos|sales|completions",
+                  "trackingMethod": "numeric",
+                  "category": "output",
+                  "leadsTo": "What this output enables"
+                }
+              ],
               "dailyActions": [
                 {
                   "dayOfWeek": "Monday",
@@ -178,8 +271,21 @@ Respond ONLY with valid JSON in this exact format:
       ]
     }
   ],
+  "dailyKpis": [
+    {
+      "title": "Daily Habit Title",
+      "description": "What this habit is",
+      "targetValue": "1",
+      "unit": "completion|sessions|minutes",
+      "trackingMethod": "checkbox|numeric",
+      "bestTime": "morning|afternoon|evening",
+      "timeRequired": "30 minutes",
+      "whyItMatters": "How this drives your vision"
+    }
+  ],
   "summary": "Overview of the complete plan",
-  "totalEstimatedHours": 480
+  "totalEstimatedHours": 480,
+  "successFormula": "If you do X daily → Y weekly → Z monthly → you WILL achieve your vision because..."
 }`;
 
     const message = await anthropic.messages.create({
@@ -226,7 +332,39 @@ Respond ONLY with valid JSON in this exact format:
       monthlyTargets: 0,
       weeklyTargets: 0,
       dailyActions: 0,
+      quarterlyKpis: 0,
+      monthlyKpis: 0,
+      weeklyKpis: 0,
+      dailyKpis: 0,
     };
+
+    // First, save Daily KPIs (these are global habits for the vision)
+    let dailyKpiSortOrder = 0;
+    for (const dk of cascadeData.dailyKpis || []) {
+      const { error: dkError } = await supabase
+        .from('vision_kpis')
+        .insert({
+          user_id: userId,
+          vision_id: visionId,
+          level: 'daily',
+          title: dk.title,
+          description: dk.description,
+          target_value: dk.targetValue,
+          unit: dk.unit,
+          tracking_method: dk.trackingMethod || 'checkbox',
+          best_time: dk.bestTime,
+          time_required: dk.timeRequired,
+          why_it_matters: dk.whyItMatters,
+          sort_order: dailyKpiSortOrder++,
+          is_active: true,
+        });
+
+      if (!dkError) {
+        savedStats.dailyKpis++;
+      } else {
+        console.error('Error creating daily KPI:', dkError);
+      }
+    }
 
     for (const pg of cascadeData.powerGoals) {
       // 1. Create Power Goal
@@ -250,6 +388,32 @@ Respond ONLY with valid JSON in this exact format:
         continue;
       }
       savedStats.powerGoals++;
+
+      // 1b. Create Quarterly KPI for this Power Goal
+      if (pg.quarterlyKpi) {
+        const { error: qkError } = await supabase
+          .from('vision_kpis')
+          .insert({
+            user_id: userId,
+            vision_id: visionId,
+            level: 'quarterly',
+            quarter: pg.quarter,
+            title: pg.quarterlyKpi.title,
+            description: pg.quarterlyKpi.description,
+            target_value: pg.quarterlyKpi.targetValue,
+            unit: pg.quarterlyKpi.unit,
+            tracking_method: 'numeric',
+            why_it_matters: pg.quarterlyKpi.outcome,
+            sort_order: pg.quarter,
+            is_active: true,
+          });
+
+        if (!qkError) {
+          savedStats.quarterlyKpis++;
+        } else {
+          console.error('Error creating quarterly KPI:', qkError);
+        }
+      }
 
       // 2. Create Monthly Targets
       for (const mt of pg.monthlyTargets) {
@@ -276,6 +440,32 @@ Respond ONLY with valid JSON in this exact format:
           continue;
         }
         savedStats.monthlyTargets++;
+
+        // 2b. Create Monthly KPI
+        if (mt.monthlyKpi) {
+          const { error: mkError } = await supabase
+            .from('vision_kpis')
+            .insert({
+              user_id: userId,
+              vision_id: visionId,
+              level: 'monthly',
+              month: mt.month,
+              quarter: pg.quarter,
+              title: mt.monthlyKpi.title,
+              description: mt.monthlyKpi.description,
+              target_value: mt.monthlyKpi.targetValue,
+              unit: mt.monthlyKpi.unit,
+              tracking_method: 'numeric',
+              sort_order: mt.month,
+              is_active: true,
+            });
+
+          if (!mkError) {
+            savedStats.monthlyKpis++;
+          } else {
+            console.error('Error creating monthly KPI:', mkError);
+          }
+        }
 
         // 3. Create Weekly Targets
         for (const wt of mt.weeklyTargets) {
@@ -305,6 +495,35 @@ Respond ONLY with valid JSON in this exact format:
           }
           savedStats.weeklyTargets++;
 
+          // 3b. Create Weekly KPIs
+          let weeklyKpiSortOrder = 0;
+          for (const wk of wt.weeklyKpis || []) {
+            const { error: wkError } = await supabase
+              .from('vision_kpis')
+              .insert({
+                user_id: userId,
+                vision_id: visionId,
+                level: 'weekly',
+                quarter: pg.quarter,
+                month: mt.month,
+                title: wk.title,
+                description: wk.description,
+                target_value: wk.targetValue,
+                unit: wk.unit,
+                tracking_method: wk.trackingMethod || 'numeric',
+                category: wk.category === 'activity' ? 'Activity' : 'Output',
+                leads_to: wk.leadsTo,
+                sort_order: weeklyKpiSortOrder++,
+                is_active: true,
+              });
+
+            if (!wkError) {
+              savedStats.weeklyKpis++;
+            } else {
+              console.error('Error creating weekly KPI:', wkError);
+            }
+          }
+
           // 4. Create Daily Actions
           for (let i = 0; i < wt.dailyActions.length; i++) {
             const da = wt.dailyActions[i];
@@ -333,13 +552,16 @@ Respond ONLY with valid JSON in this exact format:
       }
     }
 
+    const totalKpis = savedStats.quarterlyKpis + savedStats.monthlyKpis + savedStats.weeklyKpis + savedStats.dailyKpis;
+
     return NextResponse.json({
       success: true,
       visionId,
       summary: cascadeData.summary,
+      successFormula: cascadeData.successFormula,
       totalEstimatedHours: cascadeData.totalEstimatedHours,
       saved: savedStats,
-      message: `Created ${savedStats.powerGoals} Power Goals, ${savedStats.monthlyTargets} Monthly Targets, ${savedStats.weeklyTargets} Weekly Targets, and ${savedStats.dailyActions} Daily Actions`,
+      message: `Created complete plan: ${savedStats.powerGoals} Power Goals, ${totalKpis} KPIs (${savedStats.dailyKpis} Daily, ${savedStats.weeklyKpis} Weekly, ${savedStats.monthlyKpis} Monthly, ${savedStats.quarterlyKpis} Quarterly), ${savedStats.monthlyTargets} Monthly Targets, ${savedStats.weeklyTargets} Weekly Targets, and ${savedStats.dailyActions} Daily Actions`,
     }, {
       headers: rateLimitResult ? rateLimitHeaders(rateLimitResult) : {},
     });

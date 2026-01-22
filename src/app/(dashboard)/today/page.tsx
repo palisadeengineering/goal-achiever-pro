@@ -43,6 +43,7 @@ import { toast } from 'sonner';
 import Link from 'next/link';
 import { useGoogleCalendar } from '@/lib/hooks/use-google-calendar';
 import { Daily300Checkin } from '@/components/features/reviews/daily-300-checkin';
+import { DailyKpiDashboard } from '@/components/features/kpi/daily-kpi-dashboard';
 import type { TeamMember } from '@/types/team';
 import { ShareButton } from '@/components/features/sharing';
 
@@ -955,6 +956,9 @@ export default function TodayPage() {
 
         {/* Sidebar */}
         <div className="space-y-4">
+          {/* Daily KPI Dashboard - Gamified tracking */}
+          <DailyKpiDashboard />
+
           {/* 300% Daily Check-in */}
           <Daily300Checkin />
 
