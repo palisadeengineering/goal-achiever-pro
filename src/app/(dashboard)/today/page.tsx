@@ -598,18 +598,47 @@ export default function TodayPage() {
         />
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <CheckCircle2 className="h-16 w-16 text-muted-foreground/50 mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No Actions Scheduled</h3>
+            <CalendarX className="h-16 w-16 text-muted-foreground/50 mb-4" />
+            <h3 className="text-xl font-semibold mb-2">No Actions for Today</h3>
             <p className="text-muted-foreground text-center max-w-md mb-6">
-              You don&apos;t have any actions scheduled for today. Create a backtrack plan to
-              generate daily actions aligned with your vision.
+              Daily actions are generated from your Vision. Create a vision first,
+              then use AI to generate a complete action plan.
             </p>
-            <Link href="/backtrack">
-              <Button className="gap-2">
-                <Sparkles className="h-4 w-4" />
-                Create Backtrack Plan
-              </Button>
-            </Link>
+
+            <div className="flex flex-col gap-4 w-full max-w-sm">
+              {/* Primary CTA */}
+              <Link href="/vision" className="w-full">
+                <Button size="lg" className="w-full gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700">
+                  <Sparkles className="h-5 w-5" />
+                  Create Vision & Generate Actions
+                </Button>
+              </Link>
+
+              <div className="flex items-center gap-3">
+                <div className="flex-1 border-t" />
+                <span className="text-xs text-muted-foreground">or if you have a vision</span>
+                <div className="flex-1 border-t" />
+              </div>
+
+              {/* Secondary - for users who already have visions */}
+              <Link href="/vision" className="w-full">
+                <Button variant="outline" className="w-full gap-2">
+                  <Target className="h-4 w-4" />
+                  Go to Visions → Plan Tab → Generate Daily Actions
+                </Button>
+              </Link>
+            </div>
+
+            <div className="mt-6 p-4 bg-muted/50 rounded-lg max-w-md">
+              <h4 className="font-medium text-sm mb-2">How it works:</h4>
+              <ol className="text-sm text-muted-foreground space-y-1">
+                <li>1. Create or select a Vision</li>
+                <li>2. Go to the Plan tab</li>
+                <li>3. Click &quot;Generate Daily Actions&quot;</li>
+                <li>4. AI creates Power Goals → Monthly → Weekly → Daily tasks</li>
+                <li>5. Come back here to track your daily progress!</li>
+              </ol>
+            </div>
           </CardContent>
         </Card>
       </div>

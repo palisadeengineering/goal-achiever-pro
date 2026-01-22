@@ -44,6 +44,7 @@ import {
   CheckSquare,
   GitBranch,
   Trash2,
+  Zap,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -191,6 +192,46 @@ export default function VisionDetailPage({ params }: { params: Promise<{ id: str
 
   // AI Project Planner state
   const [showAIPlanner, setShowAIPlanner] = useState(false);
+
+  // Cascade generation state
+  const [isGeneratingCascade, setIsGeneratingCascade] = useState(false);
+
+  // Handle generate full cascade (Vision → Daily Actions)
+  const handleGenerateCascade = async () => {
+    setIsGeneratingCascade(true);
+    try {
+      const response = await fetch(`/api/visions/${id}/generate-cascade`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quarters: [1, 2, 3, 4], goalsPerQuarter: 3 }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to generate plan');
+      }
+
+      toast.success(result.message || 'Full plan generated!');
+
+      // Refresh the page data
+      await fetchBacktrackPlan();
+      await fetchVision();
+
+      // Redirect to Today page to see actions
+      toast.info('View your daily actions on the Today page', {
+        action: {
+          label: 'Go to Today',
+          onClick: () => router.push('/today'),
+        },
+      });
+    } catch (err) {
+      console.error('Error generating cascade:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to generate plan');
+    } finally {
+      setIsGeneratingCascade(false);
+    }
+  };
 
   // Handle delete vision
   const handleDeleteVision = async () => {
@@ -775,21 +816,49 @@ export default function VisionDetailPage({ params }: { params: Promise<{ id: str
                   Create a plan to break down your vision into actionable steps.
                   Choose how you want to get started:
                 </p>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button onClick={() => setShowAIPlanner(true)} className="gap-2">
-                    <Sparkles className="h-4 w-4" />
-                    Generate Power Goals with AI
+                <div className="flex flex-col gap-4">
+                  {/* Primary CTA - Generate Full Cascade */}
+                  <Button
+                    onClick={handleGenerateCascade}
+                    disabled={isGeneratingCascade}
+                    size="lg"
+                    className="gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
+                  >
+                    {isGeneratingCascade ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        Generating Full Plan...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-5 w-5" />
+                        Generate Daily Actions (Recommended)
+                      </>
+                    )}
                   </Button>
-                  <Button variant="outline" onClick={() => setShowBacktrackWizard(true)} className="gap-2">
-                    <GitBranch className="h-4 w-4" />
-                    Create Backtrack Plan
-                  </Button>
+                  <p className="text-xs text-muted-foreground text-center max-w-sm">
+                    AI generates Power Goals, Monthly/Weekly Targets, and Daily Actions in one click.
+                    <br />
+                    Uses Dan Martell, Alex Hormozi, and Grant Cardone methodologies.
+                  </p>
+
+                  <div className="flex items-center gap-3 w-full">
+                    <div className="flex-1 border-t" />
+                    <span className="text-xs text-muted-foreground">or choose manually</span>
+                    <div className="flex-1 border-t" />
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button variant="outline" onClick={() => setShowAIPlanner(true)} className="gap-2 flex-1">
+                      <Sparkles className="h-4 w-4" />
+                      Generate Power Goals Only
+                    </Button>
+                    <Button variant="outline" onClick={() => setShowBacktrackWizard(true)} className="gap-2 flex-1">
+                      <GitBranch className="h-4 w-4" />
+                      Manual Backtrack Plan
+                    </Button>
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-4 max-w-md text-center">
-                  <strong>AI Power Goals:</strong> Generates 12 quarterly milestones you can break down further.
-                  <br />
-                  <strong>Backtrack Plan:</strong> Manual planning with quarterly, monthly, weekly, and daily targets.
-                </p>
               </CardContent>
             </Card>
           )}
