@@ -446,6 +446,7 @@ export default function VisionPage() {
           visions={visions}
           backtrackPlans={backtrackPlans}
           onEditVision={handleEditVision}
+          onViewDetails={handleViewDetails}
           onCreateNew={handleCreateNew}
         />
       ) : (

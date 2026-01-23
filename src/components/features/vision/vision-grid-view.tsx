@@ -32,6 +32,7 @@ interface VisionGridViewProps {
   visions: Vision[];
   backtrackPlans: BacktrackPlan[];
   onEditVision: (visionId: string) => void;
+  onViewDetails: (visionId: string) => void;
   onCreateNew: () => void;
 }
 
@@ -39,6 +40,7 @@ export function VisionGridView({
   visions,
   backtrackPlans,
   onEditVision,
+  onViewDetails,
   onCreateNew,
 }: VisionGridViewProps) {
   const getVisionBacktrackPlan = (visionId: string) => {
@@ -77,6 +79,7 @@ export function VisionGridView({
           vision={vision}
           backtrackPlan={getVisionBacktrackPlan(vision.id)}
           onEdit={() => onEditVision(vision.id)}
+          onViewDetails={() => onViewDetails(vision.id)}
           variant="grid"
         />
       ))}

@@ -143,10 +143,7 @@ export function VisionCard({
 
   // Grid variant (original card style)
   return (
-    <Card
-      className="hover:shadow-md transition-shadow cursor-pointer group"
-      onClick={onEdit}
-    >
+    <Card className="hover:shadow-md transition-shadow group">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -163,17 +160,6 @@ export function VisionCard({
               )}
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit();
-            }}
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -205,37 +191,34 @@ export function VisionCard({
         </div>
 
         {/* Backtrack Plan Status */}
-        <div className="pt-3 border-t">
-          {backtrackPlan ? (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm">
-                <GitBranch className="h-4 w-4 text-primary" />
-                <span>Backtrack Plan Active</span>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                asChild
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Link href={`/backtrack/${backtrackPlan.id}`}>
-                  View
-                  <ArrowRight className="h-3 w-3 ml-1" />
-                </Link>
-              </Button>
-            </div>
-          ) : (
+        {backtrackPlan && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <GitBranch className="h-4 w-4 text-primary" />
+            <span>Backtrack Plan Active</span>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="pt-3 border-t flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={onEdit}
+          >
+            <Edit className="h-4 w-4 mr-2" />
+            Edit
+          </Button>
+          {onViewDetails && (
             <Button
-              variant="outline"
+              variant="default"
               size="sm"
-              className="w-full"
-              asChild
-              onClick={(e) => e.stopPropagation()}
+              className="flex-1"
+              onClick={onViewDetails}
             >
-              <Link href="/backtrack">
-                <GitBranch className="h-4 w-4 mr-2" />
-                Create Backtrack Plan
-              </Link>
+              <Eye className="h-4 w-4 mr-2" />
+              View
+              <ArrowRight className="h-3 w-3 ml-1" />
             </Button>
           )}
         </div>
