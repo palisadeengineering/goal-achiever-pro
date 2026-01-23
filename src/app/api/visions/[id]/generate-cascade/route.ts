@@ -136,14 +136,13 @@ export async function POST(
     const body = await request.json().catch(() => ({}));
     const { quarters = [1, 2, 3, 4], goalsPerQuarter = 3 } = body;
 
-    // Check for API key - support both ANTHROPIC and OPENAI
-    const apiKey = process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json({ error: 'AI API key not configured. Please set ANTHROPIC_API_KEY or OPENAI_API_KEY.' }, { status: 500 });
+    // Check for Anthropic API key
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return NextResponse.json({ error: 'Anthropic API key not configured. Please set ANTHROPIC_API_KEY.' }, { status: 500 });
     }
 
     const anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY || apiKey,
+      apiKey: process.env.ANTHROPIC_API_KEY,
     });
 
     // Calculate dates and current quarter
