@@ -325,6 +325,73 @@ export function DailyKpiDashboard({ className }: DailyKpiDashboardProps) {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Streak Level Badge - PROMINENT GAMIFICATION */}
+          {summary && summary.bestStreak > 0 && (() => {
+            const badge = getStreakBadge(summary.bestStreak);
+            const { level, nextMilestone, progress } = getStreakLevel(summary.bestStreak);
+            return (
+              <div className={cn(
+                'p-4 rounded-xl text-white',
+                badge.color
+              )}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white/20 rounded-lg">
+                      {summary.bestStreak >= 90 ? (
+                        <Star className="h-6 w-6" />
+                      ) : summary.bestStreak >= 30 ? (
+                        <Trophy className="h-6 w-6" />
+                      ) : summary.bestStreak >= 7 ? (
+                        <Award className="h-6 w-6" />
+                      ) : (
+                        <Flame className="h-6 w-6" />
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-lg font-bold">{badge.label}</div>
+                      <div className="text-sm opacity-90">Level {level} • {summary.bestStreak} day streak</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-3xl font-black">{summary.bestStreak}</div>
+                    <div className="text-xs opacity-75">days</div>
+                  </div>
+                </div>
+                {/* Progress to next level */}
+                <div className="mt-3 space-y-1">
+                  <div className="flex justify-between text-xs opacity-90">
+                    <span>Progress to next level</span>
+                    <span>{nextMilestone - summary.bestStreak} days to go</span>
+                  </div>
+                  <div className="h-2 bg-white/30 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-white rounded-full transition-all"
+                      style={{ width: `${Math.min(100, progress)}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Show encouragement for new users */}
+          {(!summary || summary.bestStreak === 0) && (
+            <div className="p-4 rounded-xl bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 text-gray-700 dark:text-gray-200">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/50 rounded-lg">
+                  <Flame className="h-6 w-6" />
+                </div>
+                <div>
+                  <div className="font-bold">Start Your Streak!</div>
+                  <div className="text-sm opacity-75">Complete a KPI to begin your journey</div>
+                </div>
+              </div>
+              <div className="mt-3 text-xs opacity-75">
+                Levels: Building → On Fire → Consistent → Champion → Master → Legendary
+              </div>
+            </div>
+          )}
+
           {/* Progress Bar */}
           <div className="space-y-2">
             <Progress value={completionPercentage} className="h-3" />

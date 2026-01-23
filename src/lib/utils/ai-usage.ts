@@ -1,17 +1,16 @@
 import { createClient } from '@/lib/supabase/server';
 
-// Pricing per 1M tokens (in cents) - GPT-4o-mini
+// Pricing per 1M tokens (in cents) - Claude models
 const PRICING = {
-  'gpt-4o-mini': {
-    input: 15, // $0.15 per 1M tokens = 15 cents
-    output: 60, // $0.60 per 1M tokens = 60 cents
-  },
-  // Claude pricing if needed
-  'claude-3-5-sonnet': {
+  'claude-sonnet-4-20250514': {
     input: 300, // $3 per 1M tokens
     output: 1500, // $15 per 1M tokens
   },
-  'claude-3-haiku': {
+  'claude-3-5-sonnet-20241022': {
+    input: 300, // $3 per 1M tokens
+    output: 1500, // $15 per 1M tokens
+  },
+  'claude-3-haiku-20240307': {
     input: 25, // $0.25 per 1M tokens
     output: 125, // $1.25 per 1M tokens
   },
@@ -39,7 +38,7 @@ export function calculateCost(
   promptTokens: number,
   completionTokens: number
 ): number {
-  const pricing = PRICING[model as ModelName] || PRICING['gpt-4o-mini'];
+  const pricing = PRICING[model as ModelName] || PRICING['claude-sonnet-4-20250514'];
 
   // Cost = (tokens / 1,000,000) * price_per_million
   const inputCost = (promptTokens / 1_000_000) * pricing.input;

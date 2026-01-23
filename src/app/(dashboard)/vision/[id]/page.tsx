@@ -209,7 +209,8 @@ export default function VisionDetailPage({ params }: { params: Promise<{ id: str
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to generate plan');
+        const errorDetails = result.details ? `: ${result.details}` : '';
+        throw new Error((result.error || 'Failed to generate plan') + errorDetails);
       }
 
       toast.success(result.message || 'Full plan generated!');
@@ -227,7 +228,11 @@ export default function VisionDetailPage({ params }: { params: Promise<{ id: str
       });
     } catch (err) {
       console.error('Error generating cascade:', err);
-      toast.error(err instanceof Error ? err.message : 'Failed to generate plan');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to generate plan';
+      toast.error(errorMessage, {
+        duration: 10000,
+        description: 'Check the console for more details. Try again or use Manual Backtrack Plan.',
+      });
     } finally {
       setIsGeneratingCascade(false);
     }

@@ -594,7 +594,7 @@ export const userSettings = pgTable('user_settings', {
   pomodoroBreakMinutes: integer('pomodoro_break_minutes').default(5),
   calendarStartHour: integer('calendar_start_hour').default(5),
   calendarEndHour: integer('calendar_end_hour').default(23),
-  aiProvider: text('ai_provider').default('openai'),
+  aiProvider: text('ai_provider').default('anthropic'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });

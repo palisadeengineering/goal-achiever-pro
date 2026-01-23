@@ -21,7 +21,7 @@ const DEFAULT_SETTINGS = {
   pomodoroBreakMinutes: 5,
   calendarStartHour: 5,
   calendarEndHour: 23,
-  aiProvider: 'openai',
+  aiProvider: 'anthropic',
 };
 
 // GET - Fetch user settings
