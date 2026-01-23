@@ -136,12 +136,14 @@ export async function POST(
     const body = await request.json().catch(() => ({}));
     const { quarters = [1, 2, 3, 4], goalsPerQuarter = 3 } = body;
 
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return NextResponse.json({ error: 'AI API key not configured' }, { status: 500 });
+    // Check for API key - support both ANTHROPIC and OPENAI
+    const apiKey = process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json({ error: 'AI API key not configured. Please set ANTHROPIC_API_KEY or OPENAI_API_KEY.' }, { status: 500 });
     }
 
     const anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
+      apiKey: process.env.ANTHROPIC_API_KEY || apiKey,
     });
 
     // Calculate dates and current quarter
@@ -368,6 +370,9 @@ Respond ONLY with valid JSON in this exact format:
 
     for (const pg of cascadeData.powerGoals) {
       // 1. Create Power Goal
+      // Calculate year based on quarter
+      const powerGoalYear = pg.quarter >= currentQuarter ? currentYear : currentYear + 1;
+
       const { data: savedPowerGoal, error: pgError } = await supabase
         .from('power_goals')
         .insert({
@@ -376,6 +381,7 @@ Respond ONLY with valid JSON in this exact format:
           title: pg.title,
           description: pg.description,
           quarter: pg.quarter,
+          year: powerGoalYear,
           category: pg.category,
           status: 'pending',
           progress_percentage: 0,
@@ -385,7 +391,12 @@ Respond ONLY with valid JSON in this exact format:
 
       if (pgError || !savedPowerGoal) {
         console.error('Error creating power goal:', pgError);
-        continue;
+        // Return detailed error instead of silently continuing
+        return NextResponse.json({
+          error: 'Failed to save power goal',
+          details: pgError?.message || 'Unknown database error',
+          powerGoal: pg.title,
+        }, { status: 500 });
       }
       savedStats.powerGoals++;
 
@@ -437,7 +448,11 @@ Respond ONLY with valid JSON in this exact format:
 
         if (mtError || !savedMonthly) {
           console.error('Error creating monthly target:', mtError);
-          continue;
+          return NextResponse.json({
+            error: 'Failed to save monthly target',
+            details: mtError?.message || 'Unknown database error',
+            monthlyTarget: mt.title,
+          }, { status: 500 });
         }
         savedStats.monthlyTargets++;
 
@@ -491,7 +506,11 @@ Respond ONLY with valid JSON in this exact format:
 
           if (wtError || !savedWeekly) {
             console.error('Error creating weekly target:', wtError);
-            continue;
+            return NextResponse.json({
+              error: 'Failed to save weekly target',
+              details: wtError?.message || 'Unknown database error',
+              weeklyTarget: wt.title,
+            }, { status: 500 });
           }
           savedStats.weeklyTargets++;
 

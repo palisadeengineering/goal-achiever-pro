@@ -7,12 +7,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Sparkles, Loader2, ChevronDown, ChevronUp, CalendarIcon } from 'lucide-react';
+import { Sparkles, Loader2, ChevronDown, ChevronUp, CalendarIcon, LayoutTemplate } from 'lucide-react';
 import { toast } from 'sonner';
 import { addMonths, addYears, format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { VisionWizardData } from '../vision-wizard';
 import { SmartQuestions } from '../smart-questions';
+import { VisionTemplates, VisionTemplate } from '../vision-templates';
 
 const COLOR_OPTIONS = [
   { value: '#6366f1', label: 'Indigo' },
@@ -42,6 +43,7 @@ interface VisionStepProps {
 export function VisionStep({ data, updateData }: VisionStepProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showAIOptions, setShowAIOptions] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
   const [aiContext, setAiContext] = useState('');
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [isGeneratingDate, setIsGeneratingDate] = useState(false);
@@ -51,6 +53,40 @@ export function VisionStep({ data, updateData }: VisionStepProps) {
     keyMilestones: string[];
   } | null>(null);
   const [smartAnswers, setSmartAnswers] = useState<Record<string, string>>({});
+  const [selectedMethodology, setSelectedMethodology] = useState<string | null>(null);
+
+  const handleSelectTemplate = (template: VisionTemplate, use10X?: boolean) => {
+    // Use 10X version if selected and available
+    const useVersion = use10X && template.tenXVersion ? template.tenXVersion : template;
+
+    updateData({
+      title: useVersion.title,
+      description: template.dreamOutcome || useVersion.description,
+      color: template.color,
+      // Set target date based on suggested months
+      targetDate: format(addMonths(new Date(), template.suggestedMonths), 'yyyy-MM-dd'),
+    });
+
+    // Also pre-fill SMART goals if we're on that step later
+    // Store template data for use in SMART step
+    updateData({
+      // @ts-expect-error - template data extension
+      templateData: {
+        specific: use10X && template.tenXVersion?.specific ? template.tenXVersion.specific : template.specific,
+        measurable: use10X && template.tenXVersion?.measurable ? template.tenXVersion.measurable : template.measurable,
+        attainable: template.attainable,
+        realistic: template.realistic,
+        suggestedNonNegotiables: template.suggestedNonNegotiables,
+        methodology: use10X ? 'cardone' : template.methodology,
+      },
+    });
+
+    setSelectedMethodology(use10X ? 'cardone' : template.methodology);
+    setShowTemplates(false);
+    toast.success(`Template applied: ${useVersion.title}`, {
+      description: use10X ? '10X version selected!' : 'Feel free to customize it.',
+    });
+  };
 
   const handleDatePreset = (getValue: () => Date) => {
     const date = getValue();
@@ -143,66 +179,119 @@ export function VisionStep({ data, updateData }: VisionStepProps) {
 
   return (
     <div className="space-y-6">
-      {/* AI Generation Section */}
-      <div className="rounded-lg border bg-gradient-to-r from-violet-500/10 to-purple-500/10 p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-violet-500" />
-            <span className="font-medium">AI Vision Generator</span>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setShowAIOptions(!showAIOptions)}
-          >
-            {showAIOptions ? (
-              <>Hide Options <ChevronUp className="ml-1 h-4 w-4" /></>
-            ) : (
-              <>Generate with AI <ChevronDown className="ml-1 h-4 w-4" /></>
-            )}
-          </Button>
+      {/* Templates Section */}
+      {showTemplates ? (
+        <div className="rounded-lg border p-4">
+          <VisionTemplates
+            onSelectTemplate={handleSelectTemplate}
+            onClose={() => setShowTemplates(false)}
+          />
         </div>
-
-        {showAIOptions && (
-          <div className="mt-4 space-y-3">
-            <div>
-              <Label htmlFor="aiContext" className="text-sm">
-                Context (optional)
-              </Label>
-              <Textarea
-                id="aiContext"
-                placeholder="Tell AI about your situation: your industry, goals, current stage, what excites you... (e.g., 'I run a small marketing agency and want to scale while having more freedom')"
-                value={aiContext}
-                onChange={(e) => setAiContext(e.target.value)}
-                rows={3}
-                className="mt-1"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                More context = more personalized vision
-              </p>
-            </div>
+      ) : (
+        <>
+          {/* Quick Start Options */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Templates Button */}
             <Button
               type="button"
-              onClick={generateVisionWithAI}
-              disabled={isGenerating}
-              className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700"
+              variant="outline"
+              className="h-auto py-4 flex flex-col items-center gap-2 border-2 hover:border-primary/50 hover:bg-primary/5"
+              onClick={() => setShowTemplates(true)}
             >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Generate Vision
-                </>
+              <LayoutTemplate className="h-6 w-6 text-cyan-500" />
+              <div className="text-center">
+                <div className="font-semibold">Choose Template</div>
+                <div className="text-xs text-muted-foreground">
+                  10X Goals · Dream Outcomes · Proven Frameworks
+                </div>
+              </div>
+            </Button>
+
+            {/* AI Generator Button */}
+            <Button
+              type="button"
+              variant="outline"
+              className={cn(
+                "h-auto py-4 flex flex-col items-center gap-2 border-2",
+                showAIOptions ? "border-violet-500 bg-violet-500/5" : "hover:border-violet-500/50 hover:bg-violet-500/5"
               )}
+              onClick={() => setShowAIOptions(!showAIOptions)}
+            >
+              <Sparkles className="h-6 w-6 text-violet-500" />
+              <div className="text-center">
+                <div className="font-semibold">Generate with AI</div>
+                <div className="text-xs text-muted-foreground">
+                  Custom vision from your context
+                </div>
+              </div>
             </Button>
           </div>
-        )}
-      </div>
+
+          {/* Methodology badge if template was used */}
+          {selectedMethodology && (
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground">Using:</span>
+              {selectedMethodology === 'cardone' && (
+                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
+                  Grant Cardone 10X Rule
+                </span>
+              )}
+              {selectedMethodology === 'hormozi' && (
+                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                  Alex Hormozi Value Equation
+                </span>
+              )}
+              {selectedMethodology === 'martell' && (
+                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                  Dan Martell Buy Back Your Time
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* AI Generation Panel */}
+          {showAIOptions && (
+            <div className="rounded-lg border bg-gradient-to-r from-violet-500/10 to-purple-500/10 p-4">
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="aiContext" className="text-sm">
+                    Context (optional)
+                  </Label>
+                  <Textarea
+                    id="aiContext"
+                    placeholder="Tell AI about your situation: your industry, goals, current stage, what excites you... (e.g., 'I run a small marketing agency and want to scale while having more freedom')"
+                    value={aiContext}
+                    onChange={(e) => setAiContext(e.target.value)}
+                    rows={3}
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    More context = more personalized vision
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  onClick={generateVisionWithAI}
+                  disabled={isGenerating}
+                  className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Generate Vision
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
 
       <div className="space-y-2">
         <Label htmlFor="title">Vision Title *</Label>
