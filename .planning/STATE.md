@@ -5,39 +5,35 @@
 See: .planning/PROJECT.md (updated 2026-01-23)
 
 **Core value:** When a user creates a Vision, the entire goal hierarchy cascades automatically - from SMART-based KPIs down to daily actions - and completing any item visibly moves progress up the chain to the dashboard.
-**Current focus:** Phase 4 - Frontend State (Phase 3 verified complete)
+**Current focus:** Phase 4 - Frontend State (Plan 01 complete)
 
 ## Current Position
 
 Phase: 4 of 8 (04-frontend-state)
-Plan: 0 of 2 (not started)
-Status: Ready to plan
-Last activity: 2026-01-24 - Phase 3 verified complete
+Plan: 1 of 2 (React Query hooks complete)
+Status: In progress
+Last activity: 2026-01-24 - Completed 04-01-PLAN.md
 
-Progress: [########----------------] 38%
+Progress: [#########---------------] 43%
 
-## Phase 3 Progress
+## Phase 4 Progress
 
-| Plan | API | Library | Status |
-|------|-----|---------|--------|
-| 03-01: Goal Tree API | OK | OK | COMPLETE |
-| 03-02: Enhanced Ancestor Progress | OK | OK | COMPLETE |
+| Plan | Hooks | Types | Status |
+|------|-------|-------|--------|
+| 04-01: React Query Hooks | OK | OK | COMPLETE |
+| 04-02: Dashboard Components | - | - | NOT STARTED |
 
-**03-01 Deliverables:**
-- `src/lib/progress/tree.ts` - KpiTreeNode type, buildKpiTree() function
-- `src/app/api/goal-tree/[visionId]/route.ts` - Full hierarchy fetch endpoint
-- `src/lib/progress/index.ts` - Updated barrel with tree exports
-
-**03-02 Deliverables:**
-- `src/lib/progress/ancestor-rollup.ts` - Enhanced with AncestorProgressUpdate type
-- `src/app/api/vision-kpis/[id]/log/route.ts` - Returns full ancestor progress data
+**04-01 Deliverables:**
+- `src/lib/hooks/use-goal-tree.ts` - useGoalTree hook for fetching KPI hierarchy
+- `src/lib/hooks/use-kpi-mutations.ts` - useLogKpi, useOverrideProgress mutations
+- `src/lib/hooks/index.ts` - Barrel export for hooks
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
-- Average duration: ~8 minutes per plan
-- Total execution time: ~72 minutes
+- Total plans completed: 9
+- Average duration: ~7 minutes per plan
+- Total execution time: ~74 minutes
 
 **By Phase:**
 
@@ -46,6 +42,7 @@ Progress: [########----------------] 38%
 | 01-schema-foundation | 2 | 45m | 22m | COMPLETE |
 | 02-progress-calculation | 4 | 18m | 4m | COMPLETE |
 | 03-tree-fetching-api | 2 | 8m | 4m | COMPLETE |
+| 04-frontend-state | 1 | 2m | 2m | IN PROGRESS |
 
 *Updated after each plan completion*
 
@@ -77,11 +74,13 @@ Recent decisions affecting current work:
 - [03-01]: Supabase nested select for LEFT JOIN pattern
 - [03-02]: Include original KPI as first item in ancestor rollup response
 - [03-02]: Return child counts even for manual override cases
+- [04-01]: Optimistic updates on single KPI only, not ancestors
+- [04-01]: 30s stale time for goal tree query
 
 ### Pending Todos
 
 - [ ] Apply migration 0003_add_kpi_weight.sql
-- [ ] Begin Phase 4 planning (Dashboard Integration)
+- [ ] Execute 04-02-PLAN.md (Dashboard Components)
 
 ### Blockers/Concerns
 
@@ -89,25 +88,20 @@ None currently.
 
 ## Session Continuity
 
-Last session: 2026-01-24T06:11:22Z
-Stopped at: Completed 03-02-PLAN.md
-Resume action: Run `/gsd:plan-phase 4` to plan Phase 4 (Frontend State)
+Last session: 2026-01-24T16:46:43Z
+Stopped at: Completed 04-01-PLAN.md
+Resume action: Run `/gsd:execute-phase 04 02` to execute Plan 02 (Dashboard Components)
 
 **Commits this session:**
-- `21b0378` feat(03-01): add KPI tree building library
-- `e33f8fa` feat(03-01): add goal tree API endpoint
-- `8e49a2b` feat(03-01): export tree utilities from progress barrel
-- `6ed9097` feat(03-02): extend rollup return type with full progress data
-- `b13db43` feat(03-02): update log endpoint to use enhanced rollup type
-- `94c5140` feat(03-02): export AncestorProgressUpdate from progress barrel
+- `050e47e` feat(04-01): add useGoalTree React Query hook
+- `121dd8a` feat(04-01): add useLogKpi and useOverrideProgress mutations
+- `1faaa17` feat(04-01): add hooks barrel export
 
 **Files created this session:**
-- `src/lib/progress/tree.ts`
-- `src/app/api/goal-tree/[visionId]/route.ts`
-- `.planning/phases/03-tree-fetching-api/03-01-SUMMARY.md`
-- `.planning/phases/03-tree-fetching-api/03-02-SUMMARY.md`
+- `src/lib/hooks/use-goal-tree.ts`
+- `src/lib/hooks/use-kpi-mutations.ts`
+- `src/lib/hooks/index.ts`
+- `.planning/phases/04-frontend-state/04-01-SUMMARY.md`
 
 **Files modified this session:**
-- `src/lib/progress/index.ts` (added tree exports, AncestorProgressUpdate type)
-- `src/lib/progress/ancestor-rollup.ts` (enhanced return type)
-- `src/app/api/vision-kpis/[id]/log/route.ts` (import AncestorProgressUpdate)
+- `.planning/STATE.md`
