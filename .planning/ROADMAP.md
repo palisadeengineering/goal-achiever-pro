@@ -43,19 +43,19 @@ Plans:
 **Goal**: Completing any KPI automatically updates all ancestor progress percentages with transparent weighted calculations
 **Depends on**: Phase 1
 **Requirements**: PROG-01, PROG-02, PROG-03, PROG-04, PROG-05, PROG-06
-**Research flag**: Needs research-phase (weighted rollup strategies, 300% Rule integration)
+**Research flag**: Complete (application-layer strategy recommended over triggers)
 **Success Criteria** (what must be TRUE):
   1. Completing a daily KPI immediately updates weekly/monthly/quarterly/vision progress
   2. User can assign weight to any KPI and see higher-weight items contribute more to parent
   3. User can manually override calculated progress with explanation that persists
   4. UI shows transparent formula explaining exactly how progress percentage was calculated
-  5. Database triggers maintain progress cache within 100ms of write operations
-**Plans**: TBD
+  5. Progress cache maintained within 100ms of write operations
+**Plans**: 3 plans in 2 waves
 
 Plans:
-- [ ] 02-01: Database triggers for automatic progress roll-up
-- [ ] 02-02: Weighted calculation with transparent formula
-- [ ] 02-03: Manual override protection and progress cache refresh
+- [ ] 02-01-PLAN.md - Core progress calculation library, types, and weight schema migration (Wave 1)
+- [ ] 02-02-PLAN.md - Progress API endpoints with rollup integration (Wave 2)
+- [ ] 02-03-PLAN.md - Manual override protection and barrel exports (Wave 2)
 
 ### Phase 3: Tree Fetching API
 **Goal**: Single API call returns complete nested hierarchy for a vision with pre-computed progress
@@ -171,7 +171,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Schema Foundation | 2/2 | Complete | 2026-01-24 |
-| 2. Progress Calculation | 0/3 | Not started | - |
+| 2. Progress Calculation | 0/3 | Planned | - |
 | 3. Tree Fetching API | 0/2 | Not started | - |
 | 4. Frontend State | 0/2 | Not started | - |
 | 5. Cascade Generation | 0/3 | Not started | - |
