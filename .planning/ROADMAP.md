@@ -102,12 +102,12 @@ Plans:
   3. AI suggestions reference Vision SMART components for contextual breakdown
   4. User can manually create and link KPIs to any parent in the hierarchy
   5. Re-generating cascade adds new items without deleting user's existing customizations
-**Plans**: TBD
+**Plans**: 3 plans in 2 waves
 
 Plans:
-- [ ] 05-01: Vision-to-KPI AI generation endpoint
-- [ ] 05-02: KPI cascade breakdown with manual creation
-- [ ] 05-03: Incremental generation with existing item preservation
+- [ ] 05-01-PLAN.md - Fix generate-cascade to link KPIs hierarchically with parent_kpi_id (Wave 1)
+- [ ] 05-02-PLAN.md - Manual KPI creation endpoint and useCreateKpi hook (Wave 1)
+- [ ] 05-03-PLAN.md - Incremental generation mode preserving existing KPIs (Wave 2)
 
 ### Phase 6: Tree UI
 **Goal**: Users can navigate the full goal hierarchy with clear visual indicators and efficient interaction
