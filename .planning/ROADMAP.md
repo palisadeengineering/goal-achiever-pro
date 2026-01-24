@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Schema Foundation** - Add parent-child KPI linkage and progress cache table
 - [x] **Phase 2: Progress Calculation** - Implement roll-up engine with triggers and weighted calculations
-- [ ] **Phase 3: Tree Fetching API** - Build efficient hierarchical query endpoints
+- [x] **Phase 3: Tree Fetching API** - Build efficient hierarchical query endpoints
 - [ ] **Phase 4: Frontend State** - React Query hooks with optimistic updates and cache management
 - [ ] **Phase 5: Cascade Generation** - AI-powered KPI breakdown from Vision to daily items
 - [ ] **Phase 6: Tree UI** - Collapsible hierarchy view with progress indicators
@@ -70,8 +70,8 @@ Plans:
 **Plans**: 2 plans in 1 wave
 
 Plans:
-- [ ] 03-01-PLAN.md - Goal tree API endpoint with nested hierarchy (Wave 1)
-- [ ] 03-02-PLAN.md - Enhanced KPI log response with ancestor progress values (Wave 1)
+- [x] 03-01-PLAN.md - Goal tree API endpoint with nested hierarchy (Wave 1)
+- [x] 03-02-PLAN.md - Enhanced KPI log response with ancestor progress values (Wave 1)
 
 ### Phase 4: Frontend State
 **Goal**: React Query manages server state with optimistic updates providing instant UI feedback
@@ -173,7 +173,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 |-------|----------------|--------|-----------|
 | 1. Schema Foundation | 2/2 | Complete | 2026-01-24 |
 | 2. Progress Calculation | 4/4 | Complete | 2026-01-24 |
-| 3. Tree Fetching API | 0/2 | Planned | - |
+| 3. Tree Fetching API | 2/2 | Complete | 2026-01-24 |
 | 4. Frontend State | 0/2 | Not started | - |
 | 5. Cascade Generation | 0/3 | Not started | - |
 | 6. Tree UI | 0/3 | Not started | - |

@@ -60,8 +60,8 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### API Layer
 
-- [ ] **API-01**: GET /api/goal-tree/{visionId} returns full nested hierarchy in one query
-- [ ] **API-02**: POST /api/kpi-logs/{id}/log updates progress and returns ancestor changes
+- [x] **API-01**: GET /api/goal-tree/{visionId} returns full nested hierarchy in one query
+- [x] **API-02**: POST /api/kpi-logs/{id}/log updates progress and returns ancestor changes
 - [ ] **API-03**: React Query hooks with optimistic updates for instant UX
 - [ ] **API-04**: Hierarchical query key structure enables targeted cache invalidation
 
@@ -113,8 +113,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PROG-04 | 2 | Progress Calculation | Complete |
 | PROG-05 | 2 | Progress Calculation | Complete |
 | PROG-06 | 2 | Progress Calculation | Complete |
-| API-01 | 3 | Tree Fetching API | Pending |
-| API-02 | 3 | Tree Fetching API | Pending |
+| API-01 | 3 | Tree Fetching API | Complete |
+| API-02 | 3 | Tree Fetching API | Complete |
 | API-03 | 4 | Frontend State | Pending |
 | API-04 | 4 | Frontend State | Pending |
 | CASC-01 | 5 | Cascade Generation | Pending |
@@ -148,4 +148,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-23*
-*Last updated: 2026-01-24 after Phase 2 completion*
+*Last updated: 2026-01-24 after Phase 3 completion*
