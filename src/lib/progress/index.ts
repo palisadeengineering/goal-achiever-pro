@@ -38,6 +38,7 @@ export {
 export {
   rollupProgressToAncestors,
   recalculateParentChain,
+  type AncestorProgressUpdate,
 } from './ancestor-rollup';
 
 // Tree building utilities
