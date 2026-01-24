@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { rollupProgressToAncestors } from '@/lib/progress';
+import { rollupProgressToAncestors, type AncestorProgressUpdate } from '@/lib/progress';
 
 // Demo user ID for development
 const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
