@@ -12,7 +12,7 @@ This roadmap transforms Goal Achiever Pro from isolated goal pages into a unifie
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Schema Foundation** - Add parent-child KPI linkage and progress cache table
+- [x] **Phase 1: Schema Foundation** - Add parent-child KPI linkage and progress cache table
 - [ ] **Phase 2: Progress Calculation** - Implement roll-up engine with triggers and weighted calculations
 - [ ] **Phase 3: Tree Fetching API** - Build efficient hierarchical query endpoints
 - [ ] **Phase 4: Frontend State** - React Query hooks with optimistic updates and cache management
@@ -36,8 +36,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 2 plans
 
 Plans:
-- [ ] 01-01-PLAN.md - Add FK constraint and index to parent_kpi_id column
-- [ ] 01-02-PLAN.md - Create progress cache table and data migration script
+- [x] 01-01-PLAN.md - Add FK constraint and index to parent_kpi_id column
+- [x] 01-02-PLAN.md - Create progress cache table and data migration script
 
 ### Phase 2: Progress Calculation
 **Goal**: Completing any KPI automatically updates all ancestor progress percentages with transparent weighted calculations
@@ -170,7 +170,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Schema Foundation | 0/2 | Planned | - |
+| 1. Schema Foundation | 2/2 | Complete | 2026-01-24 |
 | 2. Progress Calculation | 0/3 | Not started | - |
 | 3. Tree Fetching API | 0/2 | Not started | - |
 | 4. Frontend State | 0/2 | Not started | - |
