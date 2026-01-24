@@ -5,9 +5,10 @@ import { FeedbackButton } from '@/components/features/feedback/feedback-button';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 
-// Testing phase: Grant full access to these emails
-const TESTING_FULL_ACCESS_EMAILS = [
+// Beta access: Grant full access to these emails
+const BETA_ACCESS_EMAILS = [
   'joel@pe-se.com',
+  'shane.chalupa@obnovit.com',
 ];
 
 export default async function DashboardLayout({
@@ -59,9 +60,9 @@ export default async function DashboardLayout({
     isAdmin = true;
   }
 
-  // Check if user has testing phase full access
-  const hasTestingAccess = TESTING_FULL_ACCESS_EMAILS.includes(userProfile.email.toLowerCase());
-  const subscriptionTier = hasTestingAccess ? 'elite' as const : 'free' as const;
+  // Check if user has beta access (full elite tier)
+  const hasBetaAccess = BETA_ACCESS_EMAILS.includes(userProfile.email.toLowerCase());
+  const subscriptionTier = hasBetaAccess ? 'elite' as const : 'free' as const;
 
   return (
     <div className="flex h-screen overflow-hidden">
