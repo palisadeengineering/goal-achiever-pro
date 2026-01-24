@@ -10,14 +10,14 @@ Requirements for this milestone. Each maps to roadmap phases.
 ### Schema & Data Model
 
 - [ ] **DATA-01**: KPIs have parent_kpi_id column linking to parent KPIs forming hierarchy
-- [ ] **DATA-02**: Hierarchy supports 5 levels: Vision → Quarterly → Monthly → Weekly → Daily
+- [ ] **DATA-02**: Hierarchy supports 5 levels: Vision -> Quarterly -> Monthly -> Weekly -> Daily
 - [ ] **DATA-03**: Migration script links existing KPIs to appropriate parents
 - [ ] **DATA-04**: Progress cache table stores pre-computed aggregates for fast reads
 
 ### Progress Calculation
 
 - [ ] **PROG-01**: Completing child KPI automatically updates parent progress percentage
-- [ ] **PROG-02**: Progress rolls up entire chain: daily → weekly → monthly → quarterly → vision
+- [ ] **PROG-02**: Progress rolls up entire chain: daily -> weekly -> monthly -> quarterly -> vision
 - [ ] **PROG-03**: User can assign weights to KPIs (higher-weight items contribute more)
 - [ ] **PROG-04**: User can manually override calculated progress with explanation
 - [ ] **PROG-05**: UI shows transparent formula explaining how progress was calculated
@@ -51,7 +51,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Progress Page
 
-- [ ] **PRGS-01**: Roll-up visualization shows Vision → Quarter → Month → Week → Day
+- [ ] **PRGS-01**: Roll-up visualization shows Vision -> Quarter -> Month -> Week -> Day
 - [ ] **PRGS-02**: Activity feed shows recent completions across entire hierarchy
 - [ ] **PRGS-03**: Trend charts show progress over time (line/bar charts)
 - [ ] **PRGS-04**: Goal health scoring flags "zombie goals" with no activity
@@ -101,51 +101,51 @@ Explicitly excluded. Documented to prevent scope creep.
 
 Which phases cover which requirements. Updated during roadmap creation.
 
-| Requirement | Phase | Status |
-|-------------|-------|--------|
-| DATA-01 | Phase 1 | Pending |
-| DATA-02 | Phase 1 | Pending |
-| DATA-03 | Phase 1 | Pending |
-| DATA-04 | Phase 1 | Pending |
-| PROG-01 | Phase 2 | Pending |
-| PROG-02 | Phase 2 | Pending |
-| PROG-03 | Phase 2 | Pending |
-| PROG-04 | Phase 2 | Pending |
-| PROG-05 | Phase 2 | Pending |
-| PROG-06 | Phase 2 | Pending |
-| API-01 | Phase 3 | Pending |
-| API-02 | Phase 3 | Pending |
-| API-03 | Phase 4 | Pending |
-| API-04 | Phase 4 | Pending |
-| CASC-01 | Phase 5 | Pending |
-| CASC-02 | Phase 5 | Pending |
-| CASC-03 | Phase 5 | Pending |
-| CASC-04 | Phase 5 | Pending |
-| CASC-05 | Phase 5 | Pending |
-| TREE-01 | Phase 6 | Pending |
-| TREE-02 | Phase 6 | Pending |
-| TREE-03 | Phase 6 | Pending |
-| TREE-04 | Phase 6 | Pending |
-| TREE-05 | Phase 6 | Pending |
-| TREE-06 | Phase 6 | Pending |
-| TODAY-01 | Phase 7 | Pending |
-| TODAY-02 | Phase 7 | Pending |
-| TODAY-03 | Phase 7 | Pending |
-| TODAY-04 | Phase 7 | Pending |
-| TODAY-05 | Phase 7 | Pending |
-| TODAY-06 | Phase 7 | Pending |
-| PRGS-01 | Phase 8 | Pending |
-| PRGS-02 | Phase 8 | Pending |
-| PRGS-03 | Phase 8 | Pending |
-| PRGS-04 | Phase 8 | Pending |
-| PRGS-05 | Phase 8 | Pending |
-| PRGS-06 | Phase 8 | Pending |
+| Requirement | Phase | Phase Name | Status |
+|-------------|-------|------------|--------|
+| DATA-01 | 1 | Schema Foundation | Pending |
+| DATA-02 | 1 | Schema Foundation | Pending |
+| DATA-03 | 1 | Schema Foundation | Pending |
+| DATA-04 | 1 | Schema Foundation | Pending |
+| PROG-01 | 2 | Progress Calculation | Pending |
+| PROG-02 | 2 | Progress Calculation | Pending |
+| PROG-03 | 2 | Progress Calculation | Pending |
+| PROG-04 | 2 | Progress Calculation | Pending |
+| PROG-05 | 2 | Progress Calculation | Pending |
+| PROG-06 | 2 | Progress Calculation | Pending |
+| API-01 | 3 | Tree Fetching API | Pending |
+| API-02 | 3 | Tree Fetching API | Pending |
+| API-03 | 4 | Frontend State | Pending |
+| API-04 | 4 | Frontend State | Pending |
+| CASC-01 | 5 | Cascade Generation | Pending |
+| CASC-02 | 5 | Cascade Generation | Pending |
+| CASC-03 | 5 | Cascade Generation | Pending |
+| CASC-04 | 5 | Cascade Generation | Pending |
+| CASC-05 | 5 | Cascade Generation | Pending |
+| TREE-01 | 6 | Tree UI | Pending |
+| TREE-02 | 6 | Tree UI | Pending |
+| TREE-03 | 6 | Tree UI | Pending |
+| TREE-04 | 6 | Tree UI | Pending |
+| TREE-05 | 6 | Tree UI | Pending |
+| TREE-06 | 6 | Tree UI | Pending |
+| TODAY-01 | 7 | Today Dashboard | Pending |
+| TODAY-02 | 7 | Today Dashboard | Pending |
+| TODAY-03 | 7 | Today Dashboard | Pending |
+| TODAY-04 | 7 | Today Dashboard | Pending |
+| TODAY-05 | 7 | Today Dashboard | Pending |
+| TODAY-06 | 7 | Today Dashboard | Pending |
+| PRGS-01 | 8 | Progress Page | Pending |
+| PRGS-02 | 8 | Progress Page | Pending |
+| PRGS-03 | 8 | Progress Page | Pending |
+| PRGS-04 | 8 | Progress Page | Pending |
+| PRGS-05 | 8 | Progress Page | Pending |
+| PRGS-06 | 8 | Progress Page | Pending |
 
 **Coverage:**
-- v1 requirements: 34 total
-- Mapped to phases: 34
-- Unmapped: 0 ✓
+- v1 requirements: 37 total
+- Mapped to phases: 37
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-01-23*
-*Last updated: 2026-01-23 after initial definition*
+*Last updated: 2026-01-23 after roadmap creation*
