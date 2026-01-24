@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-01-23)
 
 **Core value:** When a user creates a Vision, the entire goal hierarchy cascades automatically - from SMART-based KPIs down to daily actions - and completing any item visibly moves progress up the chain to the dashboard.
-**Current focus:** Phase 5 - Cascade Generation (in progress)
+**Current focus:** Phase 5 - Cascade Generation COMPLETE, ready for Phase 6
 
 ## Current Position
 
-Phase: 5 of 8 (05-cascade-generation) - IN PROGRESS
-Plan: 2 of 3 complete
-Status: 05-01 and 05-02 complete, 05-03 remaining
-Last activity: 2026-01-24 - Completed 05-01-PLAN.md
+Phase: 5 of 8 (05-cascade-generation) - COMPLETE
+Plan: 3 of 3 complete
+Status: Phase 5 complete, ready for Phase 6 (Full Tree UI)
+Last activity: 2026-01-24 - Completed 05-03-PLAN.md
 
-Progress: [###############---------] 61%
+Progress: [################--------] 67%
 
-## Phase 5 Progress
+## Phase 5 Progress (COMPLETE)
 
 | Plan | API | Hooks | Status |
 |------|-----|-------|--------|
 | 05-01: KPI Generation API | OK | - | COMPLETE |
 | 05-02: Manual KPI Creation | OK | OK | COMPLETE |
-| 05-03: Cascade Trigger | - | - | PENDING |
+| 05-03: Cascade Trigger | OK | OK | COMPLETE |
 
 **05-01 Deliverables:**
 - Hierarchical parent_kpi_id linkage in generate-cascade endpoint
@@ -33,12 +33,18 @@ Progress: [###############---------] 61%
 - Enhanced `src/app/api/vision-kpis/route.ts` with validation and cache init
 - Added `useCreateKpi` hook with `CreateKpiInput` type
 
+**05-03 Deliverables:**
+- Incremental mode support in generate-cascade endpoint (mode='incremental')
+- useGenerateCascade mutation hook with incremental default
+- KPI deduplication by title+level matching
+- Skipped counts in response for incremental updates
+
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 14
+- Total plans completed: 15
 - Average duration: ~7 minutes per plan
-- Total execution time: ~94 minutes
+- Total execution time: ~102 minutes
 
 **By Phase:**
 
@@ -48,7 +54,7 @@ Progress: [###############---------] 61%
 | 02-progress-calculation | 4 | 18m | 4m | COMPLETE |
 | 03-tree-fetching-api | 2 | 8m | 4m | COMPLETE |
 | 04-frontend-state | 4 | 9m | 2m | COMPLETE |
-| 05-cascade-generation | 2 | 13m | 6m | IN PROGRESS |
+| 05-cascade-generation | 3 | 21m | 7m | COMPLETE |
 
 *Updated after each plan completion*
 
@@ -92,12 +98,17 @@ Recent decisions affecting current work:
 - [05-02]: Vision ownership check for single KPI creation only
 - [05-02]: Parent KPI must belong to same vision
 - [05-02]: Progress cache initialized with status 'not_started' and progress 0
+- [05-03]: Default mode is incremental for safety (preserves user data)
+- [05-03]: Title matching uses case-insensitive ilike for deduplication
+- [05-03]: Skipped KPI IDs are still looked up for child linking
+- [05-03]: Known limitation: title changes cause duplicates (hash-based matching for future)
 
 ### Pending Todos
 
 - [ ] Apply migration 0003_add_kpi_weight.sql
-- [ ] Execute remaining Phase 5 plan (05-03)
 - [ ] Execute Phase 6 plans (Full Tree UI)
+- [ ] Execute Phase 7 plans (Sync and Polish)
+- [ ] Execute Phase 8 plans (Integration and Testing)
 
 ### Blockers/Concerns
 
@@ -105,19 +116,23 @@ None currently.
 
 ## Session Continuity
 
-Last session: 2026-01-24T20:35:30Z
-Stopped at: Completed 05-01-PLAN.md
-Resume action: Continue with 05-03-PLAN.md
+Last session: 2026-01-24T21:08:00Z
+Stopped at: Completed 05-03-PLAN.md (Phase 5 complete)
+Resume action: Start Phase 6 (06-full-tree-ui)
 
 **Commits this session:**
 - `ccc4f86` feat(05-01): add hierarchical parent_kpi_id linkage to cascade generation
 - `a95724a` feat(05-01): initialize progress cache for newly created KPIs
 - `5a482d4` feat(05-02): enhance POST /api/vision-kpis with validation and cache init
 - `c4e7d17` feat(05-02): add useCreateKpi mutation hook
+- `ac1a89f` feat(05-03): add incremental mode to generate-cascade endpoint
+- `f59627f` feat(05-03): add useGenerateCascade mutation hook
 
 **Files created this session:**
 - `.planning/phases/05-cascade-generation/05-01-SUMMARY.md`
 - `.planning/phases/05-cascade-generation/05-02-SUMMARY.md`
+- `.planning/phases/05-cascade-generation/05-03-SUMMARY.md`
+- `src/lib/hooks/use-cascade-generation.ts`
 
 **Files modified this session:**
 - `src/app/api/visions/[id]/generate-cascade/route.ts`
