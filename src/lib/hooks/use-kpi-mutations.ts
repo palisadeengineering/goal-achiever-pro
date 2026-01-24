@@ -173,11 +173,11 @@ async function postKpiLog(request: LogKpiRequest): Promise<LogKpiResponse> {
  * Posts a progress override to the server
  */
 async function postProgressOverride(request: OverrideProgressRequest): Promise<unknown> {
-  const response = await fetch(`/api/kpi-progress/${request.kpiId}/override`, {
+  const response = await fetch(`/api/vision-kpis/${request.kpiId}/override`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      progress: request.progress,
+      progressPercentage: request.progress,
       reason: request.reason,
     }),
   });
