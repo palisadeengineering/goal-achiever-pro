@@ -83,11 +83,11 @@ Plans:
   2. Failed updates roll back to previous state with clear error message
   3. Hierarchical query keys enable targeted cache invalidation without refetching entire tree
   4. Loading states clearly indicate when progress is being recalculated
-**Plans**: TBD
+**Plans**: 2 plans in 2 waves
 
 Plans:
-- [ ] 04-01: React Query hooks with optimistic update pattern
-- [ ] 04-02: Hierarchical query key structure and cache invalidation
+- [ ] 04-01-PLAN.md - React Query hooks (useGoalTree, useLogKpi) with optimistic updates (Wave 1)
+- [ ] 04-02-PLAN.md - Hierarchical query key factory and targeted cache invalidation (Wave 2)
 
 ### Phase 5: Cascade Generation
 **Goal**: Creating or editing a Vision triggers AI generation of aligned KPIs that cascade to daily actions
