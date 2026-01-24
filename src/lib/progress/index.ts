@@ -39,3 +39,12 @@ export {
   rollupProgressToAncestors,
   recalculateParentChain,
 } from './ancestor-rollup';
+
+// Tree building utilities
+export {
+  buildKpiTree,
+  countTreeNodes,
+  getLatestCalculationTime,
+  type KpiTreeNode,
+  type FlatKpiWithProgress,
+} from './tree';
