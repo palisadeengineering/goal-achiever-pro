@@ -941,6 +941,8 @@ export const visionKpis = pgTable('vision_kpis', {
   numericTarget: decimal('numeric_target', { precision: 15, scale: 2 }),
   // Hierarchical organization - self-reference with FK constraint
   parentKpiId: uuid('parent_kpi_id').references((): ReturnType<typeof uuid> => visionKpis.id, { onDelete: 'set null' }),
+  // Weight for weighted progress calculation (PROG-03)
+  weight: decimal('weight', { precision: 5, scale: 2 }).default('1'),
   quarter: integer('quarter'), // 1-4 for quarterly
   month: integer('month'), // 1-12 for monthly
   // Additional metadata from AI generation
