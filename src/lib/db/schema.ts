@@ -996,6 +996,36 @@ export const kpiStreaks = pgTable('kpi_streaks', {
 });
 
 // =============================================
+// KPI PROGRESS CACHE (Pre-computed Aggregates)
+// =============================================
+export const kpiProgressCache = pgTable('kpi_progress_cache', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  kpiId: uuid('kpi_id').notNull().references(() => visionKpis.id, { onDelete: 'cascade' }).unique(),
+  // Progress values
+  currentValue: decimal('current_value', { precision: 15, scale: 2 }).default('0'),
+  targetValue: decimal('target_value', { precision: 15, scale: 2 }),
+  progressPercentage: decimal('progress_percentage', { precision: 5, scale: 2 }).default('0'),
+  // Hierarchy aggregates
+  childCount: integer('child_count').default(0),
+  completedChildCount: integer('completed_child_count').default(0),
+  // Weighted calculation support
+  weightedProgress: decimal('weighted_progress', { precision: 5, scale: 2 }),
+  totalWeight: decimal('total_weight', { precision: 5, scale: 2 }).default('1'),
+  // Status derived from progress
+  status: text('status').default('not_started'), // 'not_started', 'in_progress', 'at_risk', 'on_track', 'completed'
+  // Metadata
+  lastCalculatedAt: timestamp('last_calculated_at').defaultNow(),
+  calculationMethod: text('calculation_method').default('auto'), // 'auto', 'manual_override'
+  manualOverrideReason: text('manual_override_reason'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  kpiIdx: uniqueIndex('kpi_progress_cache_kpi_idx').on(table.kpiId),
+  statusIdx: index('kpi_progress_cache_status_idx').on(table.status),
+  lastCalculatedIdx: index('kpi_progress_cache_last_calculated_idx').on(table.lastCalculatedAt),
+}));
+
+// =============================================
 // MILESTONE KPIs (Link Milestones to KPIs)
 // =============================================
 export const milestoneKpis = pgTable('milestone_kpis', {
@@ -1099,6 +1129,12 @@ export const visionKpisRelations = relations(visionKpis, ({ one, many }) => ({
   childKpis: many(visionKpis, { relationName: 'parentChild' }),
   logs: many(kpiLogs),
   streak: one(kpiStreaks),
+  progressCache: one(kpiProgressCache),
+}));
+
+// KPI Progress Cache Relations
+export const kpiProgressCacheRelations = relations(kpiProgressCache, ({ one }) => ({
+  kpi: one(visionKpis, { fields: [kpiProgressCache.kpiId], references: [visionKpis.id] }),
 }));
 
 export const kpiLogsRelations = relations(kpiLogs, ({ one }) => ({
