@@ -339,10 +339,14 @@ Respond ONLY with valid JSON in this exact format:
       dailyKpis: 0,
     };
 
-    // First, save Daily KPIs (these are global habits for the vision)
+    // Maps to track KPI IDs for hierarchical linking
+    const quarterlyKpiMap: Record<number, string> = {}; // quarter -> kpi_id
+    const monthlyKpiMap: Record<string, string> = {}; // "quarter-month" -> kpi_id
+
+    // First, save Daily KPIs (these are global habits for the vision - standalone, no parent)
     let dailyKpiSortOrder = 0;
     for (const dk of cascadeData.dailyKpis || []) {
-      const { error: dkError } = await supabase
+      const { data: savedDailyKpi, error: dkError } = await supabase
         .from('vision_kpis')
         .insert({
           user_id: userId,
@@ -358,9 +362,11 @@ Respond ONLY with valid JSON in this exact format:
           why_it_matters: dk.whyItMatters,
           sort_order: dailyKpiSortOrder++,
           is_active: true,
-        });
+        })
+        .select('id')
+        .single();
 
-      if (!dkError) {
+      if (!dkError && savedDailyKpi) {
         savedStats.dailyKpis++;
       } else {
         console.error('Error creating daily KPI:', dkError);
@@ -399,9 +405,9 @@ Respond ONLY with valid JSON in this exact format:
       }
       savedStats.powerGoals++;
 
-      // 1b. Create Quarterly KPI for this Power Goal
+      // 1b. Create Quarterly KPI for this Power Goal (root node - no parent)
       if (pg.quarterlyKpi) {
-        const { error: qkError } = await supabase
+        const { data: savedQuarterlyKpi, error: qkError } = await supabase
           .from('vision_kpis')
           .insert({
             user_id: userId,
@@ -416,10 +422,14 @@ Respond ONLY with valid JSON in this exact format:
             why_it_matters: pg.quarterlyKpi.outcome,
             sort_order: pg.quarter,
             is_active: true,
-          });
+          })
+          .select('id')
+          .single();
 
-        if (!qkError) {
+        if (!qkError && savedQuarterlyKpi) {
           savedStats.quarterlyKpis++;
+          // Store quarterly KPI ID for linking monthly KPIs
+          quarterlyKpiMap[pg.quarter] = savedQuarterlyKpi.id;
         } else {
           console.error('Error creating quarterly KPI:', qkError);
         }
@@ -455,14 +465,16 @@ Respond ONLY with valid JSON in this exact format:
         }
         savedStats.monthlyTargets++;
 
-        // 2b. Create Monthly KPI
+        // 2b. Create Monthly KPI (linked to quarterly parent)
         if (mt.monthlyKpi) {
-          const { error: mkError } = await supabase
+          const quarterlyParentId = quarterlyKpiMap[pg.quarter] || null;
+          const { data: savedMonthlyKpi, error: mkError } = await supabase
             .from('vision_kpis')
             .insert({
               user_id: userId,
               vision_id: visionId,
               level: 'monthly',
+              parent_kpi_id: quarterlyParentId,
               month: mt.month,
               quarter: pg.quarter,
               title: mt.monthlyKpi.title,
@@ -472,10 +484,14 @@ Respond ONLY with valid JSON in this exact format:
               tracking_method: 'numeric',
               sort_order: mt.month,
               is_active: true,
-            });
+            })
+            .select('id')
+            .single();
 
-          if (!mkError) {
+          if (!mkError && savedMonthlyKpi) {
             savedStats.monthlyKpis++;
+            // Store monthly KPI ID for linking weekly KPIs
+            monthlyKpiMap[`${pg.quarter}-${mt.month}`] = savedMonthlyKpi.id;
           } else {
             console.error('Error creating monthly KPI:', mkError);
           }
@@ -513,15 +529,17 @@ Respond ONLY with valid JSON in this exact format:
           }
           savedStats.weeklyTargets++;
 
-          // 3b. Create Weekly KPIs
+          // 3b. Create Weekly KPIs (linked to monthly parent)
+          const monthlyParentId = monthlyKpiMap[`${pg.quarter}-${mt.month}`] || null;
           let weeklyKpiSortOrder = 0;
           for (const wk of wt.weeklyKpis || []) {
-            const { error: wkError } = await supabase
+            const { data: savedWeeklyKpi, error: wkError } = await supabase
               .from('vision_kpis')
               .insert({
                 user_id: userId,
                 vision_id: visionId,
                 level: 'weekly',
+                parent_kpi_id: monthlyParentId,
                 quarter: pg.quarter,
                 month: mt.month,
                 title: wk.title,
@@ -533,9 +551,11 @@ Respond ONLY with valid JSON in this exact format:
                 leads_to: wk.leadsTo,
                 sort_order: weeklyKpiSortOrder++,
                 is_active: true,
-              });
+              })
+              .select('id')
+              .single();
 
-            if (!wkError) {
+            if (!wkError && savedWeeklyKpi) {
               savedStats.weeklyKpis++;
             } else {
               console.error('Error creating weekly KPI:', wkError);
