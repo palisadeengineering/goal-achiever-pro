@@ -5,50 +5,35 @@
 See: .planning/PROJECT.md (updated 2026-01-23)
 
 **Core value:** When a user creates a Vision, the entire goal hierarchy cascades automatically - from SMART-based KPIs down to daily actions - and completing any item visibly moves progress up the chain to the dashboard.
-**Current focus:** Phase 3 - Tree Fetching API (Phase 2 verified complete)
+**Current focus:** Phase 3 - Tree Fetching API (Plan 01 complete)
 
 ## Current Position
 
 Phase: 3 of 8 (03-tree-fetching-api)
-Plan: 0 of 2 (not started)
-Status: Ready to plan
-Last activity: 2026-01-24 - Phase 2 verified complete
+Plan: 1 of 2 (in progress)
+Status: In progress
+Last activity: 2026-01-24 - Completed 03-01-PLAN.md
 
-Progress: [#####---------------] 25%
+Progress: [######------------------] 30%
 
-## Phase 2 Progress
+## Phase 3 Progress
 
-| Plan | Schema | Library | Migration | Status |
-|------|--------|---------|-----------|--------|
-| 02-01: Core Progress Library | N/A | OK | OK | COMPLETE |
-| 02-02: Progress API | N/A | OK | N/A | COMPLETE |
-| 02-03: Rollup Integration | N/A | OK | N/A | COMPLETE |
-| 02-04: Manual Override | N/A | OK | N/A | COMPLETE |
+| Plan | API | Library | Status |
+|------|-----|---------|--------|
+| 03-01: Goal Tree API | OK | OK | COMPLETE |
+| 03-02: Subtree Fetching | - | - | NOT STARTED |
 
-**02-01 Deliverables:**
-- `src/lib/progress/types.ts` - Type definitions
-- `src/lib/progress/calculator.ts` - Weighted progress calculation
-- `src/lib/progress/rollup.ts` - Hierarchical rollup logic
-- `drizzle/migrations/0003_add_kpi_weight.sql` - Weight column migration
-
-**02-02 Deliverables:**
-- `src/lib/progress/ancestor-rollup.ts` - Shared ancestor rollup utility
-- `src/app/api/vision-kpis/[id]/progress/route.ts` - Progress cache endpoint (GET/POST/PUT)
-- `src/app/api/progress/formula/route.ts` - Formula transparency endpoint (PROG-05)
-
-**02-03 Deliverables:**
-- `src/lib/progress/index.ts` - Barrel export for clean imports
-- `src/app/api/vision-kpis/[id]/log/route.ts` - Updated with rollup integration
-
-**02-04 Deliverables:**
-- `src/app/api/vision-kpis/[id]/override/route.ts` - Manual override endpoint (PROG-04)
+**03-01 Deliverables:**
+- `src/lib/progress/tree.ts` - KpiTreeNode type, buildKpiTree() function
+- `src/app/api/goal-tree/[visionId]/route.ts` - Full hierarchy fetch endpoint
+- `src/lib/progress/index.ts` - Updated barrel with tree exports
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
-- Average duration: ~10 minutes per plan
-- Total execution time: ~64 minutes
+- Total plans completed: 7
+- Average duration: ~9 minutes per plan
+- Total execution time: ~67 minutes
 
 **By Phase:**
 
@@ -56,6 +41,7 @@ Progress: [#####---------------] 25%
 |-------|-------|-------|----------|--------|
 | 01-schema-foundation | 2 | 45m | 22m | COMPLETE |
 | 02-progress-calculation | 4 | 18m | 4m | COMPLETE |
+| 03-tree-fetching-api | 1 | 3m | 3m | IN PROGRESS |
 
 *Updated after each plan completion*
 
@@ -82,11 +68,14 @@ Recent decisions affecting current work:
 - [02-03]: Rollup call after updateStreak for progress consistency
 - [02-04]: Required reason for manual override audit trail
 - [02-04]: Auto-calculated value transparency on override
+- [03-01]: Map<id, Node> pattern for O(1) tree building
+- [03-01]: Orphaned children treated as root nodes
+- [03-01]: Supabase nested select for LEFT JOIN pattern
 
 ### Pending Todos
 
 - [ ] Apply migration 0003_add_kpi_weight.sql
-- [ ] Begin Phase 3 planning (Dashboard Integration)
+- [ ] Complete Phase 3 Plan 02 (Subtree Fetching)
 
 ### Blockers/Concerns
 
@@ -94,29 +83,19 @@ None currently.
 
 ## Session Continuity
 
-Last session: 2026-01-24T05:41:22Z
-Stopped at: Completed 02-04-PLAN.md
-Resume action: Run `/gsd:plan-phase 3` to plan Phase 3 (Tree Fetching API)
+Last session: 2026-01-24T06:09:29Z
+Stopped at: Completed 03-01-PLAN.md
+Resume action: Run `/gsd:execute-phase` to continue Phase 3 Plan 02
 
 **Commits this session:**
-- `4fe4c2f` feat(02-02): add shared ancestor rollup utility
-- `589a15c` feat(02-02): add progress cache endpoint
-- `0dc2cd0` feat(02-02): add formula transparency endpoint (PROG-05)
-- `8b177ff` feat(02-03): add barrel export for progress library
-- `015efbe` feat(02-03): integrate progress rollup into KPI log endpoint
-- `c3a539a` feat(02-04): add manual override endpoint (PROG-04)
+- `21b0378` feat(03-01): add KPI tree building library
+- `e33f8fa` feat(03-01): add goal tree API endpoint
+- `8e49a2b` feat(03-01): export tree utilities from progress barrel
 
 **Files created this session:**
-- `src/lib/progress/ancestor-rollup.ts`
-- `src/app/api/vision-kpis/[id]/progress/route.ts`
-- `src/app/api/progress/formula/route.ts`
-- `.planning/phases/02-progress-calculation/02-02-SUMMARY.md`
-- `src/lib/progress/index.ts`
-- `.planning/phases/02-progress-calculation/02-03-SUMMARY.md`
-- `src/app/api/vision-kpis/[id]/override/route.ts`
-- `.planning/phases/02-progress-calculation/02-04-SUMMARY.md`
+- `src/lib/progress/tree.ts`
+- `src/app/api/goal-tree/[visionId]/route.ts`
+- `.planning/phases/03-tree-fetching-api/03-01-SUMMARY.md`
 
 **Files modified this session:**
-- `src/lib/db/schema.ts` (AnyPgColumn type fix)
-- `src/lib/progress/calculator.ts` (type assertion fix)
-- `src/app/api/vision-kpis/[id]/log/route.ts` (rollup integration)
+- `src/lib/progress/index.ts` (added tree exports)
