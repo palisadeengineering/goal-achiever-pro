@@ -1414,6 +1414,31 @@ export const betaFeedbackRelations = relations(betaFeedback, ({ one }) => ({
 }));
 
 // =============================================
+// BETA INVITATIONS (Beta Access Control)
+// =============================================
+export const betaInvitations = pgTable('beta_invitations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: text('email').notNull(),
+  inviteToken: text('invite_token').notNull().unique(),
+  invitedByEmail: text('invited_by_email'),
+  status: text('status').default('pending'), // 'pending', 'accepted', 'expired', 'revoked'
+  note: text('note'),
+  acceptedAt: timestamp('accepted_at'),
+  acceptedByUserId: uuid('accepted_by_user_id').references(() => profiles.id, { onDelete: 'set null' }),
+  expiresAt: timestamp('expires_at'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  emailIdx: uniqueIndex('beta_invitations_email_idx').on(table.email),
+  tokenIdx: uniqueIndex('beta_invitations_token_idx').on(table.inviteToken),
+  statusIdx: index('beta_invitations_status_idx').on(table.status),
+}));
+
+export const betaInvitationsRelations = relations(betaInvitations, ({ one }) => ({
+  acceptedByUser: one(profiles, { fields: [betaInvitations.acceptedByUserId], references: [profiles.id] }),
+}));
+
+// =============================================
 // SHARING RELATIONS
 // =============================================
 export const tabPermissionsRelations = relations(tabPermissions, ({ one }) => ({

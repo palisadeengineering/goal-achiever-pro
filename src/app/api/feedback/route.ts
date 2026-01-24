@@ -25,6 +25,10 @@ export async function GET(request: NextRequest) {
     }
 
     const userId = await getUserId(supabase);
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status');
+    const feedbackType = searchParams.get('type');
+    const limit = parseInt(searchParams.get('limit') || '100');
 
     // Check if user is admin to see all feedback, otherwise just their own
     const { data: profile } = await adminClient
@@ -37,12 +41,27 @@ export async function GET(request: NextRequest) {
 
     let query = adminClient
       .from('beta_feedback')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .select(`
+        *,
+        profiles:user_id (
+          email,
+          full_name
+        )
+      `)
+      .order('created_at', { ascending: false })
+      .limit(limit);
 
     // Non-admins can only see their own feedback
     if (!isAdmin) {
       query = query.eq('user_id', userId);
+    }
+
+    // Apply filters
+    if (status) {
+      query = query.eq('status', status);
+    }
+    if (feedbackType) {
+      query = query.eq('feedback_type', feedbackType);
     }
 
     const { data: feedback, error } = await query;
@@ -55,7 +74,25 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ feedback: feedback || [] });
+    // Get counts by status for summary
+    const { data: statusCounts } = await adminClient
+      .from('beta_feedback')
+      .select('status')
+      .then(({ data }) => {
+        const counts: Record<string, number> = {};
+        data?.forEach((item) => {
+          counts[item.status] = (counts[item.status] || 0) + 1;
+        });
+        return { data: counts };
+      });
+
+    return NextResponse.json({
+      feedback: feedback || [],
+      summary: {
+        total: feedback?.length || 0,
+        byStatus: statusCounts || {},
+      }
+    });
   } catch (error) {
     console.error('Get feedback error:', error);
     return NextResponse.json(
@@ -88,6 +125,9 @@ export async function POST(request: NextRequest) {
       currentUrl,
       userAgent,
       screenResolution,
+      screenshot,
+      capturedErrors,
+      errorsCount,
     } = body;
 
     // Validation
@@ -105,19 +145,48 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!description || description.trim().length === 0) {
-      return NextResponse.json(
-        { error: 'Description is required' },
-        { status: 400 }
-      );
-    }
-
     const validTypes = ['bug', 'feature', 'improvement', 'general'];
     if (!validTypes.includes(feedbackType)) {
       return NextResponse.json(
         { error: 'Invalid feedback type' },
         { status: 400 }
       );
+    }
+
+    // Upload screenshot to Supabase Storage if provided
+    let screenshotUrl: string | null = null;
+    if (screenshot && screenshot.startsWith('data:image')) {
+      try {
+        // Convert base64 to buffer
+        const base64Data = screenshot.split(',')[1];
+        const buffer = Buffer.from(base64Data, 'base64');
+        const fileName = `feedback/${userId}/${Date.now()}.png`;
+
+        const { error: uploadError } = await adminClient.storage
+          .from('feedback-screenshots')
+          .upload(fileName, buffer, {
+            contentType: 'image/png',
+            upsert: false,
+          });
+
+        if (!uploadError) {
+          const { data: urlData } = adminClient.storage
+            .from('feedback-screenshots')
+            .getPublicUrl(fileName);
+          screenshotUrl = urlData.publicUrl;
+        } else {
+          console.error('Screenshot upload error:', uploadError);
+        }
+      } catch (uploadErr) {
+        console.error('Failed to upload screenshot:', uploadErr);
+        // Continue without screenshot - don't fail the whole request
+      }
+    }
+
+    // Build full description with captured errors
+    let fullDescription = description?.trim() || '';
+    if (capturedErrors && capturedErrors !== 'No errors captured') {
+      fullDescription += `\n\n---\n**Captured Errors (${errorsCount || 0}):**\n\`\`\`\n${capturedErrors}\n\`\`\``;
     }
 
     // Create feedback entry
@@ -127,11 +196,12 @@ export async function POST(request: NextRequest) {
         user_id: userId,
         feedback_type: feedbackType,
         title: title.trim(),
-        description: description.trim(),
-        priority: priority || 'medium',
+        description: fullDescription,
+        priority: priority || (feedbackType === 'bug' ? 'high' : 'medium'),
         current_url: currentUrl || null,
         user_agent: userAgent || null,
         screen_resolution: screenResolution || null,
+        screenshot_url: screenshotUrl,
         status: 'open',
       })
       .select()

@@ -12,7 +12,7 @@ A comprehensive goal-setting and time-optimization web app built on **Dan Martel
 | Language | TypeScript (strict mode) |
 | UI | React 19, Tailwind CSS 4, shadcn/ui |
 | State | Zustand, TanStack React Query |
-| Database | Supabase (PostgreSQL) |
+| Database | Supabase (PostgreSQL) - Project: `uomrqmsbmuzlyghaocrj` |
 | ORM | Drizzle ORM |
 | AI | OpenAI GPT-4o-mini |
 | Payments | Stripe |

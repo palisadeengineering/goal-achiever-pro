@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,7 +20,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Bug, Lightbulb, MessageSquare, Loader2, CheckCircle2, Sparkles } from 'lucide-react';
+import { Bug, Lightbulb, MessageSquare, Loader2, CheckCircle2, Sparkles, Camera, AlertTriangle } from 'lucide-react';
 
 type FeedbackType = 'bug' | 'feature' | 'improvement' | 'general';
 
@@ -29,6 +29,15 @@ interface FeedbackFormData {
   title: string;
   description: string;
   priority: string;
+}
+
+interface CapturedError {
+  type: 'console' | 'exception' | 'unhandled-rejection' | 'network';
+  message: string;
+  timestamp: Date;
+  source?: string;
+  line?: number;
+  statusCode?: number;
 }
 
 const feedbackTypes = [
@@ -45,11 +54,16 @@ const priorities = [
   { value: 'critical', label: 'Critical - Blocking my work' },
 ];
 
+const MAX_ERRORS = 50;
+
 export function FeedbackButton() {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [screenshot, setScreenshot] = useState<string | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const errorsRef = useRef<CapturedError[]>([]);
 
   const [formData, setFormData] = useState<FeedbackFormData>({
     feedbackType: 'bug',
@@ -58,10 +72,124 @@ export function FeedbackButton() {
     priority: 'medium',
   });
 
+  // Set up error tracking
+  useEffect(() => {
+    const addError = (err: Omit<CapturedError, 'timestamp'>) => {
+      const newError: CapturedError = { ...err, timestamp: new Date() };
+      errorsRef.current = [newError, ...errorsRef.current].slice(0, MAX_ERRORS);
+    };
+
+    // Capture console.error
+    const originalConsoleError = console.error;
+    console.error = (...args: unknown[]) => {
+      const message = args
+        .map((arg) => {
+          if (arg instanceof Error) return `${arg.name}: ${arg.message}`;
+          if (typeof arg === 'object') {
+            try { return JSON.stringify(arg); } catch { return String(arg); }
+          }
+          return String(arg);
+        })
+        .join(' ');
+
+      // Filter out noise
+      if (!message.includes('Hydration') && !message.includes('Warning:')) {
+        addError({ type: 'console', message });
+      }
+      originalConsoleError.apply(console, args);
+    };
+
+    // Capture uncaught exceptions
+    const handleError = (event: ErrorEvent) => {
+      addError({
+        type: 'exception',
+        message: event.message,
+        source: event.filename,
+        line: event.lineno,
+      });
+    };
+
+    // Capture unhandled promise rejections
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      const reason = event.reason;
+      addError({
+        type: 'unhandled-rejection',
+        message: reason instanceof Error ? reason.message : String(reason),
+      });
+    };
+
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+    // Intercept fetch to capture network errors
+    const originalFetch = window.fetch;
+    window.fetch = async (...args) => {
+      try {
+        const response = await originalFetch(...args);
+        if (!response.ok && response.status >= 400) {
+          const url = typeof args[0] === 'string' ? args[0] : args[0] instanceof Request ? args[0].url : String(args[0]);
+          addError({
+            type: 'network',
+            message: `${response.status} ${response.statusText}: ${url}`,
+            statusCode: response.status,
+          });
+        }
+        return response;
+      } catch (err) {
+        const url = typeof args[0] === 'string' ? args[0] : args[0] instanceof Request ? args[0].url : String(args[0]);
+        addError({
+          type: 'network',
+          message: `Network error: ${url} - ${err instanceof Error ? err.message : String(err)}`,
+        });
+        throw err;
+      }
+    };
+
+    return () => {
+      console.error = originalConsoleError;
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      window.fetch = originalFetch;
+    };
+  }, []);
+
+  // Capture screenshot
+  const captureScreenshot = useCallback(async () => {
+    setIsCapturing(true);
+    try {
+      const html2canvas = (await import('html2canvas')).default;
+
+      // Hide dialog temporarily
+      const dialog = document.querySelector('[role="dialog"]');
+      if (dialog) (dialog as HTMLElement).style.display = 'none';
+
+      const canvas = await html2canvas(document.body, {
+        logging: false,
+        useCORS: true,
+        allowTaint: true,
+        scale: 0.75,
+      });
+
+      if (dialog) (dialog as HTMLElement).style.display = '';
+
+      setScreenshot(canvas.toDataURL('image/png', 0.8));
+    } catch (err) {
+      console.error('Failed to capture screenshot:', err);
+    } finally {
+      setIsCapturing(false);
+    }
+  }, []);
+
+  // Capture screenshot when dialog opens
+  useEffect(() => {
+    if (open) {
+      captureScreenshot();
+    }
+  }, [open, captureScreenshot]);
+
   // Reset form when dialog closes
   useEffect(() => {
     if (!open) {
-      // Reset after animation completes
       const timer = setTimeout(() => {
         setFormData({
           feedbackType: 'bug',
@@ -71,6 +199,7 @@ export function FeedbackButton() {
         });
         setIsSuccess(false);
         setError(null);
+        setScreenshot(null);
       }, 300);
       return () => clearTimeout(timer);
     }
@@ -83,6 +212,18 @@ export function FeedbackButton() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const getErrorsSummary = () => {
+    if (errorsRef.current.length === 0) return 'No errors captured';
+    return errorsRef.current
+      .map((err) => {
+        const time = err.timestamp.toLocaleTimeString();
+        const location = err.source ? ` at ${err.source}:${err.line}` : '';
+        const status = err.statusCode ? ` (${err.statusCode})` : '';
+        return `[${time}] [${err.type}]${status} ${err.message}${location}`;
+      })
+      .join('\n');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -91,9 +232,7 @@ export function FeedbackButton() {
     try {
       const response = await fetch('/api/feedback', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           feedbackType: formData.feedbackType,
           title: formData.title,
@@ -102,6 +241,9 @@ export function FeedbackButton() {
           currentUrl: window.location.href,
           userAgent: navigator.userAgent,
           screenResolution: `${window.screen.width}x${window.screen.height}`,
+          screenshot,
+          capturedErrors: getErrorsSummary(),
+          errorsCount: errorsRef.current.length,
         }),
       });
 
@@ -111,8 +253,8 @@ export function FeedbackButton() {
       }
 
       setIsSuccess(true);
+      errorsRef.current = []; // Clear captured errors
 
-      // Close dialog after 2 seconds on success
       setTimeout(() => {
         setOpen(false);
       }, 2000);
@@ -130,15 +272,15 @@ export function FeedbackButton() {
       {/* Floating feedback button */}
       <Button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-50 h-12 w-12 rounded-full shadow-lg hover:shadow-xl transition-shadow"
-        size="icon"
+        className="fixed bottom-6 right-6 z-50 h-12 px-4 rounded-full shadow-lg hover:shadow-xl transition-shadow"
         title="Send Feedback"
       >
-        <MessageSquare className="h-5 w-5" />
+        <MessageSquare className="h-5 w-5 mr-2" />
+        <span className="hidden sm:inline">Feedback</span>
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5" />
@@ -206,9 +348,8 @@ export function FeedbackButton() {
               <div className="space-y-2">
                 <Label htmlFor="description">
                   {formData.feedbackType === 'bug'
-                    ? 'Steps to reproduce'
-                    : 'Description'}{' '}
-                  *
+                    ? 'Steps to reproduce (optional)'
+                    : 'Description (optional)'}
                 </Label>
                 <Textarea
                   id="description"
@@ -219,8 +360,7 @@ export function FeedbackButton() {
                   }
                   value={formData.description}
                   onChange={(e) => updateField('description', e.target.value)}
-                  rows={4}
-                  required
+                  rows={3}
                 />
               </div>
 
@@ -244,10 +384,59 @@ export function FeedbackButton() {
                 </Select>
               </div>
 
+              {/* Screenshot Preview */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Screenshot</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={captureScreenshot}
+                    className="text-xs"
+                  >
+                    <Camera className="h-3 w-3 mr-1" />
+                    Retake
+                  </Button>
+                </div>
+                <div className="border rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-900">
+                  {isCapturing ? (
+                    <div className="flex items-center justify-center h-24 text-muted-foreground">
+                      <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                      Capturing...
+                    </div>
+                  ) : screenshot ? (
+                    <img
+                      src={screenshot}
+                      alt="Screenshot"
+                      className="w-full h-auto max-h-32 object-contain"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-24 text-muted-foreground">
+                      No screenshot
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Captured Errors */}
+              {errorsRef.current.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-amber-500" />
+                    Captured Errors ({errorsRef.current.length})
+                  </Label>
+                  <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-2 max-h-20 overflow-y-auto">
+                    <pre className="text-xs text-red-700 dark:text-red-300 whitespace-pre-wrap font-mono">
+                      {getErrorsSummary()}
+                    </pre>
+                  </div>
+                </div>
+              )}
+
               {/* Context info notice */}
               <p className="text-xs text-muted-foreground">
-                We&apos;ll automatically capture your current page URL and browser info to help us
-                debug issues faster.
+                We automatically capture your current page, browser info, screenshot, and any errors to help debug issues faster.
               </p>
 
               {error && (
@@ -267,7 +456,7 @@ export function FeedbackButton() {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isLoading || !formData.title || !formData.description}
+                  disabled={isLoading || !formData.title}
                 >
                   {isLoading ? (
                     <>

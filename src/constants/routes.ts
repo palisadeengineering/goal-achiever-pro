@@ -99,6 +99,7 @@ export const ROUTES = {
   admin: '/admin',
   adminAIUsage: '/admin/ai-usage',
   adminBetaAccess: '/admin/beta-access',
+  adminFeedback: '/admin/feedback',
 } as const;
 
 // Routes that require authentication
