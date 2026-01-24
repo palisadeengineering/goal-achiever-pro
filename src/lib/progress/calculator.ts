@@ -110,7 +110,7 @@ export function buildProgressFormula(
 
   return {
     resultPercentage: isManualOverride
-      ? options.manualOverride
+      ? options!.manualOverride!
       : calculatedProgress,
     method: isManualOverride ? 'manual_override' : 'auto',
     components,

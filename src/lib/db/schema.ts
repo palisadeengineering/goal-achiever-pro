@@ -13,6 +13,7 @@ import {
   jsonb,
   index,
   uniqueIndex,
+  type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
@@ -940,7 +941,7 @@ export const visionKpis = pgTable('vision_kpis', {
   unit: text('unit'), // e.g., "dollars", "count", "hours"
   numericTarget: decimal('numeric_target', { precision: 15, scale: 2 }),
   // Hierarchical organization - self-reference with FK constraint
-  parentKpiId: uuid('parent_kpi_id').references((): ReturnType<typeof uuid> => visionKpis.id, { onDelete: 'set null' }),
+  parentKpiId: uuid('parent_kpi_id').references((): AnyPgColumn => visionKpis.id, { onDelete: 'set null' }),
   // Weight for weighted progress calculation (PROG-03)
   weight: decimal('weight', { precision: 5, scale: 2 }).default('1'),
   quarter: integer('quarter'), // 1-4 for quarterly
