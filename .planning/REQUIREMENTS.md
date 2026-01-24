@@ -25,11 +25,11 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Cascade Generation
 
-- [ ] **CASC-01**: Creating a vision triggers AI generation of aligned KPIs
-- [ ] **CASC-02**: Each KPI can cascade down to quarterly/monthly/weekly/daily breakdown
-- [ ] **CASC-03**: AI suggests KPI breakdowns based on vision SMART components
-- [ ] **CASC-04**: User can manually create KPIs and link to parents
-- [ ] **CASC-05**: Cascade generation respects existing items (incremental, not destructive)
+- [x] **CASC-01**: Creating a vision triggers AI generation of aligned KPIs
+- [x] **CASC-02**: Each KPI can cascade down to quarterly/monthly/weekly/daily breakdown
+- [x] **CASC-03**: AI suggests KPI breakdowns based on vision SMART components
+- [x] **CASC-04**: User can manually create KPIs and link to parents
+- [x] **CASC-05**: Cascade generation respects existing items (incremental, not destructive)
 
 ### Tree UI & Hierarchy View
 
@@ -117,11 +117,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | API-02 | 3 | Tree Fetching API | Complete |
 | API-03 | 4 | Frontend State | Complete |
 | API-04 | 4 | Frontend State | Complete |
-| CASC-01 | 5 | Cascade Generation | Pending |
-| CASC-02 | 5 | Cascade Generation | Pending |
-| CASC-03 | 5 | Cascade Generation | Pending |
-| CASC-04 | 5 | Cascade Generation | Pending |
-| CASC-05 | 5 | Cascade Generation | Pending |
+| CASC-01 | 5 | Cascade Generation | Complete |
+| CASC-02 | 5 | Cascade Generation | Complete |
+| CASC-03 | 5 | Cascade Generation | Complete |
+| CASC-04 | 5 | Cascade Generation | Complete |
+| CASC-05 | 5 | Cascade Generation | Complete |
 | TREE-01 | 6 | Tree UI | Pending |
 | TREE-02 | 6 | Tree UI | Pending |
 | TREE-03 | 6 | Tree UI | Pending |
@@ -148,4 +148,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-23*
-*Last updated: 2026-01-24 after Phase 4 completion*
+*Last updated: 2026-01-24 after Phase 5 completion*

@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Progress Calculation** - Implement roll-up engine with triggers and weighted calculations
 - [x] **Phase 3: Tree Fetching API** - Build efficient hierarchical query endpoints
 - [x] **Phase 4: Frontend State** - React Query hooks with optimistic updates and cache management
-- [ ] **Phase 5: Cascade Generation** - AI-powered KPI breakdown from Vision to daily items
+- [x] **Phase 5: Cascade Generation** - AI-powered KPI breakdown from Vision to daily items
 - [ ] **Phase 6: Tree UI** - Collapsible hierarchy view with progress indicators
 - [ ] **Phase 7: Today Dashboard** - Daily KPI check-in with cascade-aware context
 - [ ] **Phase 8: Progress Page** - Roll-up visualization and analytics
@@ -105,9 +105,9 @@ Plans:
 **Plans**: 3 plans in 2 waves
 
 Plans:
-- [ ] 05-01-PLAN.md - Fix generate-cascade to link KPIs hierarchically with parent_kpi_id (Wave 1)
-- [ ] 05-02-PLAN.md - Manual KPI creation endpoint and useCreateKpi hook (Wave 1)
-- [ ] 05-03-PLAN.md - Incremental generation mode preserving existing KPIs (Wave 2)
+- [x] 05-01-PLAN.md - Fix generate-cascade to link KPIs hierarchically with parent_kpi_id (Wave 1)
+- [x] 05-02-PLAN.md - Manual KPI creation endpoint and useCreateKpi hook (Wave 1)
+- [x] 05-03-PLAN.md - Incremental generation mode preserving existing KPIs (Wave 2)
 
 ### Phase 6: Tree UI
 **Goal**: Users can navigate the full goal hierarchy with clear visual indicators and efficient interaction
@@ -177,7 +177,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 2. Progress Calculation | 4/4 | Complete | 2026-01-24 |
 | 3. Tree Fetching API | 2/2 | Complete | 2026-01-24 |
 | 4. Frontend State | 4/4 | Complete | 2026-01-24 |
-| 5. Cascade Generation | 0/3 | Not started | - |
+| 5. Cascade Generation | 3/3 | Complete | 2026-01-24 |
 | 6. Tree UI | 0/3 | Not started | - |
 | 7. Today Dashboard | 0/3 | Not started | - |
 | 8. Progress Page | 0/3 | Not started | - |
