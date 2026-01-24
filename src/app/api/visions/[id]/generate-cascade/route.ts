@@ -368,6 +368,8 @@ Respond ONLY with valid JSON in this exact format:
 
       if (!dkError && savedDailyKpi) {
         savedStats.dailyKpis++;
+        // Initialize progress cache for this daily KPI
+        await initializeKpiProgressCache(supabase, savedDailyKpi.id, parseFloat(dk.targetValue) || null);
       } else {
         console.error('Error creating daily KPI:', dkError);
       }
@@ -430,6 +432,8 @@ Respond ONLY with valid JSON in this exact format:
           savedStats.quarterlyKpis++;
           // Store quarterly KPI ID for linking monthly KPIs
           quarterlyKpiMap[pg.quarter] = savedQuarterlyKpi.id;
+          // Initialize progress cache for this quarterly KPI
+          await initializeKpiProgressCache(supabase, savedQuarterlyKpi.id, parseFloat(pg.quarterlyKpi.targetValue) || null);
         } else {
           console.error('Error creating quarterly KPI:', qkError);
         }
@@ -492,6 +496,8 @@ Respond ONLY with valid JSON in this exact format:
             savedStats.monthlyKpis++;
             // Store monthly KPI ID for linking weekly KPIs
             monthlyKpiMap[`${pg.quarter}-${mt.month}`] = savedMonthlyKpi.id;
+            // Initialize progress cache for this monthly KPI
+            await initializeKpiProgressCache(supabase, savedMonthlyKpi.id, parseFloat(mt.monthlyKpi.targetValue) || null);
           } else {
             console.error('Error creating monthly KPI:', mkError);
           }
@@ -557,6 +563,8 @@ Respond ONLY with valid JSON in this exact format:
 
             if (!wkError && savedWeeklyKpi) {
               savedStats.weeklyKpis++;
+              // Initialize progress cache for this weekly KPI
+              await initializeKpiProgressCache(supabase, savedWeeklyKpi.id, parseFloat(wk.targetValue) || null);
             } else {
               console.error('Error creating weekly KPI:', wkError);
             }
@@ -673,4 +681,29 @@ function getActionDate(weekStart: string, dayOfWeek: string): string {
   startDate.setDate(startDate.getDate() + (dayMap[dayOfWeek] || 0));
 
   return startDate.toISOString().split('T')[0];
+}
+
+// Helper function to initialize progress cache for a newly created KPI
+async function initializeKpiProgressCache(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  kpiId: string,
+  numericTarget: number | null
+): Promise<void> {
+  if (!supabase) return;
+
+  await supabase
+    .from('kpi_progress_cache')
+    .upsert({
+      kpi_id: kpiId,
+      current_value: 0,
+      target_value: numericTarget,
+      progress_percentage: 0,
+      child_count: 0,
+      completed_child_count: 0,
+      weighted_progress: 0,
+      total_weight: 1,
+      status: 'not_started',
+      calculation_method: 'auto',
+      last_calculated_at: new Date().toISOString(),
+    }, { onConflict: 'kpi_id' });
 }
