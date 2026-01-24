@@ -9,19 +9,19 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Schema & Data Model
 
-- [ ] **DATA-01**: KPIs have parent_kpi_id column linking to parent KPIs forming hierarchy
-- [ ] **DATA-02**: Hierarchy supports 5 levels: Vision -> Quarterly -> Monthly -> Weekly -> Daily
-- [ ] **DATA-03**: Migration script links existing KPIs to appropriate parents
-- [ ] **DATA-04**: Progress cache table stores pre-computed aggregates for fast reads
+- [x] **DATA-01**: KPIs have parent_kpi_id column linking to parent KPIs forming hierarchy
+- [x] **DATA-02**: Hierarchy supports 5 levels: Vision -> Quarterly -> Monthly -> Weekly -> Daily
+- [x] **DATA-03**: Migration script links existing KPIs to appropriate parents
+- [x] **DATA-04**: Progress cache table stores pre-computed aggregates for fast reads
 
 ### Progress Calculation
 
-- [ ] **PROG-01**: Completing child KPI automatically updates parent progress percentage
-- [ ] **PROG-02**: Progress rolls up entire chain: daily -> weekly -> monthly -> quarterly -> vision
-- [ ] **PROG-03**: User can assign weights to KPIs (higher-weight items contribute more)
-- [ ] **PROG-04**: User can manually override calculated progress with explanation
-- [ ] **PROG-05**: UI shows transparent formula explaining how progress was calculated
-- [ ] **PROG-06**: Database triggers maintain progress cache on write operations
+- [x] **PROG-01**: Completing child KPI automatically updates parent progress percentage
+- [x] **PROG-02**: Progress rolls up entire chain: daily -> weekly -> monthly -> quarterly -> vision
+- [x] **PROG-03**: User can assign weights to KPIs (higher-weight items contribute more)
+- [x] **PROG-04**: User can manually override calculated progress with explanation
+- [x] **PROG-05**: UI shows transparent formula explaining how progress was calculated
+- [x] **PROG-06**: Application-layer triggers maintain progress cache on write operations
 
 ### Cascade Generation
 
@@ -103,16 +103,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Phase Name | Status |
 |-------------|-------|------------|--------|
-| DATA-01 | 1 | Schema Foundation | Pending |
-| DATA-02 | 1 | Schema Foundation | Pending |
-| DATA-03 | 1 | Schema Foundation | Pending |
-| DATA-04 | 1 | Schema Foundation | Pending |
-| PROG-01 | 2 | Progress Calculation | Pending |
-| PROG-02 | 2 | Progress Calculation | Pending |
-| PROG-03 | 2 | Progress Calculation | Pending |
-| PROG-04 | 2 | Progress Calculation | Pending |
-| PROG-05 | 2 | Progress Calculation | Pending |
-| PROG-06 | 2 | Progress Calculation | Pending |
+| DATA-01 | 1 | Schema Foundation | Complete |
+| DATA-02 | 1 | Schema Foundation | Complete |
+| DATA-03 | 1 | Schema Foundation | Complete |
+| DATA-04 | 1 | Schema Foundation | Complete |
+| PROG-01 | 2 | Progress Calculation | Complete |
+| PROG-02 | 2 | Progress Calculation | Complete |
+| PROG-03 | 2 | Progress Calculation | Complete |
+| PROG-04 | 2 | Progress Calculation | Complete |
+| PROG-05 | 2 | Progress Calculation | Complete |
+| PROG-06 | 2 | Progress Calculation | Complete |
 | API-01 | 3 | Tree Fetching API | Pending |
 | API-02 | 3 | Tree Fetching API | Pending |
 | API-03 | 4 | Frontend State | Pending |
@@ -148,4 +148,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-23*
-*Last updated: 2026-01-23 after roadmap creation*
+*Last updated: 2026-01-24 after Phase 2 completion*

@@ -13,7 +13,7 @@ This roadmap transforms Goal Achiever Pro from isolated goal pages into a unifie
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Schema Foundation** - Add parent-child KPI linkage and progress cache table
-- [ ] **Phase 2: Progress Calculation** - Implement roll-up engine with triggers and weighted calculations
+- [x] **Phase 2: Progress Calculation** - Implement roll-up engine with triggers and weighted calculations
 - [ ] **Phase 3: Tree Fetching API** - Build efficient hierarchical query endpoints
 - [ ] **Phase 4: Frontend State** - React Query hooks with optimistic updates and cache management
 - [ ] **Phase 5: Cascade Generation** - AI-powered KPI breakdown from Vision to daily items
@@ -50,12 +50,13 @@ Plans:
   3. User can manually override calculated progress with explanation that persists
   4. UI shows transparent formula explaining exactly how progress percentage was calculated
   5. Progress cache maintained within 100ms of write operations
-**Plans**: 3 plans in 2 waves
+**Plans**: 4 plans in 3 waves
 
 Plans:
-- [ ] 02-01-PLAN.md - Core progress calculation library, types, and weight schema migration (Wave 1)
-- [ ] 02-02-PLAN.md - Progress API endpoints with rollup integration (Wave 2)
-- [ ] 02-03-PLAN.md - Manual override protection and barrel exports (Wave 2)
+- [x] 02-01-PLAN.md - Core progress calculation library, types, and weight schema migration (Wave 1)
+- [x] 02-02-PLAN.md - Progress API endpoints with rollup integration (Wave 2)
+- [x] 02-03-PLAN.md - KPI log integration and barrel exports (Wave 3)
+- [x] 02-04-PLAN.md - Manual override endpoint (Wave 3)
 
 ### Phase 3: Tree Fetching API
 **Goal**: Single API call returns complete nested hierarchy for a vision with pre-computed progress
@@ -171,7 +172,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Schema Foundation | 2/2 | Complete | 2026-01-24 |
-| 2. Progress Calculation | 0/3 | Planned | - |
+| 2. Progress Calculation | 4/4 | Complete | 2026-01-24 |
 | 3. Tree Fetching API | 0/2 | Not started | - |
 | 4. Frontend State | 0/2 | Not started | - |
 | 5. Cascade Generation | 0/3 | Not started | - |
@@ -181,4 +182,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 
 ---
 *Roadmap created: 2026-01-23*
-*Last updated: 2026-01-23*
+*Last updated: 2026-01-24*
