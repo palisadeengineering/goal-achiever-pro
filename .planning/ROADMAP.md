@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Schema Foundation** - Add parent-child KPI linkage and progress cache table
 - [x] **Phase 2: Progress Calculation** - Implement roll-up engine with triggers and weighted calculations
 - [x] **Phase 3: Tree Fetching API** - Build efficient hierarchical query endpoints
-- [ ] **Phase 4: Frontend State** - React Query hooks with optimistic updates and cache management
+- [x] **Phase 4: Frontend State** - React Query hooks with optimistic updates and cache management
 - [ ] **Phase 5: Cascade Generation** - AI-powered KPI breakdown from Vision to daily items
 - [ ] **Phase 6: Tree UI** - Collapsible hierarchy view with progress indicators
 - [ ] **Phase 7: Today Dashboard** - Daily KPI check-in with cascade-aware context
@@ -88,8 +88,8 @@ Plans:
 Plans:
 - [x] 04-01-PLAN.md - React Query hooks (useGoalTree, useLogKpi) with optimistic updates (Wave 1)
 - [x] 04-02-PLAN.md - Hierarchical query key factory and targeted cache invalidation (Wave 2)
-- [ ] 04-03-PLAN.md - [GAP CLOSURE] Fix API field name mismatch in useOverrideProgress (Wave 1)
-- [ ] 04-04-PLAN.md - [GAP CLOSURE] Create minimal KPI tree widget to wire up hooks (Wave 2)
+- [x] 04-03-PLAN.md - [GAP CLOSURE] Fix API field name mismatch in useOverrideProgress (Wave 1)
+- [x] 04-04-PLAN.md - [GAP CLOSURE] Create minimal KPI tree widget to wire up hooks (Wave 2)
 
 ### Phase 5: Cascade Generation
 **Goal**: Creating or editing a Vision triggers AI generation of aligned KPIs that cascade to daily actions
@@ -176,7 +176,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 1. Schema Foundation | 2/2 | Complete | 2026-01-24 |
 | 2. Progress Calculation | 4/4 | Complete | 2026-01-24 |
 | 3. Tree Fetching API | 2/2 | Complete | 2026-01-24 |
-| 4. Frontend State | 2/4 | Gap closure needed | - |
+| 4. Frontend State | 4/4 | Complete | 2026-01-24 |
 | 5. Cascade Generation | 0/3 | Not started | - |
 | 6. Tree UI | 0/3 | Not started | - |
 | 7. Today Dashboard | 0/3 | Not started | - |

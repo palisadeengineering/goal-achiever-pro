@@ -5,13 +5,13 @@
 See: .planning/PROJECT.md (updated 2026-01-23)
 
 **Core value:** When a user creates a Vision, the entire goal hierarchy cascades automatically - from SMART-based KPIs down to daily actions - and completing any item visibly moves progress up the chain to the dashboard.
-**Current focus:** Phase 5 - Dashboard Components (ready to begin)
+**Current focus:** Phase 5 - Cascade Generation (ready to begin)
 
 ## Current Position
 
 Phase: 4 of 8 (04-frontend-state) - COMPLETE
 Plan: 4 of 4 (gap closure complete)
-Status: Phase 4 complete, Phase 5 ready
+Status: Phase 4 verified and complete, Phase 5 ready
 Last activity: 2026-01-24 - Completed 04-04-PLAN.md
 
 Progress: [############------------] 52%
@@ -96,7 +96,7 @@ None currently.
 
 Last session: 2026-01-24T17:11:55Z
 Stopped at: Completed 04-04-PLAN.md (Phase 4 complete)
-Resume action: Execute Phase 5 plans
+Resume action: Run `/gsd:discuss-phase 5` or `/gsd:plan-phase 5` to start Phase 5 (Cascade Generation)
 
 **Commits this session:**
 - `a41e880` feat(04-02): add query key factory for goal tree
