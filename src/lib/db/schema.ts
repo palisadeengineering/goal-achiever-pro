@@ -939,8 +939,8 @@ export const visionKpis = pgTable('vision_kpis', {
   targetValue: text('target_value'), // e.g., "$10,000", "5 per week"
   unit: text('unit'), // e.g., "dollars", "count", "hours"
   numericTarget: decimal('numeric_target', { precision: 15, scale: 2 }),
-  // Hierarchical organization - self-reference handled via relations
-  parentKpiId: uuid('parent_kpi_id'),
+  // Hierarchical organization - self-reference with FK constraint
+  parentKpiId: uuid('parent_kpi_id').references((): ReturnType<typeof uuid> => visionKpis.id, { onDelete: 'set null' }),
   quarter: integer('quarter'), // 1-4 for quarterly
   month: integer('month'), // 1-12 for monthly
   // Additional metadata from AI generation
@@ -960,6 +960,7 @@ export const visionKpis = pgTable('vision_kpis', {
 }, (table) => ({
   userVisionIdx: index('vision_kpis_user_vision_idx').on(table.userId, table.visionId),
   levelIdx: index('vision_kpis_level_idx').on(table.visionId, table.level),
+  parentKpiIdx: index('vision_kpis_parent_kpi_idx').on(table.parentKpiId),
 }));
 
 // =============================================
