@@ -83,11 +83,13 @@ Plans:
   2. Failed updates roll back to previous state with clear error message
   3. Hierarchical query keys enable targeted cache invalidation without refetching entire tree
   4. Loading states clearly indicate when progress is being recalculated
-**Plans**: 2 plans in 2 waves
+**Plans**: 4 plans in 3 waves (2 original + 2 gap closure)
 
 Plans:
-- [ ] 04-01-PLAN.md - React Query hooks (useGoalTree, useLogKpi) with optimistic updates (Wave 1)
-- [ ] 04-02-PLAN.md - Hierarchical query key factory and targeted cache invalidation (Wave 2)
+- [x] 04-01-PLAN.md - React Query hooks (useGoalTree, useLogKpi) with optimistic updates (Wave 1)
+- [x] 04-02-PLAN.md - Hierarchical query key factory and targeted cache invalidation (Wave 2)
+- [ ] 04-03-PLAN.md - [GAP CLOSURE] Fix API field name mismatch in useOverrideProgress (Wave 1)
+- [ ] 04-04-PLAN.md - [GAP CLOSURE] Create minimal KPI tree widget to wire up hooks (Wave 2)
 
 ### Phase 5: Cascade Generation
 **Goal**: Creating or editing a Vision triggers AI generation of aligned KPIs that cascade to daily actions
@@ -174,7 +176,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 1. Schema Foundation | 2/2 | Complete | 2026-01-24 |
 | 2. Progress Calculation | 4/4 | Complete | 2026-01-24 |
 | 3. Tree Fetching API | 2/2 | Complete | 2026-01-24 |
-| 4. Frontend State | 0/2 | Not started | - |
+| 4. Frontend State | 2/4 | Gap closure needed | - |
 | 5. Cascade Generation | 0/3 | Not started | - |
 | 6. Tree UI | 0/3 | Not started | - |
 | 7. Today Dashboard | 0/3 | Not started | - |
