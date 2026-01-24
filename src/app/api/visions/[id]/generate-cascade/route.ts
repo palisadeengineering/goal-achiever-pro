@@ -134,7 +134,42 @@ export async function POST(
 
     // Parse request body for options
     const body = await request.json().catch(() => ({}));
-    const { quarters = [1, 2, 3, 4], goalsPerQuarter = 3 } = body;
+    const { quarters = [1, 2, 3, 4], goalsPerQuarter = 3, mode = 'full' } = body;
+    const isIncremental = mode === 'incremental';
+
+    // In incremental mode, load existing KPIs to avoid duplicates
+    // Uses title+level matching (known limitation: title changes cause duplicates)
+    let existingKpiTitles = new Set<string>();
+    if (isIncremental) {
+      const { data: existingKpis } = await supabase
+        .from('vision_kpis')
+        .select('title, level')
+        .eq('vision_id', visionId)
+        .eq('user_id', userId);
+
+      if (existingKpis) {
+        existingKpiTitles = new Set(existingKpis.map(k => `${k.level}:${k.title.toLowerCase()}`));
+      }
+    }
+
+    // Helper function to check if KPI already exists (by level+title)
+    function kpiExists(level: string, title: string): boolean {
+      if (!isIncremental) return false;
+      return existingKpiTitles.has(`${level}:${title.toLowerCase()}`);
+    }
+
+    // Helper to lookup existing KPI ID for parent linking in incremental mode
+    async function getExistingKpiId(level: string, title: string): Promise<string | null> {
+      if (!supabase) return null;
+      const { data } = await supabase
+        .from('vision_kpis')
+        .select('id')
+        .eq('vision_id', visionId)
+        .eq('level', level)
+        .ilike('title', title)
+        .single();
+      return data?.id || null;
+    }
 
     // Check for Anthropic API key
     if (!process.env.ANTHROPIC_API_KEY) {
@@ -339,6 +374,14 @@ Respond ONLY with valid JSON in this exact format:
       dailyKpis: 0,
     };
 
+    // Track skipped KPIs in incremental mode
+    const skippedStats = {
+      quarterlyKpis: 0,
+      monthlyKpis: 0,
+      weeklyKpis: 0,
+      dailyKpis: 0,
+    };
+
     // Maps to track KPI IDs for hierarchical linking
     const quarterlyKpiMap: Record<number, string> = {}; // quarter -> kpi_id
     const monthlyKpiMap: Record<string, string> = {}; // "quarter-month" -> kpi_id
@@ -346,6 +389,12 @@ Respond ONLY with valid JSON in this exact format:
     // First, save Daily KPIs (these are global habits for the vision - standalone, no parent)
     let dailyKpiSortOrder = 0;
     for (const dk of cascadeData.dailyKpis || []) {
+      // In incremental mode, skip if daily KPI already exists
+      if (kpiExists('daily', dk.title)) {
+        skippedStats.dailyKpis++;
+        continue;
+      }
+
       const { data: savedDailyKpi, error: dkError } = await supabase
         .from('vision_kpis')
         .insert({
@@ -409,33 +458,42 @@ Respond ONLY with valid JSON in this exact format:
 
       // 1b. Create Quarterly KPI for this Power Goal (root node - no parent)
       if (pg.quarterlyKpi) {
-        const { data: savedQuarterlyKpi, error: qkError } = await supabase
-          .from('vision_kpis')
-          .insert({
-            user_id: userId,
-            vision_id: visionId,
-            level: 'quarterly',
-            quarter: pg.quarter,
-            title: pg.quarterlyKpi.title,
-            description: pg.quarterlyKpi.description,
-            target_value: pg.quarterlyKpi.targetValue,
-            unit: pg.quarterlyKpi.unit,
-            tracking_method: 'numeric',
-            why_it_matters: pg.quarterlyKpi.outcome,
-            sort_order: pg.quarter,
-            is_active: true,
-          })
-          .select('id')
-          .single();
-
-        if (!qkError && savedQuarterlyKpi) {
-          savedStats.quarterlyKpis++;
-          // Store quarterly KPI ID for linking monthly KPIs
-          quarterlyKpiMap[pg.quarter] = savedQuarterlyKpi.id;
-          // Initialize progress cache for this quarterly KPI
-          await initializeKpiProgressCache(supabase, savedQuarterlyKpi.id, parseFloat(pg.quarterlyKpi.targetValue) || null);
+        // In incremental mode, skip if quarterly KPI already exists but still track its ID
+        if (kpiExists('quarterly', pg.quarterlyKpi.title)) {
+          const existingId = await getExistingKpiId('quarterly', pg.quarterlyKpi.title);
+          if (existingId) {
+            quarterlyKpiMap[pg.quarter] = existingId;
+          }
+          skippedStats.quarterlyKpis++;
         } else {
-          console.error('Error creating quarterly KPI:', qkError);
+          const { data: savedQuarterlyKpi, error: qkError } = await supabase
+            .from('vision_kpis')
+            .insert({
+              user_id: userId,
+              vision_id: visionId,
+              level: 'quarterly',
+              quarter: pg.quarter,
+              title: pg.quarterlyKpi.title,
+              description: pg.quarterlyKpi.description,
+              target_value: pg.quarterlyKpi.targetValue,
+              unit: pg.quarterlyKpi.unit,
+              tracking_method: 'numeric',
+              why_it_matters: pg.quarterlyKpi.outcome,
+              sort_order: pg.quarter,
+              is_active: true,
+            })
+            .select('id')
+            .single();
+
+          if (!qkError && savedQuarterlyKpi) {
+            savedStats.quarterlyKpis++;
+            // Store quarterly KPI ID for linking monthly KPIs
+            quarterlyKpiMap[pg.quarter] = savedQuarterlyKpi.id;
+            // Initialize progress cache for this quarterly KPI
+            await initializeKpiProgressCache(supabase, savedQuarterlyKpi.id, parseFloat(pg.quarterlyKpi.targetValue) || null);
+          } else {
+            console.error('Error creating quarterly KPI:', qkError);
+          }
         }
       }
 
@@ -472,34 +530,44 @@ Respond ONLY with valid JSON in this exact format:
         // 2b. Create Monthly KPI (linked to quarterly parent)
         if (mt.monthlyKpi) {
           const quarterlyParentId = quarterlyKpiMap[pg.quarter] || null;
-          const { data: savedMonthlyKpi, error: mkError } = await supabase
-            .from('vision_kpis')
-            .insert({
-              user_id: userId,
-              vision_id: visionId,
-              level: 'monthly',
-              parent_kpi_id: quarterlyParentId,
-              month: mt.month,
-              quarter: pg.quarter,
-              title: mt.monthlyKpi.title,
-              description: mt.monthlyKpi.description,
-              target_value: mt.monthlyKpi.targetValue,
-              unit: mt.monthlyKpi.unit,
-              tracking_method: 'numeric',
-              sort_order: mt.month,
-              is_active: true,
-            })
-            .select('id')
-            .single();
 
-          if (!mkError && savedMonthlyKpi) {
-            savedStats.monthlyKpis++;
-            // Store monthly KPI ID for linking weekly KPIs
-            monthlyKpiMap[`${pg.quarter}-${mt.month}`] = savedMonthlyKpi.id;
-            // Initialize progress cache for this monthly KPI
-            await initializeKpiProgressCache(supabase, savedMonthlyKpi.id, parseFloat(mt.monthlyKpi.targetValue) || null);
+          // In incremental mode, skip if monthly KPI already exists but still track its ID
+          if (kpiExists('monthly', mt.monthlyKpi.title)) {
+            const existingId = await getExistingKpiId('monthly', mt.monthlyKpi.title);
+            if (existingId) {
+              monthlyKpiMap[`${pg.quarter}-${mt.month}`] = existingId;
+            }
+            skippedStats.monthlyKpis++;
           } else {
-            console.error('Error creating monthly KPI:', mkError);
+            const { data: savedMonthlyKpi, error: mkError } = await supabase
+              .from('vision_kpis')
+              .insert({
+                user_id: userId,
+                vision_id: visionId,
+                level: 'monthly',
+                parent_kpi_id: quarterlyParentId,
+                month: mt.month,
+                quarter: pg.quarter,
+                title: mt.monthlyKpi.title,
+                description: mt.monthlyKpi.description,
+                target_value: mt.monthlyKpi.targetValue,
+                unit: mt.monthlyKpi.unit,
+                tracking_method: 'numeric',
+                sort_order: mt.month,
+                is_active: true,
+              })
+              .select('id')
+              .single();
+
+            if (!mkError && savedMonthlyKpi) {
+              savedStats.monthlyKpis++;
+              // Store monthly KPI ID for linking weekly KPIs
+              monthlyKpiMap[`${pg.quarter}-${mt.month}`] = savedMonthlyKpi.id;
+              // Initialize progress cache for this monthly KPI
+              await initializeKpiProgressCache(supabase, savedMonthlyKpi.id, parseFloat(mt.monthlyKpi.targetValue) || null);
+            } else {
+              console.error('Error creating monthly KPI:', mkError);
+            }
           }
         }
 
@@ -539,6 +607,12 @@ Respond ONLY with valid JSON in this exact format:
           const monthlyParentId = monthlyKpiMap[`${pg.quarter}-${mt.month}`] || null;
           let weeklyKpiSortOrder = 0;
           for (const wk of wt.weeklyKpis || []) {
+            // In incremental mode, skip if weekly KPI already exists
+            if (kpiExists('weekly', wk.title)) {
+              skippedStats.weeklyKpis++;
+              continue;
+            }
+
             const { data: savedWeeklyKpi, error: wkError } = await supabase
               .from('vision_kpis')
               .insert({
@@ -599,15 +673,22 @@ Respond ONLY with valid JSON in this exact format:
     }
 
     const totalKpis = savedStats.quarterlyKpis + savedStats.monthlyKpis + savedStats.weeklyKpis + savedStats.dailyKpis;
+    const totalSkipped = skippedStats.quarterlyKpis + skippedStats.monthlyKpis + skippedStats.weeklyKpis + skippedStats.dailyKpis;
+
+    const responseMessage = isIncremental
+      ? `Incremental update: Created ${totalKpis} new KPIs, skipped ${totalSkipped} existing. ${savedStats.powerGoals} Power Goals, ${savedStats.monthlyTargets} Monthly Targets, ${savedStats.weeklyTargets} Weekly Targets, ${savedStats.dailyActions} Daily Actions.`
+      : `Created complete plan: ${savedStats.powerGoals} Power Goals, ${totalKpis} KPIs (${savedStats.dailyKpis} Daily, ${savedStats.weeklyKpis} Weekly, ${savedStats.monthlyKpis} Monthly, ${savedStats.quarterlyKpis} Quarterly), ${savedStats.monthlyTargets} Monthly Targets, ${savedStats.weeklyTargets} Weekly Targets, and ${savedStats.dailyActions} Daily Actions`;
 
     return NextResponse.json({
       success: true,
       visionId,
+      mode: isIncremental ? 'incremental' : 'full',
       summary: cascadeData.summary,
       successFormula: cascadeData.successFormula,
       totalEstimatedHours: cascadeData.totalEstimatedHours,
       saved: savedStats,
-      message: `Created complete plan: ${savedStats.powerGoals} Power Goals, ${totalKpis} KPIs (${savedStats.dailyKpis} Daily, ${savedStats.weeklyKpis} Weekly, ${savedStats.monthlyKpis} Monthly, ${savedStats.quarterlyKpis} Quarterly), ${savedStats.monthlyTargets} Monthly Targets, ${savedStats.weeklyTargets} Weekly Targets, and ${savedStats.dailyActions} Daily Actions`,
+      skipped: isIncremental ? skippedStats : undefined,
+      message: responseMessage,
     }, {
       headers: rateLimitResult ? rateLimitHeaders(rateLimitResult) : {},
     });
