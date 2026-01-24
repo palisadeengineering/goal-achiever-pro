@@ -26,3 +26,10 @@ export {
   type CreateKpiInput,
   type CreateKpiResponse,
 } from './use-kpi-mutations';
+
+// Cascade generation mutation hook
+export {
+  useGenerateCascade,
+  type GenerateCascadeInput,
+  type GenerateCascadeResponse,
+} from './use-cascade-generation';
