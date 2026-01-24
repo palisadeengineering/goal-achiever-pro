@@ -8,9 +8,11 @@ export async function GET(
 ) {
   try {
     const { token } = await params;
+    console.log('[Invite API] Validating token:', token);
 
     const supabase = createServiceRoleClient();
     if (!supabase) {
+      console.error('[Invite API] Service role client not configured');
       return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
     }
 
@@ -20,9 +22,17 @@ export async function GET(
       .eq('invite_token', token)
       .single();
 
-    if (error || !invitation) {
+    if (error) {
+      console.error('[Invite API] Database error:', error.message, error.code, error.details);
+      return NextResponse.json({ error: 'Invalid invitation token', debug: error.message }, { status: 404 });
+    }
+
+    if (!invitation) {
+      console.log('[Invite API] No invitation found for token');
       return NextResponse.json({ error: 'Invalid invitation token' }, { status: 404 });
     }
+
+    console.log('[Invite API] Found invitation:', invitation.email, invitation.status);
 
     if (invitation.status === 'accepted') {
       return NextResponse.json({ error: 'Invitation already accepted', status: 'accepted' }, { status: 400 });
