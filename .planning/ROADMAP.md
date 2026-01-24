@@ -113,7 +113,7 @@ Plans:
 **Goal**: Users can navigate the full goal hierarchy with clear visual indicators and efficient interaction
 **Depends on**: Phase 5
 **Requirements**: TREE-01, TREE-02, TREE-03, TREE-04, TREE-05, TREE-06
-**Research flag**: Needs research-phase (tree component library evaluation, accessibility)
+**Research flag**: Complete (custom Radix Collapsible + roving tabindex recommended)
 **Success Criteria** (what must be TRUE):
   1. Tree view shows collapsible nodes that expand/collapse on click
   2. Each node displays progress bar showing completion percentage
@@ -121,12 +121,12 @@ Plans:
   4. Breadcrumb navigation shows path from Vision to currently selected item
   5. Tree limits visible nesting to 2-3 levels with "show more" for deeper items
   6. User can navigate tree using keyboard (Enter/Space to expand, arrows to move)
-**Plans**: TBD
+**Plans**: 3 plans in 2 waves
 
 Plans:
-- [ ] 06-01: Collapsible tree component with progress bars
-- [ ] 06-02: Status indicators and breadcrumb navigation
-- [ ] 06-03: Progressive disclosure and keyboard navigation
+- [ ] 06-01-PLAN.md - Tree context and recursive node component (Wave 1)
+- [ ] 06-02-PLAN.md - Status indicator and breadcrumb components (Wave 1)
+- [ ] 06-03-PLAN.md - Full tree view integration with keyboard navigation (Wave 2)
 
 ### Phase 7: Today Dashboard
 **Goal**: Users see all daily KPIs due today with quick check-in and clear cascade context
