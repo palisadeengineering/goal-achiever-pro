@@ -159,31 +159,56 @@ export function FeedbackButton() {
     try {
       const html2canvas = (await import('html2canvas')).default;
 
-      // Hide dialog temporarily
+      // Hide dialog and overlay temporarily using visibility (preserves layout)
       const dialog = document.querySelector('[role="dialog"]');
-      if (dialog) (dialog as HTMLElement).style.display = 'none';
+      const overlay = document.querySelector('[data-radix-dialog-overlay]');
+
+      const originalDialogVisibility = dialog ? (dialog as HTMLElement).style.visibility : '';
+      const originalOverlayVisibility = overlay ? (overlay as HTMLElement).style.visibility : '';
+
+      if (dialog) (dialog as HTMLElement).style.visibility = 'hidden';
+      if (overlay) (overlay as HTMLElement).style.visibility = 'hidden';
+
+      // Small delay to ensure styles are applied
+      await new Promise(resolve => setTimeout(resolve, 50));
 
       const canvas = await html2canvas(document.body, {
         logging: false,
         useCORS: true,
         allowTaint: true,
         scale: 0.75,
+        ignoreElements: (element) => {
+          // Ignore dialog-related elements
+          return element.getAttribute('role') === 'dialog' ||
+                 element.hasAttribute('data-radix-dialog-overlay');
+        },
       });
 
-      if (dialog) (dialog as HTMLElement).style.display = '';
+      // Restore visibility
+      if (dialog) (dialog as HTMLElement).style.visibility = originalDialogVisibility;
+      if (overlay) (overlay as HTMLElement).style.visibility = originalOverlayVisibility;
 
       setScreenshot(canvas.toDataURL('image/png', 0.8));
     } catch (err) {
       console.error('Failed to capture screenshot:', err);
+      // Make sure dialog is visible even if screenshot fails
+      const dialog = document.querySelector('[role="dialog"]');
+      const overlay = document.querySelector('[data-radix-dialog-overlay]');
+      if (dialog) (dialog as HTMLElement).style.visibility = '';
+      if (overlay) (overlay as HTMLElement).style.visibility = '';
     } finally {
       setIsCapturing(false);
     }
   }, []);
 
-  // Capture screenshot when dialog opens
+  // Capture screenshot when dialog opens (with delay to ensure dialog is rendered)
   useEffect(() => {
     if (open) {
-      captureScreenshot();
+      // Wait for dialog to fully render before capturing
+      const timer = setTimeout(() => {
+        captureScreenshot();
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [open, captureScreenshot]);
 
