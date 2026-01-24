@@ -2,15 +2,8 @@ import { Sidebar } from '@/components/layout/sidebar';
 import { DashboardHeader } from '@/components/layout/dashboard-header';
 import { Providers } from '@/components/providers';
 import { FeedbackButton } from '@/components/features/feedback/feedback-button';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-
-// Beta access: Grant full access to these emails
-const BETA_ACCESS_EMAILS = [
-  'joel@pe-se.com',
-  'shane.chalupa@obnovit.com',
-  'joelheidema@gmail.com',
-];
 
 export default async function DashboardLayout({
   children,
@@ -61,8 +54,20 @@ export default async function DashboardLayout({
     isAdmin = true;
   }
 
-  // Check if user has beta access (full elite tier)
-  const hasBetaAccess = BETA_ACCESS_EMAILS.includes(userProfile.email.toLowerCase());
+  // Check if user has beta access from database
+  let hasBetaAccess = false;
+  const serviceClient = createServiceRoleClient();
+  if (serviceClient && userProfile.email) {
+    const { data: betaInvite } = await serviceClient
+      .from('beta_invitations')
+      .select('id')
+      .ilike('email', userProfile.email)
+      .eq('status', 'accepted')
+      .single();
+
+    hasBetaAccess = !!betaInvite;
+  }
+
   const subscriptionTier = hasBetaAccess ? 'elite' as const : 'free' as const;
 
   return (

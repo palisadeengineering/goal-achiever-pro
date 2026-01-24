@@ -35,6 +35,7 @@ import {
   TrendingUp,
   Share2,
   ChevronDown,
+  UserPlus,
 } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
 import { TAB_TO_ROUTE, TAB_DISPLAY_INFO } from '@/types/sharing';
@@ -86,6 +87,7 @@ const bottomNavItems: NavItem[] = [
 
 const adminNavItems: NavItem[] = [
   { title: 'AI Usage', href: ROUTES.adminAIUsage, icon: Cpu },
+  { title: 'Beta Access', href: ROUTES.adminBetaAccess, icon: UserPlus },
 ];
 
 interface SidebarProps {
