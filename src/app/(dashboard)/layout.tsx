@@ -9,6 +9,7 @@ import { redirect } from 'next/navigation';
 const BETA_ACCESS_EMAILS = [
   'joel@pe-se.com',
   'shane.chalupa@obnovit.com',
+  'joelheidema@gmail.com',
 ];
 
 export default async function DashboardLayout({
