@@ -396,3 +396,83 @@ export function useOverrideProgress(
     reset: mutation.reset,
   };
 }
+
+/**
+ * Input type for creating a new KPI manually
+ */
+export interface CreateKpiInput {
+  visionId: string;
+  title: string;
+  description?: string;
+  level: 'quarterly' | 'monthly' | 'weekly' | 'daily';
+  parentKpiId?: string | null;
+  targetValue?: string;
+  unit?: string;
+  numericTarget?: number;
+  weight?: number;
+  quarter?: number;
+  month?: number;
+}
+
+/**
+ * Response type from POST /api/vision-kpis for single KPI creation
+ */
+export interface CreateKpiResponse {
+  kpis: Array<{
+    id: string;
+    vision_id: string;
+    title: string;
+    level: string;
+    parent_kpi_id: string | null;
+    weight: number;
+    [key: string]: unknown;
+  }>;
+  count: number;
+}
+
+/**
+ * Mutation hook for creating a new KPI manually.
+ * Invalidates goal tree query on success to show new KPI.
+ *
+ * @param visionId - The vision ID to create the KPI under
+ * @returns React Query mutation for creating KPIs
+ *
+ * @example
+ * ```tsx
+ * function AddKpiForm({ visionId }: Props) {
+ *   const { mutate: createKpi, isPending } = useCreateKpi(visionId);
+ *
+ *   const handleSubmit = (data: CreateKpiInput) => {
+ *     createKpi(data);
+ *   };
+ *
+ *   return <Form onSubmit={handleSubmit} disabled={isPending} />;
+ * }
+ * ```
+ */
+export function useCreateKpi(visionId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation<CreateKpiResponse, Error, CreateKpiInput>({
+    mutationFn: async (input: CreateKpiInput) => {
+      const response = await fetch('/api/vision-kpis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to create KPI');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      // Invalidate goal tree to show new KPI immediately
+      if (visionId) {
+        queryClient.invalidateQueries({ queryKey: goalTreeKeys.tree(visionId) });
+      }
+    },
+  });
+}

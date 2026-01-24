@@ -17,9 +17,12 @@ export {
 export {
   useLogKpi,
   useOverrideProgress,
+  useCreateKpi,
   type LogKpiRequest,
   type LogKpiResponse,
   type OverrideProgressRequest,
   type UseLogKpiReturn,
   type UseOverrideProgressReturn,
+  type CreateKpiInput,
+  type CreateKpiResponse,
 } from './use-kpi-mutations';
