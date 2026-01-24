@@ -64,6 +64,40 @@ export async function POST(request: NextRequest) {
     const userId = await getUserId(supabase);
     const body = await request.json();
 
+    // For single KPI creation (non-array body), verify vision belongs to user
+    if (!Array.isArray(body) && body.visionId) {
+      const { data: vision, error: visionError } = await supabase
+        .from('visions')
+        .select('id')
+        .eq('id', body.visionId)
+        .eq('user_id', userId)
+        .single();
+
+      if (visionError || !vision) {
+        return NextResponse.json({ error: 'Vision not found or access denied' }, { status: 404 });
+      }
+    }
+
+    // If parentKpiId provided, verify it exists and belongs to same vision
+    if (!Array.isArray(body) && body.parentKpiId) {
+      const { data: parentKpi, error: parentError } = await supabase
+        .from('vision_kpis')
+        .select('id, vision_id')
+        .eq('id', body.parentKpiId)
+        .single();
+
+      if (parentError || !parentKpi) {
+        return NextResponse.json({ error: 'Parent KPI not found' }, { status: 404 });
+      }
+
+      if (parentKpi.vision_id !== body.visionId) {
+        return NextResponse.json(
+          { error: 'Parent KPI must belong to the same vision' },
+          { status: 400 }
+        );
+      }
+    }
+
     // Support both single KPI and bulk creation
     const kpisToCreate = Array.isArray(body) ? body : [body];
 
@@ -86,6 +120,7 @@ export async function POST(request: NextRequest) {
       time_required: kpi.timeRequired || null,
       why_it_matters: kpi.whyItMatters || null,
       success_formula: kpi.successFormula || null,
+      weight: kpi.weight || 1,
       is_active: true,
       sort_order: kpi.sortOrder ?? index,
     }));
@@ -98,6 +133,51 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Error creating KPIs:', error);
       return NextResponse.json({ error: 'Failed to create KPIs' }, { status: 500 });
+    }
+
+    // Initialize progress cache for each created KPI
+    if (kpis && kpis.length > 0) {
+      const cacheEntries = kpis.map(kpi => ({
+        kpi_id: kpi.id,
+        current_value: 0,
+        target_value: kpi.numeric_target || null,
+        progress_percentage: 0,
+        child_count: 0,
+        completed_child_count: 0,
+        weighted_progress: 0,
+        total_weight: 1,
+        status: 'not_started',
+        calculation_method: 'auto',
+        last_calculated_at: new Date().toISOString(),
+      }));
+
+      await supabase
+        .from('kpi_progress_cache')
+        .upsert(cacheEntries, { onConflict: 'kpi_id' });
+
+      // Update parent child_count if any KPIs have parents
+      const parentsToUpdate = kpis
+        .filter(kpi => kpi.parent_kpi_id)
+        .map(kpi => kpi.parent_kpi_id);
+
+      for (const parentId of new Set(parentsToUpdate)) {
+        const { data: parentCache } = await supabase
+          .from('kpi_progress_cache')
+          .select('child_count')
+          .eq('kpi_id', parentId)
+          .single();
+
+        if (parentCache) {
+          const increment = parentsToUpdate.filter(p => p === parentId).length;
+          await supabase
+            .from('kpi_progress_cache')
+            .update({
+              child_count: (parentCache.child_count || 0) + increment,
+              last_calculated_at: new Date().toISOString(),
+            })
+            .eq('kpi_id', parentId);
+        }
+      }
     }
 
     return NextResponse.json({ kpis, count: kpis?.length || 0 });
