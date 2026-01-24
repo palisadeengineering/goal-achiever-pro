@@ -67,11 +67,11 @@ Plans:
   1. GET /api/goal-tree/{visionId} returns full nested JSON hierarchy in one query
   2. POST /api/kpi-logs/{id}/log updates progress and returns all changed ancestor values
   3. API response includes progress percentage from cache for instant dashboard loads
-**Plans**: TBD
+**Plans**: 2 plans in 1 wave
 
 Plans:
-- [ ] 03-01: Recursive CTE endpoint for goal tree
-- [ ] 03-02: KPI logging endpoint with ancestor progress return
+- [ ] 03-01-PLAN.md - Goal tree API endpoint with nested hierarchy (Wave 1)
+- [ ] 03-02-PLAN.md - Enhanced KPI log response with ancestor progress values (Wave 1)
 
 ### Phase 4: Frontend State
 **Goal**: React Query manages server state with optimistic updates providing instant UI feedback
@@ -173,7 +173,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 |-------|----------------|--------|-----------|
 | 1. Schema Foundation | 2/2 | Complete | 2026-01-24 |
 | 2. Progress Calculation | 4/4 | Complete | 2026-01-24 |
-| 3. Tree Fetching API | 0/2 | Not started | - |
+| 3. Tree Fetching API | 0/2 | Planned | - |
 | 4. Frontend State | 0/2 | Not started | - |
 | 5. Cascade Generation | 0/3 | Not started | - |
 | 6. Tree UI | 0/3 | Not started | - |
