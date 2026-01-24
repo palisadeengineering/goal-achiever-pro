@@ -7,6 +7,11 @@
  * Provides instant UI feedback by optimistically updating the logged KPI's progress,
  * with rollback on error and server reconciliation for accurate ancestor progress.
  *
+ * Enhanced with:
+ * - Centralized query keys for targeted invalidation
+ * - Server response reconciliation (not just invalidation)
+ * - Mutation state helpers (isLoggingKpi)
+ *
  * Usage:
  *   const { mutate: logKpi, isPending, error } = useLogKpi(visionId);
  *   const { mutate: overrideProgress } = useOverrideProgress(visionId);
@@ -15,6 +20,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { KpiTreeNode, AncestorProgressUpdate } from '@/lib/progress';
 import type { GoalTreeResponse } from './use-goal-tree';
+import { goalTreeKeys } from './query-keys';
 
 /**
  * Request type for logging a KPI value or completion
@@ -89,6 +95,58 @@ function updateSingleKpiProgress(
 }
 
 /**
+ * Updates a goal tree with progress rollup data from the server.
+ *
+ * Algorithm:
+ * 1. Create a lookup map from updates array: Map<kpiId, AncestorProgressUpdate>
+ * 2. Deep clone the tree structure using structuredClone()
+ * 3. Call recursive updateNode() on each root node
+ * 4. Return the cloned tree with updated values
+ *
+ * @param response - The current goal tree response from cache
+ * @param updates - Array of ancestor progress updates from server rollup
+ * @returns Updated goal tree response with server-accurate progress values
+ */
+function updateTreeWithRollup(
+  response: GoalTreeResponse,
+  updates: AncestorProgressUpdate[]
+): GoalTreeResponse {
+  if (!updates || updates.length === 0) {
+    return response;
+  }
+
+  // Build lookup map: O(n) where n = updates.length
+  const updateMap = new Map(updates.map(u => [u.kpiId, u]));
+
+  // Deep clone to avoid mutating cache directly
+  const clonedTree = structuredClone(response.tree);
+
+  // Recursively update nodes
+  function updateNode(node: KpiTreeNode): KpiTreeNode {
+    const update = updateMap.get(node.id);
+    if (update) {
+      // Apply progress update from server (uses correct field names from AncestorProgressUpdate)
+      node.progress = update.progressPercentage;
+      node.status = update.status;
+      node.childCount = update.childCount;
+      node.completedChildCount = update.completedChildCount;
+    }
+
+    // Recurse into children
+    if (node.children && node.children.length > 0) {
+      node.children = node.children.map(updateNode);
+    }
+
+    return node;
+  }
+
+  return {
+    ...response,
+    tree: clonedTree.map(updateNode),
+  };
+}
+
+/**
  * Posts a KPI log to the server
  */
 async function postKpiLog(request: LogKpiRequest): Promise<LogKpiResponse> {
@@ -133,26 +191,38 @@ async function postProgressOverride(request: OverrideProgressRequest): Promise<u
 }
 
 /**
+ * Return type for useLogKpi hook with enhanced state helpers
+ */
+export interface UseLogKpiReturn {
+  mutate: (request: LogKpiRequest) => void;
+  mutateAsync: (request: LogKpiRequest) => Promise<LogKpiResponse>;
+  isPending: boolean;
+  isLoggingKpi: boolean; // Semantic alias for isPending
+  error: Error | null;
+  reset: () => void;
+}
+
+/**
  * Hook to log a KPI value or completion with optimistic updates.
  *
  * The optimistic update immediately shows the KPI as complete (100%) or updated,
  * providing instant feedback. The server then returns accurate ancestor progress
- * which is applied via query invalidation.
+ * which is applied directly to the cache (avoiding extra refetch).
  *
  * @param visionId - The vision ID for cache key targeting
  * @param options - Optional callbacks for onSuccess and onError
- * @returns React Query mutation result with optimistic updates
+ * @returns React Query mutation result with optimistic updates and state helpers
  *
  * @example
  * ```tsx
  * function KpiCheckbox({ kpiId, visionId }: Props) {
- *   const { mutate: logKpi, isPending } = useLogKpi(visionId);
+ *   const { mutate: logKpi, isLoggingKpi } = useLogKpi(visionId);
  *
  *   const handleToggle = () => {
  *     logKpi({ kpiId, isCompleted: true });
  *   };
  *
- *   return <Checkbox onChange={handleToggle} disabled={isPending} />;
+ *   return <Checkbox onChange={handleToggle} disabled={isLoggingKpi} />;
  * }
  * ```
  */
@@ -162,25 +232,26 @@ export function useLogKpi(
     onSuccess?: (data: LogKpiResponse) => void;
     onError?: (error: Error) => void;
   }
-) {
+): UseLogKpiReturn {
   const queryClient = useQueryClient();
+  const queryKey = visionId ? goalTreeKeys.tree(visionId) : goalTreeKeys.trees();
 
-  return useMutation<LogKpiResponse, Error, LogKpiRequest, MutationContext>({
+  const mutation = useMutation<LogKpiResponse, Error, LogKpiRequest, MutationContext>({
     mutationFn: postKpiLog,
 
     onMutate: async (variables) => {
       // 1. Cancel outgoing refetches to prevent race conditions
-      await queryClient.cancelQueries({ queryKey: ['goalTree', visionId] });
+      await queryClient.cancelQueries({ queryKey });
 
       // 2. Snapshot previous state for rollback
-      const previousTree = queryClient.getQueryData<GoalTreeResponse>(['goalTree', visionId]);
+      const previousTree = queryClient.getQueryData<GoalTreeResponse>(queryKey);
 
       // 3. Optimistically update ONLY the logged KPI (not ancestors)
       // Ancestors will be updated after server returns accurate rollup
       if (previousTree) {
         const newProgress = variables.isCompleted ? 100 : (variables.value ?? 0);
         queryClient.setQueryData<GoalTreeResponse>(
-          ['goalTree', visionId],
+          queryKey,
           updateSingleKpiProgress(previousTree, variables.kpiId, newProgress)
         );
       }
@@ -192,7 +263,7 @@ export function useLogKpi(
     onError: (err, _variables, context) => {
       // Rollback to snapshot on failure
       if (context?.previousTree) {
-        queryClient.setQueryData(['goalTree', visionId], context.previousTree);
+        queryClient.setQueryData(queryKey, context.previousTree);
       }
       options?.onError?.(err);
     },
@@ -201,12 +272,45 @@ export function useLogKpi(
       options?.onSuccess?.(data);
     },
 
-    onSettled: () => {
-      // Refetch to get accurate ancestor rollup from server
-      // This ensures the tree reflects the server-calculated progress
-      queryClient.invalidateQueries({ queryKey: ['goalTree', visionId] });
+    onSettled: (data, error, _variables, context) => {
+      if (data && !error) {
+        // Update cache with server response (more accurate than optimistic)
+        // This avoids an extra refetch by applying server-calculated values directly
+        queryClient.setQueryData<GoalTreeResponse>(
+          queryKey,
+          (old: GoalTreeResponse | undefined) => {
+            if (!old) return old;
+            // Apply actual server progress values from rollup.updatedKpis
+            return updateTreeWithRollup(old, data.rollup.updatedKpis);
+          }
+        );
+      } else if (error) {
+        // Ensure cache is invalidated if rollback failed or update was problematic
+        queryClient.invalidateQueries({ queryKey });
+      }
     },
   });
+
+  return {
+    mutate: mutation.mutate,
+    mutateAsync: mutation.mutateAsync,
+    isPending: mutation.isPending,
+    isLoggingKpi: mutation.isPending, // Semantic alias
+    error: mutation.error,
+    reset: mutation.reset,
+  };
+}
+
+/**
+ * Return type for useOverrideProgress hook with enhanced state helpers
+ */
+export interface UseOverrideProgressReturn {
+  mutate: (request: OverrideProgressRequest) => void;
+  mutateAsync: (request: OverrideProgressRequest) => Promise<unknown>;
+  isPending: boolean;
+  isOverriding: boolean; // Semantic alias for isPending
+  error: Error | null;
+  reset: () => void;
 }
 
 /**
@@ -217,18 +321,18 @@ export function useLogKpi(
  *
  * @param visionId - The vision ID for cache key targeting
  * @param options - Optional callbacks for onSuccess and onError
- * @returns React Query mutation result with optimistic updates
+ * @returns React Query mutation result with optimistic updates and state helpers
  *
  * @example
  * ```tsx
  * function ProgressSlider({ kpiId, visionId }: Props) {
- *   const { mutate: override, isPending } = useOverrideProgress(visionId);
+ *   const { mutate: override, isOverriding } = useOverrideProgress(visionId);
  *
  *   const handleChange = (value: number) => {
  *     override({ kpiId, progress: value, reason: 'Manual adjustment' });
  *   };
  *
- *   return <Slider onChange={handleChange} disabled={isPending} />;
+ *   return <Slider onChange={handleChange} disabled={isOverriding} />;
  * }
  * ```
  */
@@ -238,23 +342,24 @@ export function useOverrideProgress(
     onSuccess?: (data: unknown) => void;
     onError?: (error: Error) => void;
   }
-) {
+): UseOverrideProgressReturn {
   const queryClient = useQueryClient();
+  const queryKey = visionId ? goalTreeKeys.tree(visionId) : goalTreeKeys.trees();
 
-  return useMutation<unknown, Error, OverrideProgressRequest, MutationContext>({
+  const mutation = useMutation<unknown, Error, OverrideProgressRequest, MutationContext>({
     mutationFn: postProgressOverride,
 
     onMutate: async (variables) => {
       // 1. Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['goalTree', visionId] });
+      await queryClient.cancelQueries({ queryKey });
 
       // 2. Snapshot previous state for rollback
-      const previousTree = queryClient.getQueryData<GoalTreeResponse>(['goalTree', visionId]);
+      const previousTree = queryClient.getQueryData<GoalTreeResponse>(queryKey);
 
       // 3. Optimistically update the KPI with the new progress value
       if (previousTree) {
         queryClient.setQueryData<GoalTreeResponse>(
-          ['goalTree', visionId],
+          queryKey,
           updateSingleKpiProgress(previousTree, variables.kpiId, variables.progress)
         );
       }
@@ -266,7 +371,7 @@ export function useOverrideProgress(
     onError: (err, _variables, context) => {
       // Rollback to snapshot on failure
       if (context?.previousTree) {
-        queryClient.setQueryData(['goalTree', visionId], context.previousTree);
+        queryClient.setQueryData(queryKey, context.previousTree);
       }
       options?.onError?.(err);
     },
@@ -275,9 +380,19 @@ export function useOverrideProgress(
       options?.onSuccess?.(data);
     },
 
-    onSettled: () => {
-      // Refetch to get accurate ancestor rollup from server
-      queryClient.invalidateQueries({ queryKey: ['goalTree', visionId] });
+    onSettled: (data, error) => {
+      // For overrides, always invalidate to get accurate tree state
+      // (Override response may not include full rollup data)
+      queryClient.invalidateQueries({ queryKey });
     },
   });
+
+  return {
+    mutate: mutation.mutate,
+    mutateAsync: mutation.mutateAsync,
+    isPending: mutation.isPending,
+    isOverriding: mutation.isPending, // Semantic alias
+    error: mutation.error,
+    reset: mutation.reset,
+  };
 }
