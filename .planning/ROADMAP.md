@@ -33,11 +33,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Hierarchy query returns 5 levels: Vision -> Quarterly -> Monthly -> Weekly -> Daily
   3. Existing KPIs are migrated to appropriate parent relationships without data loss
   4. Progress cache table stores pre-computed aggregates and returns data within 50ms
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 01-01: Add parent_kpi_id column and hierarchy support
-- [ ] 01-02: Create progress cache table and migration script
+- [ ] 01-01-PLAN.md - Add FK constraint and index to parent_kpi_id column
+- [ ] 01-02-PLAN.md - Create progress cache table and data migration script
 
 ### Phase 2: Progress Calculation
 **Goal**: Completing any KPI automatically updates all ancestor progress percentages with transparent weighted calculations
@@ -170,7 +170,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Schema Foundation | 0/2 | Not started | - |
+| 1. Schema Foundation | 0/2 | Planned | - |
 | 2. Progress Calculation | 0/3 | Not started | - |
 | 3. Tree Fetching API | 0/2 | Not started | - |
 | 4. Frontend State | 0/2 | Not started | - |
