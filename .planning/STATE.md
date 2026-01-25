@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-23)
 
 **Core value:** When a user creates a Vision, the entire goal hierarchy cascades automatically - from SMART-based KPIs down to daily actions - and completing any item visibly moves progress up the chain to the dashboard.
-**Current focus:** Phase 6 - Tree UI (Plan 2 of 4 complete)
+**Current focus:** Phase 6 - Tree UI (Plan 3 code complete, human verification pending)
 
 ## Current Position
 
 Phase: 6 of 8 (06-tree-ui)
-Plan: 2 of 4 complete
-Status: In progress
-Last activity: 2026-01-25 - Completed 06-02-PLAN.md
+Plan: 3 of 4 (code complete, awaiting human verification)
+Status: HUMAN VERIFICATION CHECKPOINT
+Last activity: 2026-01-24 - 06-03 code complete, testing in progress
 
-Progress: [##################------] 75%
+Progress: [####################----] 85%
 
 ## Phase 6 Progress
 
@@ -22,8 +22,8 @@ Progress: [##################------] 75%
 |------|---------|------|------|----------|--------|
 | 06-01: Tree Context & Node | OK | OK | - | - | COMPLETE |
 | 06-02: Status & Breadcrumb | - | - | OK | - | COMPLETE |
-| 06-03: Keyboard Navigation | - | - | - | - | PENDING |
-| 06-04: Status Indicators | - | - | - | - | PENDING |
+| 06-03: Main GoalTreeView | - | - | OK | OK | CODE COMPLETE - VERIFYING |
+| 06-04: Polish & Edge Cases | - | - | - | - | PENDING |
 
 **06-01 Deliverables:**
 - GoalTreeProvider context for tree state management
@@ -38,6 +38,14 @@ Progress: [##################------] 75%
 - statusConfig export for status configuration reuse
 - GoalTreeBreadcrumb navigation component
 - deriveBreadcrumbPath utility function
+
+**06-03 Deliverables (code complete):**
+- GoalTreeView main component with full hierarchy
+- GoalTreeNode enhanced with status indicator and keyboard support
+- Replaced KpiTreeWidget with GoalTreeView on Vision detail page
+- Keyboard navigation (Arrow Up/Down, Enter/Space, Home/End)
+- Progressive disclosure (shows first 10 children, "Show more" for rest)
+- Breadcrumb navigation from Vision to selected node
 
 ## Performance Metrics
 
@@ -112,31 +120,55 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-- [ ] Apply migration 0003_add_kpi_weight.sql
-- [ ] Execute Phase 6 remaining plans (06-03 through 06-04)
+- [ ] **BLOCKER**: Run `npx drizzle-kit push --force` to add missing `weight` column to `vision_kpis` table
+- [ ] Complete human verification for 06-03 (KPIs tree view testing)
+- [ ] Execute Phase 6 Plan 04 (Polish & Edge Cases)
 - [ ] Execute Phase 7 plans (Sync and Polish)
 - [ ] Execute Phase 8 plans (Integration and Testing)
 
 ### Blockers/Concerns
 
-None currently.
+**ACTIVE BLOCKER: Database schema out of sync**
+- Error: `column vision_kpis.weight does not exist`
+- Fix: Run `npx drizzle-kit push --force` OR manually add column in Supabase dashboard
+- Impact: KPIs tree view API returns 500 errors
+
+**User reported issue: Daily Actions not generating**
+- Need to verify after database fix
+- Check Plan tab after cascade generation completes
 
 ## Session Continuity
 
-Last session: 2026-01-25T01:27:00Z
-Stopped at: Completed 06-02-PLAN.md
-Resume action: Execute 06-03-PLAN.md (Keyboard Navigation)
+Last session: 2026-01-24
+Stopped at: Human verification checkpoint for 06-03
+Resume action:
+1. Fix database schema (add weight column)
+2. Test KPIs tree view at http://localhost:3000/vision/{id} > KPIs tab
+3. Verify checklist:
+   - [ ] Nodes expand/collapse on chevron click
+   - [ ] Progress bars show on each node
+   - [ ] Status indicators (on-track/at-risk/behind)
+   - [ ] Breadcrumb navigation works
+   - [ ] Keyboard navigation (Arrow keys, Enter/Space, Home/End)
+   - [ ] Leaf node checkboxes mark complete
 
-**Commits this session:**
-- `e41d1aa` chore(06-02): install shadcn breadcrumb component
-- `dc2c655` feat(06-02): create accessible StatusIndicator component
-- `b9f8393` feat(06-02): create GoalTreeBreadcrumb navigation component
+**Environment setup required:**
+Copy these to `.env` (not in git):
+```
+DATABASE_URL=postgresql://postgres.uomrqmsbmuzlyghaocrj:YOUR_PASSWORD@aws-0-us-west-2.pooler.supabase.com:6543/postgres
+DEMO_MODE_ENABLED=true
+NEXT_PUBLIC_SUPABASE_URL=https://uomrqmsbmuzlyghaocrj.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+ANTHROPIC_API_KEY=your_anthropic_key
+```
 
-**Files created this session:**
-- `.planning/phases/06-tree-ui/06-02-SUMMARY.md`
-- `src/components/ui/breadcrumb.tsx`
-- `src/components/features/kpi/status-indicator.tsx`
-- `src/components/features/kpi/goal-tree-breadcrumb.tsx`
+**Recent commits (06-03):**
+- `3087e2c` feat(06-03): replace KpiTreeWidget with GoalTreeView on Vision page
+- `3792156` feat(06-03): create GoalTreeView main component
+- `38cfaa6` feat(06-03): enhance GoalTreeNode with status indicator and keyboard support
 
-**Files modified this session:**
-- `.planning/STATE.md`
+**Files created/modified in 06-03:**
+- `src/components/features/kpi/goal-tree-view.tsx` (new)
+- `src/components/features/kpi/goal-tree-node.tsx` (enhanced)
+- `src/app/(dashboard)/vision/[id]/page.tsx` (updated import)
