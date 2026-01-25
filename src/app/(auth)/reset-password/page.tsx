@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -20,14 +20,22 @@ export default function ResetPasswordPage() {
   const [isValidSession, setIsValidSession] = useState<boolean | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
+  // Use refs to track state without triggering re-renders or stale closures
+  const isInitializedRef = useRef(false);
+  const isValidSessionRef = useRef<boolean | null>(null);
+
   const supabase = createClient();
 
   const checkAndSetSession = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
+      isValidSessionRef.current = true;
+      isInitializedRef.current = true;
       setIsValidSession(true);
       setIsInitialized(true);
+      return true;
     }
+    return false;
   }, [supabase.auth]);
 
   useEffect(() => {
@@ -38,15 +46,21 @@ export default function ResetPasswordPage() {
 
         if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
           // User has a valid recovery session
+          isValidSessionRef.current = true;
+          isInitializedRef.current = true;
           setIsValidSession(true);
           setIsInitialized(true);
         } else if (event === 'INITIAL_SESSION') {
           // Check if there's already a valid session
           if (session) {
+            isValidSessionRef.current = true;
             setIsValidSession(true);
           }
+          isInitializedRef.current = true;
           setIsInitialized(true);
         } else if (event === 'SIGNED_OUT') {
+          isValidSessionRef.current = false;
+          isInitializedRef.current = true;
           setIsValidSession(false);
           setIsInitialized(true);
         }
@@ -57,15 +71,16 @@ export default function ResetPasswordPage() {
     checkAndSetSession();
 
     // Set a timeout to show error if no session after 5 seconds
-    const timeout = setTimeout(() => {
-      if (!isInitialized) {
-        setIsInitialized(true);
+    const timeout = setTimeout(async () => {
+      // Use refs to get current values without stale closure issues
+      if (!isInitializedRef.current) {
         // Final session check before giving up
-        checkAndSetSession().then(() => {
-          if (!isValidSession) {
-            setIsValidSession(false);
-          }
-        });
+        const hasSession = await checkAndSetSession();
+        if (!hasSession && !isValidSessionRef.current) {
+          isInitializedRef.current = true;
+          setIsInitialized(true);
+          setIsValidSession(false);
+        }
       }
     }, 5000);
 
@@ -73,7 +88,7 @@ export default function ResetPasswordPage() {
       subscription.unsubscribe();
       clearTimeout(timeout);
     };
-  }, [supabase.auth, checkAndSetSession, isInitialized, isValidSession]);
+  }, [supabase.auth, checkAndSetSession]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
