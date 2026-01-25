@@ -6,13 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
-import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
 import {
   Send,
   Loader2,
   Check,
-  ChevronRight,
   Sparkles,
   Target,
   RotateCcw,
@@ -21,29 +19,35 @@ import {
 export function MetricsChatPanel() {
   const {
     state,
-    setVision,
     submitVision,
-    submitAnswer,
     submitAllAnswers,
     approveSection,
-    set300Percent,
     reset,
+    dispatch,
   } = useMetricsChat();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [inputValue, setInputValue] = useState('');
+  const [formAnswers, setFormAnswers] = useState<Record<string, string>>({});
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [state.messages]);
 
-  // Get current question if in asking_questions state
-  const currentQuestion = state.flowState === 'asking_questions'
-    ? state.questions[state.currentQuestionIndex]
-    : null;
+  // Initialize form answers when questions load
+  useEffect(() => {
+    if (state.questions.length > 0 && Object.keys(formAnswers).length === 0) {
+      const initialAnswers: Record<string, string> = {};
+      state.questions.forEach(q => {
+        initialAnswers[q.id] = '';
+      });
+      setFormAnswers(initialAnswers);
+    }
+  }, [state.questions, formAnswers]);
 
-  const allQuestionsAnswered = state.answers.length >= state.questions.length;
+  const allQuestionsAnswered = state.questions.length > 0 &&
+    state.questions.every(q => formAnswers[q.id]?.trim());
 
   // Handle vision submission
   const handleVisionSubmit = () => {
@@ -53,38 +57,49 @@ export function MetricsChatPanel() {
     }
   };
 
-  // Handle answer submission
-  const handleAnswerSubmit = () => {
-    if (!currentQuestion || !inputValue.trim()) return;
+  // Handle form submission - submit all answers at once
+  const handleFormSubmit = () => {
+    if (!allQuestionsAnswered) return;
 
-    const answer: MetricAnswer = {
-      questionId: currentQuestion.id,
-      question: currentQuestion.question,
-      answer: currentQuestion.type === 'number' || currentQuestion.type === 'currency' || currentQuestion.type === 'percentage'
-        ? parseFloat(inputValue) || 0
-        : inputValue,
-      type: currentQuestion.type,
-      category: currentQuestion.category,
-      unit: currentQuestion.unit,
-    };
+    // Convert form answers to MetricAnswer array
+    const answers: MetricAnswer[] = state.questions.map(question => ({
+      questionId: question.id,
+      question: question.question,
+      answer: formAnswers[question.id].trim(),
+      type: question.type,
+      category: question.category,
+      unit: question.unit,
+    }));
 
-    submitAnswer(answer);
-    setInputValue('');
+    // Add answers to state
+    answers.forEach(answer => {
+      dispatch({ type: 'ADD_ANSWER', payload: answer });
+    });
 
-    // Move to next question or generate plan
-    if (state.currentQuestionIndex < state.questions.length - 1) {
-      // There's a next question - the context will handle moving to it
-    }
+    // Add a summary message to chat
+    dispatch({
+      type: 'ADD_MESSAGE',
+      payload: {
+        id: crypto.randomUUID(),
+        role: 'user',
+        content: state.questions.map(q =>
+          `${q.question}\n→ ${formAnswers[q.id]}`
+        ).join('\n\n'),
+        timestamp: new Date(),
+        metadata: { type: 'answer' },
+      },
+    });
+
+    // Generate the plan - pass answers directly to avoid race condition
+    submitAllAnswers(answers);
   };
 
-  // Handle key press
+  // Handle key press for vision input
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       if (state.flowState === 'vision_input') {
         handleVisionSubmit();
-      } else if (state.flowState === 'asking_questions' && currentQuestion) {
-        handleAnswerSubmit();
       }
     }
   };
@@ -95,7 +110,7 @@ export function MetricsChatPanel() {
       <div className="flex items-center justify-between px-4 py-3 border-b">
         <div className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-primary" />
-          <h2 className="font-semibold">Goal Planner</h2>
+          <h2 className="font-semibold">Vision Planner</h2>
         </div>
         {state.visionText && (
           <Button
@@ -157,55 +172,57 @@ export function MetricsChatPanel() {
           </div>
         )}
 
-        {/* Question card if asking questions */}
-        {state.flowState === 'asking_questions' && currentQuestion && !state.isLoading && (
+        {/* All questions form - show all at once */}
+        {state.flowState === 'asking_questions' && state.questions.length > 0 && !state.isLoading && state.answers.length === 0 && (
           <Card className="border-primary/20">
-            <CardContent className="pt-4">
-              <div className="flex items-start gap-2 mb-2">
-                <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                  Question {state.currentQuestionIndex + 1} of {state.questions.length}
-                </span>
-                <span className={cn(
-                  'text-xs px-2 py-0.5 rounded',
-                  currentQuestion.category === 'outcome'
-                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                    : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                )}>
-                  {currentQuestion.category === 'outcome' ? 'Outcome' : 'Activity'}
-                </span>
+            <CardContent className="pt-4 space-y-6">
+              <div className="text-sm text-muted-foreground mb-4">
+                Answer these {state.questions.length} questions to help create your plan:
               </div>
-              <p className="font-medium mb-1">{currentQuestion.question}</p>
-              <p className="text-sm text-muted-foreground mb-3">{currentQuestion.context}</p>
-              <div className="flex gap-2">
-                <Input
-                  type={currentQuestion.type === 'currency' || currentQuestion.type === 'number' || currentQuestion.type === 'percentage' ? 'number' : 'text'}
-                  placeholder={currentQuestion.placeholder}
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  className="flex-1"
-                />
-                {currentQuestion.unit && (
-                  <span className="flex items-center text-sm text-muted-foreground">
-                    {currentQuestion.unit}
-                  </span>
-                )}
-                <Button onClick={handleAnswerSubmit} disabled={!inputValue.trim()}>
-                  <ChevronRight className="h-4 w-4" />
+
+              {state.questions.map((question, index) => (
+                <div key={question.id} className="space-y-2">
+                  <div className="flex items-start gap-2">
+                    <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded font-medium">
+                      {index + 1}
+                    </span>
+                    <span className={cn(
+                      'text-xs px-2 py-0.5 rounded',
+                      question.category === 'outcome'
+                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                        : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                    )}>
+                      {question.category === 'outcome' ? 'Outcome' : 'Activity'}
+                    </span>
+                  </div>
+                  <p className="font-medium text-sm">{question.question}</p>
+                  <p className="text-xs text-muted-foreground">{question.context}</p>
+                  <Input
+                    type="text"
+                    placeholder={question.placeholder || 'Type your answer...'}
+                    value={formAnswers[question.id] || ''}
+                    onChange={(e) => setFormAnswers(prev => ({
+                      ...prev,
+                      [question.id]: e.target.value
+                    }))}
+                    className="mt-1"
+                  />
+                </div>
+              ))}
+
+              <div className="pt-4 border-t">
+                <Button
+                  onClick={handleFormSubmit}
+                  disabled={!allQuestionsAnswered}
+                  size="lg"
+                  className="w-full gap-2"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Generate My Plan
                 </Button>
               </div>
             </CardContent>
           </Card>
-        )}
-
-        {/* Generate plan button when all questions answered */}
-        {state.flowState === 'asking_questions' && allQuestionsAnswered && !state.isLoading && (
-          <div className="flex justify-center">
-            <Button onClick={submitAllAnswers} size="lg" className="gap-2">
-              <Sparkles className="h-4 w-4" />
-              Generate My Plan
-            </Button>
-          </div>
         )}
 
         {/* Approval buttons based on flow state */}
@@ -234,77 +251,6 @@ export function MetricsChatPanel() {
               Approve Full Plan
             </Button>
           </div>
-        )}
-
-        {/* 300% Rule section */}
-        {state.flowState === 'affirmation_300' && !state.isLoading && (
-          <Card className="border-primary/20">
-            <CardContent className="pt-4 space-y-6">
-              <div>
-                <h4 className="font-medium mb-3">300% Rule - Rate Your Confidence</h4>
-                <p className="text-sm text-muted-foreground mb-4">
-                  How confident are you in achieving this vision? Rate each on a scale of 0-100.
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between mb-2">
-                    <label className="text-sm font-medium">Clarity</label>
-                    <span className="text-sm text-muted-foreground">{state.threeHundredPercent.clarity}%</span>
-                  </div>
-                  <Slider
-                    value={[state.threeHundredPercent.clarity]}
-                    onValueChange={([value]) => set300Percent({ clarity: value })}
-                    max={100}
-                    step={1}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">How clear is this vision to you?</p>
-                </div>
-
-                <div>
-                  <div className="flex justify-between mb-2">
-                    <label className="text-sm font-medium">Belief</label>
-                    <span className="text-sm text-muted-foreground">{state.threeHundredPercent.belief}%</span>
-                  </div>
-                  <Slider
-                    value={[state.threeHundredPercent.belief]}
-                    onValueChange={([value]) => set300Percent({ belief: value })}
-                    max={100}
-                    step={1}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">How strongly do you believe you can achieve it?</p>
-                </div>
-
-                <div>
-                  <div className="flex justify-between mb-2">
-                    <label className="text-sm font-medium">Consistency</label>
-                    <span className="text-sm text-muted-foreground">{state.threeHundredPercent.consistency}%</span>
-                  </div>
-                  <Slider
-                    value={[state.threeHundredPercent.consistency]}
-                    onValueChange={([value]) => set300Percent({ consistency: value })}
-                    max={100}
-                    step={1}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">How consistently will you work toward it?</p>
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <div className="text-center mb-4">
-                  <span className="text-2xl font-bold text-primary">
-                    {state.threeHundredPercent.clarity + state.threeHundredPercent.belief + state.threeHundredPercent.consistency}%
-                  </span>
-                  <span className="text-sm text-muted-foreground"> / 300%</span>
-                </div>
-                <Button onClick={() => approveSection('complete')} size="lg" className="w-full gap-2">
-                  <Check className="h-4 w-4" />
-                  Complete & Save Plan
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
         )}
 
         {/* Completion message */}

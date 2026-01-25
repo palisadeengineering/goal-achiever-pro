@@ -316,17 +316,23 @@ Respond ONLY with valid JSON in this exact format:
     const plan: GeneratedPlan = JSON.parse(cleanedResponse);
 
     // If visionId is provided, save the plan to the database
+    let saveResult: { saved: number; errors: string[] } = { saved: 0, errors: [] };
     if (visionId) {
       const supabase = await createClient();
       if (supabase) {
-        await savePlanToDatabase(supabase, userId, visionId, plan, currentYear, currentQuarter);
+        saveResult = await savePlanToDatabase(supabase, userId, visionId, plan, currentYear, currentQuarter);
+      } else {
+        saveResult.errors.push('No supabase client available');
       }
+    } else {
+      saveResult.errors.push('No visionId provided');
     }
 
     return NextResponse.json({
       success: true,
       plan,
       visionId: visionId || null,
+      saveResult,
     }, {
       headers: rateLimitResult ? rateLimitHeaders(rateLimitResult) : {},
     });
@@ -371,8 +377,13 @@ async function savePlanToDatabase(
   plan: GeneratedPlan,
   currentYear: number,
   currentQuarter: number
-): Promise<void> {
-  if (!supabase) return;
+): Promise<{ saved: number; errors: string[] }> {
+  const result = { saved: 0, errors: [] as string[] };
+
+  if (!supabase) {
+    result.errors.push('No supabase client');
+    return result;
+  }
 
   // Track KPI IDs for hierarchical linking
   const quarterlyKpiMap: Record<number, string> = {};
@@ -381,7 +392,7 @@ async function savePlanToDatabase(
   // Save daily habits first (no parent)
   let dailyHabitOrder = 0;
   for (const habit of plan.dailyHabits || []) {
-    const { data: savedHabit } = await supabase
+    const { data: savedHabit, error: habitError } = await supabase
       .from('vision_kpis')
       .insert({
         user_id: userId,
@@ -398,7 +409,10 @@ async function savePlanToDatabase(
       .select('id')
       .single();
 
-    if (savedHabit) {
+    if (habitError) {
+      result.errors.push(`Daily habit error: ${habitError.message}`);
+    } else if (savedHabit) {
+      result.saved++;
       await initializeKpiProgressCache(supabase, savedHabit.id, null);
     }
   }
@@ -408,7 +422,7 @@ async function savePlanToDatabase(
     const year = qt.quarter >= currentQuarter ? currentYear : currentYear + 1;
 
     // Save quarterly KPI (root node)
-    const { data: savedQuarterlyKpi } = await supabase
+    const { data: savedQuarterlyKpi, error: quarterlyError } = await supabase
       .from('vision_kpis')
       .insert({
         user_id: userId,
@@ -427,7 +441,10 @@ async function savePlanToDatabase(
       .select('id')
       .single();
 
-    if (savedQuarterlyKpi) {
+    if (quarterlyError) {
+      result.errors.push(`Quarterly KPI error: ${quarterlyError.message}`);
+    } else if (savedQuarterlyKpi) {
+      result.saved++;
       quarterlyKpiMap[qt.quarter] = savedQuarterlyKpi.id;
       await initializeKpiProgressCache(
         supabase,
@@ -440,7 +457,7 @@ async function savePlanToDatabase(
     for (const mt of qt.monthlyTargets || []) {
       const quarterlyParentId = quarterlyKpiMap[qt.quarter] || null;
 
-      const { data: savedMonthlyKpi } = await supabase
+      const { data: savedMonthlyKpi, error: monthlyError } = await supabase
         .from('vision_kpis')
         .insert({
           user_id: userId,
@@ -461,7 +478,10 @@ async function savePlanToDatabase(
         .select('id')
         .single();
 
-      if (savedMonthlyKpi) {
+      if (monthlyError) {
+        result.errors.push(`Monthly KPI error: ${monthlyError.message}`);
+      } else if (savedMonthlyKpi) {
+        result.saved++;
         monthlyKpiMap[`${qt.quarter}-${mt.month}`] = savedMonthlyKpi.id;
         await initializeKpiProgressCache(
           supabase,
@@ -477,7 +497,7 @@ async function savePlanToDatabase(
         // Save weekly KPIs
         let weeklyKpiOrder = 0;
         for (const wk of wt.kpis || []) {
-          const { data: savedWeeklyKpi } = await supabase
+          const { data: savedWeeklyKpi, error: weeklyError } = await supabase
             .from('vision_kpis')
             .insert({
               user_id: userId,
@@ -498,7 +518,10 @@ async function savePlanToDatabase(
             .select('id')
             .single();
 
-          if (savedWeeklyKpi) {
+          if (weeklyError) {
+            result.errors.push(`Weekly KPI error: ${weeklyError.message}`);
+          } else if (savedWeeklyKpi) {
+            result.saved++;
             await initializeKpiProgressCache(
               supabase,
               savedWeeklyKpi.id,
@@ -511,7 +534,7 @@ async function savePlanToDatabase(
   }
 
   // Update vision with SMART summary and affirmation
-  await supabase
+  const { error: updateError } = await supabase
     .from('visions')
     .update({
       specific: plan.smartSummary.specific,
@@ -523,6 +546,12 @@ async function savePlanToDatabase(
     })
     .eq('id', visionId)
     .eq('user_id', userId);
+
+  if (updateError) {
+    result.errors.push(`Vision update error: ${updateError.message}`);
+  }
+
+  return result;
 }
 
 // Helper function to initialize progress cache for a newly created KPI

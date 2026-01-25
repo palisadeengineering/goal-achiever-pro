@@ -31,7 +31,7 @@ export interface ChatMessage {
 export interface MetricAnswer {
   questionId: string;
   question: string;
-  answer: string | number;
+  answer: string; // Natural language input like "$1 million", "AU$500k", "20 hours"
   type: 'number' | 'text' | 'currency' | 'percentage' | 'time';
   category: 'outcome' | 'activity';
   unit?: string;
@@ -275,13 +275,11 @@ interface MetricsChatContextValue {
   // Convenience actions
   setVision: (text: string, id?: string) => void;
   submitVision: (visionText?: string) => Promise<void>;
-  submitAnswer: (answer: MetricAnswer) => void;
-  submitAllAnswers: () => Promise<void>;
+  submitAllAnswers: (answers?: MetricAnswer[]) => Promise<void>;
   approveSection: (section: 'metrics' | 'quarterly' | 'breakdown' | 'complete') => void;
   editNode: (nodeId: string) => void;
   saveNodeEdit: (nodeId: string, updates: Partial<TreeNode>) => void;
   cancelNodeEdit: () => void;
-  set300Percent: (scores: { clarity?: number; belief?: number; consistency?: number }) => void;
   reset: () => void;
 }
 
@@ -364,9 +362,30 @@ export function MetricsChatProvider({ children }: { children: React.ReactNode })
     });
 
     try {
+      // First, create a Vision record in the database
+      const createVisionResponse = await fetch('/api/visions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          title: vision.slice(0, 100), // Use first 100 chars as title
+          description: vision,
+          status: 'draft',
+        }),
+      });
+
+      let visionId: string | undefined = undefined;
+      if (createVisionResponse.ok) {
+        const visionData = await createVisionResponse.json();
+        // API returns { vision: { id: ... } }
+        visionId = visionData.vision?.id || visionData.id;
+        dispatch({ type: 'SET_VISION', payload: { text: vision, id: visionId } });
+      }
+
       const response = await fetch('/api/ai/generate-metric-questions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ vision }),
       });
 
@@ -384,7 +403,7 @@ export function MetricsChatProvider({ children }: { children: React.ReactNode })
         payload: {
           id: crypto.randomUUID(),
           role: 'assistant',
-          content: `Great vision! "${data.visionSummary}"\n\nTo create a realistic plan, I need to understand where you are now. I'll ask you ${data.questions.length} questions about your current metrics.`,
+          content: `Great vision! "${data.visionSummary}"\n\nTo create a realistic plan, I need to understand where you are now. Please answer the ${data.questions.length} questions below:`,
           timestamp: new Date(),
           metadata: { type: 'question' },
         },
@@ -397,24 +416,11 @@ export function MetricsChatProvider({ children }: { children: React.ReactNode })
     }
   }, [state.visionText]);
 
-  // Submit an answer
-  const submitAnswer = useCallback((answer: MetricAnswer) => {
-    dispatch({ type: 'ADD_ANSWER', payload: answer });
-    dispatch({
-      type: 'ADD_MESSAGE',
-      payload: {
-        id: crypto.randomUUID(),
-        role: 'user',
-        content: `${answer.answer}${answer.unit ? ` ${answer.unit}` : ''}`,
-        timestamp: new Date(),
-        metadata: { type: 'answer', questionId: answer.questionId },
-      },
-    });
-  }, []);
-
   // Submit all answers and generate plan
-  const submitAllAnswers = useCallback(async () => {
-    if (state.answers.length < 3) return;
+  // Accepts answers directly to avoid race condition with React state updates
+  const submitAllAnswers = useCallback(async (answersToSubmit?: MetricAnswer[]) => {
+    const answers = answersToSubmit || state.answers;
+    if (answers.length < 3) return;
 
     dispatch({ type: 'SET_LOADING', payload: true });
     dispatch({ type: 'SET_FLOW_STATE', payload: 'generating_metrics' });
@@ -432,9 +438,10 @@ export function MetricsChatProvider({ children }: { children: React.ReactNode })
       const response = await fetch('/api/ai/generate-plan-from-metrics', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           vision: state.visionText,
-          metrics: state.answers,
+          metrics: answers,
           visionId: state.visionId,
         }),
       });
@@ -496,16 +503,19 @@ export function MetricsChatProvider({ children }: { children: React.ReactNode })
         });
         break;
       case 'breakdown':
-        dispatch({ type: 'SET_FLOW_STATE', payload: 'affirmation_300' });
+        // Skip 300% Rule (moved to daily check-ins) - go directly to complete
+        dispatch({ type: 'SET_FLOW_STATE', payload: 'complete' });
         dispatch({
           type: 'ADD_MESSAGE',
           payload: {
             id: crypto.randomUUID(),
             role: 'assistant',
-            content: `Almost done! Here's your suggested affirmation:\n\n"${state.affirmation}"\n\nNow rate your confidence in achieving this vision using the 300% Rule:`,
+            content: `Your vision plan is complete and saved! You can view and track your progress from the Vision page.\n\nYour daily check-ins will include the 300% Rule to track your confidence over time.`,
             timestamp: new Date(),
           },
         });
+        // Clear localStorage on completion
+        localStorage.removeItem(STORAGE_KEY);
         break;
       case 'complete':
         dispatch({ type: 'SET_FLOW_STATE', payload: 'complete' });
@@ -575,13 +585,11 @@ export function MetricsChatProvider({ children }: { children: React.ReactNode })
     dispatch,
     setVision,
     submitVision,
-    submitAnswer,
     submitAllAnswers,
     approveSection,
     editNode,
     saveNodeEdit,
     cancelNodeEdit,
-    set300Percent,
     reset,
   };
 
