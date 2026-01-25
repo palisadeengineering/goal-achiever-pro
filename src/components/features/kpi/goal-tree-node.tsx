@@ -6,8 +6,15 @@
  * Recursive tree node component for displaying KPI hierarchy.
  * Uses Radix Collapsible for accessible expand/collapse behavior
  * and follows WAI-ARIA treeitem pattern.
+ *
+ * Features:
+ * - Status indicator with icon+color (WCAG 1.4.1)
+ * - Progressive disclosure for large child lists
+ * - Keyboard navigation (Enter/Space)
+ * - Leaf node checkboxes for completion
  */
 
+import { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import {
   Collapsible,
@@ -20,6 +27,10 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { KpiTreeNode } from '@/lib/progress';
 import { useGoalTreeContext } from './goal-tree-context';
+import { StatusIndicator } from './status-indicator';
+
+/** Maximum children to show before progressive disclosure */
+const MAX_VISIBLE_CHILDREN = 10;
 
 export interface GoalTreeNodeProps {
   node: KpiTreeNode;
@@ -37,6 +48,7 @@ export interface GoalTreeNodeProps {
  * - aria-expanded on nodes with children
  * - aria-selected for selection state
  * - roving tabindex for keyboard navigation
+ * - Enter/Space to toggle expand or complete leaf
  */
 export function GoalTreeNode({
   node,
@@ -54,6 +66,9 @@ export function GoalTreeNode({
     setSelectedId,
   } = useGoalTreeContext();
 
+  // Progressive disclosure state
+  const [showAll, setShowAll] = useState(false);
+
   // Calculate derived state
   const isExpanded = expandedIds.has(node.id);
   const isFocused = focusedId === node.id;
@@ -63,6 +78,13 @@ export function GoalTreeNode({
 
   // Check if this is a completed leaf node
   const isCompleted = node.status === 'completed' || node.progress >= 100;
+
+  // Progressive disclosure calculations
+  const childCount = node.children?.length || 0;
+  const visibleChildren = showAll
+    ? node.children
+    : node.children?.slice(0, MAX_VISIBLE_CHILDREN);
+  const hiddenCount = childCount - MAX_VISIBLE_CHILDREN;
 
   /**
    * Handle checkbox change for leaf node completion
@@ -92,6 +114,22 @@ export function GoalTreeNode({
     setFocusedId(node.id);
   };
 
+  /**
+   * Handle keyboard events for Enter/Space
+   * Arrow navigation is handled at tree level
+   */
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (hasChildren) {
+        toggleExpanded(node.id);
+      } else if (onLogKpi) {
+        // Toggle leaf node completion
+        onLogKpi(node.id, node.progress < 100);
+      }
+    }
+  };
+
   return (
     <li
       role="treeitem"
@@ -103,6 +141,7 @@ export function GoalTreeNode({
       data-id={node.id}
       tabIndex={isFocused ? 0 : -1}
       onFocus={handleFocus}
+      onKeyDown={handleKeyDown}
       className="outline-none list-none"
     >
       <Collapsible open={isExpanded} onOpenChange={() => hasChildren && toggleExpanded(node.id)}>
@@ -125,6 +164,7 @@ export function GoalTreeNode({
                 size="sm"
                 className="h-6 w-6 p-0 shrink-0"
                 aria-label={isExpanded ? 'Collapse' : 'Expand'}
+                data-slot="button"
               >
                 <ChevronRight
                   className={cn(
@@ -146,6 +186,7 @@ export function GoalTreeNode({
               onCheckedChange={handleCheckboxChange}
               aria-label={`Mark ${node.title} as ${isCompleted ? 'incomplete' : 'complete'}`}
               className="shrink-0"
+              data-slot="checkbox"
             />
           )}
 
@@ -160,6 +201,8 @@ export function GoalTreeNode({
               >
                 {node.title}
               </span>
+              {/* Status indicator - shows on-track/at-risk/behind with icon+color */}
+              <StatusIndicator status={node.status} size="sm" />
             </div>
             {/* Progress bar */}
             <div className="flex items-center gap-2 mt-1">
@@ -175,7 +218,7 @@ export function GoalTreeNode({
           </div>
         </div>
 
-        {/* Children - recursive rendering */}
+        {/* Children - recursive rendering with progressive disclosure */}
         {hasChildren && (
           <CollapsibleContent>
             <ul
@@ -183,16 +226,29 @@ export function GoalTreeNode({
               className="border-l border-border ml-4"
               aria-label={`${node.title} sub-items`}
             >
-              {node.children.map((child, index) => (
+              {visibleChildren?.map((child, index) => (
                 <GoalTreeNode
                   key={child.id}
                   node={child}
                   level={level + 1}
                   posInSet={index + 1}
-                  setSize={node.children.length}
+                  setSize={showAll ? childCount : Math.min(childCount, MAX_VISIBLE_CHILDREN)}
                   onLogKpi={onLogKpi}
                 />
               ))}
+              {/* Progressive disclosure: Show more button */}
+              {!showAll && hiddenCount > 0 && (
+                <li className="py-1 px-2 list-none">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-muted-foreground"
+                    onClick={() => setShowAll(true)}
+                  >
+                    Show {hiddenCount} more...
+                  </Button>
+                </li>
+              )}
             </ul>
           </CollapsibleContent>
         )}
