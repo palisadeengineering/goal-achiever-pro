@@ -55,6 +55,12 @@ export async function getAuthenticatedUser(): Promise<AuthCheck> {
   const { data: { user }, error } = await supabase.auth.getUser();
 
   if (error || !user) {
+    console.error('Auth getUser failed:', {
+      error: error?.message,
+      errorCode: error?.code,
+      hasUser: !!user,
+    });
+
     // In development only, allow demo mode if explicitly enabled
     const isDemoMode = process.env.DEMO_MODE_ENABLED === 'true' && process.env.NODE_ENV !== 'production';
     if (isDemoMode) {
@@ -66,7 +72,7 @@ export async function getAuthenticatedUser(): Promise<AuthCheck> {
     return {
       userId: null,
       isAuthenticated: false,
-      error: 'Authentication required',
+      error: error?.message || 'Authentication required',
       status: 401,
     };
   }

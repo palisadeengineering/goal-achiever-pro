@@ -34,9 +34,11 @@ export async function POST(request: NextRequest) {
     // Authenticate user
     const auth = await getAuthenticatedUser();
     if (!auth.isAuthenticated) {
+      console.error('Auth failed:', auth.error, 'Status:', auth.status);
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
     userId = auth.userId;
+    console.log('Authenticated user:', userId);
 
     // Apply rate limiting (standard operation)
     rateLimitResult = applyMultipleRateLimits(userId, [

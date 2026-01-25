@@ -75,6 +75,13 @@ export async function updateSession(request: NextRequest) {
     '/analytics',
     '/accountability',
     '/settings',
+    '/planner',
+    '/today',
+    '/progress',
+    '/okrs',
+    '/team',
+    '/admin',
+    '/guide',
   ];
 
   const isProtectedPath = protectedPaths.some((path) =>
