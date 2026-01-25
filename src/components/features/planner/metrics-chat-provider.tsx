@@ -274,7 +274,7 @@ interface MetricsChatContextValue {
 
   // Convenience actions
   setVision: (text: string, id?: string) => void;
-  submitVision: () => Promise<void>;
+  submitVision: (visionText?: string) => Promise<void>;
   submitAnswer: (answer: MetricAnswer) => void;
   submitAllAnswers: () => Promise<void>;
   approveSection: (section: 'metrics' | 'quarterly' | 'breakdown' | 'complete') => void;
@@ -341,8 +341,14 @@ export function MetricsChatProvider({ children }: { children: React.ReactNode })
   }, []);
 
   // Submit vision and get questions
-  const submitVision = useCallback(async () => {
-    if (!state.visionText.trim()) return;
+  const submitVision = useCallback(async (visionText?: string) => {
+    const vision = visionText || state.visionText;
+    if (!vision.trim()) return;
+
+    // Update state with vision if provided
+    if (visionText) {
+      dispatch({ type: 'SET_VISION', payload: { text: visionText } });
+    }
 
     dispatch({ type: 'SET_LOADING', payload: true });
     dispatch({ type: 'SET_FLOW_STATE', payload: 'generating_questions' });
@@ -351,7 +357,7 @@ export function MetricsChatProvider({ children }: { children: React.ReactNode })
       payload: {
         id: crypto.randomUUID(),
         role: 'user',
-        content: state.visionText,
+        content: vision,
         timestamp: new Date(),
         metadata: { type: 'vision' },
       },
@@ -361,7 +367,7 @@ export function MetricsChatProvider({ children }: { children: React.ReactNode })
       const response = await fetch('/api/ai/generate-metric-questions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ vision: state.visionText }),
+        body: JSON.stringify({ vision }),
       });
 
       if (!response.ok) {

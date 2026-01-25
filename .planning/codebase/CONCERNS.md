@@ -1,6 +1,6 @@
 # Codebase Concerns
 
-**Analysis Date:** 2026-01-11
+**Analysis Date:** 2026-01-24
 
 ## Tech Debt
 
@@ -32,6 +32,34 @@
 - Fix approach: Extract components and utilities into smaller files
 
 ## Known Bugs
+
+**CRITICAL: Analytics page reads from localStorage, not database:**
+- Symptoms: Analytics/insights page shows no data or stale data, doesn't reflect time blocks saved to database
+- Trigger: Opening analytics page after tracking time in time audit
+- Files:
+  - `src/lib/hooks/use-analytics-data.ts:93` - reads `useLocalStorage<TimeBlock[]>('time-blocks', [])`
+  - `src/app/(dashboard)/analytics/page.tsx` - uses the broken hook
+- Workaround: Data only appears if localStorage `'time-blocks'` key is populated
+- Root cause: Analytics hook was designed to read from localStorage cache, but localStorage is not reliably synced with database
+- Fix approach: Refactor `use-analytics-data.ts` to fetch from `/api/time-blocks` with date range params instead of localStorage
+
+**Time range filtering works but data source is wrong:**
+- Symptoms: Changing date range (1 week, 2 weeks, 1 month, 3 months) correctly filters the UI, but underlying data is from localStorage not database
+- Files: `src/lib/hooks/use-analytics-data.ts:96-101` - filters localStorage array
+- Root cause: Same as above - fetches from wrong data source
+- Fix approach: Part of the analytics refactor to use database API
+
+**Metrics not syncing between features:**
+- Symptoms: Time tracked in time-audit doesn't appear in analytics or weekly scorecards
+- Files:
+  - `src/lib/db/schema.ts:423` - `audit_snapshots` table exists but not used by analytics
+  - `src/lib/db/schema.ts:636` - `weekly_scorecards` table exists but not connected
+- Root cause: Multiple metrics systems exist but are disconnected:
+  - `time_blocks` → manual tracking
+  - `audit_snapshots` → weekly aggregations (not populated?)
+  - `north_star_metrics` → user KPIs (separate system)
+  - `weekly_scorecards` → scoring system (separate)
+- Fix approach: Either unify metrics systems or ensure `audit_snapshots` is populated when time blocks are saved
 
 **Incomplete action status update:**
 - Symptoms: TODO comments indicate unimplemented feature
@@ -126,6 +154,37 @@
 
 ## Missing Critical Features
 
+**Project/meeting recognition in Time Audit:**
+- Problem: No AI to recognize projects or meetings from time block activity names
+- Current workaround: Users manually categorize every time block
+- Files:
+  - `src/lib/db/schema.ts:337` - `time_blocks` table has `activityName` but no `project_id` or `meeting` type
+  - No AI endpoint exists for project/meeting recognition
+- Blocks: Automatic project time tracking, meeting time analysis, productivity insights by project
+- Implementation approach:
+  1. Add `project_id` field to `time_blocks` linking to `power_goals`
+  2. Add `activity_type` field (work, meeting, admin, break, etc.)
+  3. Create `/api/ai/recognize-activity` endpoint using Claude
+  4. AI analyzes activity name + user's projects to suggest categorization
+  5. Store patterns for future auto-categorization
+
+**Analytics fetches from localStorage instead of database:**
+- Problem: `use-analytics-data.ts` reads from localStorage `'time-blocks'` key instead of database API
+- Files: `src/lib/hooks/use-analytics-data.ts:93`
+- Current workaround: None - analytics shows stale/missing data
+- Blocks: Reliable analytics, cross-device sync, accurate time range filtering
+- Implementation approach: Refactor hook to call `/api/time-blocks?startDate=X&endDate=Y` and compute metrics from API response
+
+**Disconnected metrics systems:**
+- Problem: Multiple metrics tables exist but aren't connected
+- Files:
+  - `audit_snapshots` - weekly aggregations (exists but unused)
+  - `weekly_scorecards` - scoring (exists but disconnected)
+  - `north_star_metrics` - KPIs (separate from time tracking)
+- Current workaround: Each feature works in isolation
+- Blocks: Unified dashboard, progress insights, goal-to-time correlation
+- Implementation approach: Create scheduled job or trigger to populate `audit_snapshots` from `time_blocks`, connect to analytics
+
 **Test infrastructure:**
 - Problem: No test framework configured
 - Current workaround: Manual testing only
@@ -186,4 +245,4 @@
 
 *Concerns audit: 2026-01-11*
 *Update as issues are fixed or new ones discovered*
-*Last updated: 2026-01-19*
+*Last updated: 2026-01-24*

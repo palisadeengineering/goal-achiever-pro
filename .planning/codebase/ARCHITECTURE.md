@@ -1,6 +1,6 @@
 # Architecture
 
-**Analysis Date:** 2026-01-11
+**Analysis Date:** 2026-01-24
 
 ## Pattern Overview
 
@@ -79,6 +79,70 @@
 - Global UI state: Zustand stores with localStorage persistence
 - Form state: React Hook Form (ephemeral)
 - Local persistence: useLocalStorage hook for time blocks cache
+
+## Time Audit Data Flow
+
+**Time Block Creation (Time Audit Page):**
+
+1. User creates/edits time block in `src/app/(dashboard)/time-audit/page.tsx`
+2. Data saved to database via `POST /api/time-blocks`
+3. **Also cached in localStorage** via `useLocalStorage<TimeBlock[]>('time-blocks', [])`
+4. Local state updated for immediate UI feedback
+
+**Time Block Data Model (`src/lib/db/schema.ts:337`):**
+- `activityName` - User-entered activity description
+- `activityCategory` - Free-text category (NOT linked to projects)
+- `dripQuadrant` - DRIP categorization (delegation/replacement/investment/production)
+- `energyRating` - green/yellow/red energy level
+- `time_block_tags` - Many-to-many custom tags via junction table
+
+**Missing Features (No AI/Project Recognition):**
+- ❌ No `project_id` field linking to projects or power goals
+- ❌ No `meeting` type flag or meeting detection
+- ❌ No AI endpoint for recognizing projects/meetings from activity names
+- ❌ No automatic categorization based on patterns
+
+**Tags System (`src/lib/db/schema.ts:395`):**
+- `time_block_tags` table for custom user tags
+- `time_block_tag_assignments` junction table
+- Can be used manually but not AI-populated
+
+## Analytics/Insights Data Flow
+
+**Critical Issue: Analytics reads from localStorage, NOT database**
+
+**Current Flow (BROKEN):**
+
+1. Analytics page loads `src/app/(dashboard)/analytics/page.tsx`
+2. Calls `useAnalyticsData(dateRange)` hook
+3. Hook reads from **localStorage**: `useLocalStorage<TimeBlock[]>('time-blocks', [])`
+4. Computes metrics from localStorage cache
+5. **Does NOT fetch from database API**
+
+**Files:**
+- Page: `src/app/(dashboard)/analytics/page.tsx`
+- Hook: `src/lib/hooks/use-analytics-data.ts:93` - reads localStorage
+- Components: `src/components/features/analytics/weekly-trends-chart.tsx`, `productivity-heatmap.tsx`
+
+**Metrics Displayed:**
+- Production percentage (DRIP)
+- Total hours tracked
+- Energy balance
+- Peak productivity hour/day
+- Weekly trends chart
+- DRIP/Energy pie charts
+- Productivity heatmap
+
+**Time Range Filtering:**
+- Implemented in page via `dateRangeOption` state (1week, 2weeks, 1month, 3months)
+- Filters localStorage array in `useAnalyticsData` hook
+- Date range passed to hook, filtered via `isWithinInterval()`
+
+**Separate Metrics Systems (NOT connected to Time Audit):**
+- `north_star_metrics` - User-defined KPIs linked to visions
+- `metric_logs` - Log entries for north star metrics
+- `weekly_scorecards` - Weekly aggregated scores
+- `audit_snapshots` - Weekly time audit aggregations (NOT used by analytics page)
 
 ## Key Abstractions
 

@@ -48,8 +48,7 @@ export function MetricsChatPanel() {
   // Handle vision submission
   const handleVisionSubmit = () => {
     if (inputValue.trim()) {
-      setVision(inputValue.trim());
-      submitVision();
+      submitVision(inputValue.trim());
       setInputValue('');
     }
   };

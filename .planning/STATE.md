@@ -120,7 +120,7 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-- [ ] **BLOCKER**: Run `npx drizzle-kit push --force` to add missing `weight` column to `vision_kpis` table
+- [x] ~~**BLOCKER**: Run `npx drizzle-kit push --force` to add missing `weight` column to `vision_kpis` table~~ (FIXED 2026-01-24)
 - [ ] Complete human verification for 06-03 (KPIs tree view testing)
 - [ ] Execute Phase 6 Plan 04 (Polish & Edge Cases)
 - [ ] Execute Phase 7 plans (Sync and Polish)
@@ -128,13 +128,8 @@ Recent decisions affecting current work:
 
 ### Blockers/Concerns
 
-**ACTIVE BLOCKER: Database schema out of sync**
-- Error: `column vision_kpis.weight does not exist`
-- Fix: Run `npx drizzle-kit push --force` OR manually add column in Supabase dashboard
-- Impact: KPIs tree view API returns 500 errors
-
 **User reported issue: Daily Actions not generating**
-- Need to verify after database fix
+- Need to verify in KPIs tree view
 - Check Plan tab after cascade generation completes
 
 ## Session Continuity
