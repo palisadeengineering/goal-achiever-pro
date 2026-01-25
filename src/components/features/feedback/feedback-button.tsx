@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,7 +20,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Bug, Lightbulb, MessageSquare, Loader2, CheckCircle2, Sparkles, Camera, AlertTriangle } from 'lucide-react';
+import { Bug, Lightbulb, MessageSquare, Loader2, CheckCircle2, Sparkles, AlertTriangle } from 'lucide-react';
 
 type FeedbackType = 'bug' | 'feature' | 'improvement' | 'general';
 
@@ -61,9 +61,8 @@ export function FeedbackButton() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [screenshot, setScreenshot] = useState<string | null>(null);
-  const [isCapturing, setIsCapturing] = useState(false);
   const errorsRef = useRef<CapturedError[]>([]);
+  const [, forceUpdate] = useState(0);
 
   const [formData, setFormData] = useState<FeedbackFormData>({
     feedbackType: 'bug',
@@ -92,12 +91,8 @@ export function FeedbackButton() {
         })
         .join(' ');
 
-      // Filter out noise and internal errors
-      if (!message.includes('Hydration') &&
-          !message.includes('Warning:') &&
-          !message.includes('screenshot') &&
-          !message.includes('html2canvas') &&
-          !message.includes('oklch')) {
+      // Filter out noise
+      if (!message.includes('Hydration') && !message.includes('Warning:')) {
         addError({ type: 'console', message });
       }
       originalConsoleError.apply(console, args);
@@ -157,64 +152,12 @@ export function FeedbackButton() {
     };
   }, []);
 
-  // Capture screenshot - gracefully handles failures (oklch colors not supported by html2canvas)
-  const captureScreenshot = useCallback(async () => {
-    setIsCapturing(true);
-    try {
-      const html2canvas = (await import('html2canvas')).default;
-
-      // Hide dialog and overlay temporarily
-      const dialog = document.querySelector('[role="dialog"]');
-      const overlay = document.querySelector('[data-radix-dialog-overlay]');
-
-      if (dialog) (dialog as HTMLElement).style.visibility = 'hidden';
-      if (overlay) (overlay as HTMLElement).style.visibility = 'hidden';
-
-      await new Promise(resolve => setTimeout(resolve, 50));
-
-      const canvas = await html2canvas(document.body, {
-        logging: false,
-        useCORS: true,
-        allowTaint: true,
-        scale: 0.5,
-        backgroundColor: '#1a1a2e',
-        ignoreElements: (element) => {
-          return element.getAttribute('role') === 'dialog' ||
-                 element.hasAttribute('data-radix-dialog-overlay');
-        },
-      });
-
-      if (dialog) (dialog as HTMLElement).style.visibility = '';
-      if (overlay) (overlay as HTMLElement).style.visibility = '';
-
-      setScreenshot(canvas.toDataURL('image/png', 0.8));
-    } catch (err) {
-      // Screenshot capture failed (likely due to oklch colors in Tailwind v4)
-      // This is fine - we still capture errors and URL which are more valuable
-      console.warn('Screenshot capture unavailable:', err instanceof Error ? err.message : err);
-
-      // Restore dialog visibility
-      const dialog = document.querySelector('[role="dialog"]');
-      const overlay = document.querySelector('[data-radix-dialog-overlay]');
-      if (dialog) (dialog as HTMLElement).style.visibility = '';
-      if (overlay) (overlay as HTMLElement).style.visibility = '';
-
-      setScreenshot(null);
-    } finally {
-      setIsCapturing(false);
-    }
-  }, []);
-
-  // Capture screenshot when dialog opens (with delay to ensure dialog is rendered)
+  // Force update when dialog opens to show latest errors
   useEffect(() => {
     if (open) {
-      // Wait for dialog to fully render before capturing
-      const timer = setTimeout(() => {
-        captureScreenshot();
-      }, 100);
-      return () => clearTimeout(timer);
+      forceUpdate(n => n + 1);
     }
-  }, [open, captureScreenshot]);
+  }, [open]);
 
   // Reset form when dialog closes
   useEffect(() => {
@@ -228,7 +171,6 @@ export function FeedbackButton() {
         });
         setIsSuccess(false);
         setError(null);
-        setScreenshot(null);
       }, 300);
       return () => clearTimeout(timer);
     }
@@ -270,7 +212,6 @@ export function FeedbackButton() {
           currentUrl: window.location.href,
           userAgent: navigator.userAgent,
           screenResolution: `${window.screen.width}x${window.screen.height}`,
-          screenshot,
           capturedErrors: getErrorsSummary(),
           errorsCount: errorsRef.current.length,
         }),
@@ -413,41 +354,6 @@ export function FeedbackButton() {
                 </Select>
               </div>
 
-              {/* Screenshot Preview */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>Screenshot</Label>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={captureScreenshot}
-                    className="text-xs"
-                  >
-                    <Camera className="h-3 w-3 mr-1" />
-                    Retake
-                  </Button>
-                </div>
-                <div className="border rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-900">
-                  {isCapturing ? (
-                    <div className="flex items-center justify-center h-24 text-muted-foreground">
-                      <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                      Capturing...
-                    </div>
-                  ) : screenshot ? (
-                    <img
-                      src={screenshot}
-                      alt="Screenshot"
-                      className="w-full h-auto max-h-32 object-contain"
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center h-24 text-muted-foreground">
-                      No screenshot
-                    </div>
-                  )}
-                </div>
-              </div>
-
               {/* Captured Errors */}
               {errorsRef.current.length > 0 && (
                 <div className="space-y-2">
@@ -455,7 +361,7 @@ export function FeedbackButton() {
                     <AlertTriangle className="h-4 w-4 text-amber-500" />
                     Captured Errors ({errorsRef.current.length})
                   </Label>
-                  <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-2 max-h-20 overflow-y-auto">
+                  <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-2 max-h-24 overflow-y-auto">
                     <pre className="text-xs text-red-700 dark:text-red-300 whitespace-pre-wrap font-mono">
                       {getErrorsSummary()}
                     </pre>
@@ -465,7 +371,7 @@ export function FeedbackButton() {
 
               {/* Context info notice */}
               <p className="text-xs text-muted-foreground">
-                We automatically capture your current page, browser info, screenshot, and any errors to help debug issues faster.
+                We automatically capture your current page URL, browser info, and any errors to help debug issues faster.
               </p>
 
               {error && (
