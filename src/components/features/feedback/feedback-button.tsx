@@ -92,8 +92,12 @@ export function FeedbackButton() {
         })
         .join(' ');
 
-      // Filter out noise
-      if (!message.includes('Hydration') && !message.includes('Warning:')) {
+      // Filter out noise and internal errors
+      if (!message.includes('Hydration') &&
+          !message.includes('Warning:') &&
+          !message.includes('screenshot') &&
+          !message.includes('html2canvas') &&
+          !message.includes('oklch')) {
         addError({ type: 'console', message });
       }
       originalConsoleError.apply(console, args);
@@ -153,49 +157,49 @@ export function FeedbackButton() {
     };
   }, []);
 
-  // Capture screenshot
+  // Capture screenshot - gracefully handles failures (oklch colors not supported by html2canvas)
   const captureScreenshot = useCallback(async () => {
     setIsCapturing(true);
     try {
       const html2canvas = (await import('html2canvas')).default;
 
-      // Hide dialog and overlay temporarily using visibility (preserves layout)
+      // Hide dialog and overlay temporarily
       const dialog = document.querySelector('[role="dialog"]');
       const overlay = document.querySelector('[data-radix-dialog-overlay]');
-
-      const originalDialogVisibility = dialog ? (dialog as HTMLElement).style.visibility : '';
-      const originalOverlayVisibility = overlay ? (overlay as HTMLElement).style.visibility : '';
 
       if (dialog) (dialog as HTMLElement).style.visibility = 'hidden';
       if (overlay) (overlay as HTMLElement).style.visibility = 'hidden';
 
-      // Small delay to ensure styles are applied
       await new Promise(resolve => setTimeout(resolve, 50));
 
       const canvas = await html2canvas(document.body, {
         logging: false,
         useCORS: true,
         allowTaint: true,
-        scale: 0.75,
+        scale: 0.5,
+        backgroundColor: '#1a1a2e',
         ignoreElements: (element) => {
-          // Ignore dialog-related elements
           return element.getAttribute('role') === 'dialog' ||
                  element.hasAttribute('data-radix-dialog-overlay');
         },
       });
 
-      // Restore visibility
-      if (dialog) (dialog as HTMLElement).style.visibility = originalDialogVisibility;
-      if (overlay) (overlay as HTMLElement).style.visibility = originalOverlayVisibility;
+      if (dialog) (dialog as HTMLElement).style.visibility = '';
+      if (overlay) (overlay as HTMLElement).style.visibility = '';
 
       setScreenshot(canvas.toDataURL('image/png', 0.8));
     } catch (err) {
-      console.error('Failed to capture screenshot:', err);
-      // Make sure dialog is visible even if screenshot fails
+      // Screenshot capture failed (likely due to oklch colors in Tailwind v4)
+      // This is fine - we still capture errors and URL which are more valuable
+      console.warn('Screenshot capture unavailable:', err instanceof Error ? err.message : err);
+
+      // Restore dialog visibility
       const dialog = document.querySelector('[role="dialog"]');
       const overlay = document.querySelector('[data-radix-dialog-overlay]');
       if (dialog) (dialog as HTMLElement).style.visibility = '';
       if (overlay) (overlay as HTMLElement).style.visibility = '';
+
+      setScreenshot(null);
     } finally {
       setIsCapturing(false);
     }
