@@ -7,10 +7,19 @@ import { XIcon, GripHorizontal } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 // Hook for draggable functionality
-function useDraggable(enabled: boolean) {
+function useDraggable(enabled: boolean, isOpen: boolean) {
   const [position, setPosition] = React.useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = React.useState(false);
+  const [hasDragged, setHasDragged] = React.useState(false);
   const dragStartPos = React.useRef({ x: 0, y: 0 });
+
+  // Reset position when dialog opens
+  React.useEffect(() => {
+    if (isOpen) {
+      setPosition({ x: 0, y: 0 });
+      setHasDragged(false);
+    }
+  }, [isOpen]);
 
   const handleMouseDown = React.useCallback((e: React.MouseEvent) => {
     if (!enabled) return;
@@ -21,6 +30,7 @@ function useDraggable(enabled: boolean) {
 
     e.preventDefault();
     setIsDragging(true);
+    setHasDragged(true);
     dragStartPos.current = {
       x: e.clientX - position.x,
       y: e.clientY - position.y,
@@ -50,12 +60,7 @@ function useDraggable(enabled: boolean) {
     };
   }, [isDragging]);
 
-  // Reset position when dialog opens
-  const resetPosition = React.useCallback(() => {
-    setPosition({ x: 0, y: 0 });
-  }, []);
-
-  return { position, isDragging, handleMouseDown, resetPosition };
+  return { position, isDragging, hasDragged, handleMouseDown };
 }
 
 function Dialog({
@@ -98,6 +103,9 @@ function DialogOverlay({
   )
 }
 
+// Context to track dialog open state for draggable functionality
+const DialogOpenContext = React.createContext<boolean>(false);
+
 function DialogContent({
   className,
   children,
@@ -108,14 +116,20 @@ function DialogContent({
   showCloseButton?: boolean
   draggable?: boolean
 }) {
-  const { position, isDragging, handleMouseDown, resetPosition } = useDraggable(draggable);
+  const [isOpen, setIsOpen] = React.useState(false);
+  const { position, isDragging, hasDragged, handleMouseDown } = useDraggable(draggable, isOpen);
 
-  // Reset position when dialog opens
+  // Track when dialog is actually rendered/visible
   React.useEffect(() => {
-    if (props.onOpenAutoFocus) {
-      resetPosition();
-    }
-  }, [resetPosition, props.onOpenAutoFocus]);
+    setIsOpen(true);
+    return () => setIsOpen(false);
+  }, []);
+
+  // Only apply transform offset when user has actually dragged
+  // Otherwise let the CSS handle centering
+  const transformStyle = draggable && hasDragged ? {
+    transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
+  } : undefined;
 
   return (
     <DialogPortal data-slot="dialog-portal">
@@ -128,9 +142,7 @@ function DialogContent({
           isDragging && "cursor-grabbing select-none",
           className
         )}
-        style={draggable ? {
-          transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
-        } : undefined}
+        style={transformStyle}
         {...props}
       >
         {children}

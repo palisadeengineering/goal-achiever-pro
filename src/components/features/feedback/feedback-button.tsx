@@ -309,14 +309,14 @@ export function FeedbackButton() {
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent draggable className="max-w-lg max-h-[90vh] overflow-y-auto z-[9999]">
+          <DialogHeader draggable>
             <DialogTitle className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5" />
               Beta Feedback
             </DialogTitle>
             <DialogDescription>
-              Help us improve! Report bugs, request features, or share your thoughts.
+              Drag to move • Help us improve! Report bugs, request features, or share your thoughts.
             </DialogDescription>
           </DialogHeader>
 
