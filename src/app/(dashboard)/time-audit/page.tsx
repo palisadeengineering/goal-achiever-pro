@@ -1553,7 +1553,7 @@ export default function TimeAuditPage() {
         editBlock={editingBlock}
       />
 
-      {/* Google Calendar Categorization Dialog - Full screen on mobile */}
+      {/* Google Calendar Categorization Dialog - Full screen on mobile, draggable on desktop */}
       <Dialog open={showCategorizationDialog} onOpenChange={(open) => {
         setShowCategorizationDialog(open);
         // If user is closing the dialog (not opening it), mark as dismissed
@@ -1561,11 +1561,11 @@ export default function TimeAuditPage() {
           setCategorizationDismissed(true);
         }
       }}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto sm:max-h-[85vh] h-[100dvh] sm:h-auto w-full sm:w-auto p-4 sm:p-6">
-          <DialogHeader>
+        <DialogContent draggable className="max-w-2xl max-h-[85vh] overflow-y-auto sm:max-h-[85vh] h-[100dvh] sm:h-auto w-full sm:w-auto p-4 sm:p-6">
+          <DialogHeader draggable>
             <DialogTitle className="text-lg">Categorize Events</DialogTitle>
             <DialogDescription className="text-sm">
-              Tap to set DRIP quadrant and energy level for each event
+              Drag header to move • Tap to set DRIP quadrant and energy level
             </DialogDescription>
           </DialogHeader>
           <BulkCategorizationView
@@ -2202,11 +2202,11 @@ export default function TimeAuditPage() {
 
       {/* Push to Google Calendar Dialog */}
       <Dialog open={showPushDialog} onOpenChange={setShowPushDialog}>
-        <DialogContent>
-          <DialogHeader>
+        <DialogContent draggable>
+          <DialogHeader draggable>
             <DialogTitle>Push to Google Calendar</DialogTitle>
             <DialogDescription>
-              Create this time block as an event in your Google Calendar.
+              Drag to move • Create this time block as an event in your Google Calendar.
             </DialogDescription>
           </DialogHeader>
           {blockToPush && (

@@ -298,11 +298,11 @@ export function TimeBlockForm({
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent draggable className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader draggable>
           <DialogTitle>{editBlock ? 'Edit Time Block' : 'Log Time Block'}</DialogTitle>
           <DialogDescription>
-            Record how you spent your time and categorize it by DRIP quadrant.
+            Drag to move • Record how you spent your time and categorize it by DRIP quadrant.
           </DialogDescription>
         </DialogHeader>
 

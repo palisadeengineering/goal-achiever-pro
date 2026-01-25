@@ -2,9 +2,61 @@
 
 import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
-import { XIcon } from "lucide-react"
+import { XIcon, GripHorizontal } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+
+// Hook for draggable functionality
+function useDraggable(enabled: boolean) {
+  const [position, setPosition] = React.useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = React.useState(false);
+  const dragStartPos = React.useRef({ x: 0, y: 0 });
+
+  const handleMouseDown = React.useCallback((e: React.MouseEvent) => {
+    if (!enabled) return;
+    // Only start drag if clicking on the header/drag handle
+    const target = e.target as HTMLElement;
+    const isDragHandle = target.closest('[data-drag-handle]');
+    if (!isDragHandle) return;
+
+    e.preventDefault();
+    setIsDragging(true);
+    dragStartPos.current = {
+      x: e.clientX - position.x,
+      y: e.clientY - position.y,
+    };
+  }, [enabled, position]);
+
+  React.useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      setPosition({
+        x: e.clientX - dragStartPos.current.x,
+        y: e.clientY - dragStartPos.current.y,
+      });
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
+
+  // Reset position when dialog opens
+  const resetPosition = React.useCallback(() => {
+    setPosition({ x: 0, y: 0 });
+  }, []);
+
+  return { position, isDragging, handleMouseDown, resetPosition };
+}
 
 function Dialog({
   ...props
@@ -50,19 +102,35 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  draggable = false,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
+  draggable?: boolean
 }) {
+  const { position, isDragging, handleMouseDown, resetPosition } = useDraggable(draggable);
+
+  // Reset position when dialog opens
+  React.useEffect(() => {
+    if (props.onOpenAutoFocus) {
+      resetPosition();
+    }
+  }, [resetPosition, props.onOpenAutoFocus]);
+
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogOverlay />
       <DialogPrimitive.Content
         data-slot="dialog-content"
+        onMouseDown={draggable ? handleMouseDown : undefined}
         className={cn(
           "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 outline-none sm:max-w-lg",
+          isDragging && "cursor-grabbing select-none",
           className
         )}
+        style={draggable ? {
+          transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
+        } : undefined}
         {...props}
       >
         {children}
@@ -80,13 +148,29 @@ function DialogContent({
   )
 }
 
-function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
+function DialogHeader({
+  className,
+  draggable = false,
+  ...props
+}: React.ComponentProps<"div"> & { draggable?: boolean }) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-2 text-center sm:text-left", className)}
+      data-drag-handle={draggable ? true : undefined}
+      className={cn(
+        "flex flex-col gap-2 text-center sm:text-left",
+        draggable && "cursor-grab active:cursor-grabbing select-none",
+        className
+      )}
       {...props}
-    />
+    >
+      {draggable && (
+        <div className="flex justify-center -mt-2 mb-1 opacity-40">
+          <GripHorizontal className="h-4 w-4" />
+        </div>
+      )}
+      {props.children}
+    </div>
   )
 }
 

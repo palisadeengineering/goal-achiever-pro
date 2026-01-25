@@ -208,14 +208,14 @@ export function BulkDeleteDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent draggable className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader draggable>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
             AI Cleanup Suggestions
           </DialogTitle>
           <DialogDescription>
-            {suggestions?.summary || 'Review AI-suggested events to delete'}
+            Drag to move • {suggestions?.summary || 'Review AI-suggested events to delete'}
           </DialogDescription>
         </DialogHeader>
 
