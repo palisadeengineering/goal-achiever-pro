@@ -37,6 +37,7 @@ import {
   ChevronDown,
   UserPlus,
   MessageSquare,
+  Sparkles,
 } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
 import { TAB_TO_ROUTE, TAB_DISPLAY_INFO } from '@/types/sharing';
@@ -57,8 +58,9 @@ const mainNavItems: NavItem[] = [
 ];
 
 const visionPlanningItems: NavItem[] = [
+  { title: 'Goal Planner', href: ROUTES.planner, icon: Sparkles, badge: 'New' },
   { title: 'Vision', href: ROUTES.vision, icon: Eye },
-  { title: 'Key Results', href: ROUTES.okrs, icon: TrendingUp, badge: 'New' },
+  { title: 'Key Results', href: ROUTES.okrs, icon: TrendingUp },
   { title: 'Milestones', href: ROUTES.goals, icon: Trophy },
   { title: 'Daily & Weekly MINS', href: ROUTES.mins, icon: ListTodo },
 ];

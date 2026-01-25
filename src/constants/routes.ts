@@ -32,6 +32,7 @@ export const ROUTES = {
   backtrackDetail: (id: string) => `/backtrack/${id}`,
 
   // Vision & Goals
+  planner: '/planner',
   vision: '/vision',
   goals: '/goals',
   goalNew: '/goals/new',
@@ -108,6 +109,7 @@ export const PROTECTED_ROUTES = [
   '/today',
   '/progress',
   '/backtrack',
+  '/planner',
   '/vision',
   '/goals',
   '/mins',
