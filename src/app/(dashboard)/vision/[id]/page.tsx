@@ -20,7 +20,7 @@ import {
 import { CascadingPlanView } from '@/components/features/backtrack/cascading-plan-view';
 import { BacktrackPlanningWizard } from '@/components/features/backtrack/backtrack-planning-wizard';
 import { KpiTrackingPanel } from '@/components/features/kpi/kpi-tracking-panel';
-import { KpiTreeWidget } from '@/components/features/kpi/kpi-tree-widget';
+import { GoalTreeView } from '@/components/features/kpi/goal-tree-view';
 import { AIProjectPlanner } from '@/components/features/vision/ai-project-planner';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
@@ -1034,7 +1034,7 @@ export default function VisionDetailPage({ params }: { params: Promise<{ id: str
                 <Target className="h-5 w-5 text-primary" />
                 KPI Progress Tree
               </h3>
-              <KpiTreeWidget visionId={id} />
+              <GoalTreeView visionId={id} visionTitle={vision.title} />
             </CardContent>
           </Card>
 
