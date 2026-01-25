@@ -20,7 +20,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Bug, Lightbulb, MessageSquare, Loader2, CheckCircle2, Sparkles, AlertTriangle } from 'lucide-react';
+import { Bug, Lightbulb, MessageSquare, Loader2, CheckCircle2, Sparkles, AlertTriangle, Camera, X } from 'lucide-react';
 
 type FeedbackType = 'bug' | 'feature' | 'improvement' | 'general';
 
@@ -61,8 +61,15 @@ export function FeedbackButton() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [screenshot, setScreenshot] = useState<string | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
   const errorsRef = useRef<CapturedError[]>([]);
   const [, forceUpdate] = useState(0);
+
+  // Check if screen capture is supported
+  const isScreenCaptureSupported = typeof navigator !== 'undefined' &&
+    navigator.mediaDevices &&
+    'getDisplayMedia' in navigator.mediaDevices;
 
   const [formData, setFormData] = useState<FeedbackFormData>({
     feedbackType: 'bug',
@@ -159,6 +166,56 @@ export function FeedbackButton() {
     }
   }, [open]);
 
+  // Capture screenshot using browser's native screen capture
+  const captureScreenshot = async () => {
+    if (!isScreenCaptureSupported) {
+      setError('Screen capture is not supported on this device. Please take a manual screenshot.');
+      return;
+    }
+
+    setIsCapturing(true);
+    setError(null);
+
+    try {
+      // Request screen capture permission
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: {
+          displaySurface: 'browser',
+        } as MediaTrackConstraints,
+        audio: false,
+      });
+
+      // Create video element to capture frame
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      await video.play();
+
+      // Wait a moment for the video to be ready
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Create canvas and capture frame
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(video, 0, 0);
+        const dataUrl = canvas.toDataURL('image/png', 0.8);
+        setScreenshot(dataUrl);
+      }
+
+      // Stop all tracks to release the screen capture
+      stream.getTracks().forEach(track => track.stop());
+    } catch (err) {
+      // User cancelled or permission denied - this is fine
+      if (err instanceof Error && err.name !== 'NotAllowedError') {
+        console.warn('Screenshot capture failed:', err);
+      }
+    } finally {
+      setIsCapturing(false);
+    }
+  };
+
   // Reset form when dialog closes
   useEffect(() => {
     if (!open) {
@@ -171,6 +228,7 @@ export function FeedbackButton() {
         });
         setIsSuccess(false);
         setError(null);
+        setScreenshot(null);
       }, 300);
       return () => clearTimeout(timer);
     }
@@ -212,6 +270,7 @@ export function FeedbackButton() {
           currentUrl: window.location.href,
           userAgent: navigator.userAgent,
           screenResolution: `${window.screen.width}x${window.screen.height}`,
+          screenshot,
           capturedErrors: getErrorsSummary(),
           errorsCount: errorsRef.current.length,
         }),
@@ -354,6 +413,62 @@ export function FeedbackButton() {
                 </Select>
               </div>
 
+              {/* Screenshot */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Camera className="h-4 w-4" />
+                  Screenshot (optional)
+                </Label>
+                {screenshot ? (
+                  <div className="relative border rounded-lg overflow-hidden">
+                    <img
+                      src={screenshot}
+                      alt="Screenshot"
+                      className="w-full h-auto max-h-40 object-contain bg-gray-100 dark:bg-gray-900"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2 h-6 w-6"
+                      onClick={() => setScreenshot(null)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="border border-dashed rounded-lg p-4 text-center">
+                    {isScreenCaptureSupported ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={captureScreenshot}
+                        disabled={isCapturing}
+                        className="w-full"
+                      >
+                        {isCapturing ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Select screen to capture...
+                          </>
+                        ) : (
+                          <>
+                            <Camera className="mr-2 h-4 w-4" />
+                            Take Screenshot
+                          </>
+                        )}
+                      </Button>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        Screen capture not supported on this device.
+                        <br />
+                        Use <kbd className="px-1 py-0.5 bg-muted rounded text-xs">Win+Shift+S</kbd> to take a screenshot manually.
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+
               {/* Captured Errors */}
               {errorsRef.current.length > 0 && (
                 <div className="space-y-2">
@@ -371,7 +486,7 @@ export function FeedbackButton() {
 
               {/* Context info notice */}
               <p className="text-xs text-muted-foreground">
-                We automatically capture your current page URL, browser info, and any errors to help debug issues faster.
+                We automatically capture your current page URL, browser info, and any errors to help debug issues faster. Screenshots are optional.
               </p>
 
               {error && (
