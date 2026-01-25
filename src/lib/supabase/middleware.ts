@@ -88,13 +88,15 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Redirect authenticated users away from auth pages (except reset-password which needs session)
+  // Redirect authenticated users away from auth pages and homepage to dashboard
+  // (except reset-password which needs session)
   const authPaths = ['/login', '/signup', '/forgot-password'];
   const isAuthPath = authPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   );
+  const isHomePage = request.nextUrl.pathname === '/';
 
-  if (isAuthPath && user) {
+  if ((isAuthPath || isHomePage) && user) {
     const url = request.nextUrl.clone();
     url.pathname = '/dashboard';
     return NextResponse.redirect(url);
