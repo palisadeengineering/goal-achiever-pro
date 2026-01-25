@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -65,6 +66,12 @@ export function FeedbackButton() {
   const [isCapturing, setIsCapturing] = useState(false);
   const errorsRef = useRef<CapturedError[]>([]);
   const [, forceUpdate] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  // Track client-side mounting for portal
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Check if screen capture is supported
   const isScreenCaptureSupported = typeof navigator !== 'undefined' &&
@@ -296,20 +303,49 @@ export function FeedbackButton() {
 
   const selectedType = feedbackTypes.find((t) => t.value === formData.feedbackType);
 
-  return (
-    <>
-      {/* Floating feedback button - z-[9999] ensures it's always clickable above any modals */}
+  // Handle feedback button click - stop propagation to prevent dialog overlay from intercepting
+  const handleFeedbackButtonClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setOpen(true);
+  };
+
+  // Render button through portal to ensure it's at DOM root level
+  // Wrapped in a div with isolation to create a new stacking context above all dialogs
+  // The data-feedback-button attribute tells dialogs not to close when clicking here
+  const feedbackButton = mounted ? createPortal(
+    <div
+      data-feedback-button="true"
+      style={{
+        position: 'fixed',
+        bottom: 24,
+        right: 24,
+        zIndex: 2147483647, // Maximum 32-bit signed integer - highest possible z-index
+        isolation: 'isolate', // Create new stacking context
+        pointerEvents: 'auto',
+      }}
+      onMouseDown={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
+    >
       <Button
-        onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-[9999] h-12 px-4 rounded-full shadow-lg hover:shadow-xl transition-shadow"
+        onClick={handleFeedbackButtonClick}
+        className="h-12 px-4 rounded-full shadow-lg hover:shadow-xl transition-shadow"
         title="Send Feedback"
       >
         <MessageSquare className="h-5 w-5 mr-2" />
         <span className="hidden sm:inline">Feedback</span>
       </Button>
+    </div>,
+    document.body
+  ) : null;
+
+  return (
+    <>
+      {feedbackButton}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent draggable className="max-w-lg max-h-[90vh] overflow-y-auto z-[9999]">
+        <DialogContent draggable className="max-w-lg max-h-[90vh] overflow-y-auto" style={{ zIndex: 99999 }}>
           <DialogHeader draggable>
             <DialogTitle className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5" />

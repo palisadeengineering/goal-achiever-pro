@@ -8,43 +8,61 @@ import { cn } from "@/lib/utils"
 
 // Hook for draggable functionality
 function useDraggable(enabled: boolean, isOpen: boolean) {
-  const [position, setPosition] = React.useState({ x: 0, y: 0 });
+  // Position is the offset from center (0,0 = centered)
+  const [offset, setOffset] = React.useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = React.useState(false);
-  const [hasDragged, setHasDragged] = React.useState(false);
-  const dragStartPos = React.useRef({ x: 0, y: 0 });
+  const dialogRef = React.useRef<HTMLDivElement>(null);
+  // Store the mouse position relative to dialog top-left when drag starts
+  const dragStart = React.useRef({ mouseX: 0, mouseY: 0, dialogX: 0, dialogY: 0 });
 
   // Reset position when dialog opens
   React.useEffect(() => {
     if (isOpen) {
-      setPosition({ x: 0, y: 0 });
-      setHasDragged(false);
+      setOffset({ x: 0, y: 0 });
     }
   }, [isOpen]);
 
   const handleMouseDown = React.useCallback((e: React.MouseEvent) => {
-    if (!enabled) return;
+    if (!enabled || !dialogRef.current) return;
+
     // Only start drag if clicking on the header/drag handle
     const target = e.target as HTMLElement;
     const isDragHandle = target.closest('[data-drag-handle]');
     if (!isDragHandle) return;
 
     e.preventDefault();
-    setIsDragging(true);
-    setHasDragged(true);
-    dragStartPos.current = {
-      x: e.clientX - position.x,
-      y: e.clientY - position.y,
+
+    // Get dialog's current position on screen
+    const rect = dialogRef.current.getBoundingClientRect();
+
+    // Store starting positions
+    dragStart.current = {
+      mouseX: e.clientX,
+      mouseY: e.clientY,
+      dialogX: rect.left,
+      dialogY: rect.top,
     };
-  }, [enabled, position]);
+
+    setIsDragging(true);
+  }, [enabled]);
 
   React.useEffect(() => {
     if (!isDragging) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      setPosition({
-        x: e.clientX - dragStartPos.current.x,
-        y: e.clientY - dragStartPos.current.y,
-      });
+      // Calculate how far the mouse has moved since drag started
+      const deltaX = e.clientX - dragStart.current.mouseX;
+      const deltaY = e.clientY - dragStart.current.mouseY;
+
+      // Update offset (this is added to the centered position)
+      setOffset(prev => ({
+        x: prev.x + deltaX,
+        y: prev.y + deltaY,
+      }));
+
+      // Update the start position for next move event
+      dragStart.current.mouseX = e.clientX;
+      dragStart.current.mouseY = e.clientY;
     };
 
     const handleMouseUp = () => {
@@ -60,7 +78,7 @@ function useDraggable(enabled: boolean, isOpen: boolean) {
     };
   }, [isDragging]);
 
-  return { position, isDragging, hasDragged, handleMouseDown };
+  return { offset, isDragging, dialogRef, handleMouseDown };
 }
 
 function Dialog({
@@ -89,6 +107,7 @@ function DialogClose({
 
 function DialogOverlay({
   className,
+  style,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
   return (
@@ -98,6 +117,7 @@ function DialogOverlay({
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50",
         className
       )}
+      style={style}
       {...props}
     />
   )
@@ -111,13 +131,39 @@ function DialogContent({
   children,
   showCloseButton = true,
   draggable = false,
+  style,
+  onInteractOutside,
+  onPointerDownOutside,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
   draggable?: boolean
 }) {
   const [isOpen, setIsOpen] = React.useState(false);
-  const { position, isDragging, hasDragged, handleMouseDown } = useDraggable(draggable, isOpen);
+  const { offset, isDragging, dialogRef, handleMouseDown } = useDraggable(draggable, isOpen);
+
+  // Handler to prevent dialog from closing when clicking on feedback button
+  const handleInteractOutside = React.useCallback((event: { target: EventTarget | null; preventDefault: () => void }) => {
+    const target = event.target as HTMLElement | null;
+    // Check if click is on the feedback button or its container
+    if (target?.closest?.('[data-feedback-button]')) {
+      event.preventDefault();
+      return;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onInteractOutside?.(event as any);
+  }, [onInteractOutside]);
+
+  const handlePointerDownOutside = React.useCallback((event: { target: EventTarget | null; preventDefault: () => void }) => {
+    const target = event.target as HTMLElement | null;
+    // Check if click is on the feedback button or its container
+    if (target?.closest?.('[data-feedback-button]')) {
+      event.preventDefault();
+      return;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onPointerDownOutside?.(event as any);
+  }, [onPointerDownOutside]);
 
   // Track when dialog is actually rendered/visible
   React.useEffect(() => {
@@ -125,21 +171,28 @@ function DialogContent({
     return () => setIsOpen(false);
   }, []);
 
-  // Only apply transform offset when user has actually dragged
-  // Otherwise let the CSS handle centering
-  const transformStyle = draggable && hasDragged ? {
-    transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
-  } : undefined;
+  // Apply offset as inline style - offset is relative to centered position
+  const transformStyle: React.CSSProperties = draggable ? {
+    transform: `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px))`,
+    ...style,
+  } : { ...style };
+
+  // Extract zIndex from style for overlay (if provided)
+  const overlayZIndex = style?.zIndex ? { zIndex: Number(style.zIndex) - 1 } : undefined;
 
   return (
     <DialogPortal data-slot="dialog-portal">
-      <DialogOverlay />
+      <DialogOverlay style={overlayZIndex} />
       <DialogPrimitive.Content
+        ref={dialogRef}
         data-slot="dialog-content"
         onMouseDown={draggable ? handleMouseDown : undefined}
+        onInteractOutside={handleInteractOutside}
+        onPointerDownOutside={handlePointerDownOutside}
         className={cn(
-          "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 outline-none sm:max-w-lg",
-          isDragging && "cursor-grabbing select-none",
+          "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] gap-4 rounded-lg border p-6 shadow-lg duration-200 outline-none sm:max-w-lg",
+          !draggable && "translate-x-[-50%] translate-y-[-50%]",
+          isDragging && "cursor-grabbing select-none transition-none",
           className
         )}
         style={transformStyle}
