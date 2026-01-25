@@ -5,46 +5,39 @@
 See: .planning/PROJECT.md (updated 2026-01-23)
 
 **Core value:** When a user creates a Vision, the entire goal hierarchy cascades automatically - from SMART-based KPIs down to daily actions - and completing any item visibly moves progress up the chain to the dashboard.
-**Current focus:** Phase 5 - Cascade Generation COMPLETE, ready for Phase 6
+**Current focus:** Phase 6 - Tree UI (Plan 1 of 4 complete)
 
 ## Current Position
 
-Phase: 5 of 8 (05-cascade-generation) - COMPLETE
-Plan: 3 of 3 complete
-Status: Phase 5 complete, ready for Phase 6 (Full Tree UI)
-Last activity: 2026-01-24 - Completed 05-03-PLAN.md
+Phase: 6 of 8 (06-tree-ui)
+Plan: 1 of 4 complete
+Status: In progress
+Last activity: 2026-01-24 - Completed 06-01-PLAN.md
 
-Progress: [################--------] 67%
+Progress: [#################-------] 70%
 
-## Phase 5 Progress (COMPLETE)
+## Phase 6 Progress
 
-| Plan | API | Hooks | Status |
-|------|-----|-------|--------|
-| 05-01: KPI Generation API | OK | - | COMPLETE |
-| 05-02: Manual KPI Creation | OK | OK | COMPLETE |
-| 05-03: Cascade Trigger | OK | OK | COMPLETE |
+| Plan | Context | Node | View | Keyboard | Status |
+|------|---------|------|------|----------|--------|
+| 06-01: Tree Context & Node | OK | OK | - | - | COMPLETE |
+| 06-02: Tree View Container | - | - | - | - | PENDING |
+| 06-03: Keyboard Navigation | - | - | - | - | PENDING |
+| 06-04: Status Indicators | - | - | - | - | PENDING |
 
-**05-01 Deliverables:**
-- Hierarchical parent_kpi_id linkage in generate-cascade endpoint
-- Progress cache initialization for all generated KPIs
-- ID tracking maps for parent-child linking
-
-**05-02 Deliverables:**
-- Enhanced `src/app/api/vision-kpis/route.ts` with validation and cache init
-- Added `useCreateKpi` hook with `CreateKpiInput` type
-
-**05-03 Deliverables:**
-- Incremental mode support in generate-cascade endpoint (mode='incremental')
-- useGenerateCascade mutation hook with incremental default
-- KPI deduplication by title+level matching
-- Skipped counts in response for incremental updates
+**06-01 Deliverables:**
+- GoalTreeProvider context for tree state management
+- GoalTreeNode recursive component with Radix Collapsible
+- Expand/collapse state with Set<string>
+- Selection and focus state for keyboard navigation
+- WAI-ARIA treeitem pattern implementation
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 15
+- Total plans completed: 16
 - Average duration: ~7 minutes per plan
-- Total execution time: ~102 minutes
+- Total execution time: ~110 minutes
 
 **By Phase:**
 
@@ -55,6 +48,7 @@ Progress: [################--------] 67%
 | 03-tree-fetching-api | 2 | 8m | 4m | COMPLETE |
 | 04-frontend-state | 4 | 9m | 2m | COMPLETE |
 | 05-cascade-generation | 3 | 21m | 7m | COMPLETE |
+| 06-tree-ui | 1 | 8m | 8m | IN PROGRESS |
 
 *Updated after each plan completion*
 
@@ -102,11 +96,15 @@ Recent decisions affecting current work:
 - [05-03]: Title matching uses case-insensitive ilike for deduplication
 - [05-03]: Skipped KPI IDs are still looked up for child linking
 - [05-03]: Known limitation: title changes cause duplicates (hash-based matching for future)
+- [06-01]: Set<string> for expandedIds (O(1) lookup)
+- [06-01]: Memoized context value to prevent unnecessary re-renders
+- [06-01]: Checkbox only shown on leaf nodes with onLogKpi callback
+- [06-01]: Focus ring with ring-offset for visibility on colored backgrounds
 
 ### Pending Todos
 
 - [ ] Apply migration 0003_add_kpi_weight.sql
-- [ ] Execute Phase 6 plans (Full Tree UI)
+- [ ] Execute Phase 6 remaining plans (06-02 through 06-04)
 - [ ] Execute Phase 7 plans (Sync and Polish)
 - [ ] Execute Phase 8 plans (Integration and Testing)
 
@@ -116,27 +114,18 @@ None currently.
 
 ## Session Continuity
 
-Last session: 2026-01-24T21:08:00Z
-Stopped at: Completed 05-03-PLAN.md (Phase 5 complete)
-Resume action: Start Phase 6 (06-full-tree-ui)
+Last session: 2026-01-24T21:38:00Z
+Stopped at: Completed 06-01-PLAN.md
+Resume action: Execute 06-02-PLAN.md (Tree View Container)
 
 **Commits this session:**
-- `ccc4f86` feat(05-01): add hierarchical parent_kpi_id linkage to cascade generation
-- `a95724a` feat(05-01): initialize progress cache for newly created KPIs
-- `5a482d4` feat(05-02): enhance POST /api/vision-kpis with validation and cache init
-- `c4e7d17` feat(05-02): add useCreateKpi mutation hook
-- `ac1a89f` feat(05-03): add incremental mode to generate-cascade endpoint
-- `f59627f` feat(05-03): add useGenerateCascade mutation hook
+- `d658843` feat(06-01): add GoalTreeContext provider for tree state management
+- `945f169` feat(06-01): add GoalTreeNode recursive component with Radix Collapsible
 
 **Files created this session:**
-- `.planning/phases/05-cascade-generation/05-01-SUMMARY.md`
-- `.planning/phases/05-cascade-generation/05-02-SUMMARY.md`
-- `.planning/phases/05-cascade-generation/05-03-SUMMARY.md`
-- `src/lib/hooks/use-cascade-generation.ts`
+- `.planning/phases/06-tree-ui/06-01-SUMMARY.md`
+- `src/components/features/kpi/goal-tree-context.tsx`
+- `src/components/features/kpi/goal-tree-node.tsx`
 
 **Files modified this session:**
-- `src/app/api/visions/[id]/generate-cascade/route.ts`
-- `src/app/api/vision-kpis/route.ts`
-- `src/lib/hooks/use-kpi-mutations.ts`
-- `src/lib/hooks/index.ts`
 - `.planning/STATE.md`
