@@ -56,6 +56,7 @@ interface UseGoogleCalendarReturn {
   disconnect: () => Promise<void>;
   checkConnection: () => Promise<void>;
   clearCache: () => void;
+  removeEvent: (eventId: string) => void;
 }
 
 // Note: fetchEvents replaces all events with the fetched range.
@@ -123,6 +124,27 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
     } catch (err) {
       console.error('Failed to clear cache:', err);
     }
+  }, []);
+
+  // Remove a single event from state and cache (used after deletion)
+  const removeEvent = useCallback((eventId: string) => {
+    setEvents(prevEvents => {
+      const filtered = prevEvents.filter(e => e.id !== eventId && e.id !== `gcal_${eventId}` && `gcal_${e.id}` !== eventId);
+
+      // Update cache with filtered events
+      try {
+        const cached = localStorage.getItem(GOOGLE_EVENTS_CACHE_KEY);
+        if (cached) {
+          const cacheData = JSON.parse(cached) as GoogleEventsCache;
+          cacheData.events = filtered;
+          localStorage.setItem(GOOGLE_EVENTS_CACHE_KEY, JSON.stringify(cacheData));
+        }
+      } catch (err) {
+        console.error('Failed to update cache after event removal:', err);
+      }
+
+      return filtered;
+    });
   }, []);
 
   const fetchEvents = useCallback(async (startDate: Date, endDate: Date): Promise<void> => {
@@ -252,5 +274,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
     disconnect,
     checkConnection,
     clearCache,
+    removeEvent,
   };
 }

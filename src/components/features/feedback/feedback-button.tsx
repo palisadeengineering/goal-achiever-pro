@@ -298,10 +298,10 @@ export function FeedbackButton() {
 
   return (
     <>
-      {/* Floating feedback button */}
+      {/* Floating feedback button - z-[9999] ensures it's always clickable above any modals */}
       <Button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-50 h-12 px-4 rounded-full shadow-lg hover:shadow-xl transition-shadow"
+        className="fixed bottom-6 right-6 z-[9999] h-12 px-4 rounded-full shadow-lg hover:shadow-xl transition-shadow"
         title="Send Feedback"
       >
         <MessageSquare className="h-5 w-5 mr-2" />

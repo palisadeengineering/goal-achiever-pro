@@ -105,6 +105,7 @@ export default function TimeAuditPage() {
     isConnected: isGoogleConnected,
     fetchEvents: fetchGoogleEvents,
     clearCache: clearGoogleCache,
+    removeEvent: removeGoogleEvent,
     debugInfo: googleDebugInfo,
   } = useGoogleCalendar();
 
@@ -1152,7 +1153,17 @@ export default function TimeAuditPage() {
 
   // Handle deleting a time block (and optionally from Google Calendar)
   const handleDeleteBlock = useCallback(async (block: TimeBlock) => {
-    // If it's a Google Calendar event, delete from Google Calendar first
+    // Prevent categorization popup from showing after delete
+    setCategorizationDismissed(true);
+
+    // Immediately remove from Google events state for instant UI update (no flicker)
+    if (block.externalEventId) {
+      removeGoogleEvent(block.externalEventId);
+    }
+    // Also try removing by block.id in case it matches
+    removeGoogleEvent(block.id);
+
+    // If it's a Google Calendar event, delete from Google Calendar
     if (block.externalEventId && isGoogleConnected) {
       try {
         const eventId = block.externalEventId.replace('gcal_', '');
@@ -1177,11 +1188,9 @@ export default function TimeAuditPage() {
     // Also remove from local storage
     setLocalTimeBlocks(blocks => blocks.filter(b => b.id !== block.id));
 
-    // Refresh Google events to update the view
-    if (block.externalEventId && isGoogleConnected) {
-      handleSyncGoogle();
-    }
-  }, [deleteTimeBlock, setLocalTimeBlocks, isGoogleConnected, handleSyncGoogle, dbTimeBlocks]);
+    // Fetch updated time blocks from database
+    await fetchTimeBlocks();
+  }, [deleteTimeBlock, setLocalTimeBlocks, isGoogleConnected, fetchTimeBlocks, dbTimeBlocks, removeGoogleEvent]);
 
   // Handle skipping (uncategorizing) a time block - keeps event in Google Calendar but removes from tracking
   const handleSkipBlock = useCallback(async (block: TimeBlock) => {
@@ -1208,6 +1217,15 @@ export default function TimeAuditPage() {
   // Handle deleting an event from the Manage Events tab
   const handleEventListDelete = useCallback(async (event: EventListItem) => {
     setIsDeletingEvent(true);
+    // Prevent categorization popup from showing after delete
+    setCategorizationDismissed(true);
+
+    // Immediately remove from Google events state for instant UI update (no flicker)
+    if (event.externalEventId) {
+      removeGoogleEvent(event.externalEventId);
+    }
+    removeGoogleEvent(event.id);
+
     try {
       // If it's a Google Calendar event, delete from Google Calendar
       if (event.externalEventId && isGoogleConnected) {
@@ -1230,16 +1248,14 @@ export default function TimeAuditPage() {
       // Remove from local storage
       setLocalTimeBlocks(blocks => blocks.filter(b => b.id !== event.id));
 
-      // Refresh data
-      if (event.externalEventId && isGoogleConnected) {
-        handleSyncGoogle();
-      }
+      // Fetch updated time blocks from database
+      await fetchTimeBlocks();
     } catch (error) {
       console.error('Error deleting event:', error);
     } finally {
       setIsDeletingEvent(false);
     }
-  }, [dbTimeBlocks, deleteTimeBlock, setLocalTimeBlocks, isGoogleConnected, handleSyncGoogle]);
+  }, [dbTimeBlocks, deleteTimeBlock, setLocalTimeBlocks, isGoogleConnected, fetchTimeBlocks, removeGoogleEvent]);
 
   // Fetch AI cleanup suggestions
   const fetchAiCleanupSuggestions = useCallback(async () => {
@@ -1269,9 +1285,18 @@ export default function TimeAuditPage() {
 
   // Handle bulk delete from AI suggestions
   const handleBulkDelete = useCallback(async (eventIds: string[]) => {
+    // Prevent categorization popup from showing after bulk delete
+    setCategorizationDismissed(true);
+
     for (const eventId of eventIds) {
       const event = manageEventsList.find(e => e.id === eventId);
       if (event) {
+        // Immediately remove from Google events state for instant UI update
+        if (event.externalEventId) {
+          removeGoogleEvent(event.externalEventId);
+        }
+        removeGoogleEvent(event.id);
+
         // If it's a Google Calendar event, delete from Google Calendar
         if (event.externalEventId && isGoogleConnected) {
           const googleEventId = event.externalEventId.replace('gcal_', '');
@@ -1295,11 +1320,9 @@ export default function TimeAuditPage() {
       }
     }
 
-    // Refresh data after bulk delete
-    if (isGoogleConnected) {
-      handleSyncGoogle();
-    }
-  }, [manageEventsList, dbTimeBlocks, deleteTimeBlock, setLocalTimeBlocks, isGoogleConnected, handleSyncGoogle]);
+    // Fetch updated time blocks from database
+    await fetchTimeBlocks();
+  }, [manageEventsList, dbTimeBlocks, deleteTimeBlock, setLocalTimeBlocks, isGoogleConnected, fetchTimeBlocks, removeGoogleEvent]);
 
   // Handle moving/resizing a time block (drag-drop or resize)
   const handleBlockMove = useCallback(async (
