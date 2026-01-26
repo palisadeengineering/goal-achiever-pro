@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-23)
 
 **Core value:** When a user creates a Vision, the entire goal hierarchy cascades automatically - from SMART-based KPIs down to daily actions - and completing any item visibly moves progress up the chain to the dashboard.
-**Current focus:** Phase 6 - Tree UI (Plan 3 code complete, human verification pending)
+**Current focus:** Phase 6 - Tree UI COMPLETE, ready for Phase 7
 
 ## Current Position
 
-Phase: 6 of 8 (06-tree-ui)
-Plan: 3 of 4 (code complete, awaiting human verification)
-Status: HUMAN VERIFICATION CHECKPOINT
-Last activity: 2026-01-25 - Vision Planner feature complete and verified
+Phase: 6 of 8 (06-tree-ui) - COMPLETE
+Plan: 4 of 4 (all plans complete)
+Status: READY FOR PHASE 7
+Last activity: 2026-01-25 - Phase 6 Tree UI complete with keyboard navigation
 
-Progress: [####################----] 85%
+Progress: [########################-] 95%
 
 ## Vision Planner Feature - COMPLETE
 
@@ -67,14 +67,14 @@ Tested full end-to-end workflow:
 - `59ca215` fix: pass vision text directly to submitVision to avoid state timing issue
 - `530abc1` feat: add metrics-first goal planner with chat interface
 
-## Phase 6 Progress
+## Phase 6 Progress - COMPLETE
 
 | Plan | Context | Node | View | Keyboard | Status |
 |------|---------|------|------|----------|--------|
 | 06-01: Tree Context & Node | OK | OK | - | - | COMPLETE |
 | 06-02: Status & Breadcrumb | - | - | OK | - | COMPLETE |
-| 06-03: Main GoalTreeView | - | - | OK | OK | CODE COMPLETE - VERIFYING |
-| 06-04: Polish & Edge Cases | - | - | - | - | PENDING |
+| 06-03: Main GoalTreeView | - | - | OK | OK | COMPLETE |
+| 06-04: Polish & Edge Cases | - | - | OK | OK | COMPLETE |
 
 **06-01 Deliverables:**
 - GoalTreeProvider context for tree state management
@@ -90,7 +90,7 @@ Tested full end-to-end workflow:
 - GoalTreeBreadcrumb navigation component
 - deriveBreadcrumbPath utility function
 
-**06-03 Deliverables (code complete):**
+**06-03 Deliverables:**
 - GoalTreeView main component with full hierarchy
 - GoalTreeNode enhanced with status indicator and keyboard support
 - Replaced KpiTreeWidget with GoalTreeView on Vision detail page
@@ -98,12 +98,19 @@ Tested full end-to-end workflow:
 - Progressive disclosure (shows first 10 children, "Show more" for rest)
 - Breadcrumb navigation from Vision to selected node
 
+**06-04 Deliverables:**
+- Fixed keyboard navigation with roving tabindex pattern
+- Created TreeContent inner component for context access
+- Added tabIndex={-1} to buttons/checkboxes to prevent focus stealing
+- Wrapped handlers with useCallback for performance
+- All TREE requirements verified working
+
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 17
+- Total plans completed: 21
 - Average duration: ~7 minutes per plan
-- Total execution time: ~112 minutes
+- Total execution time: ~140 minutes
 
 **By Phase:**
 
@@ -114,7 +121,7 @@ Tested full end-to-end workflow:
 | 03-tree-fetching-api | 2 | 8m | 4m | COMPLETE |
 | 04-frontend-state | 4 | 9m | 2m | COMPLETE |
 | 05-cascade-generation | 3 | 21m | 7m | COMPLETE |
-| 06-tree-ui | 2 | 10m | 5m | IN PROGRESS |
+| 06-tree-ui | 4 | 25m | 6m | COMPLETE |
 
 *Updated after each plan completion*
 
@@ -172,49 +179,34 @@ Recent decisions affecting current work:
 ### Pending Todos
 
 - [x] ~~**BLOCKER**: Run `npx drizzle-kit push --force` to add missing `weight` column to `vision_kpis` table~~ (FIXED 2026-01-24)
-- [ ] Complete human verification for 06-03 (KPIs tree view testing)
-- [ ] Execute Phase 6 Plan 04 (Polish & Edge Cases)
+- [x] ~~Complete human verification for 06-03 (KPIs tree view testing)~~ (VERIFIED 2026-01-25)
+- [x] ~~Execute Phase 6 Plan 04 (Polish & Edge Cases)~~ (COMPLETE 2026-01-25)
 - [ ] Execute Phase 7 plans (Sync and Polish)
 - [ ] Execute Phase 8 plans (Integration and Testing)
 
 ### Blockers/Concerns
 
-**User reported issue: Daily Actions not generating**
-- Need to verify in KPIs tree view
-- Check Plan tab after cascade generation completes
+None currently. Phase 6 complete, ready for Phase 7.
 
 ## Session Continuity
 
-Last session: 2026-01-24
-Stopped at: Human verification checkpoint for 06-03
+Last session: 2026-01-25
+Stopped at: Phase 6 complete
 Resume action:
-1. Fix database schema (add weight column)
-2. Test KPIs tree view at http://localhost:3000/vision/{id} > KPIs tab
-3. Verify checklist:
-   - [ ] Nodes expand/collapse on chevron click
-   - [ ] Progress bars show on each node
-   - [ ] Status indicators (on-track/at-risk/behind)
-   - [ ] Breadcrumb navigation works
-   - [ ] Keyboard navigation (Arrow keys, Enter/Space, Home/End)
-   - [ ] Leaf node checkboxes mark complete
+1. Review Phase 7 roadmap and plans
+2. Begin Phase 7 execution
 
-**Environment setup required:**
-Copy these to `.env` (not in git):
-```
-DATABASE_URL=postgresql://postgres.uomrqmsbmuzlyghaocrj:YOUR_PASSWORD@aws-0-us-west-2.pooler.supabase.com:6543/postgres
-DEMO_MODE_ENABLED=true
-NEXT_PUBLIC_SUPABASE_URL=https://uomrqmsbmuzlyghaocrj.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-ANTHROPIC_API_KEY=your_anthropic_key
-```
+**Phase 6 Verification Results (2026-01-25):**
+- [x] Nodes expand/collapse on chevron click
+- [x] Progress bars show on each node
+- [x] Status indicators (on-track/at-risk/behind)
+- [x] Breadcrumb navigation works
+- [x] Keyboard navigation (Arrow keys, Enter/Space, Home/End)
+- [x] Leaf node checkboxes mark complete
 
-**Recent commits (06-03):**
-- `3087e2c` feat(06-03): replace KpiTreeWidget with GoalTreeView on Vision page
-- `3792156` feat(06-03): create GoalTreeView main component
-- `38cfaa6` feat(06-03): enhance GoalTreeNode with status indicator and keyboard support
+**Recent commits (06-04):**
+- `8324ffc` feat(06-04): fix keyboard navigation with roving tabindex
 
-**Files created/modified in 06-03:**
-- `src/components/features/kpi/goal-tree-view.tsx` (new)
-- `src/components/features/kpi/goal-tree-node.tsx` (enhanced)
-- `src/app/(dashboard)/vision/[id]/page.tsx` (updated import)
+**Files modified in 06-04:**
+- `src/components/features/kpi/goal-tree-view.tsx` (refactored with TreeContent)
+- `src/components/features/kpi/goal-tree-node.tsx` (tabIndex, useCallback)
