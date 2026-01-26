@@ -35,6 +35,7 @@ import {
   type GranularityOption,
   type MeasureOption,
 } from '@/lib/hooks/use-insights-data';
+import { useEnhancedAnalytics } from '@/lib/hooks/use-enhanced-analytics';
 import type { Tag } from '@/lib/hooks/use-tags';
 import type { DripQuadrant, EnergyRating } from '@/types/database';
 import {
@@ -44,6 +45,9 @@ import {
   TrendLineChart,
   EnergyFlowChart,
 } from './insights-charts';
+import { CategoryBreakdownChart } from '@/components/features/analytics/category-breakdown-chart';
+import { TimeByProjectChart } from '@/components/features/analytics/time-by-project-chart';
+import { MeetingLoadWidget } from '@/components/features/analytics/meeting-load-widget';
 
 interface InsightsViewProps {
   timeBlocks: TimeBlockData[];
@@ -122,6 +126,12 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
       tagIds: selectedTags.length > 0 ? selectedTags : undefined,
     },
   });
+
+  // Enhanced analytics data (fetches from API for activity classification)
+  const enhancedAnalytics = useEnhancedAnalytics(
+    { start: startDate, end: endDate },
+    granularity === 'day' ? 'day' : granularity === 'week' ? 'week' : 'month'
+  );
 
   // Get colors and keys for time series charts
   const { chartKeys, chartColors } = useMemo(() => {
@@ -681,6 +691,23 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Enhanced Analytics - Activity Classification */}
+      {!enhancedAnalytics.isLoading && (
+        <>
+          {/* Activity Type Breakdown */}
+          <CategoryBreakdownChart
+            data={enhancedAnalytics.activityTypeBreakdown}
+            totalMinutes={enhancedAnalytics.totalMinutes}
+          />
+
+          {/* Project & Meeting Analytics */}
+          <div className="grid gap-6 lg:grid-cols-2">
+            <TimeByProjectChart data={enhancedAnalytics.projectBreakdown} />
+            <MeetingLoadWidget metrics={enhancedAnalytics.meetingMetrics} />
+          </div>
+        </>
+      )}
 
       {/* Detailed Breakdown Tables */}
       <div className="grid gap-6 lg:grid-cols-3">

@@ -1,22 +1,10 @@
 'use client';
 
-import { useMemo } from 'react';
-import { useLocalStorage } from './use-local-storage';
+import { useMemo, useState, useEffect } from 'react';
 import {
-  startOfWeek,
-  endOfWeek,
-  startOfMonth,
-  endOfMonth,
-  startOfQuarter,
-  endOfQuarter,
-  eachDayOfInterval,
-  eachWeekOfInterval,
   format,
   parseISO,
   isWithinInterval,
-  subWeeks,
-  subMonths,
-  differenceInMinutes,
 } from 'date-fns';
 import type { DripQuadrant, EnergyRating } from '@/types/database';
 
@@ -112,13 +100,19 @@ export interface EnhancedAnalyticsData {
   // Summary stats
   totalMinutes: number;
   totalHours: number;
+
+  // Loading state
+  isLoading: boolean;
 }
 
 // Calculate duration in minutes between two time strings
 function calculateDuration(startTime: string, endTime: string): number {
-  const [startHour, startMin] = startTime.split(':').map(Number);
-  const [endHour, endMin] = endTime.split(':').map(Number);
-  return (endHour * 60 + endMin) - (startHour * 60 + startMin);
+  // Handle time formats with or without seconds
+  const parseTime = (t: string) => {
+    const parts = t.split(':').map(Number);
+    return parts[0] * 60 + parts[1];
+  };
+  return parseTime(endTime) - parseTime(startTime);
 }
 
 // Infer activity type from activity name if not set
@@ -190,6 +184,15 @@ function inferActivityType(block: TimeBlock): ActivityType {
     return 'project';
   }
 
+  // Check for project-like patterns
+  if (
+    name.includes('project') ||
+    name.includes('development') ||
+    name.includes('implementation')
+  ) {
+    return 'project';
+  }
+
   return 'other';
 }
 
@@ -199,38 +202,69 @@ export function useEnhancedAnalytics(
   dateRange: { start: Date; end: Date },
   granularity: TimeGranularity = 'week'
 ): EnhancedAnalyticsData {
-  const [timeBlocks] = useLocalStorage<TimeBlock[]>('time-blocks', []);
+  const [timeBlocks, setTimeBlocks] = useState<TimeBlock[]>([]);
+  const [comparisonBlocks, setComparisonBlocks] = useState<TimeBlock[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Memoize date timestamps to avoid infinite loops
+  const startTime = dateRange.start.getTime();
+  const endTime = dateRange.end.getTime();
 
   // Get comparison period based on granularity
-  const getComparisonRange = useMemo(() => {
-    const diffMs = dateRange.end.getTime() - dateRange.start.getTime();
-    const prevEnd = new Date(dateRange.start.getTime() - 1);
+  const comparisonRange = useMemo(() => {
+    const diffMs = endTime - startTime;
+    const prevEnd = new Date(startTime - 1);
     const prevStart = new Date(prevEnd.getTime() - diffMs);
     return { start: prevStart, end: prevEnd };
-  }, [dateRange]);
+  }, [startTime, endTime]);
 
-  // Filter blocks within date range
-  const filteredBlocks = useMemo(() => {
-    return timeBlocks.filter((block) => {
-      const blockDate = parseISO(block.date);
-      return isWithinInterval(blockDate, { start: dateRange.start, end: dateRange.end });
-    });
-  }, [timeBlocks, dateRange]);
+  // Memoize comparison timestamps
+  const compStartTime = comparisonRange.start.getTime();
+  const compEndTime = comparisonRange.end.getTime();
 
-  // Filter blocks for comparison period
-  const comparisonBlocks = useMemo(() => {
-    return timeBlocks.filter((block) => {
-      const blockDate = parseISO(block.date);
-      return isWithinInterval(blockDate, { start: getComparisonRange.start, end: getComparisonRange.end });
-    });
-  }, [timeBlocks, getComparisonRange]);
+  // Fetch time blocks from API
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        // Format dates for API
+        const startDate = format(dateRange.start, 'yyyy-MM-dd');
+        const endDate = format(dateRange.end, 'yyyy-MM-dd');
+        const prevStartDate = format(comparisonRange.start, 'yyyy-MM-dd');
+        const prevEndDate = format(comparisonRange.end, 'yyyy-MM-dd');
+
+        // Fetch current period and comparison period in parallel
+        const [currentRes, prevRes] = await Promise.all([
+          fetch(`/api/time-blocks?startDate=${startDate}&endDate=${endDate}`),
+          fetch(`/api/time-blocks?startDate=${prevStartDate}&endDate=${prevEndDate}`),
+        ]);
+
+        if (currentRes.ok) {
+          const data = await currentRes.json();
+          setTimeBlocks(data.timeBlocks || []);
+        }
+
+        if (prevRes.ok) {
+          const data = await prevRes.json();
+          setComparisonBlocks(data.timeBlocks || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch time blocks for analytics:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startTime, endTime, compStartTime, compEndTime]);
 
   // Calculate total minutes
   const totalMinutes = useMemo(() => {
-    return filteredBlocks.reduce((sum, block) => {
+    return timeBlocks.reduce((sum, block) => {
       return sum + calculateDuration(block.startTime, block.endTime);
     }, 0);
-  }, [filteredBlocks]);
+  }, [timeBlocks]);
 
   // Project breakdown
   const projectBreakdown = useMemo((): ProjectBreakdown[] => {
@@ -243,7 +277,7 @@ export function useEnhancedAnalytics(
     }>();
 
     // Current period
-    filteredBlocks.forEach((block) => {
+    timeBlocks.forEach((block) => {
       const type = inferActivityType(block);
       if (type === 'project' || block.detectedProjectId) {
         const projectId = block.detectedProjectId || `inferred-${block.activityName}`;
@@ -290,7 +324,7 @@ export function useEnhancedAnalytics(
         };
       })
       .sort((a, b) => b.totalMinutes - a.totalMinutes);
-  }, [filteredBlocks, comparisonBlocks]);
+  }, [timeBlocks, comparisonBlocks]);
 
   // Meeting metrics
   const meetingMetrics = useMemo((): MeetingMetrics => {
@@ -299,7 +333,7 @@ export function useEnhancedAnalytics(
     const dailyMeetingMinutes = new Map<string, number>();
     let meetingCount = 0;
 
-    filteredBlocks.forEach((block) => {
+    timeBlocks.forEach((block) => {
       const type = inferActivityType(block);
       if (type === 'meeting') {
         const duration = calculateDuration(block.startTime, block.endTime);
@@ -357,7 +391,7 @@ export function useEnhancedAnalytics(
       averageMeetingDuration: meetingCount > 0 ? Math.round(totalMeetingMinutes / meetingCount) : 0,
       trend: Math.round(trend),
     };
-  }, [filteredBlocks, comparisonBlocks, totalMinutes]);
+  }, [timeBlocks, comparisonBlocks, totalMinutes]);
 
   // Activity type breakdown
   const activityTypeBreakdown = useMemo((): ActivityTypeBreakdown[] => {
@@ -371,7 +405,7 @@ export function useEnhancedAnalytics(
       other: 0,
     };
 
-    filteredBlocks.forEach((block) => {
+    timeBlocks.forEach((block) => {
       const type = inferActivityType(block);
       typeMinutes[type] += calculateDuration(block.startTime, block.endTime);
     });
@@ -409,7 +443,7 @@ export function useEnhancedAnalytics(
       })
       .filter((item) => item.minutes > 0)
       .sort((a, b) => b.minutes - a.minutes);
-  }, [filteredBlocks, comparisonBlocks, totalMinutes]);
+  }, [timeBlocks, comparisonBlocks, totalMinutes]);
 
   // Period comparison
   const periodComparison = useMemo((): PeriodComparison => {
@@ -465,7 +499,7 @@ export function useEnhancedAnalytics(
       return summary;
     };
 
-    const current = calculateSummary(filteredBlocks);
+    const current = calculateSummary(timeBlocks);
     const previous = calculateSummary(comparisonBlocks);
 
     return {
@@ -477,7 +511,7 @@ export function useEnhancedAnalytics(
         meetingPercentage: current.meetingPercentage - previous.meetingPercentage,
       },
     };
-  }, [filteredBlocks, comparisonBlocks]);
+  }, [timeBlocks, comparisonBlocks]);
 
   // Total project minutes
   const totalProjectMinutes = useMemo(() => {
@@ -492,5 +526,6 @@ export function useEnhancedAnalytics(
     periodComparison,
     totalMinutes,
     totalHours: totalMinutes / 60,
+    isLoading,
   };
 }
