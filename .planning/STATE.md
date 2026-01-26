@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-23)
 
 **Core value:** When a user creates a Vision, the entire goal hierarchy cascades automatically - from SMART-based KPIs down to daily actions - and completing any item visibly moves progress up the chain to the dashboard.
-**Current focus:** Phase 7 - Today Dashboard COMPLETE, ready for Phase 8
+**Current focus:** ALL PHASES COMPLETE - Vision & KPI Cascade project finished
 
 ## Current Position
 
-Phase: 7 of 8 (07-today-dashboard) - COMPLETE
-Plan: 1 of 1 (gap closure complete)
-Status: READY FOR PHASE 8
-Last activity: 2026-01-25 - Phase 7 Today Dashboard complete with quarterly progress
+Phase: 8 of 8 (08-progress-page) - COMPLETE
+Plan: 3 of 3 (all plans executed)
+Status: PROJECT COMPLETE
+Last activity: 2026-01-25 - Phase 8 Progress Page complete with all features
 
-Progress: [##########################] 100%
+Progress: [##############################] 100%
 
 ## Vision Planner Feature - COMPLETE
 
@@ -66,6 +66,29 @@ Tested full end-to-end workflow:
 - `1b395b8` chore: rename Goal Planner to Vision Planner and add protected routes
 - `59ca215` fix: pass vision text directly to submitVision to avoid state timing issue
 - `530abc1` feat: add metrics-first goal planner with chat interface
+
+## Phase 8 Progress - COMPLETE
+
+| Plan | Status |
+|------|--------|
+| 08-01: Roll-up Visualization & Filters | COMPLETE |
+| 08-02: Activity Feed & Trend Charts | COMPLETE |
+| 08-03: Zombie Goals & Impact Indicators | COMPLETE |
+
+**08-01 Deliverables:**
+- HierarchyRollupView component for vision->quarterly->monthly->weekly->daily visualization
+- ProgressFilters component with vision, status, date range filters
+- Tabbed interface (Overview / Hierarchy Roll-up) on Progress page
+
+**08-02 Deliverables:**
+- ActivityFeed API at /api/progress/activity-feed
+- ActivityFeed component with date grouping (Today, Yesterday, This Week, Earlier)
+- ProgressTrendChart with Recharts (7d, 30d, 90d, 1yr views)
+
+**08-03 Deliverables:**
+- Zombie goal detection (14+ days inactive) in progress summary API
+- ZombieGoalsWidget with revive/hide actions
+- ImpactIndicators component showing high-impact daily KPIs
 
 ## Phase 7 Progress - COMPLETE
 
@@ -137,8 +160,9 @@ Tested full end-to-end workflow:
 | 05-cascade-generation | 3 | 21m | 7m | COMPLETE |
 | 06-tree-ui | 4 | 25m | 6m | COMPLETE |
 | 07-today-dashboard | 1 | 15m | 15m | COMPLETE |
+| 08-progress-page | 3 | 40m | 13m | COMPLETE |
 
-*Updated after each plan completion*
+*All phases complete*
 
 ## Accumulated Context
 
@@ -197,26 +221,30 @@ Recent decisions affecting current work:
 - [x] ~~Complete human verification for 06-03 (KPIs tree view testing)~~ (VERIFIED 2026-01-25)
 - [x] ~~Execute Phase 6 Plan 04 (Polish & Edge Cases)~~ (COMPLETE 2026-01-25)
 - [x] ~~Execute Phase 7 plans (Today Dashboard)~~ (COMPLETE 2026-01-25)
-- [ ] Execute Phase 8 plans (Progress Page)
+- [x] ~~Execute Phase 8 plans (Progress Page)~~ (COMPLETE 2026-01-25)
 
 ### Blockers/Concerns
 
-None currently. Phase 7 complete, ready for Phase 8.
+None. All 8 phases complete. Project finished.
 
 ## Session Continuity
 
 Last session: 2026-01-25
-Stopped at: Phase 7 complete
-Resume action:
-1. Review Phase 8 roadmap and plans
-2. Begin Phase 8 execution (Progress Page)
+Stopped at: Project complete - all 8 phases finished
+Resume action: None - project complete
 
-**Phase 7 Summary (2026-01-25):**
-- Gap analysis found most TODAY requirements already implemented
-- Added quarterly progress to API and stats grid
-- All 6 TODAY requirements now complete
+**Phase 8 Summary (2026-01-25):**
+- 08-01: Added HierarchyRollupView, ProgressFilters, tabbed interface
+- 08-02: Added ActivityFeed API/component, ProgressTrendChart with date ranges
+- 08-03: Added zombie goal detection, ZombieGoalsWidget, ImpactIndicators
 
-**Files modified in 07-01:**
-- `src/app/api/kpi-dashboard/route.ts` (added quarterlyProgress)
-- `src/components/features/kpi/daily-kpi-dashboard.tsx` (4-column stats grid)
-- `src/components/features/kpi/goal-tree-view.tsx` (type fix)
+**Files created/modified in Phase 8:**
+- `src/app/api/progress/activity-feed/route.ts` (new)
+- `src/app/api/progress/summary/route.ts` (zombie detection added)
+- `src/components/features/progress/hierarchy-rollup-view.tsx` (new)
+- `src/components/features/progress/progress-filters.tsx` (new)
+- `src/components/features/progress/activity-feed.tsx` (new)
+- `src/components/features/progress/progress-trend-chart.tsx` (new)
+- `src/components/features/progress/zombie-goals-widget.tsx` (new)
+- `src/components/features/progress/impact-indicators.tsx` (new)
+- `src/app/(dashboard)/progress/page.tsx` (major enhancements)

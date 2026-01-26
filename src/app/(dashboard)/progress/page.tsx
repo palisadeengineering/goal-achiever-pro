@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { PageHeader } from '@/components/layout/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,10 +23,17 @@ import {
   Calendar,
   BarChart3,
   Sparkles,
+  Layers,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { ShareButton } from '@/components/features/sharing';
+import { HierarchyRollupView } from '@/components/features/progress/hierarchy-rollup-view';
+import { ProgressFilters, type ProgressFiltersState } from '@/components/features/progress/progress-filters';
+import { ActivityFeed } from '@/components/features/progress/activity-feed';
+import { ProgressTrendChart } from '@/components/features/progress/progress-trend-chart';
+import { ZombieGoalsWidget } from '@/components/features/progress/zombie-goals-widget';
+import { AllVisionsImpact } from '@/components/features/progress/impact-indicators';
 
 interface KpiSummary {
   id: string;
@@ -66,6 +73,17 @@ interface StreakEntry {
   visionColor: string;
 }
 
+interface ZombieGoal {
+  id: string;
+  title: string;
+  level: string;
+  visionId: string;
+  visionTitle: string;
+  visionColor: string;
+  daysSinceActivity: number | null;
+  lastActivity: string | null;
+}
+
 interface ProgressData {
   summary: {
     totalKpis: number;
@@ -80,6 +98,7 @@ interface ProgressData {
   };
   kpisByVision: VisionKpis[];
   streakLeaderboard: StreakEntry[];
+  zombieGoals: ZombieGoal[];
   date: string;
 }
 
@@ -101,6 +120,12 @@ export default function ProgressPage() {
   const [data, setData] = useState<ProgressData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'hierarchy'>('overview');
+  const [filters, setFilters] = useState<ProgressFiltersState>({
+    visionId: null,
+    status: 'all',
+    dateRange: 'all',
+  });
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -121,6 +146,29 @@ export default function ProgressPage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Get visions for filter dropdown
+  const visions = useMemo(() => {
+    if (!data?.kpisByVision) return [];
+    return data.kpisByVision.map(v => ({
+      id: v.visionId,
+      title: v.visionTitle,
+      color: v.visionColor,
+    }));
+  }, [data?.kpisByVision]);
+
+  // Filter kpisByVision based on selected filters
+  const filteredKpisByVision = useMemo(() => {
+    if (!data?.kpisByVision) return [];
+    let filtered = data.kpisByVision;
+
+    // Filter by vision
+    if (filters.visionId) {
+      filtered = filtered.filter(v => v.visionId === filters.visionId);
+    }
+
+    return filtered;
+  }, [data?.kpisByVision, filters.visionId]);
 
   if (isLoading) {
     return (
@@ -195,6 +243,11 @@ export default function ProgressPage() {
         icon={<TrendingUp className="h-6 w-6" />}
         actions={
           <div className="flex items-center gap-2">
+            <ProgressFilters
+              filters={filters}
+              onFiltersChange={setFilters}
+              visions={visions}
+            />
             <ShareButton tabName="progress" />
             <Button variant="outline" onClick={fetchData} size="sm">
               <RefreshCw className="h-4 w-4 mr-2" />
@@ -204,8 +257,28 @@ export default function ProgressPage() {
         }
       />
 
-      {/* Overview Summary */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {/* View Tabs */}
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'overview' | 'hierarchy')}>
+        <TabsList>
+          <TabsTrigger value="overview" className="gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="hierarchy" className="gap-2">
+            <Layers className="h-4 w-4" />
+            Hierarchy Roll-up
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      {/* Tab Content */}
+      {activeTab === 'overview' ? (
+        <>
+          {/* Trend Chart */}
+          <ProgressTrendChart visionId={filters.visionId} />
+
+          {/* Overview Summary */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
@@ -284,7 +357,7 @@ export default function ProgressPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {data.kpisByVision.map((vision) => (
+              {filteredKpisByVision.map((vision) => (
                 <div key={vision.visionId} className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -350,9 +423,11 @@ export default function ProgressPage() {
                 </div>
               ))}
 
-              {data.kpisByVision.length === 0 && (
+              {filteredKpisByVision.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
-                  No visions with KPIs found. Set up KPIs for your visions to track progress.
+                  {filters.visionId
+                    ? 'No KPIs found for the selected vision.'
+                    : 'No visions with KPIs found. Set up KPIs for your visions to track progress.'}
                 </div>
               )}
             </CardContent>
@@ -447,34 +522,46 @@ export default function ProgressPage() {
             </CardContent>
           </Card>
 
-          {/* Quick Links */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Link href="/today">
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <Calendar className="h-4 w-4" />
-                  Today&apos;s Actions
-                </Button>
-              </Link>
-              <Link href="/vision">
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <Target className="h-4 w-4" />
-                  Manage KPIs
-                </Button>
-              </Link>
-              <Link href="/backtrack">
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <Sparkles className="h-4 w-4" />
-                  Backtrack Plans
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+          {/* Activity Feed */}
+          <ActivityFeed visionId={filters.visionId} limit={20} />
+
+          {/* Zombie Goals */}
+          {data.zombieGoals && data.zombieGoals.length > 0 && (
+            <ZombieGoalsWidget zombieGoals={data.zombieGoals} onRefresh={fetchData} />
+          )}
+
+          {/* Impact Indicators */}
+          <AllVisionsImpact visions={visions} />
         </div>
       </div>
+        </>
+      ) : (
+        /* Hierarchy Roll-up View */
+        <div className="space-y-6">
+          {filteredKpisByVision.length > 0 ? (
+            filteredKpisByVision.map((vision) => (
+              <HierarchyRollupView
+                key={vision.visionId}
+                visionId={vision.visionId}
+                visionTitle={vision.visionTitle}
+                visionColor={vision.visionColor}
+              />
+            ))
+          ) : (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <Layers className="h-16 w-16 text-muted-foreground/50 mb-4" />
+                <h3 className="text-xl font-semibold mb-2">No Visions to Display</h3>
+                <p className="text-muted-foreground text-center max-w-md">
+                  {filters.visionId
+                    ? 'No KPIs found for the selected vision.'
+                    : 'Create visions with KPIs to see the hierarchy roll-up.'}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
     </div>
   );
 }

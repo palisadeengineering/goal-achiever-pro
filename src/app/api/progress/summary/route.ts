@@ -151,6 +151,65 @@ export async function GET() {
     const actionsCompleted = dailyActionsStats?.filter(a => a.status === 'completed').length || 0;
     const actionsTotal = dailyActionsStats?.length || 0;
 
+    // Detect zombie goals (no activity in 14+ days)
+    const { data: lastActivityData } = await supabase
+      .from('vision_kpi_logs')
+      .select('kpi_id, log_date')
+      .eq('user_id', userId)
+      .in('kpi_id', allKpiIds)
+      .order('log_date', { ascending: false });
+
+    // Build map of last activity per KPI
+    const lastActivityMap = new Map<string, string>();
+    lastActivityData?.forEach(log => {
+      if (!lastActivityMap.has(log.kpi_id)) {
+        lastActivityMap.set(log.kpi_id, log.log_date);
+      }
+    });
+
+    // Find zombie goals (14+ days since last activity)
+    const ZOMBIE_THRESHOLD_DAYS = 14;
+    const todayDate = new Date(today);
+
+    const zombieGoals = visions?.flatMap(vision => {
+      const kpis = vision.vision_kpis || [];
+      return kpis
+        .map(kpi => {
+          const lastActivity = lastActivityMap.get(kpi.id);
+          let daysSinceActivity = null;
+
+          if (!lastActivity) {
+            // Never logged - consider as zombie if it's a daily/weekly KPI
+            daysSinceActivity = 999;
+          } else {
+            const lastDate = new Date(lastActivity);
+            daysSinceActivity = Math.floor(
+              (todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24)
+            );
+          }
+
+          if (daysSinceActivity && daysSinceActivity >= ZOMBIE_THRESHOLD_DAYS) {
+            return {
+              id: kpi.id,
+              title: kpi.title,
+              level: kpi.level,
+              visionId: vision.id,
+              visionTitle: vision.title,
+              visionColor: vision.color || '#6366f1',
+              daysSinceActivity: daysSinceActivity === 999 ? null : daysSinceActivity,
+              lastActivity: lastActivity || null,
+            };
+          }
+          return null;
+        })
+        .filter(Boolean);
+    })?.sort((a: any, b: any) => {
+      // Sort by most neglected first
+      const aVal = a?.daysSinceActivity ?? 999;
+      const bVal = b?.daysSinceActivity ?? 999;
+      return bVal - aVal;
+    }).slice(0, 10) || [];
+
     return NextResponse.json({
       summary: {
         totalKpis,
@@ -165,6 +224,7 @@ export async function GET() {
       },
       kpisByVision,
       streakLeaderboard: allStreaks,
+      zombieGoals,
       date: today,
     });
   } catch (error) {
