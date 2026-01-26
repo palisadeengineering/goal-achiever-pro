@@ -14,7 +14,7 @@
  * - Leaf node checkboxes for completion
  */
 
-import { useState } from 'react';
+import { useState, memo, useCallback } from 'react';
 import { ChevronRight } from 'lucide-react';
 import {
   Collapsible,
@@ -49,8 +49,10 @@ export interface GoalTreeNodeProps {
  * - aria-selected for selection state
  * - roving tabindex for keyboard navigation
  * - Enter/Space to toggle expand or complete leaf
+ *
+ * Memoized to prevent unnecessary re-renders in large trees.
  */
-export function GoalTreeNode({
+export const GoalTreeNode = memo(function GoalTreeNode({
   node,
   level,
   posInSet,
@@ -89,36 +91,36 @@ export function GoalTreeNode({
   /**
    * Handle checkbox change for leaf node completion
    */
-  const handleCheckboxChange = (checked: boolean) => {
+  const handleCheckboxChange = useCallback((checked: boolean) => {
     if (onLogKpi) {
       onLogKpi(node.id, checked);
     }
-  };
+  }, [node.id, onLogKpi]);
 
   /**
    * Handle node click for selection
    */
-  const handleNodeClick = (e: React.MouseEvent) => {
+  const handleNodeClick = useCallback((e: React.MouseEvent) => {
     // Don't select if clicking on the expand button or checkbox
     const target = e.target as HTMLElement;
     if (target.closest('[data-slot="button"]') || target.closest('[data-slot="checkbox"]')) {
       return;
     }
     setSelectedId(node.id);
-  };
+  }, [node.id, setSelectedId]);
 
   /**
    * Handle focus for roving tabindex
    */
-  const handleFocus = () => {
+  const handleFocus = useCallback(() => {
     setFocusedId(node.id);
-  };
+  }, [node.id, setFocusedId]);
 
   /**
    * Handle keyboard events for Enter/Space
    * Arrow navigation is handled at tree level
    */
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       if (hasChildren) {
@@ -128,7 +130,7 @@ export function GoalTreeNode({
         onLogKpi(node.id, node.progress < 100);
       }
     }
-  };
+  }, [hasChildren, node.id, node.progress, onLogKpi, toggleExpanded]);
 
   return (
     <li
@@ -165,6 +167,7 @@ export function GoalTreeNode({
                 className="h-6 w-6 p-0 shrink-0"
                 aria-label={isExpanded ? 'Collapse' : 'Expand'}
                 data-slot="button"
+                tabIndex={-1}
               >
                 <ChevronRight
                   className={cn(
@@ -187,6 +190,7 @@ export function GoalTreeNode({
               aria-label={`Mark ${node.title} as ${isCompleted ? 'incomplete' : 'complete'}`}
               className="shrink-0"
               data-slot="checkbox"
+              tabIndex={-1}
             />
           )}
 
@@ -244,6 +248,7 @@ export function GoalTreeNode({
                     size="sm"
                     className="text-xs text-muted-foreground"
                     onClick={() => setShowAll(true)}
+                    tabIndex={-1}
                   >
                     Show {hiddenCount} more...
                   </Button>
@@ -255,4 +260,4 @@ export function GoalTreeNode({
       </Collapsible>
     </li>
   );
-}
+});
