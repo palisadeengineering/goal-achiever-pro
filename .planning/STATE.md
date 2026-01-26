@@ -12,9 +12,60 @@ See: .planning/PROJECT.md (updated 2026-01-23)
 Phase: 6 of 8 (06-tree-ui)
 Plan: 3 of 4 (code complete, awaiting human verification)
 Status: HUMAN VERIFICATION CHECKPOINT
-Last activity: 2026-01-24 - 06-03 code complete, testing in progress
+Last activity: 2026-01-25 - Vision Planner feature complete and verified
 
 Progress: [####################----] 85%
+
+## Vision Planner Feature - COMPLETE
+
+**Status:** ✅ VERIFIED WORKING (2026-01-25)
+
+The Vision Planner is a new metrics-first goal creation flow that replaces the old 8-step wizard. Users describe their goal, AI asks targeted questions about current metrics, and the plan builds from real numbers.
+
+### What Was Built
+
+| Component | Status |
+|-----------|--------|
+| Metrics Chat Provider | ✅ Complete |
+| Metrics Chat Panel | ✅ Complete |
+| Live Tree Panel | ✅ Complete |
+| AI Question Generation API | ✅ Complete |
+| AI Plan Generation API | ✅ Complete |
+| KPI Database Save | ✅ Fixed & Verified |
+
+### Flow
+
+1. User enters vision description
+2. AI generates 5-10 targeted metric questions
+3. User answers all questions in form
+4. AI generates personalized plan with quarterly/monthly/weekly/daily breakdown
+5. User approves metrics → quarterly targets → full plan
+6. Vision + SMART goals + Affirmation + KPIs saved to database
+7. KPIs display in Vision detail page under KPIs tab
+
+### Bug Fix Applied
+
+**Issue:** KPIs were not saving to database
+**Root cause:** API response `{ vision: { id: "..." } }` but code read `visionData.id` (undefined)
+**Fix:** Changed to `visionData.vision?.id || visionData.id` in `metrics-chat-provider.tsx:381`
+
+### Verification Results
+
+Tested full end-to-end workflow:
+- ✅ Vision created: "Launch YouTube channel with 10K subscribers"
+- ✅ 8 metric questions generated and answered
+- ✅ Plan generated with 4 quarterly targets + 4 daily habits
+- ✅ All 3 approval steps completed
+- ✅ 19 KPIs saved to database
+- ✅ KPIs display correctly in tree view
+- ✅ Daily habits show with time allocations
+
+### Commits
+
+- `a975024` fix: Vision Planner now saves KPIs to database correctly
+- `1b395b8` chore: rename Goal Planner to Vision Planner and add protected routes
+- `59ca215` fix: pass vision text directly to submitVision to avoid state timing issue
+- `530abc1` feat: add metrics-first goal planner with chat interface
 
 ## Phase 6 Progress
 
