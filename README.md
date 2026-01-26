@@ -1,39 +1,292 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Goal Achiever Pro
+
+A comprehensive goal-setting and time-optimization web app built on **Dan Martell's "Buy Back Your Time" methodology**. Helps entrepreneurs define visions, create Power Goals, track time, and optimize productivity.
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Framework | Next.js 16.1.1 (App Router) |
+| Language | TypeScript (strict mode) |
+| UI | React 19, Tailwind CSS 4, shadcn/ui |
+| State | Zustand, TanStack React Query |
+| Database | Supabase (PostgreSQL) |
+| ORM | Drizzle ORM |
+| AI | OpenAI GPT-4o-mini |
+| Payments | Stripe |
+| Auth | Supabase Auth |
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Node.js 18+
+- npm or yarn
+- Supabase account
+- Stripe account (for payments)
+
+### Environment Variables
+
+Create a `.env.local` file:
+
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+# Database
+DATABASE_URL=your_database_url
+
+# Anthropic
+ANTHROPIC_API_KEY=your_anthropic_key
+
+# Stripe
+STRIPE_SECRET_KEY=your_stripe_secret
+STRIPE_WEBHOOK_SECRET=your_webhook_secret
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_publishable_key
+
+# Google Calendar (optional)
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Installation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# Install dependencies
+npm install
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Run development server
+npm run dev
 
-## Learn More
+# Build for production
+npm run build
 
-To learn more about Next.js, take a look at the following resources:
+# Run linting
+npm run lint
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Open [http://localhost:3000](http://localhost:3000) to view the app.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Database Setup
 
-## Deploy on Vercel
+```bash
+# Push schema changes
+npx drizzle-kit push
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Generate migrations
+npx drizzle-kit generate
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Core Features
 
-# Trigger redeploy
+### Goal Hierarchy
+```
+Vision (SMART Goals)
+  └── 12 Power Goals (annual projects, 4 quarters)
+       └── Monthly Targets
+            └── Weekly Targets
+                 └── Daily Actions
+```
 
+### Key Modules
+
+| Module | Description |
+|--------|-------------|
+| **Vision** | SMART goal framework with AI-assisted generation |
+| **Power Goals** | 12 annual projects per Dan Martell's method |
+| **MINs** | Most Important Next Steps scheduling |
+| **Time Audit** | 15-minute block tracking with DRIP categorization |
+| **DRIP Matrix** | Delegation, Replacement, Investment, Production quadrants |
+| **300% Rule** | Track Clarity, Belief, Consistency scores |
+| **KPI Tracking** | AI-generated KPIs aligned with vision |
+| **Leverage (4 C's)** | Code, Content, Capital, Collaboration tracking |
+| **Routines** | Morning, midday, and evening routine builder |
+| **Reviews** | 3x daily review system |
+| **Pomodoro** | Focus timer with session tracking |
+| **Analytics** | Dashboard with charts and progress visualization |
+
+## Project Structure
+
+```
+src/
+├── app/
+│   ├── (auth)/              # Login, signup, callback
+│   ├── (dashboard)/         # Protected routes
+│   │   ├── vision/          # Vision & SMART goals
+│   │   ├── goals/           # Power Goals
+│   │   ├── mins/            # Most Important Next Steps
+│   │   ├── time-audit/      # Time tracking
+│   │   ├── drip/            # DRIP Matrix
+│   │   ├── routines/        # Daily routines
+│   │   ├── pomodoro/        # Focus timer
+│   │   ├── reviews/         # Daily reviews
+│   │   ├── leverage/        # 4 C's tracking
+│   │   ├── network/         # Friend inventory
+│   │   ├── analytics/       # Dashboard
+│   │   └── settings/        # Settings & subscription
+│   ├── (marketing)/         # Public pages
+│   ├── (onboarding)/        # Onboarding flow
+│   └── api/                 # API routes
+├── components/
+│   ├── layout/              # Header, Sidebar, PageHeader
+│   ├── ui/                  # shadcn/ui components
+│   ├── features/            # Domain-specific components
+│   └── shared/              # Reusable components
+├── lib/
+│   ├── db/                  # Drizzle schema & migrations
+│   ├── supabase/            # Supabase clients
+│   ├── stripe/              # Stripe integration
+│   ├── hooks/               # Custom hooks
+│   ├── stores/              # Zustand stores
+│   └── validations/         # Zod schemas
+├── types/                   # TypeScript interfaces
+├── constants/               # Routes and constants
+└── middleware.ts            # Auth middleware
+```
+
+## Subscription Tiers
+
+| Feature | Free | Pro | Elite |
+|---------|------|-----|-------|
+| Vision & Power Goals | Yes | Yes | Yes |
+| Basic Time Tracking | Yes | Yes | Yes |
+| Biweekly Time Audit | No | Yes | Yes |
+| Leverage/Network | No | Yes | Yes |
+| Midday Reviews | No | Yes | Yes |
+| Monthly Time Audit | No | No | Yes |
+| Accountability Features | No | No | Yes |
+
+## Branding
+
+| Element | Value |
+|---------|-------|
+| Primary Color | `#00BEFF` (Cyan) |
+| Background Dark | `#0A0A0A` |
+| Text Light | `#FAFAFA` |
+| Font Primary | Outfit |
+| Font Secondary | Plus Jakarta Sans |
+
+---
+
+## Marketing Materials
+
+The `/marketing` folder contains a complete content marketing system.
+
+### Content Calendar & Strategy
+
+| File | Description |
+|------|-------------|
+| `social-media-content-calendar.md` | 6-week content calendar for all platforms |
+| `content-calendar-template.csv` | Master planning spreadsheet |
+| `buffer-import-template.csv` | Ready-to-import Buffer CSV |
+| `content-calendar-guide.md` | Usage guide and workflow |
+| `posting-schedule.md` | Optimal posting times by platform |
+
+### YouTube Production System
+
+| File | Description |
+|------|-------------|
+| `youtube-production-system.md` | Complete YouTube playbook |
+
+**Includes:**
+- YouTube algorithm strategies
+- 15 viral hook formulas
+- 5 complete long-form video scripts with B-roll
+- 10 YouTube Shorts scripts
+- Retention engineering tactics
+- 90-day launch plan
+- 50 video ideas + 100 Shorts ideas
+- Batch production workflow
+- Monetization pathways
+
+### Thumbnail Templates
+
+| File | Description |
+|------|-------------|
+| `youtube-thumbnail-templates.md` | Specs and design guide |
+| `thumbnails/template-1-face-text.svg` | Face + Text layout |
+| `thumbnails/template-2-big-number.svg` | Big Number layout |
+| `thumbnails/template-3-before-after.svg` | Before/After split |
+| `thumbnails/template-4-drip-matrix.svg` | DRIP Matrix visual |
+| `thumbnails/template-5-text-only.svg` | Bold text only |
+| `thumbnails/template-6-app-feature.svg` | App feature showcase |
+| `thumbnails/template-7-list-number.svg` | List/Number format |
+
+### Lead Magnets
+
+Free downloadable resources for email list building:
+
+| File | Description |
+|------|-------------|
+| `lead-magnets/time-audit-template.md` | 7-day time tracking worksheet |
+| `lead-magnets/drip-matrix-worksheet.md` | DRIP analysis + delegation planner |
+| `lead-magnets/power-goals-template.md` | 12-month Power Goals workbook |
+| `lead-magnets/300-rule-worksheet.md` | Clarity + Belief + Consistency tracker |
+| `lead-magnets/weekly-planning-template.md` | 30-minute weekly planning system |
+| `lead-magnets/daily-routine-checklists.md` | Morning, midday, evening routines |
+
+### Social Media Templates
+
+**Instagram Carousels** (`instagram-carousels/`)
+- 4 weeks of carousel templates (HTML + CSS)
+- Ready-to-export designs
+- Matching captions
+
+**LinkedIn Posts** (`linkedin-posts/`)
+- Professional post templates
+- Week-by-week content
+- Export-ready graphics
+
+**Instagram Stories** (`instagram-stories/`)
+- Story templates for engagement
+- Q&A and poll formats
+
+**X/Twitter** (`x-twitter/`)
+- Thread templates
+- Viral hook formulas
+- Daily post content
+
+### Exporting Graphics
+
+```bash
+# Export all marketing graphics to PNG
+node marketing/export-graphics.js
+```
+
+---
+
+## API Endpoints
+
+### AI Generation
+- `POST /api/ai/generate-smart` - Generate SMART components
+- `POST /api/ai/generate-power-goals` - Create Power Goals
+- `POST /api/ai/generate-kpis` - Generate KPIs
+- `POST /api/ai/generate-targets` - Generate targets
+- `POST /api/ai/suggest-vision` - AI vision suggestions
+
+### Data CRUD
+- `/api/visions` - Vision management
+- `/api/power-goals` - Power Goals management
+- `/api/targets` - Target management
+
+### Integrations
+- `/api/stripe/*` - Payment processing
+- `/api/calendar/google/*` - Google Calendar sync
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run linting and tests
+5. Submit a pull request
+
+## License
+
+MIT License - see LICENSE file for details.
+
+---
+
+Built with Next.js, Supabase, and the Buy Back Your Time methodology.

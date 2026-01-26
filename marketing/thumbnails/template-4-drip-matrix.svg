@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0A0A0A"/>
+      <stop offset="100%" style="stop-color:#1A1A2E"/>
+    </linearGradient>
+    <filter id="textShadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+    <filter id="cellShadow">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1280" height="720" fill="url(#bgGradient)"/>
+
+  <!-- Title -->
+  <text x="100" y="100" font-family="Outfit, Arial Black, sans-serif" font-weight="800" font-size="72" fill="#FAFAFA" filter="url(#textShadow)">
+    DRIP
+  </text>
+  <text x="100" y="170" font-family="Outfit, Arial, sans-serif" font-weight="600" font-size="36" fill="#00BEFF">
+    MATRIX
+  </text>
+
+  <!-- DRIP Matrix Grid -->
+  <g transform="translate(100, 220)" filter="url(#cellShadow)">
+    <!-- D - Delegation (Red) -->
+    <rect x="0" y="0" width="200" height="160" fill="#EF4444" rx="12"/>
+    <text x="100" y="100" font-family="Outfit, Arial Black, sans-serif" font-weight="800" font-size="80" fill="#FAFAFA" text-anchor="middle">
+      D
+    </text>
+
+    <!-- R - Replacement (Amber) -->
+    <rect x="220" y="0" width="200" height="160" fill="#F59E0B" rx="12"/>
+    <text x="320" y="100" font-family="Outfit, Arial Black, sans-serif" font-weight="800" font-size="80" fill="#FAFAFA" text-anchor="middle">
+      R
+    </text>
+
+    <!-- I - Investment (Green) -->
+    <rect x="0" y="180" width="200" height="160" fill="#22C55E" rx="12"/>
+    <text x="100" y="280" font-family="Outfit, Arial Black, sans-serif" font-weight="800" font-size="80" fill="#FAFAFA" text-anchor="middle">
+      I
+    </text>
+
+    <!-- P - Production (Cyan) -->
+    <rect x="220" y="180" width="200" height="160" fill="#00BEFF" rx="12"/>
+    <text x="320" y="280" font-family="Outfit, Arial Black, sans-serif" font-weight="800" font-size="80" fill="#FAFAFA" text-anchor="middle">
+      P
+    </text>
+  </g>
+
+  <!-- Right side text -->
+  <g transform="translate(640, 300)">
+    <text x="0" y="0" font-family="Outfit, Arial Black, sans-serif" font-weight="800" font-size="100" fill="#FAFAFA" filter="url(#textShadow)">
+      FIND
+    </text>
+    <text x="0" y="100" font-family="Outfit, Arial Black, sans-serif" font-weight="800" font-size="100" fill="#00BEFF" filter="url(#textShadow)">
+      20 HRS
+    </text>
+  </g>
+
+  <!-- Face placeholder (bottom right) -->
+  <circle cx="1100" cy="580" r="80" fill="#1a1a1a" stroke="#00BEFF" stroke-width="4"/>
+  <text x="1100" y="585" font-family="Arial, sans-serif" font-size="14" fill="#666" text-anchor="middle">
+    FACE
+  </text>
+
+  <!-- Legend (small) -->
+  <g transform="translate(100, 620)" font-family="Arial, sans-serif" font-size="14" fill="#999">
+    <rect x="0" y="0" width="12" height="12" fill="#EF4444" rx="2"/>
+    <text x="20" y="11">Delegate</text>
+    <rect x="100" y="0" width="12" height="12" fill="#F59E0B" rx="2"/>
+    <text x="120" y="11">Replace</text>
+    <rect x="200" y="0" width="12" height="12" fill="#22C55E" rx="2"/>
+    <text x="220" y="11">Invest</text>
+    <rect x="280" y="0" width="12" height="12" fill="#00BEFF" rx="2"/>
+    <text x="300" y="11">Produce</text>
+  </g>
+</svg>

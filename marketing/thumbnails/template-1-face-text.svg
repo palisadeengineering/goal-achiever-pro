@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0A0A0A"/>
+      <stop offset="100%" style="stop-color:#1A1A2E"/>
+    </linearGradient>
+    <filter id="textShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="10" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+    <filter id="glowCyan" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="20" result="blur"/>
+      <feFlood flood-color="#00BEFF" flood-opacity="0.5"/>
+      <feComposite in2="blur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1280" height="720" fill="url(#bgGradient)"/>
+
+  <!-- Safe Zone Guide (delete in final) -->
+  <rect x="40" y="40" width="1200" height="640" fill="none" stroke="#333" stroke-width="1" stroke-dasharray="10,5" opacity="0.5"/>
+
+  <!-- Face Placeholder (Left 40%) -->
+  <rect x="40" y="40" width="472" height="640" fill="#1a1a1a" rx="8"/>
+  <text x="276" y="360" font-family="Arial, sans-serif" font-size="24" fill="#666" text-anchor="middle">
+    FACE PHOTO
+  </text>
+  <text x="276" y="400" font-family="Arial, sans-serif" font-size="16" fill="#444" text-anchor="middle">
+    (Replace with your image)
+  </text>
+
+  <!-- Text Area (Right Side) -->
+  <g transform="translate(560, 200)">
+    <!-- Main Headline -->
+    <text x="640" y="0" font-family="Outfit, Arial Black, sans-serif" font-weight="800" font-size="140" fill="#FAFAFA" text-anchor="end" filter="url(#textShadow)">
+      HEADLINE
+    </text>
+    <text x="640" y="140" font-family="Outfit, Arial Black, sans-serif" font-weight="800" font-size="140" fill="#FAFAFA" text-anchor="end" filter="url(#textShadow)">
+      TEXT
+    </text>
+
+    <!-- Accent underline -->
+    <rect x="400" y="180" width="240" height="8" fill="#00BEFF" rx="4"/>
+  </g>
+
+  <!-- Brand accent corner -->
+  <rect x="0" y="0" width="8" height="720" fill="#00BEFF"/>
+
+  <!-- Duration avoid zone marker (delete in final) -->
+  <rect x="1140" y="660" width="120" height="40" fill="#EF4444" opacity="0.3" rx="4"/>
+  <text x="1200" y="685" font-family="Arial, sans-serif" font-size="12" fill="#EF4444" text-anchor="middle">
+    AVOID
+  </text>
+</svg>

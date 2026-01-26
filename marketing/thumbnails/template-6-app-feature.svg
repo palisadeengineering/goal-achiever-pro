@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0A0A0A"/>
+      <stop offset="100%" style="stop-color:#1A1A2E"/>
+    </linearGradient>
+    <filter id="phoneShadow">
+      <feDropShadow dx="0" dy="20" stdDeviation="30" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+    <filter id="textShadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+    <clipPath id="screenClip">
+      <rect x="90" y="100" width="220" height="440" rx="4"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1280" height="720" fill="url(#bgGradient)"/>
+
+  <!-- Decorative elements -->
+  <circle cx="1200" cy="100" r="200" fill="#00BEFF" opacity="0.1"/>
+  <circle cx="100" cy="650" r="150" fill="#00BEFF" opacity="0.05"/>
+
+  <!-- Phone Mockup -->
+  <g transform="translate(80, 80) rotate(-5, 200, 280)" filter="url(#phoneShadow)">
+    <!-- Phone frame -->
+    <rect x="0" y="0" width="280" height="560" rx="40" fill="#1a1a1a"/>
+    <rect x="8" y="8" width="264" height="544" rx="36" fill="#000"/>
+
+    <!-- Screen area -->
+    <rect x="16" y="60" width="248" height="480" rx="4" fill="#111"/>
+
+    <!-- App screenshot placeholder -->
+    <g clip-path="url(#screenClip)">
+      <rect x="16" y="60" width="248" height="480" fill="#0A0A0A"/>
+
+      <!-- Fake app UI -->
+      <rect x="30" y="80" width="220" height="40" fill="#1a1a1a" rx="8"/>
+      <text x="140" y="108" font-family="Arial, sans-serif" font-size="16" fill="#666" text-anchor="middle">Today</text>
+
+      <rect x="30" y="140" width="220" height="80" fill="#00BEFF" opacity="0.2" rx="8"/>
+      <rect x="30" y="240" width="220" height="60" fill="#1a1a1a" rx="8"/>
+      <rect x="30" y="320" width="220" height="60" fill="#1a1a1a" rx="8"/>
+      <rect x="30" y="400" width="220" height="60" fill="#1a1a1a" rx="8"/>
+
+      <text x="140" y="185" font-family="Arial, sans-serif" font-size="14" fill="#00BEFF" text-anchor="middle">PROGRESS</text>
+    </g>
+
+    <!-- Notch -->
+    <rect x="90" y="16" width="100" height="28" rx="14" fill="#000"/>
+
+    <!-- Home indicator -->
+    <rect x="100" y="528" width="80" height="5" rx="2.5" fill="#333"/>
+  </g>
+
+  <!-- Feature Label -->
+  <g transform="translate(500, 180)">
+    <text x="0" y="0" font-family="Outfit, Arial, sans-serif" font-weight="600" font-size="36" fill="#00BEFF" letter-spacing="6">
+      NEW FEATURE
+    </text>
+
+    <text x="0" y="100" font-family="Outfit, Arial Black, sans-serif" font-weight="800" font-size="120" fill="#FAFAFA" filter="url(#textShadow)">
+      PROGRESS
+    </text>
+    <text x="0" y="220" font-family="Outfit, Arial Black, sans-serif" font-weight="800" font-size="120" fill="#FAFAFA" filter="url(#textShadow)">
+      PAGE
+    </text>
+  </g>
+
+  <!-- Accent underline -->
+  <rect x="500" y="430" width="300" height="8" fill="#00BEFF" rx="4"/>
+
+  <!-- Face placeholder -->
+  <circle cx="1100" cy="580" r="80" fill="#1a1a1a" stroke="#00BEFF" stroke-width="4"/>
+  <text x="1100" y="585" font-family="Arial, sans-serif" font-size="14" fill="#666" text-anchor="middle">
+    FACE
+  </text>
+
+  <!-- Brand corner -->
+  <rect x="0" y="0" width="1280" height="8" fill="#00BEFF"/>
+</svg>

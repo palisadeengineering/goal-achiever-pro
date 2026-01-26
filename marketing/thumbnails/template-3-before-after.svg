@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="redOverlay" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#EF4444;stop-opacity:0.4"/>
+      <stop offset="100%" style="stop-color:#EF4444;stop-opacity:0.2"/>
+    </linearGradient>
+    <linearGradient id="greenOverlay" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#00BEFF;stop-opacity:0.4"/>
+      <stop offset="100%" style="stop-color:#22C55E;stop-opacity:0.2"/>
+    </linearGradient>
+    <filter id="textShadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000000" flood-opacity="0.7"/>
+    </filter>
+    <clipPath id="leftClip">
+      <polygon points="0,0 660,0 600,720 0,720"/>
+    </clipPath>
+    <clipPath id="rightClip">
+      <polygon points="660,0 1280,0 1280,720 600,720"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1280" height="720" fill="#0A0A0A"/>
+
+  <!-- BEFORE Side (Left) -->
+  <g clip-path="url(#leftClip)">
+    <rect width="640" height="720" fill="#1a1a1a"/>
+    <rect width="640" height="720" fill="url(#redOverlay)"/>
+    <text x="300" y="380" font-family="Arial, sans-serif" font-size="24" fill="#999" text-anchor="middle">
+      BEFORE IMAGE
+    </text>
+    <text x="300" y="420" font-family="Arial, sans-serif" font-size="16" fill="#666" text-anchor="middle">
+      (chaos/problem state)
+    </text>
+  </g>
+
+  <!-- AFTER Side (Right) -->
+  <g clip-path="url(#rightClip)">
+    <rect x="640" width="640" height="720" fill="#1a1a1a"/>
+    <rect x="640" width="640" height="720" fill="url(#greenOverlay)"/>
+    <text x="960" y="380" font-family="Arial, sans-serif" font-size="24" fill="#999" text-anchor="middle">
+      AFTER IMAGE
+    </text>
+    <text x="960" y="420" font-family="Arial, sans-serif" font-size="16" fill="#666" text-anchor="middle">
+      (calm/solution state)
+    </text>
+  </g>
+
+  <!-- Diagonal Divider -->
+  <polygon points="600,720 660,0 668,0 608,720" fill="#FAFAFA"/>
+
+  <!-- Labels -->
+  <rect x="80" y="60" width="200" height="60" fill="#EF4444" rx="8"/>
+  <text x="180" y="102" font-family="Outfit, Arial Black, sans-serif" font-weight="700" font-size="36" fill="#FAFAFA" text-anchor="middle" filter="url(#textShadow)">
+    BEFORE
+  </text>
+
+  <rect x="1000" y="60" width="200" height="60" fill="#22C55E" rx="8"/>
+  <text x="1100" y="102" font-family="Outfit, Arial Black, sans-serif" font-weight="700" font-size="36" fill="#FAFAFA" text-anchor="middle" filter="url(#textShadow)">
+    AFTER
+  </text>
+
+  <!-- Bottom text area -->
+  <text x="640" y="660" font-family="Outfit, Arial Black, sans-serif" font-weight="800" font-size="48" fill="#FAFAFA" text-anchor="middle" filter="url(#textShadow)">
+    65 → 40 HOUR WEEKS
+  </text>
+</svg>

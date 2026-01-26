@@ -15,8 +15,9 @@
 ### Secondary Platforms (Recommended)
 | Platform | Why | Content Type |
 |----------|-----|--------------|
+| **YouTube** | Long-form authority building, SEO, evergreen | Tutorials, walkthroughs, deep dives |
+| **YouTube Shorts** | Discovery, reach, algorithm boost | Quick tips, feature teasers |
 | **TikTok** | Viral potential, younger entrepreneurs | Short-form video tips |
-| **YouTube Shorts** | SEO benefits, evergreen content | Quick tutorials |
 | **Pinterest** | Productivity niche is huge | Infographics, tips |
 
 ---
@@ -1915,6 +1916,797 @@
 
 ---
 
+## Week 5: Analytics & Progress Tracking Theme
+
+### Day 31 (Monday) - Progress Page Introduction
+
+**LinkedIn:**
+> Tracking goals is easy. Knowing if you're actually on track? That's the hard part.
+>
+> Just shipped a new Progress page that changes everything:
+>
+> 📊 **Roll-up View**
+> See how your daily actions roll up to weekly targets, monthly targets, and Power Goals. One glance tells you if you're on track.
+>
+> 🎯 **Goal Health Scoring**
+> Each goal gets a health score based on:
+> • Completion rate
+> • Consistency
+> • Time spent in Production hours
+>
+> 📈 **Activity Trends**
+> See what you actually spend time on over weeks and months. Patterns emerge that you'd never notice day-to-day.
+>
+> The insight that hit me:
+>
+> I was 80% complete on my tasks but only 40% toward my actual goals.
+>
+> Busy ≠ productive.
+>
+> The Progress page makes that visible instantly.
+>
+> What would you discover if you could see your real progress?
+>
+> #BuildInPublic #ProductivityApp #GoalTracking #Metrics
+
+**X/Twitter:**
+> Just shipped: Progress Page 📊
+>
+> • Roll-up view: Daily → Weekly → Monthly → Power Goal
+> • Goal health scoring
+> • Activity trends over time
+>
+> The insight that hit: 80% task completion, 40% goal progress.
+>
+> Busy ≠ productive.
+>
+> This makes it visible instantly.
+
+**Instagram:**
+> [CAROUSEL - 5 slides]
+>
+> Slide 1: "New Feature: The Progress Page"
+>
+> Slide 2: "📊 ROLL-UP VIEW
+> See how daily actions connect to:
+> → Weekly targets
+> → Monthly targets
+> → Power Goals"
+>
+> Slide 3: "🎯 GOAL HEALTH
+> Every goal gets a health score:
+> • Completion rate
+> • Consistency
+> • Production time"
+>
+> Slide 4: "📈 THE INSIGHT
+> I was 80% complete on tasks
+> But only 40% toward goals
+>
+> Busy ≠ productive"
+>
+> Slide 5: "Try it: Link in bio"
+>
+> Caption: This changed how I look at my weeks. What's YOUR task completion vs goal progress ratio? Be honest 👇
+>
+> #ProductivityApp #GoalTracking #Progress #BuildInPublic
+
+---
+
+### Day 32 (Tuesday) - AI Activity Classification
+
+**LinkedIn:**
+> "What category was that task?"
+>
+> Used to ask myself this 20+ times a day. Tedious. Often wrong.
+>
+> Now AI does it automatically.
+>
+> Here's how it works:
+>
+> 1. You describe your activity: "Client call with Alex about Q2 strategy"
+>
+> 2. AI classifies it instantly:
+>    • DRIP: Production (high-value client work)
+>    • Category: Sales/Client Relations
+>    • Energy impact: Energizing
+>
+> 3. You confirm or adjust (usually don't need to)
+>
+> Why it matters:
+>
+> ✅ No more context-switching to categorize
+> ✅ Consistent classification (no "what did I call this last time?")
+> ✅ Better data for your DRIP analysis
+> ✅ Saves 5-10 minutes/day of mental overhead
+>
+> Small feature. Big quality-of-life improvement.
+>
+> What tedious daily task would you love to automate?
+>
+> #AI #Productivity #Automation #BuildInPublic
+
+**X/Twitter:**
+> New: AI Activity Classification 🤖
+>
+> You: "Client call with Alex about Q2 strategy"
+>
+> AI: "Production • Sales/Client Relations • Energizing"
+>
+> No more manual categorizing.
+> No more "what did I call this last time?"
+> 5-10 minutes saved daily.
+>
+> Small feature. Big impact.
+
+**Instagram:**
+> [REEL - Screen recording demo]
+>
+> "Watch AI categorize my tasks instantly.
+>
+> Old way: Every 15 minutes, stop and think about what category this was.
+>
+> New way: Just describe what you did.
+>
+> 'Client call with Alex about Q2 strategy.'
+>
+> AI says: Production. Sales. Energizing.
+>
+> Done.
+>
+> Saves 5-10 minutes a day. Zero mental overhead.
+>
+> The little things add up."
+>
+> Caption: This is the kind of automation I actually want. What small daily annoyance would you love AI to handle?
+>
+> #AIProductivity #Automation #TimeTracking #SmartTools
+
+---
+
+### Day 33 (Wednesday) - Analytics Deep Dive
+
+**LinkedIn:**
+> Data without insight is just noise.
+>
+> Here's what the Goal Achiever Pro analytics dashboard actually shows you:
+>
+> 📊 **Time Distribution Heatmap**
+> When are you most productive? Which days? Which hours?
+> Mine: Tuesday-Thursday, 6-10am. Everything else is support.
+>
+> 📈 **DRIP Breakdown Over Time**
+> Are you improving? Is D+R shrinking? Is P growing?
+> Trend lines don't lie.
+>
+> ⚡ **Energy Patterns**
+> When do you hit 5/5 energy? When do you crash?
+> Schedule accordingly.
+>
+> 🎯 **Goal Velocity**
+> How fast are you progressing toward each Power Goal?
+> Which ones are stalling? Which are flying?
+>
+> 🔄 **Consistency Streaks**
+> How many days in a row have you hit your MINs?
+> Gamification that actually works.
+>
+> The dashboard isn't about tracking for tracking's sake.
+>
+> It's about answering: "What should I do differently?"
+>
+> What insight would change your productivity game?
+>
+> #Analytics #DataDriven #Productivity #Entrepreneurship
+
+**X/Twitter:**
+> What Goal Achiever Pro analytics actually show:
+>
+> • Time heatmap (when you're most productive)
+> • DRIP trends (is P growing?)
+> • Energy patterns (when you crash)
+> • Goal velocity (what's stalling)
+> • Consistency streaks
+>
+> Not tracking for tracking's sake.
+>
+> Tracking to answer: "What should I change?"
+
+**Instagram:**
+> [CAROUSEL - 6 slides with chart mockups]
+>
+> Slide 1: "Your Productivity Data, Visualized"
+>
+> Slide 2: "📊 TIME HEATMAP
+> When are you most productive?
+> Mine: Tue-Thu, 6-10am"
+>
+> Slide 3: "📈 DRIP TRENDS
+> Is D+R shrinking?
+> Is P growing?
+> Track over weeks/months"
+>
+> Slide 4: "⚡ ENERGY PATTERNS
+> When do you hit 5/5?
+> When do you crash?
+> Schedule around it"
+>
+> Slide 5: "🎯 GOAL VELOCITY
+> Which goals are flying?
+> Which are stalling?
+> Focus your energy"
+>
+> Slide 6: "Data → Insight → Action"
+>
+> Caption: What ONE chart would change how you work? Mine was the energy pattern - I had no idea I crashed at 2pm every day.
+>
+> #Analytics #ProductivityData #Insights #SelfKnowledge
+
+---
+
+### Day 34 (Thursday) - Today Dashboard Feature
+
+**LinkedIn:**
+> The best productivity app is the one you actually use.
+>
+> That's why we built the Today dashboard as your daily home:
+>
+> 🌅 **Morning at a Glance**
+> • Your 3 MINs for today
+> • Calendar conflicts highlighted
+> • Yesterday's completion rate
+> • Current 300% scores
+>
+> 📊 **Quarterly Progress**
+> • Power Goal progress bars
+> • Days remaining in quarter
+> • What needs attention
+>
+> ⏱️ **Time Tracking Widget**
+> • Start/stop timer
+> • Current activity
+> • Running totals
+>
+> 🎯 **Focus Mode Toggle**
+> One click: Hide everything except current MIN.
+>
+> The goal: Open app → Know exactly what to do → Execute.
+>
+> No hunting through menus. No analysis paralysis.
+>
+> Just clarity and action.
+>
+> What does your ideal daily dashboard show?
+>
+> #ProductivityApp #UX #Dashboard #DailyPlanning
+
+**X/Twitter:**
+> The Today dashboard philosophy:
+>
+> Open app → Know what to do → Execute
+>
+> What it shows:
+> • 3 MINs for today
+> • Quarterly Power Goal progress
+> • Time tracking widget
+> • Focus mode toggle
+>
+> No hunting. No analysis paralysis.
+>
+> Clarity + action.
+
+**Instagram:**
+> [REEL - App walkthrough of Today dashboard]
+>
+> "Here's what I see when I open Goal Achiever Pro each morning.
+>
+> My 3 MINs for today. Right at the top.
+>
+> Quarterly progress. Am I on track for my Power Goals?
+>
+> Time tracking. One tap to start logging.
+>
+> Focus mode. Everything disappears except what I'm working on right now.
+>
+> Open. Know. Execute.
+>
+> That's the whole philosophy."
+>
+> Caption: What's the first thing you need to see when you start your day? Comment below!
+>
+> #DailyPlanning #ProductivityApp #MorningRoutine #Focus
+
+---
+
+### Day 35 (Friday) - Week 5 Engagement
+
+**All Platforms:**
+> Friday poll: What productivity metric matters most to you?
+>
+> A) Time spent on high-value work (Production hours)
+> B) Goal completion percentage
+> C) Energy levels throughout the day
+> D) Consistency streaks
+>
+> Reply with your letter! Curious what this community prioritizes.
+
+---
+
+## Week 6: Advanced Features Theme
+
+### Day 36 (Monday) - Accountability Features
+
+**LinkedIn:**
+> Accountability is the difference between "I should" and "I did."
+>
+> Goal Achiever Pro's accountability features (Elite tier):
+>
+> 🤝 **Accountability Partners**
+> Connect up to 5 partners. They see:
+> • Your Power Goal progress
+> • Weekly completion rates
+> • When you miss MINs
+>
+> 💰 **Financial Stakes**
+> Set a stake. Miss your target? It goes to charity (or a friend who loves when you fail).
+>
+> 📱 **Smart Reminders**
+> Not spam. Context-aware:
+> • "You haven't logged time since 2pm"
+> • "MIN #2 is at risk - 3 hours left"
+> • "Your week is 20% behind pace"
+>
+> 📄 **Goal Achievement Contract**
+> PDF template for serious commitments. Sign it. Share it.
+>
+> Why does this work?
+>
+> Public commitment = 65% higher completion rate (research from the American Society of Training and Development).
+>
+> Who's holding you accountable right now?
+>
+> #Accountability #GoalSetting #Commitment #Results
+
+**X/Twitter:**
+> Accountability features that actually work:
+>
+> • 5 accountability partners (they see your progress)
+> • Financial stakes (miss target → money to charity)
+> • Smart reminders (context-aware, not spam)
+> • Goal achievement contract (sign it, share it)
+>
+> Public commitment = 65% higher completion.
+>
+> Who's holding you accountable?
+
+**Instagram:**
+> [CAROUSEL - 5 slides]
+>
+> Slide 1: "Accountability = Results"
+>
+> Slide 2: "🤝 PARTNERS
+> Connect 5 people who see:
+> • Your progress
+> • Your completion rate
+> • When you miss"
+>
+> Slide 3: "💰 STAKES
+> Miss your target?
+> Money goes to charity
+> (or a friend who loves your failure)"
+>
+> Slide 4: "📱 SMART REMINDERS
+> Not spam. Context:
+> 'MIN #2 at risk - 3 hours left'"
+>
+> Slide 5: "Research:
+> Public commitment = 65% higher completion
+>
+> Who's holding you accountable?"
+>
+> Caption: I added financial stakes to my Q4 goals. Suddenly I never miss a deadline. Funny how that works.
+>
+> #Accountability #Commitment #GoalSetting #Results
+
+---
+
+### Day 37 (Tuesday) - Integrations & Ecosystem
+
+**LinkedIn:**
+> Your productivity system should work with your existing tools. Not replace everything.
+>
+> Goal Achiever Pro integrations:
+>
+> 📅 **Google Calendar Sync**
+> Your time blocks auto-populate. No double entry.
+>
+> 📊 **Export Options**
+> PDF reports for clients, investors, or your therapist.
+> CSV for spreadsheet lovers.
+> JSON for developers.
+>
+> 🔗 **API Access (Elite)**
+> Build custom integrations. Connect to Notion, Zapier, whatever.
+>
+> What integration would make your life easier?
+>
+> #Integrations #ProductivityStack #Automation #API
+
+**X/Twitter:**
+> Goal Achiever Pro plays nice with your stack:
+>
+> • Google Calendar sync (no double entry)
+> • PDF/CSV/JSON exports
+> • API access for custom integrations
+>
+> What integration would you build first?
+
+---
+
+### Day 38-42 - User Stories & Success Metrics
+
+**Rotate through:**
+- User success stories (with permission)
+- Before/after metrics
+- Specific feature impact stories
+- Community highlights
+- Q&A addressing common questions
+
+---
+
+## YouTube Content Strategy
+
+### Channel Positioning
+**Channel Name:** Goal Achiever Pro (or aligned personal brand)
+**Tagline:** "Master Your Time. Achieve Your Goals."
+**Niche:** Productivity, goal-setting, time management for entrepreneurs
+
+### Content Tiers
+
+| Tier | Length | Frequency | Purpose |
+|------|--------|-----------|---------|
+| **Long-form** | 10-20 min | 1x weekly | Authority, SEO, deep value |
+| **Shorts** | 30-60 sec | 3-5x weekly | Discovery, algorithm, reach |
+| **Live streams** | 30-60 min | 1-2x monthly | Community, Q&A, engagement |
+
+---
+
+### YouTube Long-Form Video Ideas
+
+#### 1. The Complete "Buy Back Your Time" System (Pillar Video)
+**Title:** How to Actually Achieve Your Goals in 2026 (The Complete System)
+**Length:** 15-20 min
+
+**Script Outline:**
+```
+HOOK (0:00-0:30)
+"Most entrepreneurs work 60+ hours a week and still can't tell you exactly what they're working toward. Today I'm going to show you the complete system that changed everything for me - and it's all based on Dan Martell's Buy Back Your Time methodology."
+
+PROBLEM (0:30-2:00)
+- The busy trap: working hard without direction
+- Why New Year's resolutions fail (90% by February)
+- The cost of unclear goals: burnout, spinning wheels, missed opportunities
+
+THE SYSTEM OVERVIEW (2:00-4:00)
+- Vision → Power Goals → Targets → Daily Actions
+- Show the hierarchy visually
+- Introduce the app briefly
+
+SECTION 1: SMART VISION (4:00-6:00)
+- What makes a vision SMART (Specific, Meaningful, Aligned, Realistic, Time-bound)
+- Live demo: Creating a vision in Goal Achiever Pro
+- AI-assisted generation feature
+
+SECTION 2: 12 POWER GOALS (6:00-9:00)
+- Why 12 projects beats 1 resolution
+- Quarterly breakdown
+- Live demo: Setting up Power Goals
+
+SECTION 3: THE TIME AUDIT (9:00-12:00)
+- 15-minute time blocks
+- Energy tracking (why it matters)
+- DRIP Matrix explained
+- Live demo: Time tracking in the app
+
+SECTION 4: DAILY EXECUTION (12:00-15:00)
+- 3 MINs (Most Important Next Steps)
+- Morning/Midday/Evening reviews
+- The 300% Rule scoring
+
+SECTION 5: LEVERAGE & SCALE (15:00-17:00)
+- The 4 C's: Code, Content, Capital, Collaboration
+- Friend inventory
+- When to delegate
+
+CTA (17:00-18:00)
+"Link in description to try Goal Achiever Pro free. Founding member pricing available until Dec 31, 2026."
+```
+
+---
+
+#### 2. Time Audit Tutorial (High-Intent Video)
+**Title:** How I Found 22 Hours/Week I Was Wasting (Time Audit Tutorial)
+**Length:** 12-15 min
+
+**Script Outline:**
+```
+HOOK
+"I was convinced I was productive. Then I tracked my time in 15-minute blocks for two weeks. What I found was... embarrassing. Let me show you exactly how to do this audit yourself."
+
+THE REVELATION
+- What I thought I was doing vs reality
+- 3.5 hours/day on email (thought it was 1 hour)
+- 2 hours on Slack "quick check-ins"
+- Only 2 hours on revenue-generating work
+
+HOW TO DO THE AUDIT
+Step 1: Set up 15-minute blocks (show in app)
+Step 2: Track everything honestly
+Step 3: Add energy ratings (1-5)
+Step 4: Categorize using DRIP
+
+THE DRIP MATRIX EXPLAINED
+- D: Delegation (drains you, delegate it)
+- R: Replacement (good at it, shouldn't do it)
+- I: Investment (builds future capacity)
+- P: Production (highest value work)
+
+ANALYZING YOUR RESULTS
+- What percentage is D+R? (goal: minimize)
+- What percentage is I+P? (goal: maximize)
+- Your energy patterns throughout the day
+
+TAKING ACTION
+- What to delegate immediately
+- What to schedule in peak hours
+- What to eliminate entirely
+
+CTA
+"Download the time audit template in the description, or try Goal Achiever Pro which does all of this automatically."
+```
+
+---
+
+#### 3. Morning Routine Deep Dive
+**Title:** The 2-Hour Morning Routine That 10x'd My Productivity
+**Length:** 10-12 min
+
+**Script Outline:**
+```
+HOOK
+"Before 8:30am, I've already completed my most important task, worked out, and set my intention for the day. Here's my exact morning routine, refined over 3 years."
+
+WHY MORNINGS MATTER
+- The only time you fully control
+- Peak cognitive hours for most people
+- Compound effect of starting strong
+
+MY ROUTINE BREAKDOWN
+5:30am - Wake (no phone for 30 min)
+5:35am - Hydrate + stretch
+5:40am - Journal (3 gratitudes + intention)
+6:00am - Deep work on MIN #1 (90 min)
+7:30am - Workout
+8:00am - Shower + ready
+8:30am - NOW check email/Slack
+
+THE RULES
+- No reactive mode before 8:30
+- MIN #1 gets the best hours
+- Non-negotiable consistency
+
+BUILDING YOUR OWN
+- Start with 1 element
+- Add gradually
+- Protect ruthlessly
+
+LIVE DEMO
+- Show morning review in Goal Achiever Pro
+- How the app tracks routine completion
+```
+
+---
+
+#### 4. Power Goals Workshop
+**Title:** How to Set 12 Power Goals That Actually Get Done (Workshop)
+**Length:** 20-25 min
+
+**Script Outline:**
+```
+HOOK
+"By the end of this video, you'll have your entire year mapped out - not with vague resolutions, but with 12 specific projects that will transform your life. Grab a pen."
+
+WORKSHOP FORMAT
+- Interactive, pause-and-do style
+- Templates in description
+- Or follow along in Goal Achiever Pro
+
+PART 1: VISION FIRST (5 min)
+- Write your 3-year vision
+- Make it SMART
+- AI suggestion feature demo
+
+PART 2: QUARTERLY THEMES (5 min)
+- What's the focus of each quarter?
+- Q1: Foundation
+- Q2: Growth
+- Q3: Scale
+- Q4: Optimize
+
+PART 3: THE 12 POWER GOALS (10 min)
+- 3 per quarter
+- Each 6-8 weeks
+- Must connect to vision
+- Fill in template together
+
+PART 4: BREAKING DOWN (5 min)
+- Monthly targets
+- Weekly targets
+- Daily actions
+- Live demo in app
+
+CLOSE
+- Review what we built
+- Accountability options
+- CTA to app
+```
+
+---
+
+#### 5. DRIP Matrix Masterclass
+**Title:** The DRIP Matrix: Find 20+ Hours/Week to Buy Back
+**Length:** 15 min
+
+**Script Outline:**
+```
+HOOK
+"Not all work is created equal. Some tasks should never touch your calendar. Today I'll show you how to categorize every task and find 20+ hours a week to buy back."
+
+THE FRAMEWORK
+- D: Delegation
+- R: Replacement
+- I: Investment
+- P: Production
+
+DEEP DIVE: EACH QUADRANT
+Delegation (5 min)
+- What qualifies
+- Examples: email, scheduling, data entry
+- How to find someone
+
+Replacement (3 min)
+- You're good but shouldn't do it
+- Examples: bookkeeping, social posting
+- The $500 decision story
+
+Investment (3 min)
+- Builds future capacity
+- Examples: learning, relationships, systems
+- Why most people skip this
+
+Production (3 min)
+- Your 10x zone
+- How to identify it
+- Protect at all costs
+
+LIVE AUDIT
+- Walk through a real week
+- Categorize together
+- Calculate time reclaimed
+
+ACTION STEPS
+- Do your own 1-week audit
+- Use the app's auto-categorization
+- Set delegation targets
+```
+
+---
+
+### YouTube Shorts Ideas (30-60 seconds each)
+
+#### Quick Tips Series
+1. **"The 300% Rule in 60 seconds"** - Quick explanation with visual scoring
+2. **"One question that changed my mornings"** - "What's my #1 priority?"
+3. **"Stop doing this at 8am"** - Checking email first thing
+4. **"The DRIP Matrix explained"** - Quick visual walkthrough
+5. **"3 MINs that win your day"** - Most Important Next Steps
+6. **"Your weekly planning is wrong"** - Start with the vision
+7. **"Track time in 15-min blocks"** - Why and quick demo
+8. **"The shutdown ritual"** - 15 seconds on ending your day
+9. **"12 Power Goals > 1 Resolution"** - Quick comparison
+10. **"Your lowest 300% score is the problem"** - Clarity vs Belief vs Consistency
+
+#### App Feature Teasers
+1. **"AI writes your goals for you"** - Vision generation demo
+2. **"This tracks my energy all day"** - Energy rating feature
+3. **"Auto-categorize your tasks"** - DRIP auto-assignment
+4. **"Morning review in 30 seconds"** - Quick app walkthrough
+5. **"See where your time actually goes"** - Analytics heatmap
+
+#### Relatable Content
+1. **"POV: You checked email first and now it's 11am"**
+2. **"When your time audit hits different"** - Reaction to D+R percentage
+3. **"That moment you realize you've been productive at the wrong things"**
+4. **"Before vs After: Time blocking"**
+5. **"The face you make when you find 20 hours of wasted time"**
+
+---
+
+### YouTube Live Stream Ideas
+
+#### Monthly Q&A
+**Title:** Goal Achiever Pro Monthly Q&A - Ask Me Anything About Productivity
+**Format:** 45-60 min
+- Live questions from chat
+- Feature demos on request
+- Success story spotlights
+- Roadmap previews
+
+#### Live Time Audit
+**Title:** Watch Me Audit My Week (LIVE) - DRIP Matrix Breakdown
+**Format:** 30-45 min
+- Screen share actual time data
+- Categorize in real-time
+- Explain reasoning
+- Answer questions
+
+#### Live Goal Setting Workshop
+**Title:** Set Your Q[X] Power Goals With Me (LIVE Workshop)
+**Format:** 60 min
+- Quarterly at the start of each quarter
+- Interactive goal-setting
+- Template downloads
+- Accountability commitments
+
+---
+
+### YouTube SEO Strategy
+
+**Target Keywords:**
+- "goal setting app"
+- "time tracking for entrepreneurs"
+- "buy back your time"
+- "productivity system"
+- "DRIP matrix"
+- "power goals"
+- "morning routine entrepreneur"
+- "time audit"
+- "how to achieve goals"
+- "15 minute time blocking"
+
+**Thumbnail Best Practices:**
+- Face showing emotion (surprise, curiosity)
+- Bold text (3-4 words max)
+- High contrast colors (cyan brand color)
+- Consistent style for recognition
+
+**Description Template:**
+```
+[2-3 sentence summary]
+
+📲 Try Goal Achiever Pro FREE: [link]
+🎁 Founding Member Offer ($99 lifetime): [link]
+
+⏱️ TIMESTAMPS:
+00:00 - Hook
+00:30 - [Section 1]
+...
+
+📚 RESOURCES:
+- Free Time Audit Template: [link]
+- DRIP Matrix Worksheet: [link]
+- Goal Achiever Pro: [link]
+
+🔗 CONNECT:
+- Instagram: @goalachierverpro
+- Twitter/X: @goalachieverpro
+- LinkedIn: [link]
+
+#productivity #goalsetting #entrepreneurship #buybackyourtime
+```
+
+---
+
 ## Reddit-Specific Strategy
 
 **Subreddits to engage:**
@@ -2006,6 +2798,186 @@
 
 ---
 
+## Social Media Profiles & Bios
+
+### X (Twitter)
+**Handle:** @GoalAchieverPro
+**Name:** Goal Achiever Pro
+**Bio (160 chars):**
+```
+Master your time. Achieve your goals. 🎯
+The system from Buy Back Your Time.
+AI-powered goal tracking for entrepreneurs.
+⬇️ Try free
+```
+**Link:** goalachieverpro.com
+**Header:** App screenshot showing Today dashboard with cyan brand accent
+
+---
+
+### LinkedIn
+**Page Name:** Goal Achiever Pro
+**Tagline:** Master Your Time. Achieve Your Goals.
+**About (2,000 chars):**
+```
+Goal Achiever Pro is the productivity system for entrepreneurs who are done being busy and ready to be effective.
+
+Built on Dan Martell's "Buy Back Your Time" methodology, we help you:
+
+🎯 Set SMART visions with AI-assisted goal creation
+📊 Track time in 15-minute blocks with energy ratings
+🔄 Categorize work using the DRIP Matrix (Delegation, Replacement, Investment, Production)
+📈 Monitor progress with the 300% Rule (Clarity + Belief + Consistency)
+⚡ Execute daily with MINs (Most Important Next Steps)
+🤝 Stay accountable with partners and financial stakes
+
+Features:
+• 12 Power Goals system (quarterly projects)
+• AI-powered activity classification
+• Morning, midday, and evening reviews
+• Progress analytics and goal health scoring
+• Google Calendar integration
+• Pomodoro timer with context tracking
+
+Founding member pricing: $99 one-time for lifetime access (through Dec 31, 2026)
+
+Join entrepreneurs who've reclaimed 20+ hours/week of productive time.
+
+#Productivity #GoalSetting #TimeManagement #Entrepreneurship
+```
+
+---
+
+### Instagram
+**Handle:** @goalachieverpro
+**Name:** Goal Achiever Pro
+**Bio (150 chars):**
+```
+Master your time 🎯 Achieve your goals
+Buy Back Your Time methodology
+AI-powered productivity for entrepreneurs
+⬇️ Try free
+```
+**Link:** linktr.ee/goalachieverpro (or direct to site)
+**Highlights:**
+- Features (app walkthrough)
+- DRIP (matrix explainer)
+- Reviews (testimonials)
+- Tips (saved tips)
+- FAQ
+
+---
+
+### YouTube
+**Channel Name:** Goal Achiever Pro
+**Handle:** @GoalAchieverPro
+**About:**
+```
+Master your time. Achieve your goals.
+
+Goal Achiever Pro is the productivity system built on Dan Martell's "Buy Back Your Time" methodology.
+
+On this channel:
+• Deep-dive tutorials on goal setting and time management
+• Live workshops for quarterly planning
+• App walkthroughs and feature demos
+• Interviews with productive entrepreneurs
+• Behind-the-scenes building in public
+
+Subscribe for weekly videos on:
+- SMART goal creation
+- Time tracking & energy management
+- The DRIP Matrix
+- Daily execution systems
+- Accountability and leverage
+
+🎯 Try the app free: goalachieverpro.com
+
+New videos every Wednesday!
+```
+**Banner:** App interface with "Master Your Time. Achieve Your Goals." tagline
+
+---
+
+### Linktree / Link in Bio
+**Links to include:**
+1. Try Goal Achiever Pro Free
+2. Founding Member Offer ($99 lifetime)
+3. Latest YouTube Video
+4. Free Time Audit Template
+5. DRIP Matrix Worksheet
+6. Book a Demo
+
+---
+
+## Content Templates
+
+### Carousel Template (Canva/Figma)
+- **Size:** 1080x1350px (4:5 ratio)
+- **Slides:** 5-7 max
+- **Font:** Outfit (headers), Plus Jakarta Sans (body)
+- **Colors:**
+  - Primary: #00BEFF (cyan)
+  - Dark: #0a0a0a
+  - Light: #fafafa
+- **Style:** Clean, minimal, bold headers, icon accents
+
+### Reel/Short Template
+- **Size:** 1080x1920px (9:16)
+- **Duration:** 30-60 seconds
+- **Structure:** Hook (3s) → Problem (5s) → Solution (15s) → Demo (15s) → CTA (5s)
+- **Captions:** Always on, bold white with black outline
+- **Music:** Upbeat, motivational (check licensing)
+
+### Thumbnail Template (YouTube)
+- **Size:** 1280x720px
+- **Elements:** Face (emotion), 3-4 word text, brand color accent
+- **Style:** High contrast, readable at small size
+
+---
+
+## Engagement Strategy
+
+### Response Templates
+
+**For questions about the methodology:**
+> Great question! [Answer]. This is exactly why we built Goal Achiever Pro - to make this actionable. Have you tried tracking your [relevant metric]?
+
+**For feature requests:**
+> Love this idea! Adding it to our roadmap. What would this help you accomplish specifically?
+
+**For skepticism:**
+> Totally get the skepticism - there are a lot of apps out there. The difference is this is a complete system, not just a tracker. Happy to share more about how it works differently.
+
+**For positive feedback:**
+> Appreciate you sharing this! [Specific acknowledgment]. Would love to feature your story - DM me if you're open to it!
+
+---
+
+## Metrics to Track
+
+### Weekly
+- Follower growth (per platform)
+- Engagement rate (likes + comments / followers)
+- Profile visits
+- Link clicks
+- Best performing content
+
+### Monthly
+- Follower growth rate
+- Top 5 posts
+- Content pillar performance
+- Conversion to signups
+- Audience demographics
+
+### Quarterly
+- Platform ROI (effort vs results)
+- Content strategy adjustments
+- Audience sentiment
+- Competitor analysis
+
+---
+
 ## Next Steps
 
 1. Customize dates to your actual start date
@@ -2013,3 +2985,6 @@
 3. Schedule using Buffer, Later, or Hootsuite
 4. Engage with comments within first hour of posting
 5. Track metrics weekly, adjust strategy monthly
+6. Set up all social profiles using bios above
+7. Create Linktree with key links
+8. Design thumbnail and carousel templates in Canva/Figma
