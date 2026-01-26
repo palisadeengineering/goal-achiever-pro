@@ -47,6 +47,7 @@ export const ROUTES = {
   timeAuditWeekly: '/time-audit/weekly',
   timeAuditBiweekly: '/time-audit/biweekly',
   timeAuditMonthly: '/time-audit/monthly',
+  timeAuditProjects: '/time-audit/projects',
 
   // DRIP Matrix
   drip: '/drip',

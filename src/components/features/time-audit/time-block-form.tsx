@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,9 +26,10 @@ import { TagSelector } from './tag-selector';
 import { TagManager } from './tag-manager';
 import { useTags, type Tag } from '@/lib/hooks/use-tags';
 import { useTagPatterns } from '@/lib/hooks/use-tag-patterns';
-import { Sparkles, Check, X, Loader2, Trash2, Repeat, SkipForward } from 'lucide-react';
+import { Sparkles, Check, X, Loader2, Trash2, Repeat, SkipForward, Brain, Briefcase, Users, Car, Zap, Coffee, FileText, HelpCircle } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import type { DripQuadrant, EnergyRating } from '@/types/database';
+import type { ActivityType } from '@/lib/hooks/use-enhanced-analytics';
 
 export interface TimeBlock {
   id: string;
@@ -42,6 +43,13 @@ export interface TimeBlock {
   source?: string;
   externalEventId?: string;
   tagIds?: string[];
+  // Activity classification fields
+  activityType?: ActivityType;
+  detectedProjectId?: string;
+  detectedProjectName?: string;
+  meetingCategoryId?: string;
+  meetingCategoryName?: string;
+  aiClassificationConfidence?: number;
   // Recurring event fields
   isRecurring?: boolean;
   recurrenceRule?: string;
@@ -87,6 +95,16 @@ const ENERGY_OPTIONS = [
   { value: 'red', label: 'Draining', description: 'This activity drains my energy', color: 'bg-red-500' },
 ];
 
+const ACTIVITY_TYPE_OPTIONS: { value: ActivityType; label: string; icon: React.ComponentType<{ className?: string }>; color: string }[] = [
+  { value: 'project', label: 'Project Work', icon: Briefcase, color: 'text-indigo-500' },
+  { value: 'meeting', label: 'Meeting', icon: Users, color: 'text-amber-500' },
+  { value: 'deep_work', label: 'Deep Work', icon: Zap, color: 'text-emerald-500' },
+  { value: 'commute', label: 'Commute', icon: Car, color: 'text-violet-500' },
+  { value: 'admin', label: 'Admin', icon: FileText, color: 'text-slate-500' },
+  { value: 'break', label: 'Break', icon: Coffee, color: 'text-pink-500' },
+  { value: 'other', label: 'Other', icon: HelpCircle, color: 'text-gray-400' },
+];
+
 export function TimeBlockForm({
   open,
   onOpenChange,
@@ -117,6 +135,27 @@ export function TimeBlockForm({
   const [recurrenceRule, setRecurrenceRule] = useState('FREQ=WEEKLY');
   const [recurrenceEndDate, setRecurrenceEndDate] = useState('');
 
+  // Activity classification states
+  const [activityType, setActivityType] = useState<ActivityType | undefined>(undefined);
+  const [detectedProjectId, setDetectedProjectId] = useState<string | undefined>(undefined);
+  const [detectedProjectName, setDetectedProjectName] = useState<string | undefined>(undefined);
+  const [meetingCategoryId, setMeetingCategoryId] = useState<string | undefined>(undefined);
+  const [meetingCategoryName, setMeetingCategoryName] = useState<string | undefined>(undefined);
+  const [meetingCategories, setMeetingCategories] = useState<{ id: string; name: string; color: string }[]>([]);
+  const [detectedProjects, setDetectedProjects] = useState<{ id: string; name: string }[]>([]);
+
+  // AI classification states
+  const [aiClassification, setAiClassification] = useState<{
+    activityType: ActivityType;
+    projectName?: string;
+    meetingCategory?: string;
+    confidence: number;
+    reasoning: string;
+  } | null>(null);
+  const [isClassifying, setIsClassifying] = useState(false);
+  const [showClassificationSuggestion, setShowClassificationSuggestion] = useState(false);
+  const classifyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Smart tag suggestion states
   const [suggestedTagIds, setSuggestedTagIds] = useState<string[]>([]);
   const [showSuggestion, setShowSuggestion] = useState(false);
@@ -125,6 +164,23 @@ export function TimeBlockForm({
 
   const { tags, createTag, updateTag, deleteTag } = useTags();
   const { getSuggestion, shouldAutoApply, learnPattern } = useTagPatterns();
+
+  // Load meeting categories and detected projects when dialog opens
+  useEffect(() => {
+    if (open) {
+      // Fetch meeting categories
+      fetch('/api/meeting-categories')
+        .then((res) => res.ok ? res.json() : { categories: [] })
+        .then((data) => setMeetingCategories(data.categories || []))
+        .catch(() => setMeetingCategories([]));
+
+      // Fetch detected projects
+      fetch('/api/detected-projects')
+        .then((res) => res.ok ? res.json() : { projects: [] })
+        .then((data) => setDetectedProjects(data.projects || []))
+        .catch(() => setDetectedProjects([]));
+    }
+  }, [open]);
 
   // Reset form when dialog opens/closes or edit block changes
   useEffect(() => {
@@ -142,6 +198,12 @@ export function TimeBlockForm({
         setIsRecurring(editBlock.isRecurring || false);
         setRecurrenceRule(editBlock.recurrenceRule || 'FREQ=WEEKLY');
         setRecurrenceEndDate(editBlock.recurrenceEndDate || '');
+        // Activity classification fields
+        setActivityType(editBlock.activityType);
+        setDetectedProjectId(editBlock.detectedProjectId);
+        setDetectedProjectName(editBlock.detectedProjectName);
+        setMeetingCategoryId(editBlock.meetingCategoryId);
+        setMeetingCategoryName(editBlock.meetingCategoryName);
       } else {
         setDate(initialDate || today);
         setStartTime(initialTime || '09:00');
@@ -156,11 +218,20 @@ export function TimeBlockForm({
         setIsRecurring(false);
         setRecurrenceRule('FREQ=WEEKLY');
         setRecurrenceEndDate('');
+        // Reset activity classification fields
+        setActivityType(undefined);
+        setDetectedProjectId(undefined);
+        setDetectedProjectName(undefined);
+        setMeetingCategoryId(undefined);
+        setMeetingCategoryName(undefined);
       }
       // Reset suggestion state
       setSuggestedTagIds([]);
       setShowSuggestion(false);
       setSuggestionSource(null);
+      // Reset classification suggestion state
+      setAiClassification(null);
+      setShowClassificationSuggestion(false);
     }
   }, [open, editBlock, initialDate, initialTime, initialEndTime, today]);
 
@@ -194,6 +265,101 @@ export function TimeBlockForm({
       }
     }
   }, [activityName, tags, getSuggestion, shouldAutoApply, selectedTagIds.length, open]);
+
+  // Debounced AI classification when activity name changes
+  useEffect(() => {
+    // Clear any pending timeout
+    if (classifyTimeoutRef.current) {
+      clearTimeout(classifyTimeoutRef.current);
+    }
+
+    // Don't classify if:
+    // - Activity name is too short
+    // - Dialog is closed
+    // - Activity type is already set (user has classified it)
+    // - We're editing an existing block that already has a classification
+    if (!activityName || activityName.length < 5 || !open || activityType) {
+      setAiClassification(null);
+      setShowClassificationSuggestion(false);
+      return;
+    }
+
+    // Debounce the classification call by 800ms
+    classifyTimeoutRef.current = setTimeout(async () => {
+      setIsClassifying(true);
+      try {
+        const response = await fetch('/api/ai/classify-activity', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            activityName,
+            description,
+          }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.confidence >= 0.5) {
+            setAiClassification(result);
+            setShowClassificationSuggestion(true);
+          }
+        }
+      } catch (error) {
+        console.error('AI classification error:', error);
+      } finally {
+        setIsClassifying(false);
+      }
+    }, 800);
+
+    return () => {
+      if (classifyTimeoutRef.current) {
+        clearTimeout(classifyTimeoutRef.current);
+      }
+    };
+  }, [activityName, description, open, activityType]);
+
+  // Accept AI classification
+  const acceptClassification = useCallback(() => {
+    if (!aiClassification) return;
+
+    setActivityType(aiClassification.activityType);
+
+    // If a project was detected, try to match or create it
+    if (aiClassification.projectName) {
+      const existingProject = detectedProjects.find(
+        (p) => p.name.toLowerCase() === aiClassification.projectName?.toLowerCase()
+      );
+      if (existingProject) {
+        setDetectedProjectId(existingProject.id);
+        setDetectedProjectName(existingProject.name);
+      } else {
+        // Just set the name, a new project will be created on save
+        setDetectedProjectName(aiClassification.projectName);
+      }
+    }
+
+    // If a meeting category was detected, try to match it
+    if (aiClassification.meetingCategory) {
+      const existingCategory = meetingCategories.find(
+        (c) => c.name.toLowerCase() === aiClassification.meetingCategory?.toLowerCase()
+      );
+      if (existingCategory) {
+        setMeetingCategoryId(existingCategory.id);
+        setMeetingCategoryName(existingCategory.name);
+      } else {
+        // Just set the name for now
+        setMeetingCategoryName(aiClassification.meetingCategory);
+      }
+    }
+
+    setShowClassificationSuggestion(false);
+  }, [aiClassification, detectedProjects, meetingCategories]);
+
+  // Dismiss classification
+  const dismissClassification = useCallback(() => {
+    setShowClassificationSuggestion(false);
+    setAiClassification(null);
+  }, []);
 
   // Handle AI tag suggestion
   const handleAISuggest = useCallback(async () => {
@@ -256,6 +422,13 @@ export function TimeBlockForm({
       dripQuadrant,
       energyRating,
       tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
+      // Activity classification fields
+      activityType: activityType || undefined,
+      detectedProjectId: detectedProjectId || undefined,
+      detectedProjectName: detectedProjectName || undefined,
+      meetingCategoryId: meetingCategoryId || undefined,
+      meetingCategoryName: meetingCategoryName || undefined,
+      aiClassificationConfidence: aiClassification?.confidence,
       // Recurring event fields
       isRecurring: isRecurring || undefined,
       recurrenceRule: isRecurring ? recurrenceRule : undefined,
@@ -364,6 +537,156 @@ export function TimeBlockForm({
               rows={2}
             />
           </div>
+
+          {/* AI Classification Suggestion */}
+          {showClassificationSuggestion && aiClassification && (
+            <div className="flex items-center gap-2 p-2 bg-indigo-50 dark:bg-indigo-950/30 rounded-md text-sm animate-in fade-in slide-in-from-top-1 border border-indigo-100 dark:border-indigo-900">
+              <Brain className="h-4 w-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-indigo-700 dark:text-indigo-300">AI suggests:</span>
+                  <Badge variant="secondary" className="text-xs bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300">
+                    {ACTIVITY_TYPE_OPTIONS.find(o => o.value === aiClassification.activityType)?.label || aiClassification.activityType}
+                  </Badge>
+                  {aiClassification.projectName && (
+                    <Badge variant="outline" className="text-xs">
+                      {aiClassification.projectName}
+                    </Badge>
+                  )}
+                  {aiClassification.meetingCategory && (
+                    <Badge variant="outline" className="text-xs">
+                      {aiClassification.meetingCategory}
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5 truncate">{aiClassification.reasoning}</p>
+              </div>
+              <div className="flex gap-1 shrink-0">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={acceptClassification}
+                  className="h-6 w-6 p-0 hover:bg-indigo-200 dark:hover:bg-indigo-800"
+                >
+                  <Check className="h-3 w-3 text-indigo-600 dark:text-indigo-400" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={dismissClassification}
+                  className="h-6 w-6 p-0 hover:bg-red-100 dark:hover:bg-red-900"
+                >
+                  <X className="h-3 w-3 text-red-600" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Classifying indicator */}
+          {isClassifying && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              <span>Analyzing activity...</span>
+            </div>
+          )}
+
+          {/* Activity Type */}
+          <div className="space-y-2">
+            <Label>Activity Type</Label>
+            <Select
+              value={activityType || ''}
+              onValueChange={(v) => setActivityType(v as ActivityType || undefined)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select activity type..." />
+              </SelectTrigger>
+              <SelectContent>
+                {ACTIVITY_TYPE_OPTIONS.map((option) => {
+                  const Icon = option.icon;
+                  return (
+                    <SelectItem key={option.value} value={option.value}>
+                      <div className="flex items-center gap-2">
+                        <Icon className={`h-4 w-4 ${option.color}`} />
+                        <span>{option.label}</span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Project Selection (only show for project type) */}
+          {activityType === 'project' && (
+            <div className="space-y-2 animate-in fade-in slide-in-from-top-1">
+              <Label>Project</Label>
+              <Select
+                value={detectedProjectId || 'new'}
+                onValueChange={(v) => {
+                  if (v === 'new') {
+                    setDetectedProjectId(undefined);
+                    setDetectedProjectName(undefined);
+                  } else {
+                    const project = detectedProjects.find(p => p.id === v);
+                    if (project) {
+                      setDetectedProjectId(project.id);
+                      setDetectedProjectName(project.name);
+                    }
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select or create project..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="new">
+                    <span className="text-muted-foreground">+ New project from activity name</span>
+                  </SelectItem>
+                  {detectedProjects.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Meeting Category (only show for meeting type) */}
+          {activityType === 'meeting' && (
+            <div className="space-y-2 animate-in fade-in slide-in-from-top-1">
+              <Label>Meeting Category</Label>
+              <Select
+                value={meetingCategoryId || ''}
+                onValueChange={(v) => {
+                  const category = meetingCategories.find(c => c.id === v);
+                  if (category) {
+                    setMeetingCategoryId(category.id);
+                    setMeetingCategoryName(category.name);
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select meeting type..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {meetingCategories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="h-2.5 w-2.5 rounded-full"
+                          style={{ backgroundColor: category.color }}
+                        />
+                        <span>{category.name}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* Recurring Event */}
           <div className="space-y-3">

@@ -332,6 +332,50 @@ export const mins = pgTable('mins', {
 }));
 
 // =============================================
+// DETECTED PROJECTS (Auto-detected from AI classification)
+// =============================================
+export const detectedProjects = pgTable('detected_projects', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  normalizedName: text('normalized_name').notNull(), // lowercase, trimmed for matching
+  color: text('color').default('#6366f1'),
+  // Optional link to Power Goal
+  powerGoalId: uuid('power_goal_id').references(() => powerGoals.id, { onDelete: 'set null' }),
+  // Cached aggregates
+  totalMinutes: integer('total_minutes').default(0),
+  eventCount: integer('event_count').default(0),
+  // Status
+  isArchived: boolean('is_archived').default(false),
+  // For merging duplicates
+  mergedIntoId: uuid('merged_into_id').references((): AnyPgColumn => detectedProjects.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  userIdx: index('detected_projects_user_idx').on(table.userId),
+  normalizedNameIdx: uniqueIndex('detected_projects_normalized_name_idx').on(table.userId, table.normalizedName),
+  powerGoalIdx: index('detected_projects_power_goal_idx').on(table.powerGoalId),
+}));
+
+// =============================================
+// MEETING CATEGORIES (User-defined meeting types)
+// =============================================
+export const meetingCategories = pgTable('meeting_categories', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  color: text('color').default('#ec4899'),
+  description: text('description'),
+  isDefault: boolean('is_default').default(false), // system defaults
+  sortOrder: integer('sort_order').default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  userIdx: index('meeting_categories_user_idx').on(table.userId),
+  userNameIdx: uniqueIndex('meeting_categories_user_name_idx').on(table.userId, table.name),
+}));
+
+// =============================================
 // TIME BLOCKS (15-minute increments)
 // =============================================
 export const timeBlocks = pgTable('time_blocks', {
@@ -347,6 +391,11 @@ export const timeBlocks = pgTable('time_blocks', {
   activityName: text('activity_name').notNull(),
   activityCategory: text('activity_category'),
   notes: text('notes'),
+  // AI Activity Classification
+  activityType: text('activity_type'), // 'project', 'meeting', 'commute', 'deep_work', 'admin', 'break', 'other'
+  detectedProjectId: uuid('detected_project_id').references(() => detectedProjects.id, { onDelete: 'set null' }),
+  aiClassificationConfidence: decimal('ai_classification_confidence', { precision: 3, scale: 2 }),
+  aiClassifiedAt: timestamp('ai_classified_at'),
   // Energy rating
   energyRating: text('energy_rating').notNull(), // green, yellow, red
   energyScore: integer('energy_score'),
@@ -371,6 +420,25 @@ export const timeBlocks = pgTable('time_blocks', {
   dripIdx: index('time_blocks_drip_idx').on(table.userId, table.dripQuadrant),
   recurringIdx: index('time_blocks_recurring_idx').on(table.userId, table.isRecurring),
   parentIdx: index('time_blocks_parent_idx').on(table.parentBlockId),
+  activityTypeIdx: index('time_blocks_activity_type_idx').on(table.userId, table.activityType),
+  detectedProjectIdx: index('time_blocks_detected_project_idx').on(table.detectedProjectId),
+}));
+
+// =============================================
+// TIME BLOCK MEETING DETAILS (Meeting metadata)
+// =============================================
+export const timeBlockMeetingDetails = pgTable('time_block_meeting_details', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  timeBlockId: uuid('time_block_id').notNull().references(() => timeBlocks.id, { onDelete: 'cascade' }).unique(),
+  meetingCategoryId: uuid('meeting_category_id').references(() => meetingCategories.id, { onDelete: 'set null' }),
+  attendeeCount: integer('attendee_count'),
+  isRecurring: boolean('is_recurring').default(false),
+  isExternal: boolean('is_external').default(false), // external vs internal
+  organizer: text('organizer'),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+  timeBlockIdx: uniqueIndex('time_block_meeting_details_block_idx').on(table.timeBlockId),
+  categoryIdx: index('time_block_meeting_details_category_idx').on(table.meetingCategoryId),
 }));
 
 // =============================================
@@ -819,6 +887,9 @@ export const profilesRelations = relations(profiles, ({ many, one }) => ({
   ownedTabPermissions: many(tabPermissions),
   ownedItemPermissions: many(itemPermissions),
   shareInvitations: many(shareInvitations),
+  // Time audit enhanced analytics
+  detectedProjects: many(detectedProjects),
+  meetingCategories: many(meetingCategories),
 }));
 
 export const visionsRelations = relations(visions, ({ one, many }) => ({
@@ -887,6 +958,26 @@ export const minsRelations = relations(mins, ({ one, many }) => ({
 export const timeBlocksRelations = relations(timeBlocks, ({ one }) => ({
   user: one(profiles, { fields: [timeBlocks.userId], references: [profiles.id] }),
   min: one(mins, { fields: [timeBlocks.minId], references: [mins.id] }),
+  detectedProject: one(detectedProjects, { fields: [timeBlocks.detectedProjectId], references: [detectedProjects.id] }),
+  meetingDetails: one(timeBlockMeetingDetails),
+}));
+
+export const detectedProjectsRelations = relations(detectedProjects, ({ one, many }) => ({
+  user: one(profiles, { fields: [detectedProjects.userId], references: [profiles.id] }),
+  powerGoal: one(powerGoals, { fields: [detectedProjects.powerGoalId], references: [powerGoals.id] }),
+  mergedInto: one(detectedProjects, { fields: [detectedProjects.mergedIntoId], references: [detectedProjects.id], relationName: 'projectMerge' }),
+  mergedFrom: many(detectedProjects, { relationName: 'projectMerge' }),
+  timeBlocks: many(timeBlocks),
+}));
+
+export const meetingCategoriesRelations = relations(meetingCategories, ({ one, many }) => ({
+  user: one(profiles, { fields: [meetingCategories.userId], references: [profiles.id] }),
+  meetingDetails: many(timeBlockMeetingDetails),
+}));
+
+export const timeBlockMeetingDetailsRelations = relations(timeBlockMeetingDetails, ({ one }) => ({
+  timeBlock: one(timeBlocks, { fields: [timeBlockMeetingDetails.timeBlockId], references: [timeBlocks.id] }),
+  meetingCategory: one(meetingCategories, { fields: [timeBlockMeetingDetails.meetingCategoryId], references: [meetingCategories.id] }),
 }));
 
 export const routinesRelations = relations(routines, ({ one, many }) => ({

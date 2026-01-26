@@ -38,6 +38,7 @@ import {
   UserPlus,
   MessageSquare,
   Sparkles,
+  FolderKanban,
 } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
 import { TAB_TO_ROUTE, TAB_DISPLAY_INFO } from '@/types/sharing';
@@ -71,6 +72,7 @@ const executionItems: NavItem[] = [
 
 const systemNavItems: NavItem[] = [
   { title: 'Time Audit', href: ROUTES.timeAudit, icon: Calendar },
+  { title: 'Projects', href: ROUTES.timeAuditProjects, icon: FolderKanban },
   { title: 'DRIP Matrix', href: ROUTES.drip, icon: Grid3X3 },
   { title: 'Routines', href: ROUTES.routines, icon: Target },
   { title: 'Pomodoro', href: ROUTES.pomodoro, icon: Timer },
