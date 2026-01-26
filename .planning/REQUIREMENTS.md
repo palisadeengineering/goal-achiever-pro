@@ -33,21 +33,21 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Tree UI & Hierarchy View
 
-- [ ] **TREE-01**: Collapsible tree view shows goal hierarchy with expand/collapse
-- [ ] **TREE-02**: Each node displays progress bar showing completion percentage
-- [ ] **TREE-03**: Status indicators show on-track (green), at-risk (yellow), behind (red)
-- [ ] **TREE-04**: Breadcrumb navigation shows path from vision to current item
-- [ ] **TREE-05**: Tree limits visible nesting to 2-3 levels with progressive disclosure
-- [ ] **TREE-06**: Keyboard navigation (Enter/Space to expand/collapse)
+- [x] **TREE-01**: Collapsible tree view shows goal hierarchy with expand/collapse
+- [x] **TREE-02**: Each node displays progress bar showing completion percentage
+- [x] **TREE-03**: Status indicators show on-track (green), at-risk (yellow), behind (red)
+- [x] **TREE-04**: Breadcrumb navigation shows path from vision to current item
+- [x] **TREE-05**: Tree limits visible nesting to 2-3 levels with progressive disclosure
+- [x] **TREE-06**: Keyboard navigation (Enter/Space to expand/collapse)
 
 ### Today Dashboard
 
-- [ ] **TODAY-01**: Dashboard shows all daily KPIs due today from the cascade
-- [ ] **TODAY-02**: Quick check-in form: mark complete, log value, add confidence score
-- [ ] **TODAY-03**: Progress summary widget shows daily/weekly/monthly/quarterly rates
-- [ ] **TODAY-04**: 300% Rule gauge displays Clarity, Belief, Consistency scores
-- [ ] **TODAY-05**: Completing items triggers optimistic UI update before server confirms
-- [ ] **TODAY-06**: Dashboard shows which vision/KPI each daily item contributes to
+- [x] **TODAY-01**: Dashboard shows all daily KPIs due today from the cascade
+- [x] **TODAY-02**: Quick check-in form: mark complete, log value, add confidence score
+- [x] **TODAY-03**: Progress summary widget shows daily/weekly/monthly/quarterly rates
+- [x] **TODAY-04**: 300% Rule gauge displays Clarity, Belief, Consistency scores
+- [x] **TODAY-05**: Completing items triggers optimistic UI update before server confirms
+- [x] **TODAY-06**: Dashboard shows which vision/KPI each daily item contributes to
 
 ### Progress Page
 
@@ -158,18 +158,18 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CASC-03 | 5 | Cascade Generation | Complete |
 | CASC-04 | 5 | Cascade Generation | Complete |
 | CASC-05 | 5 | Cascade Generation | Complete |
-| TREE-01 | 6 | Tree UI | Pending |
-| TREE-02 | 6 | Tree UI | Pending |
-| TREE-03 | 6 | Tree UI | Pending |
-| TREE-04 | 6 | Tree UI | Pending |
-| TREE-05 | 6 | Tree UI | Pending |
-| TREE-06 | 6 | Tree UI | Pending |
-| TODAY-01 | 7 | Today Dashboard | Pending |
-| TODAY-02 | 7 | Today Dashboard | Pending |
-| TODAY-03 | 7 | Today Dashboard | Pending |
-| TODAY-04 | 7 | Today Dashboard | Pending |
-| TODAY-05 | 7 | Today Dashboard | Pending |
-| TODAY-06 | 7 | Today Dashboard | Pending |
+| TREE-01 | 6 | Tree UI | Complete |
+| TREE-02 | 6 | Tree UI | Complete |
+| TREE-03 | 6 | Tree UI | Complete |
+| TREE-04 | 6 | Tree UI | Complete |
+| TREE-05 | 6 | Tree UI | Complete |
+| TREE-06 | 6 | Tree UI | Complete |
+| TODAY-01 | 7 | Today Dashboard | Complete |
+| TODAY-02 | 7 | Today Dashboard | Complete |
+| TODAY-03 | 7 | Today Dashboard | Complete |
+| TODAY-04 | 7 | Today Dashboard | Complete |
+| TODAY-05 | 7 | Today Dashboard | Complete |
+| TODAY-06 | 7 | Today Dashboard | Complete |
 | PRGS-01 | 8 | Progress Page | Pending |
 | PRGS-02 | 8 | Progress Page | Pending |
 | PRGS-03 | 8 | Progress Page | Pending |

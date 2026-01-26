@@ -31,6 +31,7 @@ import {
   Award,
   Star,
   ChevronRight,
+  Calendar,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -76,6 +77,7 @@ interface KpiSummary {
   totalStreakDays: number;
   weeklyProgress: number;
   monthlyProgress: number;
+  quarterlyProgress: number;
 }
 
 interface DailyKpiDashboardProps {
@@ -407,27 +409,34 @@ export function DailyKpiDashboard({ className }: DailyKpiDashboardProps) {
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="text-center p-3 rounded-lg bg-background/50">
+          <div className="grid grid-cols-4 gap-2">
+            <div className="text-center p-2 rounded-lg bg-background/50">
               <div className="flex items-center justify-center gap-1 text-orange-500 mb-1">
-                <Flame className="h-4 w-4" />
-                <span className="text-lg font-bold">{summary?.bestStreak || 0}</span>
+                <Flame className="h-3 w-3" />
+                <span className="text-base font-bold">{summary?.bestStreak || 0}</span>
               </div>
-              <span className="text-xs text-muted-foreground">Best Streak</span>
+              <span className="text-[10px] text-muted-foreground">Streak</span>
             </div>
-            <div className="text-center p-3 rounded-lg bg-background/50">
+            <div className="text-center p-2 rounded-lg bg-background/50">
               <div className="flex items-center justify-center gap-1 text-cyan-500 mb-1">
-                <TrendingUp className="h-4 w-4" />
-                <span className="text-lg font-bold">{summary?.weeklyProgress || 0}%</span>
+                <TrendingUp className="h-3 w-3" />
+                <span className="text-base font-bold">{summary?.weeklyProgress || 0}%</span>
               </div>
-              <span className="text-xs text-muted-foreground">Weekly</span>
+              <span className="text-[10px] text-muted-foreground">Weekly</span>
             </div>
-            <div className="text-center p-3 rounded-lg bg-background/50">
+            <div className="text-center p-2 rounded-lg bg-background/50">
               <div className="flex items-center justify-center gap-1 text-purple-500 mb-1">
-                <Trophy className="h-4 w-4" />
-                <span className="text-lg font-bold">{summary?.monthlyProgress || 0}%</span>
+                <Trophy className="h-3 w-3" />
+                <span className="text-base font-bold">{summary?.monthlyProgress || 0}%</span>
               </div>
-              <span className="text-xs text-muted-foreground">Monthly</span>
+              <span className="text-[10px] text-muted-foreground">Monthly</span>
+            </div>
+            <div className="text-center p-2 rounded-lg bg-background/50">
+              <div className="flex items-center justify-center gap-1 text-green-500 mb-1">
+                <Calendar className="h-3 w-3" />
+                <span className="text-base font-bold">{summary?.quarterlyProgress || 0}%</span>
+              </div>
+              <span className="text-[10px] text-muted-foreground">Quarterly</span>
             </div>
           </div>
         </CardContent>

@@ -17,8 +17,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Tree Fetching API** - Build efficient hierarchical query endpoints
 - [x] **Phase 4: Frontend State** - React Query hooks with optimistic updates and cache management
 - [x] **Phase 5: Cascade Generation** - AI-powered KPI breakdown from Vision to daily items
-- [ ] **Phase 6: Tree UI** - Collapsible hierarchy view with progress indicators
-- [ ] **Phase 7: Today Dashboard** - Daily KPI check-in with cascade-aware context
+- [x] **Phase 6: Tree UI** - Collapsible hierarchy view with progress indicators
+- [x] **Phase 7: Today Dashboard** - Daily KPI check-in with cascade-aware context
 - [ ] **Phase 8: Progress Page** - Roll-up visualization and analytics
 
 ## Phase Details
@@ -124,15 +124,16 @@ Plans:
 **Plans**: 3 plans in 2 waves
 
 Plans:
-- [ ] 06-01-PLAN.md - Tree context and recursive node component (Wave 1)
-- [ ] 06-02-PLAN.md - Status indicator and breadcrumb components (Wave 1)
-- [ ] 06-03-PLAN.md - Full tree view integration with keyboard navigation (Wave 2)
+- [x] 06-01-PLAN.md - Tree context and recursive node component (Wave 1)
+- [x] 06-02-PLAN.md - Status indicator and breadcrumb components (Wave 1)
+- [x] 06-03-PLAN.md - Full tree view integration with keyboard navigation (Wave 2)
+- [x] 06-04-PLAN.md - Polish and keyboard navigation fixes (Wave 2)
 
 ### Phase 7: Today Dashboard
 **Goal**: Users see all daily KPIs due today with quick check-in and clear cascade context
 **Depends on**: Phase 6
 **Requirements**: TODAY-01, TODAY-02, TODAY-03, TODAY-04, TODAY-05, TODAY-06
-**Research flag**: Needs research-phase (300% Rule quantification)
+**Research flag**: Complete (existing implementation covered most requirements)
 **Success Criteria** (what must be TRUE):
   1. Dashboard shows all daily KPIs from the cascade that are active today
   2. User can mark complete, log value, and add confidence score in quick form
@@ -140,12 +141,10 @@ Plans:
   4. 300% Rule gauge displays current Clarity, Belief, Consistency scores
   5. Completing items shows instant progress update before server confirms
   6. Each daily item shows which Vision and parent KPI it contributes to
-**Plans**: TBD
+**Plans**: 1 plan (gap closure - existing implementation covered most requirements)
 
 Plans:
-- [ ] 07-01: Today dashboard with daily KPI list
-- [ ] 07-02: Quick check-in form with optimistic updates
-- [ ] 07-03: Progress summary widget and 300% Rule gauge
+- [x] 07-01-PLAN.md - Add quarterly progress to stats grid (gap closure)
 
 ### Phase 8: Progress Page
 **Goal**: Users can analyze progress trends and identify which activities drive top-level goals
@@ -178,10 +177,10 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 3. Tree Fetching API | 2/2 | Complete | 2026-01-24 |
 | 4. Frontend State | 4/4 | Complete | 2026-01-24 |
 | 5. Cascade Generation | 3/3 | Complete | 2026-01-24 |
-| 6. Tree UI | 0/3 | Not started | - |
-| 7. Today Dashboard | 0/3 | Not started | - |
+| 6. Tree UI | 4/4 | Complete | 2026-01-25 |
+| 7. Today Dashboard | 1/1 | Complete | 2026-01-25 |
 | 8. Progress Page | 0/3 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-23*
-*Last updated: 2026-01-24*
+*Last updated: 2026-01-25*

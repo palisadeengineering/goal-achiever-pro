@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-23)
 
 **Core value:** When a user creates a Vision, the entire goal hierarchy cascades automatically - from SMART-based KPIs down to daily actions - and completing any item visibly moves progress up the chain to the dashboard.
-**Current focus:** Phase 6 - Tree UI COMPLETE, ready for Phase 7
+**Current focus:** Phase 7 - Today Dashboard COMPLETE, ready for Phase 8
 
 ## Current Position
 
-Phase: 6 of 8 (06-tree-ui) - COMPLETE
-Plan: 4 of 4 (all plans complete)
-Status: READY FOR PHASE 7
-Last activity: 2026-01-25 - Phase 6 Tree UI complete with keyboard navigation
+Phase: 7 of 8 (07-today-dashboard) - COMPLETE
+Plan: 1 of 1 (gap closure complete)
+Status: READY FOR PHASE 8
+Last activity: 2026-01-25 - Phase 7 Today Dashboard complete with quarterly progress
 
-Progress: [########################-] 95%
+Progress: [##########################] 100%
 
 ## Vision Planner Feature - COMPLETE
 
@@ -66,6 +66,20 @@ Tested full end-to-end workflow:
 - `1b395b8` chore: rename Goal Planner to Vision Planner and add protected routes
 - `59ca215` fix: pass vision text directly to submitVision to avoid state timing issue
 - `530abc1` feat: add metrics-first goal planner with chat interface
+
+## Phase 7 Progress - COMPLETE
+
+| Plan | Status |
+|------|--------|
+| 07-01: Add Quarterly Progress | COMPLETE |
+
+**Gap Analysis Finding:** Most TODAY requirements were already implemented in existing code.
+
+**07-01 Deliverables:**
+- Added quarterlyProgress to /api/kpi-dashboard response
+- Extended KpiSummary interface with quarterlyProgress
+- Changed stats grid from 3 to 4 columns
+- Added quarterly stat with Calendar icon
 
 ## Phase 6 Progress - COMPLETE
 
@@ -122,6 +136,7 @@ Tested full end-to-end workflow:
 | 04-frontend-state | 4 | 9m | 2m | COMPLETE |
 | 05-cascade-generation | 3 | 21m | 7m | COMPLETE |
 | 06-tree-ui | 4 | 25m | 6m | COMPLETE |
+| 07-today-dashboard | 1 | 15m | 15m | COMPLETE |
 
 *Updated after each plan completion*
 
@@ -181,32 +196,27 @@ Recent decisions affecting current work:
 - [x] ~~**BLOCKER**: Run `npx drizzle-kit push --force` to add missing `weight` column to `vision_kpis` table~~ (FIXED 2026-01-24)
 - [x] ~~Complete human verification for 06-03 (KPIs tree view testing)~~ (VERIFIED 2026-01-25)
 - [x] ~~Execute Phase 6 Plan 04 (Polish & Edge Cases)~~ (COMPLETE 2026-01-25)
-- [ ] Execute Phase 7 plans (Sync and Polish)
-- [ ] Execute Phase 8 plans (Integration and Testing)
+- [x] ~~Execute Phase 7 plans (Today Dashboard)~~ (COMPLETE 2026-01-25)
+- [ ] Execute Phase 8 plans (Progress Page)
 
 ### Blockers/Concerns
 
-None currently. Phase 6 complete, ready for Phase 7.
+None currently. Phase 7 complete, ready for Phase 8.
 
 ## Session Continuity
 
 Last session: 2026-01-25
-Stopped at: Phase 6 complete
+Stopped at: Phase 7 complete
 Resume action:
-1. Review Phase 7 roadmap and plans
-2. Begin Phase 7 execution
+1. Review Phase 8 roadmap and plans
+2. Begin Phase 8 execution (Progress Page)
 
-**Phase 6 Verification Results (2026-01-25):**
-- [x] Nodes expand/collapse on chevron click
-- [x] Progress bars show on each node
-- [x] Status indicators (on-track/at-risk/behind)
-- [x] Breadcrumb navigation works
-- [x] Keyboard navigation (Arrow keys, Enter/Space, Home/End)
-- [x] Leaf node checkboxes mark complete
+**Phase 7 Summary (2026-01-25):**
+- Gap analysis found most TODAY requirements already implemented
+- Added quarterly progress to API and stats grid
+- All 6 TODAY requirements now complete
 
-**Recent commits (06-04):**
-- `8324ffc` feat(06-04): fix keyboard navigation with roving tabindex
-
-**Files modified in 06-04:**
-- `src/components/features/kpi/goal-tree-view.tsx` (refactored with TreeContent)
-- `src/components/features/kpi/goal-tree-node.tsx` (tabIndex, useCallback)
+**Files modified in 07-01:**
+- `src/app/api/kpi-dashboard/route.ts` (added quarterlyProgress)
+- `src/components/features/kpi/daily-kpi-dashboard.tsx` (4-column stats grid)
+- `src/components/features/kpi/goal-tree-view.tsx` (type fix)

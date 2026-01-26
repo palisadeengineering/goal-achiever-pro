@@ -41,7 +41,7 @@ interface TreeContentProps {
   isUpdating: boolean;
   isLoggingKpi: boolean;
   onLogKpi: (kpiId: string, isCompleted: boolean) => void;
-  metadata?: { totalKpis: number; lastCalculated?: string };
+  metadata?: { totalKpis: number; lastCalculated?: string | null };
 }
 
 function TreeContent({

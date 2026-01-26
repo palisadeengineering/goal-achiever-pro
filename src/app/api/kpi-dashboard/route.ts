@@ -29,9 +29,10 @@ export async function GET(request: NextRequest) {
     weekEnd.setDate(startOfWeek.getDate() + 6);
     const weekEndStr = weekEnd.toISOString().split('T')[0];
 
-    // Get current month
+    // Get current month and quarter
     const currentMonth = now.getMonth() + 1;
     const currentYear = now.getFullYear();
+    const currentQuarter = Math.ceil(currentMonth / 3);
 
     // 1. Fetch all daily KPIs for the user with vision info
     const { data: dailyKpisRaw, error: dailyError } = await supabase
@@ -179,7 +180,23 @@ export async function GET(request: NextRequest) {
       })
     );
 
-    // 5. Calculate summary stats
+    // 5. Fetch quarterly KPIs with progress from cache
+    const { data: quarterlyKpisRaw } = await supabase
+      .from('vision_kpis')
+      .select(`
+        id,
+        title,
+        progress,
+        kpi_progress_cache (
+          progress_percentage
+        )
+      `)
+      .eq('user_id', userId)
+      .eq('level', 'quarterly')
+      .eq('quarter', currentQuarter)
+      .eq('is_active', true);
+
+    // 6. Calculate summary stats
     const completedToday = dailyKpis.filter((k) => k.is_completed_today).length;
     const bestStreak = Math.max(0, ...dailyKpis.map((k) => k.streak?.longest_streak || 0));
     const totalStreakDays = dailyKpis.reduce((sum, k) => sum + (k.streak?.current_streak || 0), 0);
@@ -204,6 +221,19 @@ export async function GET(request: NextRequest) {
         )
       : 0;
 
+    // Calculate quarterly progress from cached progress or KPI progress field
+    const quarterlyProgress = quarterlyKpisRaw && quarterlyKpisRaw.length > 0
+      ? Math.round(
+          quarterlyKpisRaw.reduce((sum, k) => {
+            // Use cached progress if available, otherwise use progress field
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const cached = (k.kpi_progress_cache as any)?.[0]?.progress_percentage;
+            const progress = cached ?? k.progress ?? 0;
+            return sum + progress;
+          }, 0) / quarterlyKpisRaw.length
+        )
+      : 0;
+
     return NextResponse.json({
       dailyKpis,
       weeklyKpis,
@@ -215,6 +245,7 @@ export async function GET(request: NextRequest) {
         totalStreakDays,
         weeklyProgress: Math.min(100, weeklyProgress),
         monthlyProgress: Math.min(100, monthlyProgress),
+        quarterlyProgress: Math.min(100, quarterlyProgress),
       },
     });
   } catch (error) {
