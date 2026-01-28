@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-01-27)
 
 ## Current Position
 
-Phase: 8.1 of 13 (08.1-critical-bugs) **← INSERTED - FIX FIRST**
-Plan: 08.1-01-PLAN.md ready
+Phase: 9 of 13 (09-gamification-foundation)
+Plan: 09-01-PLAN.md ready
 Status: Ready to execute
-Last activity: 2026-01-28 - Phase 8.1 created for critical bug fixes
+Last activity: 2026-01-28 - Phase 8.1 complete (critical bugs fixed)
 
-Progress: ░░░░░░░░░░ 0%
+Progress: █░░░░░░░░░ 10% (Phase 8.1 complete, 5 phases remaining)
 
 ## v2.0 Milestone Overview
 
@@ -24,8 +24,8 @@ Progress: ░░░░░░░░░░ 0%
 
 | Phase | Name | Goal | Status |
 |-------|------|------|--------|
-| **8.1** | **Critical Bug Fixes** | Time Audit crash, subscription pricing, terminology | **Planned** |
-| 9 | Gamification Foundation | DB schema, achievements, badges, XP/points | Planned |
+| **8.1** | **Critical Bug Fixes** | Time Audit crash, subscription pricing, terminology | **Complete** |
+| 9 | Gamification Foundation | DB schema, achievements, badges, XP/points | **Ready** |
 | 10 | Streaks & Daily Goals | Streak tracking, daily targets, MINS sync, heat map | Not started |
 | 11 | Visual Celebrations | Confetti, animations, level-up celebrations | Not started |
 | 12 | Value Matrix Charts | Time distribution, production trends dashboard | Not started |
@@ -60,14 +60,18 @@ Decisions from v1.0 milestone preserved for reference:
 
 ### Pending Todos
 
-- [ ] **Execute Plan 08.1-01 (Critical Bug Fixes)** ← DO THIS FIRST
-- [ ] Execute Plan 09-01 (Gamification Schema)
+- [x] ~~Execute Plan 08.1-01 (Critical Bug Fixes)~~ ✅ 2026-01-28
+- [ ] **Execute Plan 09-01 (Gamification Schema)** ← NEXT
 - [ ] Execute Plan 09-02 (Gamification Service)
 - [ ] Research confetti/animation libraries before Phase 11
 
 ### Blockers/Concerns
 
-None currently. Fresh milestone start.
+None currently.
+
+### Issues Logged
+
+- **ISS-001**: Backtrack Plan metrics not connected to KPIs tab (documented, deferred to Phase 10+)
 
 ### Roadmap Evolution
 
@@ -78,14 +82,14 @@ None currently. Fresh milestone start.
 ## Session Continuity
 
 Last session: 2026-01-28
-Stopped at: Phase 8.1 and updated phases 10-13 planned
-Resume action: Run /gsd:execute-plan to start 08.1-01-PLAN.md (critical bug fixes)
+Stopped at: Phase 8.1 complete, ready for Phase 9
+Resume action: Run /gsd:execute-plan to start 09-01-PLAN.md (gamification schema)
 
 **Context for next session:**
-- Phase 8.1 INSERTED for critical bug fixes - execute first!
-- Bugs to fix: Time Audit crash (color), subscription pricing, "Power Goals" terminology
-- After 8.1: Phase 9 ready with 2 plans (gamification schema + service)
-- Phases 10-13 updated with additional scope from user feedback:
-  - Phase 10: Added MINS sync, heat map, success rate
-  - Phase 12: Added production trends dashboard
-  - Phase 13: Added project-time linking, burndown charts
+- Phase 8.1 complete - all critical bugs fixed (3 commits: `1575bdb`, `f63f07d`, `bc426e6`)
+- ISS-001 documented: Backtrack Plan metrics not connected to KPIs tab (deferred)
+- Phase 9 ready with 2 plans (gamification schema + service)
+- Phases 10-13 have additional scope from user feedback:
+  - Phase 10: MINS sync, heat map, success rate
+  - Phase 12: Production trends dashboard
+  - Phase 13: Project-time linking, burndown charts

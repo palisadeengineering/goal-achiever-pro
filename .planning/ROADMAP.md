@@ -105,14 +105,14 @@ Plans:
 
 **Timeline:** 1-2 weeks (aggressive)
 
-#### Phase 8.1: Critical Bug Fixes (INSERTED)
+#### Phase 8.1: Critical Bug Fixes (INSERTED) ✅
 **Goal**: Fix app-breaking bugs before adding new features
 **Depends on**: v1.0 complete
 **Research**: None (bug fixes)
 **Plans**: 1 plan
 
 Plans:
-- [ ] 08.1-01-PLAN.md - Time Audit crash fix, subscription pricing, "Power Goals" terminology cleanup
+- [x] 08.1-01-PLAN.md - Time Audit crash fix, subscription pricing, "Impact Projects" terminology cleanup
 
 #### Phase 9: Gamification Foundation
 **Goal**: Database schema and core services for achievements, badges, XP/points system
@@ -199,7 +199,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 8 -> **8.1** -> 9 -> 10 -> 11 
 | 6. Tree UI | v1.0 | 4/4 | Complete | 2026-01-25 |
 | 7. Today Dashboard | v1.0 | 1/1 | Complete | 2026-01-25 |
 | 8. Progress Page | v1.0 | 3/3 | Complete | 2026-01-25 |
-| **8.1. Critical Bug Fixes** | v2.0 | 0/1 | **Planned** | - |
+| **8.1. Critical Bug Fixes** | v2.0 | 1/1 | **Complete** | 2026-01-28 |
 | 9. Gamification Foundation | v2.0 | 0/2 | Planned | - |
 | 10. Streaks & Daily Goals | v2.0 | 0/? | Not started | - |
 | 11. Visual Celebrations | v2.0 | 0/? | Not started | - |
