@@ -62,7 +62,7 @@ export default function SubscriptionPage() {
     loadData();
   }, []);
 
-  const currentTier = PRICING_TIERS.find(t => t.id === subscription.tier);
+  const currentTier = PRICING_TIERS.find(t => t.id === subscription.tier) || PRICING_TIERS[0];
   const isPaid = subscription.tier !== 'free';
 
   const handleUpgrade = async (tierId: string) => {
@@ -142,7 +142,7 @@ export default function SubscriptionPage() {
               <CardTitle>Current Plan</CardTitle>
               <CardDescription>
                 {isPaid
-                  ? `You're on the ${currentTier?.name} plan`
+                  ? `You're on the ${currentTier.name} plan`
                   : 'You\'re on the free plan'}
               </CardDescription>
             </div>
@@ -159,11 +159,11 @@ export default function SubscriptionPage() {
               <CreditCard className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{currentTier?.name}</p>
+              <p className="text-2xl font-bold">{currentTier.name}</p>
               <p className="text-muted-foreground">
-                {currentTier?.monthlyPrice === 0
+                {currentTier.monthlyPrice === 0
                   ? 'Free forever'
-                  : `$${currentTier?.monthlyPrice}/month`}
+                  : `$${currentTier.monthlyPrice}/month`}
               </p>
             </div>
           </div>
@@ -194,7 +194,7 @@ export default function SubscriptionPage() {
         </CardHeader>
         <CardContent>
           <ul className="grid md:grid-cols-2 gap-3">
-            {currentTier?.features.map((feature, index) => (
+            {currentTier.features.map((feature, index) => (
               <li key={index} className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-cyan-500" />
                 <span className="text-sm">{feature}</span>
