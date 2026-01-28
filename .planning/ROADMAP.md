@@ -105,6 +105,15 @@ Plans:
 
 **Timeline:** 1-2 weeks (aggressive)
 
+#### Phase 8.1: Critical Bug Fixes (INSERTED)
+**Goal**: Fix app-breaking bugs before adding new features
+**Depends on**: v1.0 complete
+**Research**: None (bug fixes)
+**Plans**: 1 plan
+
+Plans:
+- [ ] 08.1-01-PLAN.md - Time Audit crash fix, subscription pricing, "Power Goals" terminology cleanup
+
 #### Phase 9: Gamification Foundation
 **Goal**: Database schema and core services for achievements, badges, XP/points system
 **Depends on**: v1.0 complete
@@ -116,10 +125,16 @@ Plans:
 - [ ] 09-02-PLAN.md - Gamification service, API endpoints, and KPI integration
 
 #### Phase 10: Streaks & Daily Goals
-**Goal**: Track consecutive completion days, daily targets, visual streak indicators
+**Goal**: Track consecutive completion days, daily targets, visual streak indicators, MINS integration
 **Depends on**: Phase 9
 **Research**: Unlikely (CRUD, streak calculation logic)
 **Plans**: TBD
+
+**Additional scope (from user feedback):**
+- Daily actions from vision plan auto-populate in Daily & Weekly MINS
+- When MINS are completed, mark corresponding plan actions complete
+- Calendar heat map for habit/action tracking (like GitHub contribution graph)
+- Success rate metric (% of days goal was met)
 
 Plans:
 - [ ] 10-01: TBD
@@ -135,19 +150,36 @@ Plans:
 - [ ] 11-01: TBD
 
 #### Phase 12: Value Matrix Charts
-**Goal**: Time distribution visualization showing % in each quadrant (D/R/I/P)
+**Goal**: Time distribution visualization showing % in each quadrant (D/R/I/P), production trends
 **Depends on**: Phase 11
 **Research**: Unlikely (Recharts already in codebase)
 **Plans**: TBD
+
+**Additional scope (from user feedback):**
+- Production Time Analytics Dashboard:
+  - Weekly trend of Production % vs goal (50%+)
+  - Month-over-month comparison charts
+  - Alert when Production time drops below threshold
+- Time distribution pie/bar charts by quadrant
 
 Plans:
 - [ ] 12-01: TBD
 
 #### Phase 13: Leverage Analytics
-**Goal**: Trend charts, ROI indicators, activity categorization by leverage type (4 C's)
+**Goal**: Trend charts, ROI indicators, activity categorization by leverage type (4 C's), project-time linking
 **Depends on**: Phase 12
 **Research**: Unlikely (extending existing chart patterns)
 **Plans**: TBD
+
+**Additional scope (from user feedback):**
+- Project-to-Time Linking:
+  - Link time blocks to specific Impact Projects
+  - Track actual time spent vs planned time per project
+  - Show burndown/burnup charts per project
+- Leverage Tracking Graph:
+  - Track time invested in "high leverage" activities over time
+  - Show expected vs actual payoff
+  - ROI calculation for time investments
 
 Plans:
 - [ ] 13-01: TBD
@@ -155,7 +187,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> ... -> 8 -> 9 -> 10 -> 11 -> 12 -> 13
+Phases execute in numeric order: 1 -> 2 -> ... -> 8 -> **8.1** -> 9 -> 10 -> 11 -> 12 -> 13
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -167,6 +199,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 8 -> 9 -> 10 -> 11 -> 12 -> 13
 | 6. Tree UI | v1.0 | 4/4 | Complete | 2026-01-25 |
 | 7. Today Dashboard | v1.0 | 1/1 | Complete | 2026-01-25 |
 | 8. Progress Page | v1.0 | 3/3 | Complete | 2026-01-25 |
+| **8.1. Critical Bug Fixes** | v2.0 | 0/1 | **Planned** | - |
 | 9. Gamification Foundation | v2.0 | 0/2 | Planned | - |
 | 10. Streaks & Daily Goals | v2.0 | 0/? | Not started | - |
 | 11. Visual Celebrations | v2.0 | 0/? | Not started | - |

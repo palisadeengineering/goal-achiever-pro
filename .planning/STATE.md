@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-01-27)
 
 ## Current Position
 
-Phase: 9 of 13 (09-gamification-foundation)
-Plan: 09-01-PLAN.md ready (2 plans total)
+Phase: 8.1 of 13 (08.1-critical-bugs) **← INSERTED - FIX FIRST**
+Plan: 08.1-01-PLAN.md ready
 Status: Ready to execute
-Last activity: 2026-01-28 - Phase 9 planned
+Last activity: 2026-01-28 - Phase 8.1 created for critical bug fixes
 
 Progress: ░░░░░░░░░░ 0%
 
@@ -24,11 +24,12 @@ Progress: ░░░░░░░░░░ 0%
 
 | Phase | Name | Goal | Status |
 |-------|------|------|--------|
-| 9 | Gamification Foundation | DB schema, achievements, badges, XP/points | Not started |
-| 10 | Streaks & Daily Goals | Streak tracking, daily targets, visual indicators | Not started |
+| **8.1** | **Critical Bug Fixes** | Time Audit crash, subscription pricing, terminology | **Planned** |
+| 9 | Gamification Foundation | DB schema, achievements, badges, XP/points | Planned |
+| 10 | Streaks & Daily Goals | Streak tracking, daily targets, MINS sync, heat map | Not started |
 | 11 | Visual Celebrations | Confetti, animations, level-up celebrations | Not started |
-| 12 | Value Matrix Charts | Time distribution (D/R/I/P quadrant visualization) | Not started |
-| 13 | Leverage Analytics | Trend charts, ROI indicators, 4 C's categorization | Not started |
+| 12 | Value Matrix Charts | Time distribution, production trends dashboard | Not started |
+| 13 | Leverage Analytics | Trend charts, ROI indicators, project-time linking | Not started |
 
 ## v1.0 Milestone - COMPLETE
 
@@ -59,6 +60,7 @@ Decisions from v1.0 milestone preserved for reference:
 
 ### Pending Todos
 
+- [ ] **Execute Plan 08.1-01 (Critical Bug Fixes)** ← DO THIS FIRST
 - [ ] Execute Plan 09-01 (Gamification Schema)
 - [ ] Execute Plan 09-02 (Gamification Service)
 - [ ] Research confetti/animation libraries before Phase 11
@@ -76,12 +78,14 @@ None currently. Fresh milestone start.
 ## Session Continuity
 
 Last session: 2026-01-28
-Stopped at: Phase 9 planning complete
-Resume action: Run /gsd:execute-plan to start 09-01-PLAN.md (gamification schema)
+Stopped at: Phase 8.1 and updated phases 10-13 planned
+Resume action: Run /gsd:execute-plan to start 08.1-01-PLAN.md (critical bug fixes)
 
 **Context for next session:**
-- Phase 9 planned with 2 plans (09-01, 09-02)
-- 09-01: DB schema (achievements, user_achievements, user_gamification tables)
-- 09-02: Service layer, API endpoints, KPI integration
-- Existing kpiStreaks table can be referenced as pattern
-- No gamification tables exist yet - creating from scratch
+- Phase 8.1 INSERTED for critical bug fixes - execute first!
+- Bugs to fix: Time Audit crash (color), subscription pricing, "Power Goals" terminology
+- After 8.1: Phase 9 ready with 2 plans (gamification schema + service)
+- Phases 10-13 updated with additional scope from user feedback:
+  - Phase 10: Added MINS sync, heat map, success rate
+  - Phase 12: Added production trends dashboard
+  - Phase 13: Added project-time linking, burndown charts
