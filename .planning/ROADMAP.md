@@ -1,8 +1,13 @@
-# Roadmap: Goal Achiever Pro - Vision & KPI Cascade Fix
+# Roadmap: Goal Achiever Pro
 
 ## Overview
 
-This roadmap transforms Goal Achiever Pro from isolated goal pages into a unified cascading system where Visions drive KPIs that flow down to daily actions, with progress rolling back up to the dashboard. The journey starts with database schema changes to enable parent-child KPI relationships, builds the progress calculation engine, exposes efficient APIs, integrates frontend state management, adds AI-powered cascade generation, constructs the tree UI, surfaces daily actions on the Today dashboard, and culminates with comprehensive progress analytics.
+Goal Achiever Pro is a comprehensive goal-setting and time-optimization web app. The roadmap progresses through milestones: v1.0 established the Vision & KPI Cascade system, and v2.0 adds gamification and analytics to make the app beta-ready.
+
+## Milestones
+
+- ✅ **v1.0 Vision & KPI Cascade** - Phases 1-8 (shipped 2026-01-25)
+- 🚧 **v2.0 Beta Ready - Gamification & Analytics** - Phases 9-13 (in progress)
 
 ## Phases
 
@@ -10,29 +15,12 @@ This roadmap transforms Goal Achiever Pro from isolated goal pages into a unifie
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-Decimal phases appear between their surrounding integers in numeric order.
-
-- [x] **Phase 1: Schema Foundation** - Add parent-child KPI linkage and progress cache table
-- [x] **Phase 2: Progress Calculation** - Implement roll-up engine with triggers and weighted calculations
-- [x] **Phase 3: Tree Fetching API** - Build efficient hierarchical query endpoints
-- [x] **Phase 4: Frontend State** - React Query hooks with optimistic updates and cache management
-- [x] **Phase 5: Cascade Generation** - AI-powered KPI breakdown from Vision to daily items
-- [x] **Phase 6: Tree UI** - Collapsible hierarchy view with progress indicators
-- [x] **Phase 7: Today Dashboard** - Daily KPI check-in with cascade-aware context
-- [ ] **Phase 8: Progress Page** - Roll-up visualization and analytics
-
-## Phase Details
+<details>
+<summary>✅ v1.0 Vision & KPI Cascade (Phases 1-8) - SHIPPED 2026-01-25</summary>
 
 ### Phase 1: Schema Foundation
 **Goal**: Database supports 5-level KPI hierarchy with parent-child relationships and cached progress aggregates
 **Depends on**: Nothing (first phase)
-**Requirements**: DATA-01, DATA-02, DATA-03, DATA-04
-**Research flag**: Standard pattern (skip research-phase)
-**Success Criteria** (what must be TRUE):
-  1. KPIs can be linked to parent KPIs via parent_kpi_id column with proper foreign key
-  2. Hierarchy query returns 5 levels: Vision -> Quarterly -> Monthly -> Weekly -> Daily
-  3. Existing KPIs are migrated to appropriate parent relationships without data loss
-  4. Progress cache table stores pre-computed aggregates and returns data within 50ms
 **Plans**: 2 plans
 
 Plans:
@@ -42,145 +30,148 @@ Plans:
 ### Phase 2: Progress Calculation
 **Goal**: Completing any KPI automatically updates all ancestor progress percentages with transparent weighted calculations
 **Depends on**: Phase 1
-**Requirements**: PROG-01, PROG-02, PROG-03, PROG-04, PROG-05, PROG-06
-**Research flag**: Complete (application-layer strategy recommended over triggers)
-**Success Criteria** (what must be TRUE):
-  1. Completing a daily KPI immediately updates weekly/monthly/quarterly/vision progress
-  2. User can assign weight to any KPI and see higher-weight items contribute more to parent
-  3. User can manually override calculated progress with explanation that persists
-  4. UI shows transparent formula explaining exactly how progress percentage was calculated
-  5. Progress cache maintained within 100ms of write operations
-**Plans**: 4 plans in 3 waves
+**Plans**: 4 plans
 
 Plans:
-- [x] 02-01-PLAN.md - Core progress calculation library, types, and weight schema migration (Wave 1)
-- [x] 02-02-PLAN.md - Progress API endpoints with rollup integration (Wave 2)
-- [x] 02-03-PLAN.md - KPI log integration and barrel exports (Wave 3)
-- [x] 02-04-PLAN.md - Manual override endpoint (Wave 3)
+- [x] 02-01-PLAN.md - Core progress calculation library, types, and weight schema migration
+- [x] 02-02-PLAN.md - Progress API endpoints with rollup integration
+- [x] 02-03-PLAN.md - KPI log integration and barrel exports
+- [x] 02-04-PLAN.md - Manual override endpoint
 
 ### Phase 3: Tree Fetching API
 **Goal**: Single API call returns complete nested hierarchy for a vision with pre-computed progress
 **Depends on**: Phase 2
-**Requirements**: API-01, API-02
-**Research flag**: Standard pattern (skip research-phase)
-**Success Criteria** (what must be TRUE):
-  1. GET /api/goal-tree/{visionId} returns full nested JSON hierarchy in one query
-  2. POST /api/kpi-logs/{id}/log updates progress and returns all changed ancestor values
-  3. API response includes progress percentage from cache for instant dashboard loads
-**Plans**: 2 plans in 1 wave
+**Plans**: 2 plans
 
 Plans:
-- [x] 03-01-PLAN.md - Goal tree API endpoint with nested hierarchy (Wave 1)
-- [x] 03-02-PLAN.md - Enhanced KPI log response with ancestor progress values (Wave 1)
+- [x] 03-01-PLAN.md - Goal tree API endpoint with nested hierarchy
+- [x] 03-02-PLAN.md - Enhanced KPI log response with ancestor progress values
 
 ### Phase 4: Frontend State
 **Goal**: React Query manages server state with optimistic updates providing instant UI feedback
 **Depends on**: Phase 3
-**Requirements**: API-03, API-04
-**Research flag**: Standard pattern (skip research-phase)
-**Success Criteria** (what must be TRUE):
-  1. Completing a KPI shows updated progress immediately before server confirms
-  2. Failed updates roll back to previous state with clear error message
-  3. Hierarchical query keys enable targeted cache invalidation without refetching entire tree
-  4. Loading states clearly indicate when progress is being recalculated
-**Plans**: 4 plans in 3 waves (2 original + 2 gap closure)
+**Plans**: 4 plans
 
 Plans:
-- [x] 04-01-PLAN.md - React Query hooks (useGoalTree, useLogKpi) with optimistic updates (Wave 1)
-- [x] 04-02-PLAN.md - Hierarchical query key factory and targeted cache invalidation (Wave 2)
-- [x] 04-03-PLAN.md - [GAP CLOSURE] Fix API field name mismatch in useOverrideProgress (Wave 1)
-- [x] 04-04-PLAN.md - [GAP CLOSURE] Create minimal KPI tree widget to wire up hooks (Wave 2)
+- [x] 04-01-PLAN.md - React Query hooks with optimistic updates
+- [x] 04-02-PLAN.md - Hierarchical query key factory and targeted cache invalidation
+- [x] 04-03-PLAN.md - Fix API field name mismatch in useOverrideProgress
+- [x] 04-04-PLAN.md - Create minimal KPI tree widget
 
 ### Phase 5: Cascade Generation
 **Goal**: Creating or editing a Vision triggers AI generation of aligned KPIs that cascade to daily actions
 **Depends on**: Phase 4
-**Requirements**: CASC-01, CASC-02, CASC-03, CASC-04, CASC-05
-**Research flag**: Standard pattern (existing AI integration patterns in codebase)
-**Success Criteria** (what must be TRUE):
-  1. Creating a new Vision shows option to generate aligned KPIs via AI
-  2. Each generated KPI can be further broken down into quarterly/monthly/weekly/daily items
-  3. AI suggestions reference Vision SMART components for contextual breakdown
-  4. User can manually create and link KPIs to any parent in the hierarchy
-  5. Re-generating cascade adds new items without deleting user's existing customizations
-**Plans**: 3 plans in 2 waves
+**Plans**: 3 plans
 
 Plans:
-- [x] 05-01-PLAN.md - Fix generate-cascade to link KPIs hierarchically with parent_kpi_id (Wave 1)
-- [x] 05-02-PLAN.md - Manual KPI creation endpoint and useCreateKpi hook (Wave 1)
-- [x] 05-03-PLAN.md - Incremental generation mode preserving existing KPIs (Wave 2)
+- [x] 05-01-PLAN.md - Fix generate-cascade to link KPIs hierarchically
+- [x] 05-02-PLAN.md - Manual KPI creation endpoint and useCreateKpi hook
+- [x] 05-03-PLAN.md - Incremental generation mode preserving existing KPIs
 
 ### Phase 6: Tree UI
 **Goal**: Users can navigate the full goal hierarchy with clear visual indicators and efficient interaction
 **Depends on**: Phase 5
-**Requirements**: TREE-01, TREE-02, TREE-03, TREE-04, TREE-05, TREE-06
-**Research flag**: Complete (custom Radix Collapsible + roving tabindex recommended)
-**Success Criteria** (what must be TRUE):
-  1. Tree view shows collapsible nodes that expand/collapse on click
-  2. Each node displays progress bar showing completion percentage
-  3. Status indicators show green (on-track), yellow (at-risk), red (behind) based on progress
-  4. Breadcrumb navigation shows path from Vision to currently selected item
-  5. Tree limits visible nesting to 2-3 levels with "show more" for deeper items
-  6. User can navigate tree using keyboard (Enter/Space to expand, arrows to move)
-**Plans**: 3 plans in 2 waves
+**Plans**: 4 plans
 
 Plans:
-- [x] 06-01-PLAN.md - Tree context and recursive node component (Wave 1)
-- [x] 06-02-PLAN.md - Status indicator and breadcrumb components (Wave 1)
-- [x] 06-03-PLAN.md - Full tree view integration with keyboard navigation (Wave 2)
-- [x] 06-04-PLAN.md - Polish and keyboard navigation fixes (Wave 2)
+- [x] 06-01-PLAN.md - Tree context and recursive node component
+- [x] 06-02-PLAN.md - Status indicator and breadcrumb components
+- [x] 06-03-PLAN.md - Full tree view integration with keyboard navigation
+- [x] 06-04-PLAN.md - Polish and keyboard navigation fixes
 
 ### Phase 7: Today Dashboard
 **Goal**: Users see all daily KPIs due today with quick check-in and clear cascade context
 **Depends on**: Phase 6
-**Requirements**: TODAY-01, TODAY-02, TODAY-03, TODAY-04, TODAY-05, TODAY-06
-**Research flag**: Complete (existing implementation covered most requirements)
-**Success Criteria** (what must be TRUE):
-  1. Dashboard shows all daily KPIs from the cascade that are active today
-  2. User can mark complete, log value, and add confidence score in quick form
-  3. Progress summary widget shows completion rates at daily/weekly/monthly/quarterly levels
-  4. 300% Rule gauge displays current Clarity, Belief, Consistency scores
-  5. Completing items shows instant progress update before server confirms
-  6. Each daily item shows which Vision and parent KPI it contributes to
-**Plans**: 1 plan (gap closure - existing implementation covered most requirements)
+**Plans**: 1 plan
 
 Plans:
-- [x] 07-01-PLAN.md - Add quarterly progress to stats grid (gap closure)
+- [x] 07-01-PLAN.md - Add quarterly progress to stats grid
 
 ### Phase 8: Progress Page
 **Goal**: Users can analyze progress trends and identify which activities drive top-level goals
 **Depends on**: Phase 7
-**Requirements**: PRGS-01, PRGS-02, PRGS-03, PRGS-04, PRGS-05, PRGS-06
-**Research flag**: Standard pattern (analytics dashboard, Recharts)
-**Success Criteria** (what must be TRUE):
-  1. Roll-up visualization shows Vision -> Quarter -> Month -> Week -> Day progress cascade
-  2. Activity feed shows recent completions with timestamps across entire hierarchy
-  3. Trend charts display progress over time with selectable date ranges
-  4. Goal health scoring flags "zombie goals" that have no activity in 14+ days
-  5. Filters allow viewing by quarter, month, status, or specific vision
-  6. "Impact" indicators show which daily actions contribute most to vision progress
+**Plans**: 3 plans
+
+Plans:
+- [x] 08-01-PLAN.md - Roll-up visualization and filters
+- [x] 08-02-PLAN.md - Activity feed and trend charts
+- [x] 08-03-PLAN.md - Zombie goals and impact indicators
+
+</details>
+
+### 🚧 v2.0 Beta Ready - Gamification & Analytics (In Progress)
+
+**Milestone Goal:** Make the app engagement-worthy for beta testers with gamification rewards and visualize the core value prop (leverage time optimization)
+
+**Timeline:** 1-2 weeks (aggressive)
+
+#### Phase 9: Gamification Foundation
+**Goal**: Database schema and core services for achievements, badges, XP/points system
+**Depends on**: v1.0 complete
+**Research**: Unlikely (database schema, internal patterns)
 **Plans**: TBD
 
 Plans:
-- [ ] 08-01: Roll-up visualization and activity feed
-- [ ] 08-02: Trend charts and goal health scoring
-- [ ] 08-03: Filters and impact indicators
+- [ ] 09-01: TBD (run /gsd:plan-phase 9 to break down)
+
+#### Phase 10: Streaks & Daily Goals
+**Goal**: Track consecutive completion days, daily targets, visual streak indicators
+**Depends on**: Phase 9
+**Research**: Unlikely (CRUD, streak calculation logic)
+**Plans**: TBD
+
+Plans:
+- [ ] 10-01: TBD
+
+#### Phase 11: Visual Celebrations
+**Goal**: Confetti, animations, level-up celebrations, satisfying micro-interactions
+**Depends on**: Phase 10
+**Research**: Likely (confetti/animation libraries, UX patterns)
+**Research topics**: canvas-confetti, Framer Motion, Lottie, gamification UX patterns
+**Plans**: TBD
+
+Plans:
+- [ ] 11-01: TBD
+
+#### Phase 12: Value Matrix Charts
+**Goal**: Time distribution visualization showing % in each quadrant (D/R/I/P)
+**Depends on**: Phase 11
+**Research**: Unlikely (Recharts already in codebase)
+**Plans**: TBD
+
+Plans:
+- [ ] 12-01: TBD
+
+#### Phase 13: Leverage Analytics
+**Goal**: Trend charts, ROI indicators, activity categorization by leverage type (4 C's)
+**Depends on**: Phase 12
+**Research**: Unlikely (extending existing chart patterns)
+**Plans**: TBD
+
+Plans:
+- [ ] 13-01: TBD
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
+Phases execute in numeric order: 1 -> 2 -> ... -> 8 -> 9 -> 10 -> 11 -> 12 -> 13
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Schema Foundation | 2/2 | Complete | 2026-01-24 |
-| 2. Progress Calculation | 4/4 | Complete | 2026-01-24 |
-| 3. Tree Fetching API | 2/2 | Complete | 2026-01-24 |
-| 4. Frontend State | 4/4 | Complete | 2026-01-24 |
-| 5. Cascade Generation | 3/3 | Complete | 2026-01-24 |
-| 6. Tree UI | 4/4 | Complete | 2026-01-25 |
-| 7. Today Dashboard | 1/1 | Complete | 2026-01-25 |
-| 8. Progress Page | 0/3 | Not started | - |
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 1. Schema Foundation | v1.0 | 2/2 | Complete | 2026-01-24 |
+| 2. Progress Calculation | v1.0 | 4/4 | Complete | 2026-01-24 |
+| 3. Tree Fetching API | v1.0 | 2/2 | Complete | 2026-01-24 |
+| 4. Frontend State | v1.0 | 4/4 | Complete | 2026-01-24 |
+| 5. Cascade Generation | v1.0 | 3/3 | Complete | 2026-01-24 |
+| 6. Tree UI | v1.0 | 4/4 | Complete | 2026-01-25 |
+| 7. Today Dashboard | v1.0 | 1/1 | Complete | 2026-01-25 |
+| 8. Progress Page | v1.0 | 3/3 | Complete | 2026-01-25 |
+| 9. Gamification Foundation | v2.0 | 0/? | Not started | - |
+| 10. Streaks & Daily Goals | v2.0 | 0/? | Not started | - |
+| 11. Visual Celebrations | v2.0 | 0/? | Not started | - |
+| 12. Value Matrix Charts | v2.0 | 0/? | Not started | - |
+| 13. Leverage Analytics | v2.0 | 0/? | Not started | - |
 
 ---
 *Roadmap created: 2026-01-23*
-*Last updated: 2026-01-25*
+*Last updated: 2026-01-27*
