@@ -66,6 +66,9 @@ interface PowerGoal {
   quarter: number;
 }
 
+// Default color for projects without a color set
+const DEFAULT_PROJECT_COLOR = '#6b7280'; // gray-500
+
 const COLOR_OPTIONS = [
   '#6366f1', // indigo
   '#8b5cf6', // violet
@@ -163,7 +166,7 @@ export default function ProjectsPage() {
   const openEditDialog = (project: DetectedProject) => {
     setEditingProject(project);
     setEditName(project.name);
-    setEditColor(project.color);
+    setEditColor(project.color || DEFAULT_PROJECT_COLOR);
     setEditPowerGoalId(project.powerGoalId);
   };
 
@@ -285,7 +288,7 @@ export default function ProjectsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Projects"
-        description="Manage detected projects and link them to Power Goals"
+        description="Manage detected projects and link them to Impact Projects"
         actions={
           <Button onClick={() => setShowCreateDialog(true)}>
             <Plus className="h-4 w-4 mr-2" />
@@ -353,11 +356,11 @@ export default function ProjectsPage() {
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: project.color + '20' }}
+                      style={{ backgroundColor: (project.color || DEFAULT_PROJECT_COLOR) + '20' }}
                     >
                       <FolderKanban
                         className="h-4 w-4"
-                        style={{ color: project.color }}
+                        style={{ color: project.color || DEFAULT_PROJECT_COLOR }}
                       />
                     </div>
                     <div className="min-w-0">
