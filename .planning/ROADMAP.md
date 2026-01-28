@@ -109,10 +109,11 @@ Plans:
 **Goal**: Database schema and core services for achievements, badges, XP/points system
 **Depends on**: v1.0 complete
 **Research**: Unlikely (database schema, internal patterns)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 09-01: TBD (run /gsd:plan-phase 9 to break down)
+- [ ] 09-01-PLAN.md - Gamification database schema (achievements, user_achievements, user_gamification tables)
+- [ ] 09-02-PLAN.md - Gamification service, API endpoints, and KPI integration
 
 #### Phase 10: Streaks & Daily Goals
 **Goal**: Track consecutive completion days, daily targets, visual streak indicators
@@ -166,7 +167,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 8 -> 9 -> 10 -> 11 -> 12 -> 13
 | 6. Tree UI | v1.0 | 4/4 | Complete | 2026-01-25 |
 | 7. Today Dashboard | v1.0 | 1/1 | Complete | 2026-01-25 |
 | 8. Progress Page | v1.0 | 3/3 | Complete | 2026-01-25 |
-| 9. Gamification Foundation | v2.0 | 0/? | Not started | - |
+| 9. Gamification Foundation | v2.0 | 0/2 | Planned | - |
 | 10. Streaks & Daily Goals | v2.0 | 0/? | Not started | - |
 | 11. Visual Celebrations | v2.0 | 0/? | Not started | - |
 | 12. Value Matrix Charts | v2.0 | 0/? | Not started | - |
@@ -174,4 +175,4 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 8 -> 9 -> 10 -> 11 -> 12 -> 13
 
 ---
 *Roadmap created: 2026-01-23*
-*Last updated: 2026-01-27*
+*Last updated: 2026-01-28*
