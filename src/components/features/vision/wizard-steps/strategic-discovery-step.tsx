@@ -226,7 +226,7 @@ export function StrategicDiscoveryStep({ data, updateData }: StrategicDiscoveryS
               </li>
             </ul>
             <p className="font-medium text-foreground">
-              This data will be used to generate more precise Power Goals aligned with your actual numbers.
+              This data will be used to generate more precise Impact Projects aligned with your actual numbers.
             </p>
           </div>
         </CardContent>
@@ -235,7 +235,7 @@ export function StrategicDiscoveryStep({ data, updateData }: StrategicDiscoveryS
       {/* Skip Option */}
       {!hasDiscoveryData && (
         <p className="text-xs text-center text-muted-foreground">
-          You can skip this step and come back later, but your Power Goals will be less specific.
+          You can skip this step and come back later, but your Impact Projects will be less specific.
         </p>
       )}
     </div>

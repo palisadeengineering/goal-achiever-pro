@@ -91,7 +91,7 @@ function getInitialQuestions(): CategoryQuestion[] {
       category: 'product',
       question: 'What are the 3-5 core features that deliver your value?',
       type: 'text',
-      placeholder: 'e.g., Time audit, Value Matrix, Power Goals tracking, AI coaching',
+      placeholder: 'e.g., Time audit, Value Matrix, Impact Projects tracking, AI coaching',
       required: true,
     },
     {

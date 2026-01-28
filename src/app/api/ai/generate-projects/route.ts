@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       apiKey: process.env.ANTHROPIC_API_KEY,
     });
 
-    const prompt = `You are an expert project planner specializing in the 12 Power Goals methodology. Given the following vision and SMART goals, create a 12-month project plan broken into quarterly Power Goals.
+    const prompt = `You are an expert project planner specializing in the 12 Impact Projects methodology. Given the following vision and SMART goals, create a 12-month project plan broken into quarterly Impact Projects.
 
 Vision: "${vision}"
 
@@ -64,7 +64,7 @@ SMART Goals:
 ${targetDate ? `Target Completion Date: ${targetDate}` : 'Target: Within 12 months'}
 
 Create a structured 12-month plan with:
-1. 12 Power Goals (3 per quarter) that build progressively toward the vision
+1. 12 Impact Projects (3 per quarter) that build progressively toward the vision
 2. Each goal should be specific, actionable, and completable within its quarter
 3. Consider dependencies - earlier goals should enable later ones
 4. Include a mix of: foundation work, skill building, implementation, and scaling

@@ -30,7 +30,7 @@ export function generateBetaInvitationEmailHtml({
 
     <ul style="margin: 0 0 16px 0; padding-left: 20px; color: #64748b; font-size: 16px; line-height: 1.8;">
       <li>Vision & SMART goal creation with AI assistance</li>
-      <li>12 Power Goals annual planning system</li>
+      <li>12 Impact Projects annual planning system</li>
       <li>Time audit with Value Matrix analysis</li>
       <li>KPI tracking and accountability features</li>
       <li>And much more...</li>

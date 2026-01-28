@@ -203,7 +203,7 @@ VISION:
 Current Quarter: Q${currentQuarter} ${currentYear}
 Target Date: ${targetDate ? targetDate.toISOString().split('T')[0] : '12 months from now'}
 
-Generate ${goalsPerQuarter} Power Goals for each quarter (${quarters.join(', ').replace(/(\d)/g, 'Q$1')}), totaling ${quarters.length * goalsPerQuarter} Power Goals.
+Generate ${goalsPerQuarter} Impact Projects for each quarter (${quarters.join(', ').replace(/(\d)/g, 'Q$1')}), totaling ${quarters.length * goalsPerQuarter} Impact Projects.
 
 KEY REQUIREMENTS:
 1. Each level MUST have trackable KPIs with specific numeric targets
@@ -676,8 +676,8 @@ Respond ONLY with valid JSON in this exact format:
     const totalSkipped = skippedStats.quarterlyKpis + skippedStats.monthlyKpis + skippedStats.weeklyKpis + skippedStats.dailyKpis;
 
     const responseMessage = isIncremental
-      ? `Incremental update: Created ${totalKpis} new KPIs, skipped ${totalSkipped} existing. ${savedStats.powerGoals} Power Goals, ${savedStats.monthlyTargets} Monthly Targets, ${savedStats.weeklyTargets} Weekly Targets, ${savedStats.dailyActions} Daily Actions.`
-      : `Created complete plan: ${savedStats.powerGoals} Power Goals, ${totalKpis} KPIs (${savedStats.dailyKpis} Daily, ${savedStats.weeklyKpis} Weekly, ${savedStats.monthlyKpis} Monthly, ${savedStats.quarterlyKpis} Quarterly), ${savedStats.monthlyTargets} Monthly Targets, ${savedStats.weeklyTargets} Weekly Targets, and ${savedStats.dailyActions} Daily Actions`;
+      ? `Incremental update: Created ${totalKpis} new KPIs, skipped ${totalSkipped} existing. ${savedStats.powerGoals} Impact Projects, ${savedStats.monthlyTargets} Monthly Targets, ${savedStats.weeklyTargets} Weekly Targets, ${savedStats.dailyActions} Daily Actions.`
+      : `Created complete plan: ${savedStats.powerGoals} Impact Projects, ${totalKpis} KPIs (${savedStats.dailyKpis} Daily, ${savedStats.weeklyKpis} Weekly, ${savedStats.monthlyKpis} Monthly, ${savedStats.quarterlyKpis} Quarterly), ${savedStats.monthlyTargets} Monthly Targets, ${savedStats.weeklyTargets} Weekly Targets, and ${savedStats.dailyActions} Daily Actions`;
 
     return NextResponse.json({
       success: true,

@@ -199,7 +199,7 @@ export async function POST(request: NextRequest) {
 
 ## BACKTRACKING PLANNING METHOD
 Start with the END VISION, then work BACKWARDS to determine what must be accomplished at each level:
-Vision → Quarterly Targets → Power Goals → Monthly Targets → Weekly Targets → Daily Actions
+Vision → Quarterly Targets → Impact Projects → Monthly Targets → Weekly Targets → Daily Actions
 
 ## INPUT DATA
 
@@ -225,7 +225,7 @@ Vision → Quarterly Targets → Power Goals → Monthly Targets → Weekly Targ
    - Each with clear theme, metric, and target value
    - Estimated hours: ~${hoursPerQuarter} hours each
 
-2. **Power Goals** (${Math.min(numQuarters * 3, 12)} goals, ~3 per quarter):
+2. **Impact Projects** (${Math.min(numQuarters * 3, 12)} goals, ~3 per quarter):
    - Specific project-based goals
    - Category: business, career, health, wealth, relationships, or personal
    - Estimated hours: ~${hoursPerPowerGoal} hours each

@@ -40,7 +40,7 @@ export function generateWelcomeEmail(props: WelcomeEmailProps): string {
       </p>
       <ul style="margin: 0; padding-left: 20px; color: ${colors.textMuted}; font-size: 14px; line-height: 1.8;">
         <li><strong style="color: ${colors.text};">Set Your Vision</strong> — Define your SMART goals with AI assistance</li>
-        <li><strong style="color: ${colors.text};">Create Power Goals</strong> — Plan your 12 annual projects</li>
+        <li><strong style="color: ${colors.text};">Create Impact Projects</strong> — Plan your 12 annual projects</li>
         <li><strong style="color: ${colors.text};">Track Your Time</strong> — Use 15-minute blocks with Value categorization</li>
         <li><strong style="color: ${colors.text};">Build Routines</strong> — Establish morning, midday, and evening habits</li>
         <li><strong style="color: ${colors.text};">Review Progress</strong> — Daily reviews to stay on track</li>

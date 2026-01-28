@@ -147,7 +147,7 @@ export const backtrackPlans = pgTable('backtrack_plans', {
 }));
 
 // =============================================
-// QUARTERLY TARGETS (Links Vision to Power Goals)
+// QUARTERLY TARGETS (Links Vision to Impact Projects)
 // =============================================
 export const quarterlyTargets = pgTable('quarterly_targets', {
   id: uuid('id').primaryKey().defaultRandom(),
