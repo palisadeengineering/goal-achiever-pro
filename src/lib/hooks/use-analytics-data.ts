@@ -14,7 +14,7 @@ import {
   differenceInMinutes,
   subWeeks,
 } from 'date-fns';
-import type { DripQuadrant, EnergyRating } from '@/types/database';
+import type { ValueQuadrant, EnergyRating } from '@/types/database';
 
 interface TimeBlock {
   id: string;
@@ -22,12 +22,12 @@ interface TimeBlock {
   startTime: string;
   endTime: string;
   activityName: string;
-  dripQuadrant: DripQuadrant;
+  valueQuadrant: ValueQuadrant;
   energyRating: EnergyRating;
   createdAt: string;
 }
 
-interface DripBreakdown {
+interface ValueBreakdown {
   delegation: number;
   replacement: number;
   investment: number;
@@ -58,19 +58,19 @@ interface HeatmapCell {
   hour: number; // 0-23
   value: number; // 0-1 intensity
   dominantEnergy: EnergyRating | null;
-  dominantDrip: DripQuadrant | null;
+  dominantValue: ValueQuadrant | null;
   hoursLogged: number;
 }
 
 interface DailyBreakdown {
   date: string;
-  drip: DripBreakdown;
+  value: ValueBreakdown;
   energy: EnergyBreakdown;
   totalMinutes: number;
 }
 
 export interface AnalyticsData {
-  dripBreakdown: DripBreakdown;
+  valueBreakdown: ValueBreakdown;
   energyBreakdown: EnergyBreakdown;
   productionPercentage: number;
   energyBalance: number;
@@ -100,13 +100,13 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
     });
   }, [timeBlocks, dateRange]);
 
-  // DRIP Breakdown
-  const dripBreakdown = useMemo((): DripBreakdown => {
-    const breakdown: DripBreakdown = { delegation: 0, replacement: 0, investment: 0, production: 0, na: 0 };
+  // Value Breakdown
+  const valueBreakdown = useMemo((): ValueBreakdown => {
+    const breakdown: ValueBreakdown = { delegation: 0, replacement: 0, investment: 0, production: 0, na: 0 };
 
     filteredBlocks.forEach((block) => {
       const duration = calculateDuration(block.startTime, block.endTime);
-      breakdown[block.dripQuadrant] += duration;
+      breakdown[block.valueQuadrant] += duration;
     });
 
     return breakdown;
@@ -126,15 +126,15 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
 
   // Total hours and percentages
   const totalMinutes = useMemo(() => {
-    return Object.values(dripBreakdown).reduce((a, b) => a + b, 0);
-  }, [dripBreakdown]);
+    return Object.values(valueBreakdown).reduce((a, b) => a + b, 0);
+  }, [valueBreakdown]);
 
   const totalHours = totalMinutes / 60;
 
   const productionPercentage = useMemo(() => {
     if (totalMinutes === 0) return 0;
-    return Math.round((dripBreakdown.production / totalMinutes) * 100);
-  }, [dripBreakdown, totalMinutes]);
+    return Math.round((valueBreakdown.production / totalMinutes) * 100);
+  }, [valueBreakdown, totalMinutes]);
 
   const energyBalance = useMemo(() => {
     if (totalMinutes === 0) return 0;
@@ -159,28 +159,28 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
         return isWithinInterval(blockDate, { start: weekStart, end: weekEnd });
       });
 
-      const drip: DripBreakdown = { delegation: 0, replacement: 0, investment: 0, production: 0, na: 0 };
+      const value: ValueBreakdown = { delegation: 0, replacement: 0, investment: 0, production: 0, na: 0 };
       let greenMins = 0;
       let redMins = 0;
 
       weekBlocks.forEach((block) => {
         const duration = calculateDuration(block.startTime, block.endTime);
-        drip[block.dripQuadrant] += duration;
+        value[block.valueQuadrant] += duration;
         if (block.energyRating === 'green') greenMins += duration;
         if (block.energyRating === 'red') redMins += duration;
       });
 
-      const weekTotal = Object.values(drip).reduce((a, b) => a + b, 0);
+      const weekTotal = Object.values(value).reduce((a, b) => a + b, 0);
 
       return {
         week: format(weekStart, 'MMM d'),
         weekStart,
-        delegationHours: drip.delegation / 60,
-        replacementHours: drip.replacement / 60,
-        investmentHours: drip.investment / 60,
-        productionHours: drip.production / 60,
+        delegationHours: value.delegation / 60,
+        replacementHours: value.replacement / 60,
+        investmentHours: value.investment / 60,
+        productionHours: value.production / 60,
         totalHours: weekTotal / 60,
-        productionPercentage: weekTotal > 0 ? Math.round((drip.production / weekTotal) * 100) : 0,
+        productionPercentage: weekTotal > 0 ? Math.round((value.production / weekTotal) * 100) : 0,
         energyBalance: weekTotal > 0 ? Math.round(((greenMins - redMins) / weekTotal) * 100) : 0,
       };
     });
@@ -192,7 +192,7 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
     const grid: Map<string, {
       totalMins: number;
       energy: EnergyBreakdown;
-      drip: DripBreakdown;
+      value: ValueBreakdown;
     }> = new Map();
 
     // Initialize grid
@@ -201,7 +201,7 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
         grid.set(`${day}-${hour}`, {
           totalMins: 0,
           energy: { green: 0, yellow: 0, red: 0 },
-          drip: { delegation: 0, replacement: 0, investment: 0, production: 0, na: 0 },
+          value: { delegation: 0, replacement: 0, investment: 0, production: 0, na: 0 },
         });
       }
     }
@@ -218,7 +218,7 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
       if (cell) {
         cell.totalMins += duration;
         cell.energy[block.energyRating] += duration;
-        cell.drip[block.dripQuadrant] += duration;
+        cell.value[block.valueQuadrant] += duration;
       }
     });
 
@@ -242,12 +242,12 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
         else dominantEnergy = 'yellow';
       }
 
-      // Find dominant DRIP
-      let dominantDrip: DripQuadrant | null = null;
+      // Find dominant Value
+      let dominantValue: ValueQuadrant | null = null;
       if (cell.totalMins > 0) {
-        const entries = Object.entries(cell.drip) as [DripQuadrant, number][];
+        const entries = Object.entries(cell.value) as [ValueQuadrant, number][];
         const max = entries.reduce((a, b) => (b[1] > a[1] ? b : a));
-        if (max[1] > 0) dominantDrip = max[0];
+        if (max[1] > 0) dominantValue = max[0];
       }
 
       result.push({
@@ -255,7 +255,7 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
         hour,
         value: maxMins > 0 ? cell.totalMins / maxMins : 0,
         dominantEnergy,
-        dominantDrip,
+        dominantValue,
         hoursLogged: cell.totalMins / 60,
       });
     });
@@ -271,20 +271,20 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
       const dateStr = format(day, 'yyyy-MM-dd');
       const dayBlocks = filteredBlocks.filter((b) => b.date === dateStr);
 
-      const drip: DripBreakdown = { delegation: 0, replacement: 0, investment: 0, production: 0, na: 0 };
+      const value: ValueBreakdown = { delegation: 0, replacement: 0, investment: 0, production: 0, na: 0 };
       const energy: EnergyBreakdown = { green: 0, yellow: 0, red: 0 };
 
       dayBlocks.forEach((block) => {
         const duration = calculateDuration(block.startTime, block.endTime);
-        drip[block.dripQuadrant] += duration;
+        value[block.valueQuadrant] += duration;
         energy[block.energyRating] += duration;
       });
 
       return {
         date: dateStr,
-        drip,
+        value,
         energy,
-        totalMinutes: Object.values(drip).reduce((a, b) => a + b, 0),
+        totalMinutes: Object.values(value).reduce((a, b) => a + b, 0),
       };
     });
   }, [filteredBlocks, dateRange]);
@@ -293,15 +293,15 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
   const mostProductiveDay = useMemo(() => {
     if (dailyBreakdown.length === 0) return 'N/A';
 
-    const best = dailyBreakdown.reduce((a, b) => (b.drip.production > a.drip.production ? b : a));
-    return best.drip.production > 0 ? format(parseISO(best.date), 'EEEE') : 'N/A';
+    const best = dailyBreakdown.reduce((a, b) => (b.value.production > a.value.production ? b : a));
+    return best.value.production > 0 ? format(parseISO(best.date), 'EEEE') : 'N/A';
   }, [dailyBreakdown]);
 
   // Peak productivity hour
   const peakProductivityHour = useMemo(() => {
     const productivityByHour = heatmapData.reduce(
       (acc, cell) => {
-        if (cell.dominantDrip === 'production') {
+        if (cell.dominantValue === 'production') {
           acc[cell.hour] = (acc[cell.hour] || 0) + cell.hoursLogged;
         }
         return acc;
@@ -317,7 +317,7 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
   }, [heatmapData]);
 
   return {
-    dripBreakdown,
+    valueBreakdown,
     energyBreakdown,
     productionPercentage,
     energyBalance,

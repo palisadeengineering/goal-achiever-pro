@@ -36,7 +36,7 @@ interface AIProjectPlannerProps {
   };
   targetDate?: Date | null;
   onProjectsGenerated?: (projects: Project[]) => void;
-  onPowerGoalsSaved?: () => void;
+  onImpactProjectsSaved?: () => void;
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -56,7 +56,7 @@ export function AIProjectPlanner({
   smartGoals,
   targetDate,
   onProjectsGenerated,
-  onPowerGoalsSaved,
+  onImpactProjectsSaved,
 }: AIProjectPlannerProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -76,7 +76,7 @@ export function AIProjectPlanner({
     setSelectedProject(null);
   };
 
-  const handleSaveAsPowerGoals = async () => {
+  const handleSaveAsImpactProjects = async () => {
     if (!plan?.projects?.length) return;
 
     setIsSaving(true);
@@ -86,7 +86,7 @@ export function AIProjectPlanner({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           visionId,
-          powerGoals: plan.projects.map((project) => ({
+          impactProjects: plan.projects.map((project) => ({
             title: project.title,
             description: project.description,
             quarter: project.quarter,
@@ -96,15 +96,15 @@ export function AIProjectPlanner({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save power goals');
+        throw new Error('Failed to save impact projects');
       }
 
       const result = await response.json();
-      toast.success(`Saved ${result.saved} Power Goals successfully!`);
-      onPowerGoalsSaved?.();
+      toast.success(`Saved ${result.saved} Impact Projects successfully!`);
+      onImpactProjectsSaved?.();
     } catch (err) {
-      console.error('Save power goals error:', err);
-      toast.error('Failed to save Power Goals. Please try again.');
+      console.error('Save impact projects error:', err);
+      toast.error('Failed to save Impact Projects. Please try again.');
     } finally {
       setIsSaving(false);
     }
@@ -167,7 +167,7 @@ export function AIProjectPlanner({
             AI Project Planner
           </CardTitle>
           <CardDescription>
-            Generate a 12-month roadmap with quarterly Power Goals aligned to your vision
+            Generate a 12-month roadmap with quarterly Impact Projects aligned to your vision
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -178,7 +178,7 @@ export function AIProjectPlanner({
             <div>
               <h3 className="font-medium">Ready to plan your year?</h3>
               <p className="text-sm text-muted-foreground mt-1">
-                AI will create 12 Power Goals (3 per quarter) based on your vision and SMART goals
+                AI will create 12 Impact Projects (3 per quarter) based on your vision and SMART goals
               </p>
             </div>
 
@@ -257,7 +257,7 @@ export function AIProjectPlanner({
                     {label}
                   </Badge>
                   <span className="font-medium">
-                    {projects.length} Power Goals
+                    {projects.length} Impact Projects
                   </span>
                 </div>
                 {isExpanded ? (
@@ -329,7 +329,7 @@ export function AIProjectPlanner({
         <div className="pt-4 flex justify-end">
           <Button
             className="gap-2"
-            onClick={handleSaveAsPowerGoals}
+            onClick={handleSaveAsImpactProjects}
             disabled={isSaving}
           >
             {isSaving ? (
@@ -340,7 +340,7 @@ export function AIProjectPlanner({
             ) : (
               <>
                 <CheckCircle2 className="h-4 w-4" />
-                Save as Power Goals
+                Save as Impact Projects
               </>
             )}
           </Button>
@@ -358,7 +358,7 @@ export function AIProjectPlanner({
           </DialogHeader>
           {selectedProject && (
             <TargetGenerationWizard
-              powerGoal={{
+              impactProject={{
                 id: `temp-${selectedProject.title.toLowerCase().replace(/\s+/g, '-')}`,
                 title: selectedProject.title,
                 description: selectedProject.description,

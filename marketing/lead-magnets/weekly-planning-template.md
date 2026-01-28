@@ -1,7 +1,7 @@
 # Weekly Planning Template
 ## Plan Your Week in 30 Minutes or Less
 
-*Based on the Buy Back Your Time methodology*
+*Based on time optimization methodology*
 
 ---
 
@@ -28,7 +28,7 @@ A 30-minute weekly planning session can:
 - This template
 - Your calendar
 - Last week's notes/tasks
-- Your current Power Goal
+- Your current Impact Project
 
 ---
 
@@ -64,9 +64,9 @@ What rolled over from last week?
 
 ## Part 2: Weekly Targets (10 minutes)
 
-### Current Power Goal
+### Current Impact Project
 
-**This month's Power Goal:**
+**This month's Impact Project:**
 _____________________________________________
 
 **This week's milestone toward that goal:**
@@ -265,11 +265,11 @@ _____________________________________________
 
 ---
 
-## Weekly DRIP Time Budget
+## Weekly Value Time Budget
 
 How will your time be distributed this week?
 
-| DRIP Zone | Planned Hours | Actual Hours |
+| Value Zone | Planned Hours | Actual Hours |
 |-----------|---------------|--------------|
 | **D** - Delegate Zone | hrs | hrs |
 | **R** - Replace Zone | hrs | hrs |
@@ -412,7 +412,7 @@ Use this checklist every week:
 - [ ] Clear workspace
 - [ ] Have calendar open
 - [ ] Review last week's notes
-- [ ] Check current Power Goal
+- [ ] Check current Impact Project
 
 ### During Planning
 - [ ] Complete weekly review
@@ -420,7 +420,7 @@ Use this checklist every week:
 - [ ] Identify ONE Thing
 - [ ] Block big rocks on calendar
 - [ ] Plan daily MINs
-- [ ] Check DRIP time budget
+- [ ] Check Value time budget
 - [ ] Set weekly boundaries
 
 ### After Planning
@@ -435,7 +435,7 @@ Use this checklist every week:
 Goal Achiever Pro helps you:
 - Plan your week in minutes
 - Set and track daily MINs
-- Monitor DRIP time distribution
+- Monitor Value time distribution
 - See weekly progress dashboards
 - Get AI-generated target suggestions
 

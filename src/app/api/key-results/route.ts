@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
       .insert({
         user_id: userId,
         vision_id: body.visionId,
-        power_goal_id: body.powerGoalId || null,
+        power_goal_id: body.impactProjectId || null, // DB column unchanged
         title: body.title,
         description: body.description || null,
         target_value: body.targetValue,

@@ -44,7 +44,7 @@ Your goals are only as strong as your weakest link.
 
 I learned this the hard way after failing at the same goal 3 years in a row.
 
-Then I discovered the 300% Rule from Dan Martell:
+Then I discovered the 300% Rule for goal achievement:
 
 Clarity + Belief + Consistency = 300%
 
@@ -69,7 +69,7 @@ What's your weakest of the three?
 
 ---
 
-### Day 3 - 12 Power Goals
+### Day 3 - 12 Impact Projects
 
 **Caption:**
 
@@ -81,7 +81,7 @@ Here's why this constraint is actually freedom:
 
 When everything is a priority, nothing is.
 
-The 12 Power Goals system (from Dan Martell's "Buy Back Your Time") forces clarity:
+The 12 Impact Projects system (from time optimization methodology) forces clarity:
 
 - 3 goals per quarter
 - 1 goal per month gets primary focus
@@ -106,7 +106,7 @@ How many goals are you juggling right now?
 
 ---
 
-### Day 4 - DRIP Matrix
+### Day 4 - Value Matrix
 
 **Caption:**
 
@@ -114,7 +114,7 @@ Not all tasks are created equal.
 
 Some make you money. Others cost you money (even if they feel productive).
 
-Enter the DRIP Matrix:
+Enter the Value Matrix:
 
 D - Delegation ($25/hr tasks)
 R - Replacement ($50/hr tasks)
@@ -139,11 +139,11 @@ What quadrant do you spend most of your time in?
 
 ---
 
-### Day 5 - DRIP Deep Dive
+### Day 5 - Value Deep Dive
 
 **Caption:**
 
-Yesterday I introduced the DRIP Matrix.
+Yesterday I introduced the Value Matrix.
 
 Today, let's get specific.
 
@@ -210,7 +210,7 @@ Clarity + Belief + Consistency = 300%. Your lowest score is your biggest bottlen
 03 | 12 POWER GOALS
 3 goals per quarter. Forced focus. The constraint creates the results.
 
-04 | DRIP MATRIX
+04 | Value MATRIX
 D ($25/hr) → R ($50/hr) → I ($500/hr) → P ($5,000/hr)
 Know your task values. Protect your high-value time.
 
@@ -253,7 +253,7 @@ Here's how to start:
 1. Set a timer for every 15 minutes
 2. Log what you just did (1 word is fine)
 3. Do this for 2 weeks straight
-4. Review and categorize using the DRIP Matrix
+4. Review and categorize using the Value Matrix
 
 The awareness alone changes behavior.
 
@@ -338,7 +338,7 @@ What are your 3 MINs for tomorrow?
 
 **Caption:**
 
-I read "Buy Back Your Time" by Dan Martell 18 months ago.
+I read time optimization methodology 18 months ago.
 
 It changed how I work.
 
@@ -349,8 +349,8 @@ So I built the thing.
 Goal Achiever Pro takes everything from the book and puts it in one place:
 
 - SMART Vision creation with the 300% Rule
-- 12 Power Goals with quarterly planning
-- Time tracking with DRIP categorization
+- 12 Impact Projects with quarterly planning
+- Time tracking with Value categorization
 - Daily MINs scheduling
 - Morning and evening routine builders
 - 3x daily review system
@@ -362,7 +362,7 @@ It's the system from the book, digitized.
 
 Building in public. Sharing the journey.
 
-If you've read "Buy Back Your Time" - what was your biggest takeaway?
+If you've read "time optimization" - what was your biggest takeaway?
 
 #buildinpublic #productivity #entrepreneurship #startup #goalsetting
 
@@ -435,14 +435,14 @@ Rate your energy (1-10) throughout the day. Schedule important work during peaks
 3 Most Important Next Steps. Set them the night before. Morning is for execution, not decisions.
 
 11 | GOAL ACHIEVER PRO
-The system from "Buy Back Your Time," digitized. Everything in one place.
+The system from "time optimization," digitized. Everything in one place.
 
 12 | 300% DEEP DIVE
 Clarity + Belief + Consistency. Your lowest score is your biggest opportunity.
 
 If you've been following along, you now have:
 - A SMART Vision with 300% scoring
-- 12 Power Goals mapped to quarters
+- 12 Impact Projects mapped to quarters
 - Time tracking revealing your true patterns
 - Energy data showing your peak hours
 - Daily MINs focusing your effort
@@ -753,13 +753,13 @@ Here's the complete system I use to achieve more in less time:
 
 THE FOUNDATION:
 - SMART Vision with 300% Rule
-- 12 Power Goals (3 per quarter)
+- 12 Impact Projects (3 per quarter)
 
 THE DAILY ENGINE:
 - 3 MINs (Most Important Next Steps)
 - Time tracking in 15-min blocks
 - Energy ratings (1-10)
-- DRIP Matrix categorization
+- Value Matrix categorization
 
 THE ROUTINES:
 - Morning routine (first 2 hours protected)
@@ -799,8 +799,8 @@ Over the past month, I've shared:
 
 - The SMART Vision framework
 - The 300% Rule for goal achievement
-- 12 Power Goals system
-- DRIP Matrix for time categorization
+- 12 Impact Projects system
+- Value Matrix for time categorization
 - 15-minute time tracking
 - Energy management
 - Daily MINs
@@ -812,7 +812,7 @@ Over the past month, I've shared:
 - Delegation math
 - Friend Inventory
 
-That's the entire system from Dan Martell's "Buy Back Your Time," broken down into actionable pieces.
+That's the entire system for goal achievement's "time optimization," broken down into actionable pieces.
 
 But information isn't transformation.
 

@@ -16,7 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import type { DripQuadrant, EnergyRating } from '@/types/database';
+import type { ValueQuadrant, EnergyRating } from '@/types/database';
 
 export interface EventListItem {
   id: string;
@@ -24,7 +24,7 @@ export interface EventListItem {
   startTime: string;
   endTime: string;
   activityName: string;
-  dripQuadrant?: DripQuadrant;
+  valueQuadrant?: ValueQuadrant;
   energyRating?: EnergyRating;
   source?: string;
   externalEventId?: string;
@@ -39,8 +39,8 @@ interface EventListProps {
   isDeleting?: boolean;
 }
 
-// DRIP quadrant colors
-const dripColors: Record<DripQuadrant, string> = {
+// Value quadrant colors
+const valueColors: Record<ValueQuadrant, string> = {
   delegation: 'bg-red-100 text-red-700 border-red-200',
   replacement: 'bg-amber-100 text-amber-700 border-amber-200',
   investment: 'bg-purple-100 text-purple-700 border-purple-200',
@@ -175,12 +175,12 @@ export function EventList({
                         </div>
                         {/* Badges */}
                         <div className="flex flex-wrap gap-1.5 mt-2">
-                          {event.dripQuadrant && event.dripQuadrant !== 'na' && (
+                          {event.valueQuadrant && event.valueQuadrant !== 'na' && (
                             <Badge
                               variant="outline"
-                              className={`text-xs capitalize ${dripColors[event.dripQuadrant]}`}
+                              className={`text-xs capitalize ${valueColors[event.valueQuadrant]}`}
                             >
-                              {event.dripQuadrant}
+                              {event.valueQuadrant}
                             </Badge>
                           )}
                           {event.energyRating && (

@@ -5,7 +5,7 @@
 
 /* ============================================
    GOAL ACHIEVER PRO - Design System
-   Aesthetic: "Dan Martell Inspired"
+   Aesthetic: Modern Productivity
    Primary: Cyan/Blue #00BEFF
    ============================================ */
 
@@ -52,7 +52,7 @@
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
 
-  /* DRIP Matrix Colors */
+  /* Value Matrix Colors */
   --color-drip-delegation: var(--drip-delegation);
   --color-drip-replacement: var(--drip-replacement);
   --color-drip-investment: var(--drip-investment);
@@ -67,7 +67,7 @@
 :root {
   --radius: 0.625rem;
 
-  /* Core Brand - Dan Martell Cyan #00BEFF */
+  /* Core Brand - Primary Cyan #00BEFF */
   --primary: oklch(0.72 0.16 210);
   --primary-foreground: oklch(0.99 0 0);
 
@@ -160,7 +160,7 @@
   --input: oklch(0.25 0.012 260);
   --ring: oklch(0.75 0.16 210);
 
-  /* DRIP colors stay vibrant in dark mode */
+  /* Value colors stay vibrant in dark mode */
   --drip-delegation: oklch(0.70 0.20 300);
   --drip-replacement: oklch(0.75 0.18 55);
   --drip-investment: oklch(0.62 0.18 250);
@@ -456,7 +456,7 @@
   background: linear-gradient(90deg, oklch(0.72 0.16 210), oklch(0.72 0.16 210 / 0.3));
 }
 
-/* DRIP quadrant textures */
+/* Value quadrant textures */
 .drip-quadrant {
   position: relative;
   overflow: hidden;

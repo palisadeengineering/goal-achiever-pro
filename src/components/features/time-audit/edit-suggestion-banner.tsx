@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Sparkles, X, Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { EditPattern } from '@/lib/hooks/use-edit-patterns';
-import { DRIP_QUADRANTS } from '@/constants/drip';
+import { VALUE_QUADRANTS } from '@/constants/drip';
 
 interface EditSuggestionBannerProps {
   pattern: EditPattern;
@@ -38,8 +38,8 @@ export function EditSuggestionBanner({
 
   // Build the change description
   const changes: string[] = [];
-  if (pattern.suggestedDrip) {
-    changes.push(`DRIP: ${DRIP_QUADRANTS[pattern.suggestedDrip].name}`);
+  if (pattern.suggestedValue) {
+    changes.push(`Value: ${VALUE_QUADRANTS[pattern.suggestedValue].name}`);
   }
   if (pattern.suggestedEnergy) {
     changes.push(`Energy: ${ENERGY_LABELS[pattern.suggestedEnergy]}`);

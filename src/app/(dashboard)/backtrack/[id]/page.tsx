@@ -99,7 +99,19 @@ interface PlanData {
     progress_percentage: number;
     estimated_hours_total?: number;
   }>;
-  powerGoals: Array<{
+  impactProjects: Array<{
+    id: string;
+    quarterly_target_id?: string;
+    title: string;
+    description?: string;
+    quarter?: number;
+    category?: string;
+    estimated_hours?: number;
+    progress_percentage: number;
+    status: string;
+  }>;
+  // Backwards compatibility alias
+  powerGoals?: Array<{
     id: string;
     quarterly_target_id?: string;
     title: string;
@@ -911,8 +923,8 @@ export default function BacktrackDetailPage({ params }: { params: Promise<{ id: 
                     <div className="text-xs text-muted-foreground">Quarterly Targets</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold">{data.powerGoals.length}</div>
-                    <div className="text-xs text-muted-foreground">Power Goals</div>
+                    <div className="text-2xl font-bold">{data.impactProjects.length}</div>
+                    <div className="text-xs text-muted-foreground">Impact Projects</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold">{data.monthlyTargets.length}</div>
@@ -1477,7 +1489,7 @@ export default function BacktrackDetailPage({ params }: { params: Promise<{ id: 
                     const relatedWeekly = data.weeklyTargets.filter(
                       (w) =>
                         data.monthlyTargets.find((m) => m.id === target.id)?.power_goal_id ===
-                        data.powerGoals.find((p) =>
+                        data.impactProjects.find((p) =>
                           data.monthlyTargets.some((mt) => mt.power_goal_id === p.id)
                         )?.id
                     );
@@ -1604,7 +1616,7 @@ export default function BacktrackDetailPage({ params }: { params: Promise<{ id: 
                 visionTitle={data.plan.visions.title}
                 visionColor={data.plan.visions.color}
                 quarterlyTargets={data.quarterlyTargets}
-                powerGoals={data.powerGoals}
+                impactProjects={data.impactProjects}
                 monthlyTargets={data.monthlyTargets}
                 weeklyTargets={data.weeklyTargets}
                 dailyActions={data.dailyActions}

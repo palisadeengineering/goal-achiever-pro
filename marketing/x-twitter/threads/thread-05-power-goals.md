@@ -1,4 +1,4 @@
-# Thread 05: The 12 Power Goals System
+# Thread 05: The 12 Impact Projects System
 
 **Topic:** How to achieve more in 12 months than most do in 5 years
 **Best Time:** Wednesday 8 AM EST
@@ -14,7 +14,7 @@ Not by setting bigger goals.
 
 By setting FEWER goals.
 
-Here's the 12 Power Goals system that changed everything:
+Here's the 12 Impact Projects system that changed everything:
 
 ---
 
@@ -49,7 +49,7 @@ Spreading thin = accomplishing nothing.
 ---
 
 ## Tweet 4 (The System)
-The Power Goals System:
+The Impact Projects System:
 
 12 goals. 12 months. 1 goal per month.
 
@@ -100,7 +100,7 @@ WEALTH: 2 goals
 ---
 
 ## Tweet 7 (Examples)
-Real Power Goal examples:
+Real Impact Project examples:
 
 - January: Launch email newsletter (0 to 1,000 subscribers)
 - February: Complete 30-day fitness challenge
@@ -114,7 +114,7 @@ One thing. Full focus. Done.
 ---
 
 ## Tweet 8 (Structure)
-Power Goal structure:
+Impact Project structure:
 
 Each goal needs:
 1. Clear outcome (what "done" looks like)
@@ -167,9 +167,9 @@ Complete them before anything else.
 ---
 
 ## Tweet 11 (Common Mistakes)
-Power Goal mistakes to avoid:
+Impact Project mistakes to avoid:
 
-1. Setting 3 Power Goals in one month (defeats the purpose)
+1. Setting 3 Impact Projects in one month (defeats the purpose)
 2. Goals too vague ("get healthy" vs "complete Couch to 5K")
 3. No weekly milestones (waiting until week 4 to act)
 4. Abandoning mid-month (finish what you start)
@@ -216,12 +216,12 @@ Start THIS month:
 
 30 days from now: DONE.
 
-What's your Power Goal?
+What's your Impact Project?
 
 ---
 
 ## Tweet 15 (CTA)
-Want to plan and track your 12 Power Goals?
+Want to plan and track your 12 Impact Projects?
 
 Goal Achiever Pro breaks goals into:
 - Monthly targets
@@ -236,7 +236,7 @@ Link in bio.
 ---
 
 ## Tweet 16 (Summary)
-TL;DR The 12 Power Goals System:
+TL;DR The 12 Impact Projects System:
 
 1. Set 12 major goals for the year
 2. Focus on ONE per month

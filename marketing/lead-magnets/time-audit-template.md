@@ -17,7 +17,7 @@ After each block, rate how you felt:
 - ⚡⚡ (2) = Sluggish, forcing it
 - ⚡ (1) = Running on fumes
 
-### Step 3: Categorize Using DRIP
+### Step 3: Categorize Using the Value Matrix
 At the end of each day, categorize each block:
 - **D** = Delegation (drains you, someone else should do it)
 - **R** = Replacement (you're good at it, but shouldn't do it)
@@ -31,7 +31,7 @@ Calculate your percentages and identify patterns.
 
 ## Day 1: _____________ (Date)
 
-| Time | Activity | Energy (1-5) | DRIP |
+| Time | Activity | Energy (1-5) | Value |
 |------|----------|--------------|------|
 | 6:00 AM | | | |
 | 6:15 AM | | | |
@@ -95,7 +95,7 @@ Calculate your percentages and identify patterns.
 
 **Total blocks tracked:** _____ (out of 56 possible for 14-hour day)
 
-**DRIP Breakdown:**
+**Value Breakdown:**
 - D (Delegation): _____ blocks = _____%
 - R (Replacement): _____ blocks = _____%
 - I (Investment): _____ blocks = _____%
@@ -115,7 +115,7 @@ _________________________________________________________________
 
 ## Day 2: _____________ (Date)
 
-| Time | Activity | Energy (1-5) | DRIP |
+| Time | Activity | Energy (1-5) | Value |
 |------|----------|--------------|------|
 | 6:00 AM | | | |
 | 6:15 AM | | | |
@@ -177,7 +177,7 @@ _________________________________________________________________
 
 ### Day 2 Summary
 
-**DRIP Breakdown:**
+**Value Breakdown:**
 - D: _____ blocks = _____%
 - R: _____ blocks = _____%
 - I: _____ blocks = _____%
@@ -191,7 +191,7 @@ _________________________________________________________________
 
 ## Day 3: _____________ (Date)
 
-| Time | Activity | Energy (1-5) | DRIP |
+| Time | Activity | Energy (1-5) | Value |
 |------|----------|--------------|------|
 | 6:00 AM | | | |
 | 6:15 AM | | | |
@@ -253,7 +253,7 @@ _________________________________________________________________
 
 ### Day 3 Summary
 
-**DRIP Breakdown:**
+**Value Breakdown:**
 - D: _____ blocks = _____%
 - R: _____ blocks = _____%
 - I: _____ blocks = _____%
@@ -263,7 +263,7 @@ _________________________________________________________________
 
 ## Day 4: _____________ (Date)
 
-| Time | Activity | Energy (1-5) | DRIP |
+| Time | Activity | Energy (1-5) | Value |
 |------|----------|--------------|------|
 | 6:00 AM | | | |
 | 6:15 AM | | | |
@@ -325,7 +325,7 @@ _________________________________________________________________
 
 ### Day 4 Summary
 
-**DRIP Breakdown:**
+**Value Breakdown:**
 - D: _____ blocks = _____%
 - R: _____ blocks = _____%
 - I: _____ blocks = _____%
@@ -335,7 +335,7 @@ _________________________________________________________________
 
 ## Day 5: _____________ (Date)
 
-| Time | Activity | Energy (1-5) | DRIP |
+| Time | Activity | Energy (1-5) | Value |
 |------|----------|--------------|------|
 | 6:00 AM | | | |
 | 6:15 AM | | | |
@@ -397,7 +397,7 @@ _________________________________________________________________
 
 ### Day 5 Summary
 
-**DRIP Breakdown:**
+**Value Breakdown:**
 - D: _____ blocks = _____%
 - R: _____ blocks = _____%
 - I: _____ blocks = _____%
@@ -407,7 +407,7 @@ _________________________________________________________________
 
 ## Day 6: _____________ (Date)
 
-| Time | Activity | Energy (1-5) | DRIP |
+| Time | Activity | Energy (1-5) | Value |
 |------|----------|--------------|------|
 | 6:00 AM | | | |
 | 6:15 AM | | | |
@@ -469,7 +469,7 @@ _________________________________________________________________
 
 ### Day 6 Summary
 
-**DRIP Breakdown:**
+**Value Breakdown:**
 - D: _____ blocks = _____%
 - R: _____ blocks = _____%
 - I: _____ blocks = _____%
@@ -479,7 +479,7 @@ _________________________________________________________________
 
 ## Day 7: _____________ (Date)
 
-| Time | Activity | Energy (1-5) | DRIP |
+| Time | Activity | Energy (1-5) | Value |
 |------|----------|--------------|------|
 | 6:00 AM | | | |
 | 6:15 AM | | | |
@@ -541,7 +541,7 @@ _________________________________________________________________
 
 ### Day 7 Summary
 
-**DRIP Breakdown:**
+**Value Breakdown:**
 - D: _____ blocks = _____%
 - R: _____ blocks = _____%
 - I: _____ blocks = _____%
@@ -551,7 +551,7 @@ _________________________________________________________________
 
 ## Weekly Analysis
 
-### DRIP Summary
+### Value Summary
 
 | Category | Total Blocks | Percentage | Target | Gap |
 |----------|--------------|------------|--------|-----|
@@ -632,7 +632,7 @@ List activities that took more time than expected:
 
 Goal Achiever Pro tracks your time automatically with:
 - 15-minute block logging
-- AI-powered DRIP categorization
+- AI-powered Value categorization
 - Energy tracking
 - Weekly analytics and insights
 - Automatic pattern detection
@@ -641,5 +641,5 @@ Goal Achiever Pro tracks your time automatically with:
 
 ---
 
-*Based on Dan Martell's "Buy Back Your Time" methodology*
+*Based on time optimization methodology*
 *Template by Goal Achiever Pro*

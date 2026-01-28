@@ -2,7 +2,7 @@
 
 ## Quick Overview
 
-A comprehensive goal-setting and time-optimization web app built on **Dan Martell's "Buy Back Your Time" methodology**. Helps entrepreneurs define visions, create Power Goals, track time, and optimize productivity.
+A comprehensive goal-setting and time-optimization web app built on **proven productivity and time optimization methodologies**. Helps entrepreneurs define visions, create Impact Projects, track time, and optimize productivity.
 
 ## Tech Stack
 
@@ -26,10 +26,10 @@ src/
 │   ├── (auth)/              # Login, signup, callback
 │   ├── (dashboard)/         # Protected routes
 │   │   ├── vision/          # Vision & SMART goals
-│   │   ├── goals/           # Power Goals (12 annual projects)
+│   │   ├── goals/           # Impact Projects (12 annual projects)
 │   │   ├── mins/            # Most Important Next Steps
 │   │   ├── time-audit/      # Time tracking (15-min blocks)
-│   │   ├── drip/            # DRIP Matrix analysis
+│   │   ├── drip/            # Value Matrix analysis
 │   │   ├── routines/        # Morning/evening/midday routines
 │   │   ├── pomodoro/        # Focus timer
 │   │   ├── reviews/         # Daily reviews (3x daily)
@@ -73,7 +73,7 @@ src/
 ### Goal Hierarchy
 ```
 Vision (SMART Goals)
-  └── 12 Power Goals (annual projects, 4 quarters)
+  └── 12 Impact Projects (annual projects, 4 quarters)
        └── Monthly Targets
             └── Weekly Targets
                  └── Daily Actions
@@ -81,10 +81,10 @@ Vision (SMART Goals)
 
 ### Key Modules
 - **Vision**: SMART goal framework with AI-assisted generation
-- **Power Goals**: 12 annual projects per Dan Martell's method
+- **Impact Projects**: 12 annual projects for strategic planning
 - **MINs**: Most Important Next Steps scheduling
-- **Time Audit**: 15-minute block tracking with DRIP categorization
-- **DRIP Matrix**: Delegation, Replacement, Investment, Production quadrants
+- **Time Audit**: 15-minute block tracking with Value Matrix categorization
+- **Value Matrix**: Delegation, Replacement, Investment, Production quadrants
 - **300% Rule**: Track Clarity, Belief, Consistency scores
 - **KPI Tracking**: AI-generated KPIs aligned with vision
 - **Leverage (4 C's)**: Code, Content, Capital, Collaboration tracking
@@ -100,7 +100,7 @@ Vision (SMART Goals)
 | `weekly_targets` | Weekly breakdown |
 | `daily_actions` | Daily breakdown |
 | `mins` | Most Important Next Steps |
-| `time_blocks` | 15-min increments with DRIP + energy ratings |
+| `time_blocks` | 15-min increments with Value Matrix + energy ratings |
 | `activity_categories` | Custom activity types |
 | `routines` / `routine_steps` | Daily routines |
 | `daily_reviews` | 3x daily review entries |
@@ -112,14 +112,14 @@ Vision (SMART Goals)
 
 ### AI Generation
 - `POST /api/ai/generate-smart` - Generate SMART components from vision
-- `POST /api/ai/generate-power-goals` - Create Power Goals from SMART goals
+- `POST /api/ai/generate-power-goals` - Create Impact Projects from SMART goals
 - `POST /api/ai/generate-kpis` - Generate aligned KPIs
 - `POST /api/ai/generate-targets` - Generate monthly/weekly targets
 - `POST /api/ai/suggest-vision` - AI vision improvement suggestions
 
 ### Data CRUD
 - `/api/visions` - Vision management
-- `/api/power-goals` - Power Goals management
+- `/api/power-goals` - Impact Projects management
 - `/api/targets` - Target management
 
 ### Integrations
@@ -152,7 +152,7 @@ Vision (SMART Goals)
 
 | Feature | Free | Pro | Premium |
 |---------|------|-----|---------|
-| Vision & Power Goals | Yes | Yes | Yes |
+| Vision & Impact Projects | Yes | Yes | Yes |
 | Basic Time Tracking | Yes | Yes | Yes |
 | Biweekly Time Audit | No | Yes | Yes |
 | Leverage/Network | No | Yes | Yes |
@@ -200,8 +200,8 @@ GOOGLE_CLIENT_SECRET=
 ## Recent Changes (Git History)
 
 1. **Fix auth bypass** for demo mode and vision saving
-2. **Fix Power Goals saving** with vision
-3. **Add Generate Power Goals** from SMART goals feature
+2. **Fix Impact Projects saving** with vision
+3. **Add Generate Impact Projects** from SMART goals feature
 4. **Add KPI accountability system** and multi-vision support
 5. **Add vision improvements**: date input, AI suggestions, KPI generation
 

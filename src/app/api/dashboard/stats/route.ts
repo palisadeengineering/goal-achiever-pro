@@ -57,7 +57,7 @@ export async function GET() {
         .gte('scheduled_date', weekStart)
         .lte('scheduled_date', weekEnd),
 
-      // Time blocks for DRIP distribution (last 7 days)
+      // Time blocks for Value distribution (last 7 days)
       supabase
         .from('time_blocks')
         .select('id, drip_quadrant, duration_minutes')
@@ -84,13 +84,13 @@ export async function GET() {
     // Process visions
     const visionCount = visionsResult.count || 0;
 
-    // Process power goals
-    const powerGoals = powerGoalsResult.data || [];
-    const totalPowerGoals = powerGoals.length;
-    const activePowerGoals = powerGoals.filter(g => g.status === 'active').length;
-    const completedPowerGoals = powerGoals.filter(g => g.status === 'completed').length;
-    const avgPowerGoalProgress = totalPowerGoals > 0
-      ? Math.round(powerGoals.reduce((sum, g) => sum + (g.progress_percentage || 0), 0) / totalPowerGoals)
+    // Process impact projects
+    const impactProjects = powerGoalsResult.data || [];
+    const totalImpactProjects = impactProjects.length;
+    const activeImpactProjects = impactProjects.filter(g => g.status === 'active').length;
+    const completedImpactProjects = impactProjects.filter(g => g.status === 'completed').length;
+    const avgImpactProjectProgress = totalImpactProjects > 0
+      ? Math.round(impactProjects.reduce((sum, g) => sum + (g.progress_percentage || 0), 0) / totalImpactProjects)
       : 0;
 
     // Process MINS
@@ -104,9 +104,9 @@ export async function GET() {
       ? Math.round((todayMinsCompleted / todayMinsTotal) * 100)
       : 0;
 
-    // Process time blocks for DRIP distribution
+    // Process time blocks for Value distribution
     const timeBlocks = timeBlocksResult.data || [];
-    const dripDistribution: Record<string, number> = {
+    const valueDistribution: Record<string, number> = {
       delegation: 0,
       replacement: 0,
       investment: 0,
@@ -119,19 +119,19 @@ export async function GET() {
       totalTimeMinutes += minutes;
 
       const quadrant = (block.drip_quadrant || 'production').toLowerCase();
-      if (quadrant in dripDistribution) {
-        dripDistribution[quadrant] += minutes;
+      if (quadrant in valueDistribution) {
+        valueDistribution[quadrant] += minutes;
       } else {
-        dripDistribution.production += minutes;
+        valueDistribution.production += minutes;
       }
     });
 
-    // Calculate DRIP percentages
-    const dripPercentages = {
-      delegation: totalTimeMinutes > 0 ? Math.round((dripDistribution.delegation / totalTimeMinutes) * 100) : 0,
-      replacement: totalTimeMinutes > 0 ? Math.round((dripDistribution.replacement / totalTimeMinutes) * 100) : 0,
-      investment: totalTimeMinutes > 0 ? Math.round((dripDistribution.investment / totalTimeMinutes) * 100) : 0,
-      production: totalTimeMinutes > 0 ? Math.round((dripDistribution.production / totalTimeMinutes) * 100) : 0,
+    // Calculate Value percentages
+    const valuePercentages = {
+      delegation: totalTimeMinutes > 0 ? Math.round((valueDistribution.delegation / totalTimeMinutes) * 100) : 0,
+      replacement: totalTimeMinutes > 0 ? Math.round((valueDistribution.replacement / totalTimeMinutes) * 100) : 0,
+      investment: totalTimeMinutes > 0 ? Math.round((valueDistribution.investment / totalTimeMinutes) * 100) : 0,
+      production: totalTimeMinutes > 0 ? Math.round((valueDistribution.production / totalTimeMinutes) * 100) : 0,
     };
 
     // Process daily reviews for 300% rule
@@ -177,12 +177,12 @@ export async function GET() {
       // Vision stats
       visionCount,
 
-      // Power Goals stats
+      // Impact Projects stats (keeping response key for backwards compatibility)
       powerGoals: {
-        total: totalPowerGoals,
-        active: activePowerGoals,
-        completed: completedPowerGoals,
-        avgProgress: avgPowerGoalProgress,
+        total: totalImpactProjects,
+        active: activeImpactProjects,
+        completed: completedImpactProjects,
+        avgProgress: avgImpactProjectProgress,
       },
 
       // MINS stats
@@ -194,9 +194,9 @@ export async function GET() {
         completionRate: minsCompletionRate,
       },
 
-      // DRIP distribution
+      // Value distribution
       drip: {
-        distribution: dripPercentages,
+        distribution: valuePercentages,
         totalMinutes: totalTimeMinutes,
         totalHours: Math.round(totalTimeMinutes / 60 * 10) / 10,
       },

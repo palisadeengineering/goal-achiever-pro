@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
       notes: block.notes,
       energyRating: block.energy_rating,
       energyScore: block.energy_score,
-      dripQuadrant: block.drip_quadrant,
+      valueQuadrant: block.drip_quadrant,
       makesMoneyScore: block.makes_money_score,
       lightsUpScore: block.lights_up_score,
       source: block.source,
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
       activityCategory,
       notes,
       energyRating,
-      dripQuadrant,
+      valueQuadrant,
       source,
       externalEventId,
       minId,
@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
         activity_category: activityCategory || null,
         notes: notes || null,
         energy_rating: energyRating || 'yellow',
-        drip_quadrant: dripQuadrant || 'production',
+        drip_quadrant: valueQuadrant || 'production',
         source: source || 'manual',
         external_event_id: externalEventId || null,
         min_id: minId || null,
@@ -228,7 +228,7 @@ export async function POST(request: NextRequest) {
       activityCategory: timeBlock.activity_category,
       notes: timeBlock.notes,
       energyRating: timeBlock.energy_rating,
-      dripQuadrant: timeBlock.drip_quadrant,
+      valueQuadrant: timeBlock.drip_quadrant,
       source: timeBlock.source,
       externalEventId: timeBlock.external_event_id,
       // Recurring event fields
@@ -276,7 +276,7 @@ export async function PUT(request: NextRequest) {
       activityCategory,
       notes,
       energyRating,
-      dripQuadrant,
+      valueQuadrant,
       tagIds,
       // Recurring event fields
       isRecurring,
@@ -314,7 +314,7 @@ export async function PUT(request: NextRequest) {
     if (activityCategory !== undefined) updateData.activity_category = activityCategory;
     if (notes !== undefined) updateData.notes = notes;
     if (energyRating !== undefined) updateData.energy_rating = energyRating;
-    if (dripQuadrant !== undefined) updateData.drip_quadrant = dripQuadrant;
+    if (valueQuadrant !== undefined) updateData.drip_quadrant = valueQuadrant;
     // Recurring event fields
     if (isRecurring !== undefined) updateData.is_recurring = isRecurring;
     if (recurrenceRule !== undefined) updateData.recurrence_rule = recurrenceRule;
@@ -386,7 +386,7 @@ export async function PUT(request: NextRequest) {
       activityCategory: timeBlock.activity_category,
       notes: timeBlock.notes,
       energyRating: timeBlock.energy_rating,
-      dripQuadrant: timeBlock.drip_quadrant,
+      valueQuadrant: timeBlock.drip_quadrant,
       source: timeBlock.source,
       externalEventId: timeBlock.external_event_id,
       // Recurring event fields

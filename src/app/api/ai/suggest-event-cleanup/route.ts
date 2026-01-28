@@ -15,7 +15,7 @@ interface EventInput {
   startTime: string;
   endTime: string;
   activityName: string;
-  dripQuadrant?: string;
+  valueQuadrant?: string;
   energyRating?: string;
 }
 
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
       name: e.activityName,
       date: e.date,
       time: `${e.startTime}-${e.endTime}`,
-      drip: e.dripQuadrant || 'unknown',
+      value: e.valueQuadrant || 'unknown',
       energy: e.energyRating || 'unknown',
     }));
 
@@ -98,7 +98,7 @@ ${JSON.stringify(eventList, null, 2)}
 Identify patterns and suggest cleanup categories. Consider:
 1. **Past Events**: Events that have already occurred and are no longer relevant
 2. **Recurring Meetings No Longer Needed**: Regular meetings that may be outdated (standups for old projects, etc.)
-3. **Low-Value Activities**: Events marked as "delegation" DRIP quadrant that should be delegated instead of attended
+3. **Low-Value Activities**: Events marked as "delegation" Value quadrant that should be delegated instead of attended
 4. **Energy Drains**: Events marked with "red" energy rating that the user might want to eliminate
 5. **Duplicate Events**: Similar events that might be duplicates
 6. **Administrative Tasks**: Routine admin tasks that could be batched or eliminated

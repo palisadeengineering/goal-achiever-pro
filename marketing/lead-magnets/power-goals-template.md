@@ -1,13 +1,13 @@
-# 12 Power Goals Template
+# 12 Impact Projects Template
 ## Your Annual Strategic Planning Workbook
 
-*Based on Dan Martell's "Buy Back Your Time" methodology*
+*Based on time optimization and productivity methodology*
 
 ---
 
-## What Are Power Goals?
+## What Are Impact Projects?
 
-Power Goals are 12 strategic projects you commit to completing over the next 12 months - one per month. Unlike vague resolutions, Power Goals are:
+Impact Projects are 12 strategic projects you commit to completing over the next 12 months - one per month. Unlike vague resolutions, Impact Projects are:
 
 - **Specific** - Clear, measurable outcomes
 - **Time-bound** - One month per goal
@@ -18,11 +18,11 @@ Power Goals are 12 strategic projects you commit to completing over the next 12 
 
 ---
 
-## The Power Goals Framework
+## The Impact Projects Framework
 
 ### Step 1: Define Your Vision First
 
-Before setting Power Goals, clarify where you're headed:
+Before setting Impact Projects, clarify where you're headed:
 
 **My 3-Year Vision:**
 _____________________________________________
@@ -38,7 +38,7 @@ _____________________________________________
 
 ### Step 2: Identify Your 4 Life Pillars
 
-Power Goals should create balance across all areas of life:
+Impact Projects should create balance across all areas of life:
 
 #### BUSINESS/CAREER
 What do you want to achieve professionally?
@@ -66,7 +66,7 @@ What financial outcomes do you want?
 
 ---
 
-## Your 12 Power Goals
+## Your 12 Impact Projects
 
 ### Q1: Foundation Quarter (January - March)
 
@@ -474,9 +474,9 @@ _____________________________________________
 
 ## Annual Overview
 
-### Your 12 Power Goals at a Glance
+### Your 12 Impact Projects at a Glance
 
-| Month | Power Goal | Category | Status |
+| Month | Impact Project | Category | Status |
 |-------|------------|----------|--------|
 | Jan | | | [ ] Not Started [ ] In Progress [ ] Complete |
 | Feb | | | [ ] Not Started [ ] In Progress [ ] Complete |
@@ -504,10 +504,10 @@ _____________________________________________
 
 ---
 
-## Monthly Power Goal Execution Framework
+## Monthly Impact Project Execution Framework
 
 ### Week 1: Setup & Planning
-- [ ] Review the Power Goal
+- [ ] Review the Impact Project
 - [ ] Break down into daily actions
 - [ ] Identify first 3 MINs (Most Important Next Steps)
 - [ ] Block time on calendar
@@ -538,7 +538,7 @@ _____________________________________________
 
 ### Today's Date: _______________
 
-**Current Power Goal:** _____________________________________________
+**Current Impact Project:** _____________________________________________
 
 **Today's 3 MINs:**
 1. [ ] _____________________________________________
@@ -562,7 +562,7 @@ _____________________________________________
 
 ### Quarter: Q___ (_____________ - _____________)
 
-**Power Goals This Quarter:**
+**Impact Projects This Quarter:**
 1. _____________________________________________
 2. _____________________________________________
 3. _____________________________________________
@@ -583,7 +583,7 @@ _____________________________________________
 
 ---
 
-## Power Goal Examples by Category
+## Impact Project Examples by Category
 
 ### Business/Career
 - Launch new product/service
@@ -627,11 +627,11 @@ _____________________________________________
 
 ---
 
-## Common Power Goal Mistakes
+## Common Impact Project Mistakes
 
 ### Mistake #1: Too Many Goals
-**Problem:** Trying to do 3 Power Goals in one month
-**Solution:** ONE Power Goal per month, total focus
+**Problem:** Trying to do 3 Impact Projects in one month
+**Solution:** ONE Impact Project per month, total focus
 
 ### Mistake #2: Too Vague
 **Problem:** "Get healthy" or "Grow business"
@@ -651,10 +651,10 @@ _____________________________________________
 
 ---
 
-## Power Goal Success Rituals
+## Impact Project Success Rituals
 
 ### Daily (5 minutes)
-- [ ] Review current Power Goal
+- [ ] Review current Impact Project
 - [ ] Identify 3 MINs
 - [ ] Block time on calendar
 
@@ -665,9 +665,9 @@ _____________________________________________
 - [ ] Plan next week's actions
 
 ### Monthly (2 hours)
-- [ ] Complete current Power Goal review
+- [ ] Complete current Impact Project review
 - [ ] Document lessons learned
-- [ ] Plan next Power Goal in detail
+- [ ] Plan next Impact Project in detail
 - [ ] Update annual overview
 
 ### Quarterly (Half day)
@@ -678,12 +678,12 @@ _____________________________________________
 
 ---
 
-## Your Power Goal Commitment
+## Your Impact Project Commitment
 
-I, _________________________, commit to completing these 12 Power Goals over the next 12 months.
+I, _________________________, commit to completing these 12 Impact Projects over the next 12 months.
 
 I understand that:
-- Each month focuses on ONE Power Goal
+- Each month focuses on ONE Impact Project
 - Consistency beats intensity
 - Progress over perfection
 - Accountability accelerates results
@@ -696,10 +696,10 @@ I understand that:
 
 ---
 
-## Track Your Power Goals Automatically
+## Track Your Impact Projects Automatically
 
 Goal Achiever Pro helps you:
-- Set and track your 12 Power Goals
+- Set and track your 12 Impact Projects
 - Break them into monthly, weekly, and daily targets
 - Get AI-generated action plans
 - Track progress with visual dashboards
@@ -709,4 +709,4 @@ Goal Achiever Pro helps you:
 
 ---
 
-*Created with Goal Achiever Pro - 12 Power Goals. 12 Months. 1 Transformed Life.*
+*Created with Goal Achiever Pro - 12 Impact Projects. 12 Months. 1 Transformed Life.*

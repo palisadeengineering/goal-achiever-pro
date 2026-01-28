@@ -159,7 +159,7 @@ export function RemindersStep({ data, updateData }: RemindersStepProps) {
           Why Review 3x Daily?
         </h4>
         <p className="text-sm text-muted-foreground">
-          Dan Martell recommends reviewing your goals morning, midday, and evening.
+          We recommend reviewing your goals morning, midday, and evening.
           This consistent reinforcement keeps your vision top-of-mind and helps
           maintain the belief and clarity needed to achieve it.
         </p>

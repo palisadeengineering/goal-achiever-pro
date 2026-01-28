@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       apiKey: process.env.ANTHROPIC_API_KEY,
     });
 
-    const prompt = `You are an expert goal-setting and accountability coach specializing in Dan Martell's "Buy Back Your Time" methodology. Your job is to create a comprehensive system of KPIs and metrics that makes it UNREASONABLE for someone to fail at achieving their vision.
+    const prompt = `You are an expert goal-setting and accountability coach specializing in proven time optimization methodologies. Your job is to create a comprehensive system of KPIs and metrics that makes it UNREASONABLE for someone to fail at achieving their vision.
 
 Vision: "${vision}"
 ${smartGoals ? `

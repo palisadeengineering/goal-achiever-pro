@@ -186,7 +186,7 @@ export async function POST(
     const currentYear = now.getFullYear();
     const targetDate = vision.time_bound ? new Date(vision.time_bound) : null;
 
-    const prompt = `You are an expert goal-setting coach combining methodologies from Dan Martell (Buy Back Your Time), Alex Hormozi ($100M Offers), and Grant Cardone (10X Rule).
+    const prompt = `You are an expert goal-setting coach combining proven entrepreneurial methodologies for time optimization, value creation, and ambitious goal achievement.
 
 Generate a COMPLETE KPI-driven action plan from a vision down to daily actions. The key principle: If daily KPIs are hit → weekly KPIs are hit → monthly KPIs are hit → quarterly KPIs are hit → VISION IS ACHIEVED. Make it MATHEMATICALLY UNREASONABLE TO FAIL.
 
@@ -213,7 +213,7 @@ KEY REQUIREMENTS:
 5. Monthly KPIs are milestone markers
 6. Quarterly KPIs are major outcome checkpoints
 7. Use Grant Cardone's 10X thinking for ambitious but achievable targets
-8. Use Dan Martell's "Buy Back Your Time" focus on high-value activities
+8. Focus on high-value activities that maximize your time ROI
 9. Use Alex Hormozi's value equation (Dream Outcome × Perceived Likelihood ÷ Time × Effort)
 
 DAILY KPIS (3-5 non-negotiable habits):

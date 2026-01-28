@@ -38,7 +38,7 @@ This folder contains 5 carousel graphics focusing on the 4 C's of leverage, dele
 - Reconnect with ghosts TODAY
 
 ### Day 25 - Full System
-- Complete hierarchy: Vision -> Power Goals -> Targets -> Actions
+- Complete hierarchy: Vision -> Impact Projects -> Targets -> Actions
 - Execution layer: Time blocks, Reviews
 - Supporting systems: Routines, 4 C's, Network
 - It's about doing the RIGHT things consistently

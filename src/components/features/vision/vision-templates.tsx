@@ -22,7 +22,7 @@ import {
   Zap,
 } from 'lucide-react';
 
-// Dan Martell's 7 Pillars of Life + Business categories
+// 7 Pillars of Life + Business categories
 const TEMPLATE_CATEGORIES = [
   { id: 'business', label: 'Business', icon: Briefcase },
   { id: 'finances', label: 'Finances', icon: DollarSign },
@@ -39,7 +39,7 @@ export interface VisionTemplate {
   description: string;
   icon: typeof DollarSign;
   color: string;
-  pillar: string; // Dan Martell's 7 Pillars reference
+  pillar: string; // 7 Pillars reference
   methodology: 'martell' | 'hormozi' | 'cardone' | 'general';
   // Pre-filled SMART components
   specific?: string;
@@ -98,7 +98,7 @@ export const VISION_TEMPLATES: VisionTemplate[] = [
     specific: 'Build a specialized agency with documented processes, a-player team, and recurring clients',
     measurable: '$2M revenue, 40%+ margins, 80% recurring revenue, owner works <10 hrs/week',
     attainable: 'Start with your expertise, build systems, hire and train team members',
-    realistic: 'Following Dan Martell\'s playbook, agencies can be exit-ready in 3-4 years',
+    realistic: 'Following proven agency playbooks, agencies can be exit-ready in 3-4 years',
     suggestedMonths: 48,
     tenXVersion: {
       title: 'Build a $20M Agency Portfolio',
@@ -283,7 +283,7 @@ export const VISION_TEMPLATES: VisionTemplate[] = [
   {
     id: 'time-freedom',
     category: 'lifestyle',
-    title: 'Buy Back Your Time',
+    title: 'Reclaim Your Time',
     description: 'Work less while achieving more through delegation and systems',
     icon: Clock,
     color: '#06b6d4',
@@ -291,8 +291,8 @@ export const VISION_TEMPLATES: VisionTemplate[] = [
     methodology: 'martell',
     specific: 'Systematize and delegate to work fewer hours while increasing output',
     measurable: 'Work 25 hours/week max, revenue maintained or increased, 4+ weeks vacation/year',
-    attainable: 'Document processes, hire team, use Dan Martell\'s Buyback Loop',
-    realistic: 'Following the Buyback Principle, achievable in 12-18 months',
+    attainable: 'Document processes, hire team, use proven delegation frameworks',
+    realistic: 'Following time optimization principles, achievable in 12-18 months',
     suggestedMonths: 18,
     tenXVersion: {
       title: 'Complete Time Sovereignty',
@@ -345,7 +345,7 @@ export function VisionTemplates({ onSelectTemplate, onClose }: VisionTemplatesPr
       <div className="text-center">
         <h3 className="text-lg font-semibold">Choose a Vision Template</h3>
         <p className="text-sm text-muted-foreground mt-1">
-          Based on Dan Martell&apos;s 7 Pillars, Alex Hormozi&apos;s Value Equation, and Grant Cardone&apos;s 10X Rule
+          Based on proven entrepreneurial frameworks for goal achievement
         </p>
       </div>
 

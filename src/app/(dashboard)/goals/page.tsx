@@ -29,7 +29,7 @@ import { ShareButton } from '@/components/features/sharing';
 
 type GoalStatus = 'active' | 'completed' | 'paused' | 'archived';
 
-interface PowerGoal {
+interface ImpactProject {
   id: string;
   title: string;
   description: string | null;
@@ -57,11 +57,11 @@ interface GoalForGrid {
   status: GoalStatus;
 }
 
-// Fetch power goals
-async function fetchPowerGoals(): Promise<{ powerGoals: PowerGoal[] }> {
+// Fetch impact projects
+async function fetchImpactProjects(): Promise<{ impactProjects: ImpactProject[] }> {
   const response = await fetch('/api/power-goals');
   if (!response.ok) {
-    throw new Error('Failed to fetch power goals');
+    throw new Error('Failed to fetch impact projects');
   }
   return response.json();
 }
@@ -75,13 +75,13 @@ async function fetchVisions(): Promise<{ visions: Vision[] }> {
   return response.json();
 }
 
-// Create power goal
-async function createPowerGoal(data: GoalFormData): Promise<{ powerGoals: PowerGoal[] }> {
+// Create impact project
+async function createImpactProject(data: GoalFormData): Promise<{ impactProjects: ImpactProject[] }> {
   const response = await fetch('/api/power-goals', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      powerGoals: [{
+      impactProjects: [{
         title: data.title,
         description: data.description,
         quarter: data.quarter,
@@ -92,13 +92,13 @@ async function createPowerGoal(data: GoalFormData): Promise<{ powerGoals: PowerG
     }),
   });
   if (!response.ok) {
-    throw new Error('Failed to create power goal');
+    throw new Error('Failed to create impact project');
   }
   return response.json();
 }
 
-// Update power goal
-async function updatePowerGoal(data: {
+// Update impact project
+async function updateImpactProject(data: {
   id: string;
   title?: string;
   description?: string;
@@ -107,25 +107,25 @@ async function updatePowerGoal(data: {
   targetDate?: string;
   progressPercentage?: number;
   status?: GoalStatus;
-}): Promise<{ powerGoal: PowerGoal }> {
+}): Promise<{ impactProject: ImpactProject }> {
   const response = await fetch('/api/power-goals', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
   if (!response.ok) {
-    throw new Error('Failed to update power goal');
+    throw new Error('Failed to update impact project');
   }
   return response.json();
 }
 
-// Delete power goal
-async function deletePowerGoal(id: string): Promise<{ success: boolean }> {
+// Delete impact project
+async function deleteImpactProject(id: string): Promise<{ success: boolean }> {
   const response = await fetch(`/api/power-goals?id=${id}`, {
     method: 'DELETE',
   });
   if (!response.ok) {
-    throw new Error('Failed to delete power goal');
+    throw new Error('Failed to delete impact project');
   }
   return response.json();
 }
@@ -136,10 +136,10 @@ export default function GoalsPage() {
   const [focusedGoalId, setFocusedGoalId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('all');
 
-  // Fetch power goals
+  // Fetch impact projects
   const { data: goalsData, isLoading: goalsLoading } = useQuery({
-    queryKey: ['powerGoals'],
-    queryFn: fetchPowerGoals,
+    queryKey: ['impactProjects'],
+    queryFn: fetchImpactProjects,
   });
 
   // Fetch visions
@@ -150,34 +150,34 @@ export default function GoalsPage() {
 
   // Create mutation
   const createMutation = useMutation({
-    mutationFn: createPowerGoal,
+    mutationFn: createImpactProject,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['powerGoals'] });
+      queryClient.invalidateQueries({ queryKey: ['impactProjects'] });
       setIsDialogOpen(false);
     },
   });
 
   // Update mutation
   const updateMutation = useMutation({
-    mutationFn: updatePowerGoal,
+    mutationFn: updateImpactProject,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['powerGoals'] });
+      queryClient.invalidateQueries({ queryKey: ['impactProjects'] });
     },
   });
 
   // Delete mutation
   const deleteMutation = useMutation({
-    mutationFn: deletePowerGoal,
+    mutationFn: deleteImpactProject,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['powerGoals'] });
+      queryClient.invalidateQueries({ queryKey: ['impactProjects'] });
     },
   });
 
-  const powerGoals = goalsData?.powerGoals || [];
+  const impactProjects = goalsData?.impactProjects || [];
   const visions = visionsData?.visions || [];
 
-  // Transform power goals for the grid
-  const transformedGoals: GoalForGrid[] = powerGoals.map(goal => ({
+  // Transform impact projects for the grid
+  const transformedGoals: GoalForGrid[] = impactProjects.map(goal => ({
     id: goal.id,
     title: goal.title,
     description: goal.description || '',

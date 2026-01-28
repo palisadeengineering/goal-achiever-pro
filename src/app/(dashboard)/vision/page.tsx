@@ -281,19 +281,19 @@ export default function VisionPage() {
         }
       }
 
-      // Save monthly projects as monthlyTargets (requires creating a Power Goal first)
+      // Save monthly projects as monthlyTargets (requires creating an Impact Project first)
       if (data.monthlyProjects && data.monthlyProjects.length > 0) {
         try {
-          // First, create a Power Goal for this vision to link monthly targets
+          // First, create an Impact Project for this vision to link monthly targets
           const currentDate = new Date();
           const currentQuarter = Math.ceil((currentDate.getMonth() + 1) / 3);
 
-          const powerGoalResponse = await fetch('/api/power-goals', {
+          const impactProjectResponse = await fetch('/api/power-goals', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               visionId: savedVisionId,
-              powerGoals: [{
+              impactProjects: [{
                 title: `${data.title} - Achievement Plan`,
                 description: data.measurable || data.specific || `Achieve: ${data.title}`,
                 quarter: currentQuarter,
@@ -303,12 +303,12 @@ export default function VisionPage() {
             }),
           });
 
-          if (powerGoalResponse.ok) {
-            const powerGoalResult = await powerGoalResponse.json();
-            const powerGoalId = powerGoalResult.powerGoals?.[0]?.id;
+          if (impactProjectResponse.ok) {
+            const impactProjectResult = await impactProjectResponse.json();
+            const impactProjectId = impactProjectResult.impactProjects?.[0]?.id;
 
-            if (powerGoalId) {
-              // Now save monthly targets linked to the Power Goal
+            if (impactProjectId) {
+              // Now save monthly targets linked to the Impact Project
               const monthlyTargets = data.monthlyProjects.map(project => ({
                 month: project.month,
                 monthName: project.monthName,
@@ -323,7 +323,7 @@ export default function VisionPage() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                  powerGoalId,
+                  impactProjectId,
                   year: data.monthlyProjects[0]?.year || currentDate.getFullYear(),
                   monthlyTargets,
                 }),
@@ -340,14 +340,14 @@ export default function VisionPage() {
               saveFailures.push({
                 success: false,
                 resourceName: 'Monthly projects',
-                error: 'No Power Goal created',
+                error: 'No Impact Project created',
               });
             }
           } else {
             saveFailures.push({
               success: false,
               resourceName: 'Monthly projects',
-              error: 'Failed to create Power Goal',
+              error: 'Failed to create Impact Project',
             });
           }
         } catch (projectsError) {

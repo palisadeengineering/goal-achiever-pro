@@ -30,7 +30,7 @@ export function generateWelcomeEmail(props: WelcomeEmailProps): string {
 
     ${emailParagraph(greeting)}
 
-    ${emailParagraph("Thank you for joining Goal Achiever Pro! We're excited to help you achieve your goals with clarity and focus using Dan Martell's proven \"Buy Back Your Time\" methodology.")}
+    ${emailParagraph("Thank you for joining Goal Achiever Pro! We're excited to help you achieve your goals with clarity and focus using our proven productivity methodology.")}
 
     ${confirmUrl ? emailButton("Confirm Your Email", confirmUrl) : ''}
 
@@ -41,7 +41,7 @@ export function generateWelcomeEmail(props: WelcomeEmailProps): string {
       <ul style="margin: 0; padding-left: 20px; color: ${colors.textMuted}; font-size: 14px; line-height: 1.8;">
         <li><strong style="color: ${colors.text};">Set Your Vision</strong> — Define your SMART goals with AI assistance</li>
         <li><strong style="color: ${colors.text};">Create Power Goals</strong> — Plan your 12 annual projects</li>
-        <li><strong style="color: ${colors.text};">Track Your Time</strong> — Use 15-minute blocks with DRIP categorization</li>
+        <li><strong style="color: ${colors.text};">Track Your Time</strong> — Use 15-minute blocks with Value categorization</li>
         <li><strong style="color: ${colors.text};">Build Routines</strong> — Establish morning, midday, and evening habits</li>
         <li><strong style="color: ${colors.text};">Review Progress</strong> — Daily reviews to stay on track</li>
       </ul>

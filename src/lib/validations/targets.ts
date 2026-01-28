@@ -14,7 +14,7 @@ import {
 
 // Create monthly target
 export const createMonthlyTargetSchema = z.object({
-  powerGoalId: uuidSchema,
+  impactProjectId: uuidSchema,
   title: titleSchema,
   description: descriptionSchema,
   targetMonth: monthSchema,
@@ -137,7 +137,7 @@ const monthlyTargetItemSchema = z.object({
 });
 
 export const bulkSaveTargetsSchema = z.object({
-  powerGoalId: uuidSchema,
+  impactProjectId: uuidSchema,
   year: yearSchema,
   monthlyTargets: z.array(monthlyTargetItemSchema)
     .min(1, 'At least one monthly target is required')

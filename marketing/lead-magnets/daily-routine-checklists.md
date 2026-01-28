@@ -1,7 +1,7 @@
 # Daily Routine Checklists
 ## Morning, Midday & Evening Routines for Peak Performance
 
-*Based on high-performer research and the Buy Back Your Time methodology*
+*Based on high-performer research and time optimization methodology*
 
 ---
 

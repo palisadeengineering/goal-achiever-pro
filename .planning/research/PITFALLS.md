@@ -1,7 +1,7 @@
 # Domain Pitfalls: KPI/Goal Cascading Systems
 
 **Domain:** Goal-tracking app with hierarchical KPI cascading (OKR-style)
-**Context:** Goal Achiever Pro - Dan Martell "Buy Back Your Time" methodology
+**Context:** Goal Achiever Pro - time optimization "time optimization methodology" methodology
 **Researched:** 2026-01-23
 **Confidence:** MEDIUM (multiple sources, community patterns verified)
 
@@ -80,7 +80,7 @@ Mistakes that cause rewrites or major issues.
 
 ### Pitfall 3: Deep Hierarchy UI Becomes Unusable
 
-**What goes wrong:** With Vision > Power Goals > Monthly > Weekly > Daily hierarchy (5 levels deep), users can't navigate, understand context, or maintain overview.
+**What goes wrong:** With Vision > Impact Projects > Monthly > Weekly > Daily hierarchy (5 levels deep), users can't navigate, understand context, or maintain overview.
 
 **Why it happens:**
 - Tree views with deep nesting push content off-screen (horizontal scroll)
@@ -233,13 +233,13 @@ Mistakes that cause delays or technical debt.
 - Scores are self-reported with no guidance on what each number means
 - No connection between scores and recommended actions
 - Scores don't affect anything else in the system
-- Dan Martell methodology not fully translated to software mechanics
+- time optimization methodology not fully translated to software mechanics
 
 **Consequences:**
 - Users set 100/100/100 to "complete" onboarding
 - Scores become meaningless noise
 - Feature bloat without value
-- Violates "Buy Back Your Time" principle (wasting time on overhead)
+- Violates "time optimization methodology" principle (wasting time on overhead)
 
 **Warning signs:**
 - Analytics show 80%+ of users have scores at max
@@ -256,13 +256,13 @@ Mistakes that cause delays or technical debt.
 
 **Phase to address:** Phase 4 (300% Rule Enhancement) - After core cascade is working
 
-**Sources:** [Dan Martell Twitter - 300% Rule](https://x.com/danmartell/status/1902440329309254021)
+**Sources:** [time optimization Twitter - 300% Rule](https://x.com/danmartell/status/1902440329309254021)
 
 ---
 
 ### Pitfall 8: Setting Too Many Objectives (Focus Dilution)
 
-**What goes wrong:** Users create 12 Power Goals (because "that's what the methodology says") but can't make progress on any of them. System enables over-commitment.
+**What goes wrong:** Users create 12 Impact Projects (because "that's what the methodology says") but can't make progress on any of them. System enables over-commitment.
 
 **Why it happens:**
 - No guardrails on goal quantity
@@ -388,14 +388,14 @@ Mistakes that cause annoyance but are fixable.
 
 ---
 
-## Dan Martell Methodology-Specific Warnings
+## time optimization Methodology-Specific Warnings
 
-These pitfalls are specific to implementing "Buy Back Your Time" principles:
+These pitfalls are specific to implementing "time optimization methodology" principles:
 
-| Martell Concept | Implementation Risk | Prevention |
+| Core Concept | Implementation Risk | Prevention |
 |-----------------|---------------------|------------|
-| 12 Power Goals | Users create 12 simultaneous goals | Encourage quarterly focus (3 active) |
-| Buyback Loop | Time audit disconnected from goals | Link DRIP categories to goal types |
+| 12 Impact Projects | Users create 12 simultaneous goals | Encourage quarterly focus (3 active) |
+| Buyback Loop | Time audit disconnected from goals | Link Value Matrix categories to goal types |
 | Replacement Ladder | Users hire wrong (for growth vs time) | Prompt for "what time does this buy back?" |
 | 80% Rule | Perfectionism blocks delegation | Show "80% from delegate > 0% from you" |
 | Pain Line | System adds stress instead of reducing | Minimize required overhead, maximize optional |
@@ -441,9 +441,9 @@ These pitfalls are specific to implementing "Buy Back Your Time" principles:
 - [Cybertec - Speeding Up Recursive Queries](https://www.cybertec-postgresql.com/en/postgresql-speeding-up-recursive-queries-and-hierarchic-data/)
 - [MinervaDB - PostgreSQL Recursive Queries](https://minervadb.xyz/how-to-implement-optimally-recursive-queries-and-hierarchical-data-in-postgresql/)
 
-### Dan Martell Methodology
-- [Dan Martell - Buy Back Your Time](https://www.buybackyourtime.com)
-- [Dan Martell Twitter - 300% Rule](https://x.com/danmartell/status/1902440329309254021)
+### time optimization Methodology
+- Time optimization methodology principles
+- [time optimization Twitter - 300% Rule](https://x.com/danmartell/status/1902440329309254021)
 
 ### User Abandonment Research
 - [Forasoft - App Abandonment](https://www.forasoft.com/blog/article/avoid-app-abandonment-strategies)

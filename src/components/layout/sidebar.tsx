@@ -73,7 +73,7 @@ const executionItems: NavItem[] = [
 const systemNavItems: NavItem[] = [
   { title: 'Time Audit', href: ROUTES.timeAudit, icon: Calendar },
   { title: 'Projects', href: ROUTES.timeAuditProjects, icon: FolderKanban },
-  { title: 'DRIP Matrix', href: ROUTES.drip, icon: Grid3X3 },
+  { title: 'Value Matrix', href: ROUTES.drip, icon: Grid3X3 },
   { title: 'Routines', href: ROUTES.routines, icon: Target },
   { title: 'Pomodoro', href: ROUTES.pomodoro, icon: Timer },
   { title: 'Reviews', href: ROUTES.reviews, icon: BookOpen },

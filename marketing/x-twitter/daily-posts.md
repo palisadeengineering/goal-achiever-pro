@@ -58,7 +58,7 @@ Build systems. Stop waiting to feel like it.
 ---
 
 ### Day 5
-The DRIP Matrix in 4 sentences:
+The Value Matrix in 4 sentences:
 
 D - Delegate tasks that drain you + pay little
 R - Replace tasks that drain you + pay well
@@ -450,7 +450,7 @@ Built Goal Achiever Pro because I needed it.
 
 Tracks time in 15-min blocks.
 Shows your DRIP breakdown.
-Plans your Power Goals.
+Plans your Impact Projects.
 Runs your daily reviews.
 
 If you're serious about productivity, check it out.
@@ -472,7 +472,7 @@ Grab it free: [link]
 ---
 
 ### Promo 3
-The DRIP Matrix Worksheet is live.
+The Value Matrix Worksheet is live.
 
 - Calculate your hourly rate
 - Categorize every task

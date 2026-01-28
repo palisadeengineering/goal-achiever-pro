@@ -1,5 +1,5 @@
 // Strategic Discovery Types
-// Used for comprehensive business model questioning before generating Power Goals
+// Used for comprehensive business model questioning before generating Impact Projects
 
 export type RevenueType = 'mrr' | 'arr' | 'one-time';
 export type PricingModel = 'mass_market' | 'prosumer' | 'enterprise' | 'hybrid';
@@ -208,7 +208,7 @@ export interface StrategicDiscoveryResponse {
 
   // For 'generate-insights' action
   aiInsights?: AIInsights;
-  powerGoalRecommendations?: PowerGoalRecommendation[];
+  impactProjectRecommendations?: ImpactProjectRecommendation[];
 
   // For 'calculate-revenue' action
   revenueBreakdown?: {
@@ -219,7 +219,7 @@ export interface StrategicDiscoveryResponse {
   };
 }
 
-export interface PowerGoalRecommendation {
+export interface ImpactProjectRecommendation {
   title: string;
   description: string;
   quarter: number;
@@ -230,6 +230,9 @@ export interface PowerGoalRecommendation {
     target?: string;
   };
 }
+
+// Backwards compatibility alias
+export type PowerGoalRecommendation = ImpactProjectRecommendation;
 
 // Calculate Revenue Request
 export interface CalculateRevenueRequest {

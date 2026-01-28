@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { powerGoalId, year, monthlyTargets } = validation.data;
+    const { impactProjectId, year, monthlyTargets } = validation.data;
 
     // Start a transaction-like operation
     const savedTargets = {
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
         .from('monthly_targets')
         .insert({
           user_id: userId,
-          power_goal_id: powerGoalId,
+          power_goal_id: impactProjectId, // DB column unchanged
           title: monthly.title,
           description: monthly.description || null,
           target_month: monthly.month,

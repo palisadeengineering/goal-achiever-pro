@@ -20,10 +20,10 @@ export const PRICING_TIERS: PricingTier[] = [
     yearlyPrice: 0,
     features: [
       'Vision & SMART Goal Setting',
-      '3 Power Goals',
+      '3 Impact Projects',
       'Daily MINS (5 per day)',
       'Weekly Time Audit View',
-      'Basic DRIP Matrix',
+      'Basic Value Matrix',
       'Pomodoro Timer',
       'Morning & Evening Reviews',
     ],
@@ -37,7 +37,7 @@ export const PRICING_TIERS: PricingTier[] = [
     yearlyPrice: 149,
     features: [
       'Everything in Free, plus:',
-      '12 Power Goals',
+      '12 Impact Projects',
       'Unlimited MINS',
       'Full Calendar Views (Weekly, Bi-weekly, Monthly)',
       '3x Daily Reviews',
@@ -58,7 +58,7 @@ export const PRICING_TIERS: PricingTier[] = [
     yearlyPrice: 199,
     features: [
       'Everything in Pro, plus:',
-      'Unlimited Power Goals',
+      'Unlimited Impact Projects',
       'AI-Powered Planning',
       'AI Goal Suggestions',
       'AI Weekly Review Prompts',
@@ -76,12 +76,12 @@ export const PRICING_TIERS: PricingTier[] = [
 // Feature comparison matrix
 export const FEATURE_COMPARISON = {
   'Vision & SMART Goals': { free: true, pro: true, elite: true },
-  'Power Goals': { free: '3', pro: '12', elite: 'Unlimited' },
+  'Impact Projects': { free: '3', pro: '12', elite: 'Unlimited' },
   'Daily MINS': { free: '5/day', pro: 'Unlimited', elite: 'Unlimited' },
   'Time Audit - Weekly': { free: true, pro: true, elite: true },
   'Time Audit - Bi-weekly': { free: false, pro: true, elite: true },
   'Time Audit - Monthly': { free: false, pro: true, elite: true },
-  'DRIP Matrix': { free: 'Basic', pro: 'Full', elite: 'Full + AI' },
+  'Value Matrix': { free: 'Basic', pro: 'Full', elite: 'Full + AI' },
   'Pomodoro Timer': { free: true, pro: true, elite: true },
   'Morning Review': { free: true, pro: true, elite: true },
   'Midday Review': { free: false, pro: true, elite: true },

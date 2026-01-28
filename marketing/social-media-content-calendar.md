@@ -24,7 +24,7 @@
 
 ## Content Pillars
 
-1. **Educational** (40%) - Tips from Dan Martell's methodology
+1. **Educational** (40%) - Tips from the methodology
 2. **Product Features** (20%) - App walkthroughs and benefits
 3. **Social Proof** (15%) - Success stories, testimonials
 4. **Engagement** (15%) - Questions, polls, discussions
@@ -43,7 +43,7 @@
 >
 > Here's the uncomfortable truth: Without a clear vision, you're just trading time for exhaustion.
 >
-> Dan Martell's research shows that entrepreneurs with written, specific visions are 42% more likely to achieve their goals.
+> the research shows that entrepreneurs with written, specific visions are 42% more likely to achieve their goals.
 >
 > Not vague dreams. Not "I want to be successful."
 >
@@ -60,7 +60,7 @@
 >
 > Drop it in the comments. Let's make it real.
 >
-> #BuyBackYourTime #Entrepreneurship #Vision #GoalSetting #Productivity
+> #TimeOptimization #Entrepreneurship #Vision #GoalSetting #Productivity
 
 **Twitter/X:**
 > Tweet 1: Most entrepreneurs work 60+ hours/week but can't tell you what they're actually working toward.
@@ -100,14 +100,14 @@
 >
 > Caption: Stop being busy. Start being intentional. Your vision is the filter for every decision you'll make this year. What's yours? 👇
 >
-> #GoalSetting #Entrepreneurship #Vision #BuyBackYourTime #Productivity #BusinessGrowth
+> #GoalSetting #Entrepreneurship #Vision #TimeOptimization #Productivity #BusinessGrowth
 
 **Facebook:**
 > I used to think working harder was the answer.
 >
 > 70-hour weeks. Sacrificing weekends. Missing family events.
 >
-> Then I learned about the SMART vision framework from Dan Martell's "Buy Back Your Time" methodology.
+> Then I learned about the SMART vision framework from the "time optimization" methodology.
 >
 > The problem wasn't my work ethic. It was that I didn't have a clear destination.
 >
@@ -157,7 +157,7 @@
 **LinkedIn:**
 > The 300% Rule changed how I think about goals.
 >
-> From Dan Martell's "Buy Back Your Time":
+> From the "time optimization":
 >
 > Your success on any goal = Clarity + Belief + Consistency
 >
@@ -183,10 +183,10 @@
 >
 > What's your weakest link? That's what to fix first.
 >
-> #Productivity #GoalSetting #Entrepreneurship #BuyBackYourTime
+> #Productivity #GoalSetting #Entrepreneurship #TimeOptimization
 
 **Twitter/X:**
-> The 300% Rule (from @danmartell):
+> The 300% Rule (from Goal Achiever Pro):
 >
 > Success = Clarity + Belief + Consistency
 >
@@ -234,7 +234,7 @@
 > Hook: "Why your goals keep failing (it's math)"
 >
 > Script:
-> "The 300% Rule from Dan Martell:
+> "The 300% Rule from productivity research:
 >
 > Success equals Clarity plus Belief plus Consistency.
 >
@@ -292,16 +292,16 @@
 
 ---
 
-### Day 3 (Wednesday) - Power Goals Introduction
+### Day 3 (Wednesday) - Impact Projects Introduction
 
 **LinkedIn:**
-> 12 Power Goals. 4 Quarters. 1 Year of Transformation.
+> 12 Impact Projects. 4 Quarters. 1 Year of Transformation.
 >
 > Here's why most annual planning fails:
 >
 > People set vague yearly goals, then forget about them by February.
 >
-> Dan Martell's Power Goals system is different:
+> the Impact Projects system is different:
 >
 > Instead of 1 massive goal, you set 12 projects:
 > • 3 projects per quarter
@@ -328,21 +328,21 @@
 >
 > [Continue for Q3, Q4]
 >
-> Each Power Goal gets:
+> Each Impact Project gets:
 > • Monthly targets
 > • Weekly targets
 > • Daily actions
 >
 > That's how dreams become reality.
 >
-> What would YOUR 12 Power Goals be?
+> What would YOUR 12 Impact Projects be?
 >
-> #GoalSetting #AnnualPlanning #Entrepreneurship #PowerGoals
+> #GoalSetting #AnnualPlanning #Entrepreneurship #ImpactProjects
 
 **Twitter/X:**
 > Forget "New Year's Resolutions."
 >
-> Try 12 Power Goals instead:
+> Try 12 Impact Projects instead:
 >
 > • 3 per quarter
 > • 6-8 weeks each
@@ -350,18 +350,18 @@
 >
 > Small enough to finish. Big enough to matter.
 >
-> What's your Q1 Power Goal #1?
+> What's your Q1 Impact Project #1?
 
 **Instagram:**
 > [CAROUSEL - 6 slides]
 >
-> Slide 1: "Why 12 Power Goals > 1 Big Resolution"
+> Slide 1: "Why 12 Impact Projects > 1 Big Resolution"
 >
 > Slide 2: "The Problem:
 > January 1: 'This is my year!'
 > February 1: 'What was my goal again?'"
 >
-> Slide 3: "The Solution: 12 Power Goals
+> Slide 3: "The Solution: 12 Impact Projects
 > • 3 per quarter
 > • 6-8 weeks each
 > • Clear start & end"
@@ -371,14 +371,14 @@
 > 2. Build list to 5,000
 > 3. Create signature framework"
 >
-> Slide 5: "Each Power Goal breaks down:
-> Vision → Power Goal → Monthly → Weekly → Daily"
+> Slide 5: "Each Impact Project breaks down:
+> Vision → Impact Project → Monthly → Weekly → Daily"
 >
 > Slide 6: "Save this & plan your 12 👆"
 >
-> Caption: One resolution = one chance to fail. Twelve Power Goals = twelve chances to win. Which system sounds better? Share your Q1 goals below!
+> Caption: One resolution = one chance to fail. Twelve Impact Projects = twelve chances to win. Which system sounds better? Share your Q1 goals below!
 >
-> #PowerGoals #GoalSetting #Productivity #AnnualPlanning
+> #ImpactProjects #GoalSetting #Productivity #AnnualPlanning
 
 **Facebook:**
 > Can I share why New Year's resolutions don't work?
@@ -387,7 +387,7 @@
 >
 > One big goal for 365 days = too vague, too distant, too easy to forget.
 >
-> The alternative: 12 Power Goals
+> The alternative: 12 Impact Projects
 >
 > Instead of "grow my business," you have:
 >
@@ -402,10 +402,10 @@
 >
 > By December, you've shipped 12 meaningful projects instead of abandoning 1 vague dream.
 >
-> What would your first Power Goal be?
+> What would your first Impact Project be?
 
 **Threads:**
-> The math of 12 Power Goals:
+> The math of 12 Impact Projects:
 >
 > 12 projects ÷ 4 quarters = 3 per quarter
 >
@@ -415,12 +415,12 @@
 
 ---
 
-### Day 4 (Thursday) - DRIP Matrix Introduction
+### Day 4 (Thursday) - Value Matrix Introduction
 
 **LinkedIn:**
 > Not all work is created equal.
 >
-> The DRIP Matrix helps you categorize every task:
+> The Value Matrix helps you categorize every task:
 >
 > 🔴 D - Delegation
 > Tasks that drain you. Someone else could (and should) do them.
@@ -451,10 +451,10 @@
 >
 > That's time you're buying back.
 >
-> #BuyBackYourTime #Productivity #Delegation #TimeManagement
+> #TimeOptimization #Productivity #Delegation #TimeManagement
 
 **Twitter/X:**
-> The DRIP Matrix (save this):
+> The Value Matrix (save this):
 >
 > D - Delegate (drains you)
 > R - Replace (good at, shouldn't do)
@@ -468,7 +468,7 @@
 **Instagram:**
 > [CAROUSEL - 5 slides]
 >
-> Slide 1: "The DRIP Matrix: Where Is Your Time Going?"
+> Slide 1: "The Value Matrix: Where Is Your Time Going?"
 >
 > Slide 2: "🔴 DELEGATION
 > Tasks that drain you
@@ -491,12 +491,12 @@
 >
 > Caption: Tracked my time for a week. 67% was in D and R. No wonder I felt busy but unproductive. What about you?
 >
-> #TimeManagement #DRIP #Productivity #BuyBackYourTime
+> #TimeManagement #ValueMatrix #Productivity #TimeOptimization
 
 **Facebook:**
-> Just did a DRIP audit on my week. Eye-opening.
+> Just did a Value audit on my week. Eye-opening.
 >
-> The DRIP Matrix from Dan Martell categorizes all your work:
+> The Value Matrix from productivity research categorizes all your work:
 >
 > D = Delegation (drains you, delegate it)
 > R = Replacement (you're good at it but shouldn't do it)
@@ -518,7 +518,7 @@
 > What would your percentages be?
 
 **Threads:**
-> Tracked my time using DRIP Matrix:
+> Tracked my time using Value Matrix:
 >
 > D (delegate): 25%
 > R (replace): 35%
@@ -568,11 +568,11 @@
 **Facebook:**
 > Happy Friday! Quick reflection:
 >
-> This week I introduced several concepts from Dan Martell's methodology:
+> This week I introduced several concepts from the methodology:
 > - SMART Visions
 > - The 300% Rule
-> - 12 Power Goals
-> - The DRIP Matrix
+> - 12 Impact Projects
+> - The Value Matrix
 >
 > Which one resonated most with you?
 >
@@ -704,7 +704,7 @@
 >
 > What you discover will shock you.
 >
-> #TimeTracking #Productivity #TimeAudit #BuyBackYourTime
+> #TimeTracking #Productivity #TimeAudit #TimeOptimization
 
 **Twitter/X:**
 > Tracked my time in 15-min blocks.
@@ -864,7 +864,7 @@
 >
 > 1. Maximum 3 (focus, not a to-do list)
 > 2. Must be specific and actionable
-> 3. Must move a Power Goal forward
+> 3. Must move a Impact Project forward
 > 4. Scheduled with a time block
 >
 > Bad MIN: "Work on marketing"
@@ -890,7 +890,7 @@
 > Rules:
 > - Max 3 (focus!)
 > - Specific & actionable
-> - Tied to a Power Goal
+> - Tied to a Impact Project
 > - Time blocked
 >
 > Wake up knowing exactly what to do.
@@ -932,7 +932,7 @@
 > The rules:
 > 1. Maximum 3 (this is key - forces prioritization)
 > 2. Specific and actionable (not "work on marketing")
-> 3. Connected to a Power Goal
+> 3. Connected to a Impact Project
 > 4. Time-blocked in my calendar
 >
 > Example:
@@ -960,16 +960,16 @@
 > So I built an app that combines everything:
 >
 > ✅ SMART Vision creation with AI assistance
-> ✅ 12 Power Goals mapped to quarters
+> ✅ 12 Impact Projects mapped to quarters
 > ✅ 15-minute time blocking with energy ratings
-> ✅ DRIP Matrix auto-categorization
+> ✅ Value Matrix auto-categorization
 > ✅ 300% Rule scoring
 > ✅ MINs scheduling
 > ✅ Daily/weekly/monthly review prompts
 >
 > It's called Goal Achiever Pro.
 >
-> Everything I've been sharing this week - the vision framework, Power Goals, time tracking, DRIP analysis - it's all in one place.
+> Everything I've been sharing this week - the vision framework, Impact Projects, time tracking, Value analysis - it's all in one place.
 >
 > If you've been following along and want to try it, link in comments.
 >
@@ -984,9 +984,9 @@
 >
 > Built an app combining:
 > - SMART Visions (AI-assisted)
-> - 12 Power Goals
+> - 12 Impact Projects
 > - 15-min time blocks + energy
-> - DRIP Matrix
+> - Value Matrix
 > - 300% Rule
 > - Daily MINs
 >
@@ -1001,15 +1001,15 @@
 >
 > Slide 2: [Vision creation screen] "AI-assisted SMART Vision creation"
 >
-> Slide 3: [Power Goals grid] "12 Power Goals organized by quarter"
+> Slide 3: [Impact Projects grid] "12 Impact Projects organized by quarter"
 >
 > Slide 4: [Time tracking] "15-min blocks with energy tracking"
 >
-> Slide 5: [DRIP Matrix] "Auto-categorization into DRIP quadrants"
+> Slide 5: [Value Matrix] "Auto-categorization into Value quadrants"
 >
 > Slide 6: "Link in bio to try it"
 >
-> Caption: Everything I've been sharing this week - the SMART vision framework, Power Goals, time tracking, DRIP analysis - I put it all in one app. Would love your feedback!
+> Caption: Everything I've been sharing this week - the SMART vision framework, Impact Projects, time tracking, Value analysis - I put it all in one app. Would love your feedback!
 >
 > #ProductivityApp #BuildInPublic #GoalAchieverPro
 
@@ -1023,25 +1023,25 @@
 > Goal Achiever Pro combines:
 >
 > ✅ SMART Vision creation (with AI assistance)
-> ✅ 12 Power Goals mapped to quarters
+> ✅ 12 Impact Projects mapped to quarters
 > ✅ 15-minute time blocking with energy ratings
-> ✅ DRIP Matrix analysis
+> ✅ Value Matrix analysis
 > ✅ 300% Rule tracking
 > ✅ Daily MINs scheduling
 > ✅ Daily, weekly, and monthly review prompts
 >
-> It's based on Dan Martell's "Buy Back Your Time" methodology.
+> It's based on the "time optimization" methodology.
 >
 > If you've been following my posts this week and want to try it, comment "interested" and I'll send you the link!
 
 **Threads:**
 > Just launched the productivity app I've been building.
 >
-> Combines everything from Dan Martell's methodology:
+> Combines everything from the methodology:
 > - SMART Visions
-> - Power Goals
+> - Impact Projects
 > - Time tracking
-> - DRIP Matrix
+> - Value Matrix
 > - Daily reviews
 >
 > Called it Goal Achiever Pro. Link in bio.
@@ -1061,12 +1061,12 @@
 >
 > - Identified 22 hours/week of D+R tasks (delegated 15 of them)
 > - Clarity score went from 45% to 90%
-> - Completed his first Power Goal (launched a new service line)
+> - Completed his first Impact Project (launched a new service line)
 > - Down to 45-hour weeks with MORE revenue
 >
 > His exact words:
 >
-> "The DRIP analysis alone saved my sanity. I had no idea how much time I was spending on things I shouldn't even be touching."
+> "The Value analysis alone saved my sanity. I had no idea how much time I was spending on things I shouldn't even be touching."
 >
 > This is why I built Goal Achiever Pro.
 >
@@ -1074,12 +1074,12 @@
 >
 > What would 20 extra hours a week mean for your life?
 >
-> #Productivity #TimeManagement #Testimonial #BuyBackYourTime
+> #Productivity #TimeManagement #Testimonial #TimeOptimization
 
 **Twitter/X:**
 > "I had no idea how much time I was spending on things I shouldn't be touching."
 >
-> — Alex, after doing a DRIP analysis
+> — Alex, after doing a Value analysis
 >
 > 22 hrs/week of low-value work.
 > Delegated 15 of them.
@@ -1101,7 +1101,7 @@
 > - Down to 45-hour weeks
 > - Revenue actually went UP
 >
-> His words: 'The DRIP analysis alone saved my sanity.'"
+> His words: 'The Value analysis alone saved my sanity.'"
 >
 > Caption: What would you do with 20 extra hours a week? Comment below!
 >
@@ -1417,20 +1417,20 @@
 >
 > ❌ Pomodoro for what? (clarity)
 > ❌ How do you feel? (energy)
-> ❌ What category? (DRIP)
+> ❌ What category? (Value)
 > ❌ Did it move the needle? (outcomes)
 >
 > Enhanced Pomodoro:
 >
 > BEFORE the session:
 > - What's the specific outcome?
-> - What Power Goal does this support?
+> - What Impact Project does this support?
 > - Current energy level (1-5)?
 >
 > AFTER the session:
 > - Did I complete the outcome?
 > - Energy now (1-5)?
-> - DRIP category (D/R/I/P)?
+> - Value category (D/R/I/P)?
 >
 > Now you're not just managing time.
 >
@@ -1458,7 +1458,7 @@
 > After:
 > - Done?
 > - Energy now?
-> - DRIP category?
+> - Value category?
 >
 > Now you're tracking what matters.
 
@@ -1480,7 +1480,7 @@
 > Slide 4: "AFTER each session:
 > ✓ Did I complete it?
 > ✓ Energy now (1-5)?
-> ✓ DRIP category?"
+> ✓ Value category?"
 >
 > Slide 5: "Now you're not just managing time.
 > You're understanding your patterns."
@@ -1549,7 +1549,7 @@
 **LinkedIn:**
 > The 4 C's of Leverage: How to 10x without 10x effort.
 >
-> Dan Martell's framework for buying back time through multiplication:
+> the framework for buying back time through multiplication:
 >
 > 📱 CODE
 > Software, automation, systems that work while you sleep.
@@ -1576,7 +1576,7 @@
 >
 > Which C are you underutilizing most?
 >
-> #Leverage #4Cs #BuyBackYourTime #Entrepreneurship #Scale
+> #Leverage #4Cs #TimeOptimization #Entrepreneurship #Scale
 
 **Twitter/X:**
 > The 4 C's of Leverage:
@@ -1645,7 +1645,7 @@
 >
 > What are you holding onto that's costing you money to keep?
 >
-> #Delegation #Entrepreneurship #BuyBackYourTime #Outsourcing
+> #Delegation #Entrepreneurship #TimeOptimization #Outsourcing
 
 **Twitter/X:**
 > Held onto bookkeeping for 2 years.
@@ -1691,7 +1691,7 @@
 **LinkedIn:**
 > Your network is your net worth. But are you tracking it?
 >
-> The Friend Inventory exercise from Dan Martell:
+> The Friend Inventory exercise from productivity research:
 >
 > List your top 20 relationships.
 >
@@ -1782,7 +1782,7 @@
 >    ↓
 > DAILY ACTIONS (3 MINs)
 >    ↓
-> 15-MIN TIME BLOCKS (with DRIP + energy)
+> 15-MIN TIME BLOCKS (with Value + energy)
 >    ↓
 > 3X DAILY REVIEWS
 >    ↓
@@ -1804,12 +1804,12 @@
 >
 > What part of this system would change your game most?
 >
-> #ProductivitySystem #GoalSetting #BuyBackYourTime #Entrepreneurship
+> #ProductivitySystem #GoalSetting #TimeOptimization #Entrepreneurship
 
 **Twitter/X:**
 > The complete system:
 >
-> Vision → Power Goals → Monthly → Weekly → Daily → Time blocks → Reviews
+> Vision → Impact Projects → Monthly → Weekly → Daily → Time blocks → Reviews
 >
 > Plus:
 > - Morning routine
@@ -1826,7 +1826,7 @@
 >
 > Slides showing the hierarchy and all components visually
 >
-> Caption: This is everything. The complete system from "Buy Back Your Time." Which part would change your game most?
+> Caption: This is everything. The complete system from "time optimization." Which part would change your game most?
 >
 > #ProductivitySystem #FullFramework #GoalAchieverPro
 
@@ -1840,8 +1840,8 @@
 > Week 1: Vision & Goals
 > - SMART Vision framework
 > - 300% Rule (Clarity + Belief + Consistency)
-> - 12 Power Goals
-> - DRIP Matrix
+> - 12 Impact Projects
+> - Value Matrix
 >
 > Week 2: Time & Energy
 > - 15-minute time tracking
@@ -1871,7 +1871,7 @@
 >
 > Come back and tell me what changed.
 >
-> #MonthlyRecap #Productivity #BuyBackYourTime #TakeAction
+> #MonthlyRecap #Productivity #TimeOptimization #TakeAction
 
 ---
 
@@ -1890,7 +1890,7 @@
 
 **Day 29 (Monday) - Look Ahead**
 > "Next month preview:
-> - Deep dives into each Power Goal quadrant
+> - Deep dives into each Impact Project quadrant
 > - Live time audits
 > - Q&A sessions
 > - More user stories
@@ -1926,7 +1926,7 @@
 > Just shipped a new Progress page that changes everything:
 >
 > 📊 **Roll-up View**
-> See how your daily actions roll up to weekly targets, monthly targets, and Power Goals. One glance tells you if you're on track.
+> See how your daily actions roll up to weekly targets, monthly targets, and Impact Projects. One glance tells you if you're on track.
 >
 > 🎯 **Goal Health Scoring**
 > Each goal gets a health score based on:
@@ -1952,7 +1952,7 @@
 **X/Twitter:**
 > Just shipped: Progress Page 📊
 >
-> • Roll-up view: Daily → Weekly → Monthly → Power Goal
+> • Roll-up view: Daily → Weekly → Monthly → Impact Project
 > • Goal health scoring
 > • Activity trends over time
 >
@@ -1971,7 +1971,7 @@
 > See how daily actions connect to:
 > → Weekly targets
 > → Monthly targets
-> → Power Goals"
+> → Impact Projects"
 >
 > Slide 3: "🎯 GOAL HEALTH
 > Every goal gets a health score:
@@ -2007,7 +2007,7 @@
 > 1. You describe your activity: "Client call with Alex about Q2 strategy"
 >
 > 2. AI classifies it instantly:
->    • DRIP: Production (high-value client work)
+>    • Value: Production (high-value client work)
 >    • Category: Sales/Client Relations
 >    • Energy impact: Energizing
 >
@@ -2017,7 +2017,7 @@
 >
 > ✅ No more context-switching to categorize
 > ✅ Consistent classification (no "what did I call this last time?")
-> ✅ Better data for your DRIP analysis
+> ✅ Better data for your Value analysis
 > ✅ Saves 5-10 minutes/day of mental overhead
 >
 > Small feature. Big quality-of-life improvement.
@@ -2075,7 +2075,7 @@
 > When are you most productive? Which days? Which hours?
 > Mine: Tuesday-Thursday, 6-10am. Everything else is support.
 >
-> 📈 **DRIP Breakdown Over Time**
+> 📈 **Value Breakdown Over Time**
 > Are you improving? Is D+R shrinking? Is P growing?
 > Trend lines don't lie.
 >
@@ -2084,7 +2084,7 @@
 > Schedule accordingly.
 >
 > 🎯 **Goal Velocity**
-> How fast are you progressing toward each Power Goal?
+> How fast are you progressing toward each Impact Project?
 > Which ones are stalling? Which are flying?
 >
 > 🔄 **Consistency Streaks**
@@ -2103,7 +2103,7 @@
 > What Goal Achiever Pro analytics actually show:
 >
 > • Time heatmap (when you're most productive)
-> • DRIP trends (is P growing?)
+> • Value trends (is P growing?)
 > • Energy patterns (when you crash)
 > • Goal velocity (what's stalling)
 > • Consistency streaks
@@ -2121,7 +2121,7 @@
 > When are you most productive?
 > Mine: Tue-Thu, 6-10am"
 >
-> Slide 3: "📈 DRIP TRENDS
+> Slide 3: "📈 VALUE TRENDS
 > Is D+R shrinking?
 > Is P growing?
 > Track over weeks/months"
@@ -2158,7 +2158,7 @@
 > • Current 300% scores
 >
 > 📊 **Quarterly Progress**
-> • Power Goal progress bars
+> • Impact Project progress bars
 > • Days remaining in quarter
 > • What needs attention
 >
@@ -2187,7 +2187,7 @@
 >
 > What it shows:
 > • 3 MINs for today
-> • Quarterly Power Goal progress
+> • Quarterly Impact Project progress
 > • Time tracking widget
 > • Focus mode toggle
 >
@@ -2202,7 +2202,7 @@
 >
 > My 3 MINs for today. Right at the top.
 >
-> Quarterly progress. Am I on track for my Power Goals?
+> Quarterly progress. Am I on track for my Impact Projects?
 >
 > Time tracking. One tap to start logging.
 >
@@ -2243,7 +2243,7 @@
 >
 > 🤝 **Accountability Partners**
 > Connect up to 5 partners. They see:
-> • Your Power Goal progress
+> • Your Impact Project progress
 > • Weekly completion rates
 > • When you miss MINs
 >
@@ -2373,14 +2373,14 @@
 
 ### YouTube Long-Form Video Ideas
 
-#### 1. The Complete "Buy Back Your Time" System (Pillar Video)
+#### 1. The Complete "time optimization" System (Pillar Video)
 **Title:** How to Actually Achieve Your Goals in 2026 (The Complete System)
 **Length:** 15-20 min
 
 **Script Outline:**
 ```
 HOOK (0:00-0:30)
-"Most entrepreneurs work 60+ hours a week and still can't tell you exactly what they're working toward. Today I'm going to show you the complete system that changed everything for me - and it's all based on Dan Martell's Buy Back Your Time methodology."
+"Most entrepreneurs work 60+ hours a week and still can't tell you exactly what they're working toward. Today I'm going to show you the complete system that changed everything for me - and it's all based on the time optimization methodology."
 
 PROBLEM (0:30-2:00)
 - The busy trap: working hard without direction
@@ -2388,7 +2388,7 @@ PROBLEM (0:30-2:00)
 - The cost of unclear goals: burnout, spinning wheels, missed opportunities
 
 THE SYSTEM OVERVIEW (2:00-4:00)
-- Vision → Power Goals → Targets → Daily Actions
+- Vision → Impact Projects → Targets → Daily Actions
 - Show the hierarchy visually
 - Introduce the app briefly
 
@@ -2400,12 +2400,12 @@ SECTION 1: SMART VISION (4:00-6:00)
 SECTION 2: 12 POWER GOALS (6:00-9:00)
 - Why 12 projects beats 1 resolution
 - Quarterly breakdown
-- Live demo: Setting up Power Goals
+- Live demo: Setting up Impact Projects
 
 SECTION 3: THE TIME AUDIT (9:00-12:00)
 - 15-minute time blocks
 - Energy tracking (why it matters)
-- DRIP Matrix explained
+- Value Matrix explained
 - Live demo: Time tracking in the app
 
 SECTION 4: DAILY EXECUTION (12:00-15:00)
@@ -2443,9 +2443,9 @@ HOW TO DO THE AUDIT
 Step 1: Set up 15-minute blocks (show in app)
 Step 2: Track everything honestly
 Step 3: Add energy ratings (1-5)
-Step 4: Categorize using DRIP
+Step 4: Categorize using the Value Matrix
 
-THE DRIP MATRIX EXPLAINED
+THE VALUE MATRIX EXPLAINED
 - D: Delegation (drains you, delegate it)
 - R: Replacement (good at it, shouldn't do it)
 - I: Investment (builds future capacity)
@@ -2507,8 +2507,8 @@ LIVE DEMO
 
 ---
 
-#### 4. Power Goals Workshop
-**Title:** How to Set 12 Power Goals That Actually Get Done (Workshop)
+#### 4. Impact Projects Workshop
+**Title:** How to Set 12 Impact Projects That Actually Get Done (Workshop)
 **Length:** 20-25 min
 
 **Script Outline:**
@@ -2553,8 +2553,8 @@ CLOSE
 
 ---
 
-#### 5. DRIP Matrix Masterclass
-**Title:** The DRIP Matrix: Find 20+ Hours/Week to Buy Back
+#### 5. Value Matrix Masterclass
+**Title:** The Value Matrix: Find 20+ Hours/Week to Buy Back
 **Length:** 15 min
 
 **Script Outline:**
@@ -2608,18 +2608,18 @@ ACTION STEPS
 1. **"The 300% Rule in 60 seconds"** - Quick explanation with visual scoring
 2. **"One question that changed my mornings"** - "What's my #1 priority?"
 3. **"Stop doing this at 8am"** - Checking email first thing
-4. **"The DRIP Matrix explained"** - Quick visual walkthrough
+4. **"The Value Matrix explained"** - Quick visual walkthrough
 5. **"3 MINs that win your day"** - Most Important Next Steps
 6. **"Your weekly planning is wrong"** - Start with the vision
 7. **"Track time in 15-min blocks"** - Why and quick demo
 8. **"The shutdown ritual"** - 15 seconds on ending your day
-9. **"12 Power Goals > 1 Resolution"** - Quick comparison
+9. **"12 Impact Projects > 1 Resolution"** - Quick comparison
 10. **"Your lowest 300% score is the problem"** - Clarity vs Belief vs Consistency
 
 #### App Feature Teasers
 1. **"AI writes your goals for you"** - Vision generation demo
 2. **"This tracks my energy all day"** - Energy rating feature
-3. **"Auto-categorize your tasks"** - DRIP auto-assignment
+3. **"Auto-categorize your tasks"** - Value auto-assignment
 4. **"Morning review in 30 seconds"** - Quick app walkthrough
 5. **"See where your time actually goes"** - Analytics heatmap
 
@@ -2643,7 +2643,7 @@ ACTION STEPS
 - Roadmap previews
 
 #### Live Time Audit
-**Title:** Watch Me Audit My Week (LIVE) - DRIP Matrix Breakdown
+**Title:** Watch Me Audit My Week (LIVE) - Value Matrix Breakdown
 **Format:** 30-45 min
 - Screen share actual time data
 - Categorize in real-time
@@ -2651,7 +2651,7 @@ ACTION STEPS
 - Answer questions
 
 #### Live Goal Setting Workshop
-**Title:** Set Your Q[X] Power Goals With Me (LIVE Workshop)
+**Title:** Set Your Q[X] Impact Projects With Me (LIVE Workshop)
 **Format:** 60 min
 - Quarterly at the start of each quarter
 - Interactive goal-setting
@@ -2667,7 +2667,7 @@ ACTION STEPS
 - "time tracking for entrepreneurs"
 - "buy back your time"
 - "productivity system"
-- "DRIP matrix"
+- "Value matrix"
 - "power goals"
 - "morning routine entrepreneur"
 - "time audit"
@@ -2694,7 +2694,7 @@ ACTION STEPS
 
 📚 RESOURCES:
 - Free Time Audit Template: [link]
-- DRIP Matrix Worksheet: [link]
+- Value Matrix Worksheet: [link]
 - Goal Achiever Pro: [link]
 
 🔗 CONNECT:
@@ -2735,7 +2735,7 @@ ACTION STEPS
 **r/Entrepreneur:**
 > Title: How I went from 65 to 45-hour weeks while increasing revenue
 >
-> [Share the DRIP Matrix framework]
+> [Share the Value Matrix framework]
 > [Provide value, engage with comments]
 
 ---
@@ -2743,7 +2743,7 @@ ACTION STEPS
 ## Platform-Specific Hashtag Banks
 
 **LinkedIn:**
-#Productivity #Entrepreneurship #TimeManagement #BuyBackYourTime #Leadership #BusinessGrowth #StartupLife #ExecutiveLife #WorkLifeBalance #GoalSetting #StrategicPlanning #BusinessStrategy
+#Productivity #Entrepreneurship #TimeManagement #TimeOptimization #Leadership #BusinessGrowth #StartupLife #ExecutiveLife #WorkLifeBalance #GoalSetting #StrategicPlanning #BusinessStrategy
 
 **Instagram:**
 #ProductivityTips #EntrepreneurLife #GoalSetting #TimeManagement #MorningRoutine #BusinessOwner #SmallBusinessTips #StartupLife #WorkFromHome #SelfImprovement #PersonalGrowth #Motivation
@@ -2791,7 +2791,7 @@ ACTION STEPS
 
 | Week | Theme | Focus |
 |------|-------|-------|
-| 1 | Vision & Goals | SMART, 300%, Power Goals, DRIP |
+| 1 | Vision & Goals | SMART, 300%, Impact Projects, Value |
 | 2 | Time & Energy | Tracking, MINs, App reveal |
 | 3 | Routines | Morning, Evening, Reviews, Pomodoro |
 | 4 | Leverage | 4 C's, Delegation, Network, Full System |
@@ -2806,7 +2806,7 @@ ACTION STEPS
 **Bio (160 chars):**
 ```
 Master your time. Achieve your goals. 🎯
-The system from Buy Back Your Time.
+The system from time optimization.
 AI-powered goal tracking for entrepreneurs.
 ⬇️ Try free
 ```
@@ -2822,17 +2822,17 @@ AI-powered goal tracking for entrepreneurs.
 ```
 Goal Achiever Pro is the productivity system for entrepreneurs who are done being busy and ready to be effective.
 
-Built on Dan Martell's "Buy Back Your Time" methodology, we help you:
+Built on the "time optimization" methodology, we help you:
 
 🎯 Set SMART visions with AI-assisted goal creation
 📊 Track time in 15-minute blocks with energy ratings
-🔄 Categorize work using the DRIP Matrix (Delegation, Replacement, Investment, Production)
+🔄 Categorize work using the Value Matrix (Delegation, Replacement, Investment, Production)
 📈 Monitor progress with the 300% Rule (Clarity + Belief + Consistency)
 ⚡ Execute daily with MINs (Most Important Next Steps)
 🤝 Stay accountable with partners and financial stakes
 
 Features:
-• 12 Power Goals system (quarterly projects)
+• 12 Impact Projects system (quarterly projects)
 • AI-powered activity classification
 • Morning, midday, and evening reviews
 • Progress analytics and goal health scoring
@@ -2854,14 +2854,14 @@ Join entrepreneurs who've reclaimed 20+ hours/week of productive time.
 **Bio (150 chars):**
 ```
 Master your time 🎯 Achieve your goals
-Buy Back Your Time methodology
+time optimization methodology
 AI-powered productivity for entrepreneurs
 ⬇️ Try free
 ```
 **Link:** linktr.ee/goalachieverpro (or direct to site)
 **Highlights:**
 - Features (app walkthrough)
-- DRIP (matrix explainer)
+- Value (matrix explainer)
 - Reviews (testimonials)
 - Tips (saved tips)
 - FAQ
@@ -2875,7 +2875,7 @@ AI-powered productivity for entrepreneurs
 ```
 Master your time. Achieve your goals.
 
-Goal Achiever Pro is the productivity system built on Dan Martell's "Buy Back Your Time" methodology.
+Goal Achiever Pro is the productivity system built on the "time optimization" methodology.
 
 On this channel:
 • Deep-dive tutorials on goal setting and time management
@@ -2887,7 +2887,7 @@ On this channel:
 Subscribe for weekly videos on:
 - SMART goal creation
 - Time tracking & energy management
-- The DRIP Matrix
+- The Value Matrix
 - Daily execution systems
 - Accountability and leverage
 
@@ -2905,7 +2905,7 @@ New videos every Wednesday!
 2. Founding Member Offer ($99 lifetime)
 3. Latest YouTube Video
 4. Free Time Audit Template
-5. DRIP Matrix Worksheet
+5. Value Matrix Worksheet
 6. Book a Demo
 
 ---

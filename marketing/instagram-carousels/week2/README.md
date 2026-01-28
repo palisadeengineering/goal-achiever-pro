@@ -40,7 +40,7 @@ This folder contains 5 carousel graphics focusing on time tracking, energy manag
 
 ### Day 12 - Testimonial
 - Real results: 65 → 45 hour weeks
-- DRIP analysis case study
+- Value analysis case study
 - Social proof + engagement
 
 ## Dependencies

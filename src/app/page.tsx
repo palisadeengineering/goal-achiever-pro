@@ -151,7 +151,7 @@ export default function HomePage() {
   const faqs = [
     {
       q: 'What exactly do I get access to?',
-      a: 'You get full access to Goal Achiever Pro through December 31, 2026. This includes all current features (vision planning, time audit, DRIP matrix, routines, reviews, analytics) plus all updates and new features we release during that period.',
+      a: 'You get full access to Goal Achiever Pro through December 31, 2026. This includes all current features (vision planning, time audit, Value Matrix, routines, reviews, analytics) plus all updates and new features we release during that period.',
     },
     {
       q: 'Is this a subscription?',

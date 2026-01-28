@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       apiKey: process.env.ANTHROPIC_API_KEY,
     });
 
-    const prompt = `You are an expert vision and goal-setting coach specializing in Dan Martell's "Buy Back Your Time" methodology.
+    const prompt = `You are an expert vision and goal-setting coach specializing in proven time optimization methodologies.
 
 Generate an inspiring, specific vision statement for someone based on the following context:
 ${context ? `Context: "${context}"` : 'No specific context provided - create a general business/life vision.'}

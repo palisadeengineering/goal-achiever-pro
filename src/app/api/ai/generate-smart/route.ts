@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
       apiKey: process.env.ANTHROPIC_API_KEY,
     });
 
-    const prompt = `You are an expert goal-setting coach specializing in Dan Martell's methodology. Given the following vision statement, generate SMART goal components.
+    const prompt = `You are an expert goal-setting coach specializing in proven productivity methodologies. Given the following vision statement, generate SMART goal components.
 
 Vision: "${vision}"
 ${context ? `Additional Context: "${context}"` : ''}

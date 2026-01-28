@@ -1,6 +1,6 @@
-# Thread 01: The DRIP Matrix
+# Thread 01: The Value Matrix
 
-**Topic:** How to find 20+ hours per week using the DRIP Matrix
+**Topic:** How to find 20+ hours per week using the Value Matrix
 **Best Time:** Tuesday 8 AM EST
 **Target:** Entrepreneurs, founders, busy professionals
 
@@ -15,7 +15,7 @@ Not by "hustling."
 
 By categorizing every task into 4 quadrants.
 
-Here's the DRIP Matrix that changed everything:
+Here's the Value Matrix that changed everything:
 
 ---
 
@@ -30,12 +30,12 @@ But the real unlock?
 
 Doing LESS of the wrong things.
 
-The DRIP Matrix shows you exactly what to eliminate.
+The Value Matrix shows you exactly what to eliminate.
 
 ---
 
 ## Tweet 3 (Framework Intro)
-DRIP stands for:
+Value Matrix stands for:
 
 D - Delegate
 R - Replace

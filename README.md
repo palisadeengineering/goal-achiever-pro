@@ -1,6 +1,6 @@
 # Goal Achiever Pro
 
-A comprehensive goal-setting and time-optimization web app built on **Dan Martell's "Buy Back Your Time" methodology**. Helps entrepreneurs define visions, create Power Goals, track time, and optimize productivity.
+A comprehensive goal-setting and time-optimization web app built on **proven productivity and time optimization methodologies**. Helps entrepreneurs define visions, create Impact Projects, track time, and optimize productivity.
 
 ## Tech Stack
 
@@ -84,7 +84,7 @@ npx drizzle-kit generate
 ### Goal Hierarchy
 ```
 Vision (SMART Goals)
-  └── 12 Power Goals (annual projects, 4 quarters)
+  └── 12 Impact Projects (annual projects, 4 quarters)
        └── Monthly Targets
             └── Weekly Targets
                  └── Daily Actions
@@ -95,10 +95,10 @@ Vision (SMART Goals)
 | Module | Description |
 |--------|-------------|
 | **Vision** | SMART goal framework with AI-assisted generation |
-| **Power Goals** | 12 annual projects per Dan Martell's method |
+| **Impact Projects** | 12 annual projects for strategic planning |
 | **MINs** | Most Important Next Steps scheduling |
-| **Time Audit** | 15-minute block tracking with DRIP categorization |
-| **DRIP Matrix** | Delegation, Replacement, Investment, Production quadrants |
+| **Time Audit** | 15-minute block tracking with Value Matrix categorization |
+| **Value Matrix** | Delegation, Replacement, Investment, Production quadrants |
 | **300% Rule** | Track Clarity, Belief, Consistency scores |
 | **KPI Tracking** | AI-generated KPIs aligned with vision |
 | **Leverage (4 C's)** | Code, Content, Capital, Collaboration tracking |
@@ -115,10 +115,10 @@ src/
 │   ├── (auth)/              # Login, signup, callback
 │   ├── (dashboard)/         # Protected routes
 │   │   ├── vision/          # Vision & SMART goals
-│   │   ├── goals/           # Power Goals
+│   │   ├── goals/           # Impact Projects
 │   │   ├── mins/            # Most Important Next Steps
 │   │   ├── time-audit/      # Time tracking
-│   │   ├── drip/            # DRIP Matrix
+│   │   ├── drip/            # Value Matrix analysis
 │   │   ├── routines/        # Daily routines
 │   │   ├── pomodoro/        # Focus timer
 │   │   ├── reviews/         # Daily reviews
@@ -150,7 +150,7 @@ src/
 
 | Feature | Free | Pro | Elite |
 |---------|------|-----|-------|
-| Vision & Power Goals | Yes | Yes | Yes |
+| Vision & Impact Projects | Yes | Yes | Yes |
 | Basic Time Tracking | Yes | Yes | Yes |
 | Biweekly Time Audit | No | Yes | Yes |
 | Leverage/Network | No | Yes | Yes |
@@ -209,7 +209,7 @@ The `/marketing` folder contains a complete content marketing system.
 | `thumbnails/template-1-face-text.svg` | Face + Text layout |
 | `thumbnails/template-2-big-number.svg` | Big Number layout |
 | `thumbnails/template-3-before-after.svg` | Before/After split |
-| `thumbnails/template-4-drip-matrix.svg` | DRIP Matrix visual |
+| `thumbnails/template-4-drip-matrix.svg` | Value Matrix visual |
 | `thumbnails/template-5-text-only.svg` | Bold text only |
 | `thumbnails/template-6-app-feature.svg` | App feature showcase |
 | `thumbnails/template-7-list-number.svg` | List/Number format |
@@ -221,8 +221,8 @@ Free downloadable resources for email list building:
 | File | Description |
 |------|-------------|
 | `lead-magnets/time-audit-template.md` | 7-day time tracking worksheet |
-| `lead-magnets/drip-matrix-worksheet.md` | DRIP analysis + delegation planner |
-| `lead-magnets/power-goals-template.md` | 12-month Power Goals workbook |
+| `lead-magnets/drip-matrix-worksheet.md` | Value Matrix analysis + delegation planner |
+| `lead-magnets/power-goals-template.md` | 12-month Impact Projects workbook |
 | `lead-magnets/300-rule-worksheet.md` | Clarity + Belief + Consistency tracker |
 | `lead-magnets/weekly-planning-template.md` | 30-minute weekly planning system |
 | `lead-magnets/daily-routine-checklists.md` | Morning, midday, evening routines |
@@ -261,14 +261,14 @@ node marketing/export-graphics.js
 
 ### AI Generation
 - `POST /api/ai/generate-smart` - Generate SMART components
-- `POST /api/ai/generate-power-goals` - Create Power Goals
+- `POST /api/ai/generate-power-goals` - Create Impact Projects
 - `POST /api/ai/generate-kpis` - Generate KPIs
 - `POST /api/ai/generate-targets` - Generate targets
 - `POST /api/ai/suggest-vision` - AI vision suggestions
 
 ### Data CRUD
 - `/api/visions` - Vision management
-- `/api/power-goals` - Power Goals management
+- `/api/power-goals` - Impact Projects management
 - `/api/targets` - Target management
 
 ### Integrations
@@ -289,4 +289,4 @@ MIT License - see LICENSE file for details.
 
 ---
 
-Built with Next.js, Supabase, and the Buy Back Your Time methodology.
+Built with Next.js, Supabase, and proven productivity methodologies.

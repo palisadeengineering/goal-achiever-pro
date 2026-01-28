@@ -18,7 +18,7 @@ export interface SubscriptionPlan {
   stripePriceIdYearly?: string;
   features: PlanFeature[];
   limits: {
-    powerGoals: number;
+    impactProjects: number;
     minsPerDay: number;
     timeBlockHistoryDays: number;
     routines: number;
@@ -39,10 +39,10 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
     priceYearly: 0,
     features: [
       { name: 'Vision & SMART Goal', included: true, limit: 1 },
-      { name: 'Power Goals', included: true, limit: 3 },
+      { name: 'Impact Projects', included: true, limit: 3 },
       { name: 'Daily MINS', included: true, limit: '5/day' },
       { name: 'Weekly Calendar View', included: true },
-      { name: 'Basic DRIP Matrix', included: true },
+      { name: 'Basic Value Matrix', included: true },
       { name: 'Morning & Evening Reviews', included: true },
       { name: 'Basic Pomodoro Timer', included: true },
       { name: 'Full Planning System', included: false },
@@ -52,7 +52,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
       { name: 'Accountability Features', included: false },
     ],
     limits: {
-      powerGoals: 3,
+      impactProjects: 3,
       minsPerDay: 5,
       timeBlockHistoryDays: 7,
       routines: 2,
@@ -61,7 +61,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
       northStarMetrics: 1,
       accountabilityPartners: 0,
     },
-    highlights: ['1 Vision', '3 Power Goals', 'Weekly view only'],
+    highlights: ['1 Vision', '3 Impact Projects', 'Weekly view only'],
   },
   pro: {
     id: 'pro',
@@ -71,12 +71,12 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
     priceYearly: 149,
     features: [
       { name: 'Vision & SMART Goals', included: true, limit: 'Unlimited' },
-      { name: 'Power Goals', included: true, limit: 12 },
+      { name: 'Impact Projects', included: true, limit: 12 },
       { name: 'Daily MINS', included: true, limit: 'Unlimited' },
       { name: 'Full Planning System', included: true },
       { name: 'Weekly + Bi-weekly + Monthly Views', included: true },
       { name: '3x Daily Reviews', included: true },
-      { name: 'Full DRIP Matrix', included: true },
+      { name: 'Full Value Matrix', included: true },
       { name: 'History & Analytics', included: true, limit: '1 year' },
       { name: 'Google Calendar Sync', included: true },
       { name: 'Leverage System', included: true, limit: 10 },
@@ -88,7 +88,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
       { name: 'Priority Templates', included: false },
     ],
     limits: {
-      powerGoals: 12,
+      impactProjects: 12,
       minsPerDay: -1, // Unlimited
       timeBlockHistoryDays: 365,
       routines: 5,
@@ -107,7 +107,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
     priceYearly: 199,
     features: [
       { name: 'Everything in Pro', included: true },
-      { name: 'Unlimited Power Goals', included: true },
+      { name: 'Unlimited Impact Projects', included: true },
       { name: 'Unlimited History', included: true },
       { name: 'AI-Powered Planning', included: true },
       { name: 'AI Goal Suggestions', included: true },
@@ -122,7 +122,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
       { name: 'Priority Support', included: true },
     ],
     limits: {
-      powerGoals: -1, // Unlimited
+      impactProjects: -1, // Unlimited
       minsPerDay: -1,
       timeBlockHistoryDays: -1,
       routines: -1,
@@ -141,7 +141,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
     priceYearly: 99, // One-time payment
     features: [
       { name: 'Everything in Elite', included: true },
-      { name: 'Unlimited Power Goals', included: true },
+      { name: 'Unlimited Impact Projects', included: true },
       { name: 'Unlimited History', included: true },
       { name: 'AI-Powered Planning', included: true },
       { name: 'AI Goal Suggestions', included: true },
@@ -157,7 +157,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
       { name: 'Priority Support', included: true },
     ],
     limits: {
-      powerGoals: -1, // Unlimited
+      impactProjects: -1, // Unlimited
       minsPerDay: -1,
       timeBlockHistoryDays: -1,
       routines: -1,

@@ -1,44 +1,44 @@
 import { PageHeader } from '@/components/layout/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { DripMatrix } from '@/components/features/drip/drip-matrix';
-import { DripPieChart } from '@/components/features/time-audit/drip-pie-chart';
+import { ValueMatrix } from '@/components/features/drip/drip-matrix';
+import { ValuePieChart } from '@/components/features/time-audit/drip-pie-chart';
 import { Plus, Lightbulb } from 'lucide-react';
-import type { DripQuadrant } from '@/types/database';
+import type { ValueQuadrant } from '@/types/database';
 import { ShareButton } from '@/components/features/sharing';
 
 // Mock data - will be replaced with actual data fetching
 const mockItems = [
-  { id: '1', title: 'Email management', description: 'Daily inbox processing', quadrant: 'delegation' as DripQuadrant, timeSpent: 300 },
-  { id: '2', title: 'Meeting scheduling', description: 'Calendar coordination', quadrant: 'delegation' as DripQuadrant, timeSpent: 120 },
-  { id: '3', title: 'Social media posting', description: 'Content distribution', quadrant: 'replacement' as DripQuadrant, timeSpent: 180 },
-  { id: '4', title: 'Report generation', description: 'Weekly analytics', quadrant: 'replacement' as DripQuadrant, timeSpent: 240 },
-  { id: '5', title: 'Team mentoring', description: '1:1 development', quadrant: 'investment' as DripQuadrant, timeSpent: 180 },
-  { id: '6', title: 'Learning & courses', description: 'Skill development', quadrant: 'investment' as DripQuadrant, timeSpent: 300 },
-  { id: '7', title: 'Networking events', description: 'Building relationships', quadrant: 'investment' as DripQuadrant, timeSpent: 120 },
-  { id: '8', title: 'Client strategy calls', description: 'High-value consulting', quadrant: 'production' as DripQuadrant, timeSpent: 480 },
-  { id: '9', title: 'Product development', description: 'Core value creation', quadrant: 'production' as DripQuadrant, timeSpent: 600 },
-  { id: '10', title: 'Sales presentations', description: 'Revenue generation', quadrant: 'production' as DripQuadrant, timeSpent: 360 },
+  { id: '1', title: 'Email management', description: 'Daily inbox processing', quadrant: 'delegation' as ValueQuadrant, timeSpent: 300 },
+  { id: '2', title: 'Meeting scheduling', description: 'Calendar coordination', quadrant: 'delegation' as ValueQuadrant, timeSpent: 120 },
+  { id: '3', title: 'Social media posting', description: 'Content distribution', quadrant: 'replacement' as ValueQuadrant, timeSpent: 180 },
+  { id: '4', title: 'Report generation', description: 'Weekly analytics', quadrant: 'replacement' as ValueQuadrant, timeSpent: 240 },
+  { id: '5', title: 'Team mentoring', description: '1:1 development', quadrant: 'investment' as ValueQuadrant, timeSpent: 180 },
+  { id: '6', title: 'Learning & courses', description: 'Skill development', quadrant: 'investment' as ValueQuadrant, timeSpent: 300 },
+  { id: '7', title: 'Networking events', description: 'Building relationships', quadrant: 'investment' as ValueQuadrant, timeSpent: 120 },
+  { id: '8', title: 'Client strategy calls', description: 'High-value consulting', quadrant: 'production' as ValueQuadrant, timeSpent: 480 },
+  { id: '9', title: 'Product development', description: 'Core value creation', quadrant: 'production' as ValueQuadrant, timeSpent: 600 },
+  { id: '10', title: 'Sales presentations', description: 'Revenue generation', quadrant: 'production' as ValueQuadrant, timeSpent: 360 },
 ];
 
-const mockDripData = {
+const mockValueData = {
   delegation: 420,
   replacement: 420,
   investment: 600,
   production: 1440,
 };
 
-export default function DripPage() {
+export default function ValueMatrixPage() {
   // Calculate insights
-  const totalMinutes = Object.values(mockDripData).reduce((a, b) => a + b, 0);
-  const productionPercent = Math.round((mockDripData.production / totalMinutes) * 100);
-  const delegationPercent = Math.round((mockDripData.delegation / totalMinutes) * 100);
-  const replacementPercent = Math.round((mockDripData.replacement / totalMinutes) * 100);
+  const totalMinutes = Object.values(mockValueData).reduce((a, b) => a + b, 0);
+  const productionPercent = Math.round((mockValueData.production / totalMinutes) * 100);
+  const delegationPercent = Math.round((mockValueData.delegation / totalMinutes) * 100);
+  const replacementPercent = Math.round((mockValueData.replacement / totalMinutes) * 100);
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="DRIP Matrix"
+        title="Value Matrix"
         description="Categorize your activities by money potential and energy to optimize your time"
         actions={
           <div className="flex items-center gap-2">
@@ -65,7 +65,7 @@ export default function DripPage() {
           <CardContent className="pt-4">
             <p className="text-sm text-blue-800 dark:text-blue-200">Investment Time</p>
             <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-              {Math.round((mockDripData.investment / totalMinutes) * 100)}%
+              {Math.round((mockValueData.investment / totalMinutes) * 100)}%
             </p>
             <p className="text-xs text-blue-700 dark:text-blue-300">Long-term growth</p>
           </CardContent>
@@ -89,9 +89,9 @@ export default function DripPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* DRIP Matrix - Takes 2 columns */}
+        {/* Value Matrix - Takes 2 columns */}
         <div className="lg:col-span-2">
-          <DripMatrix items={mockItems} />
+          <ValueMatrix items={mockItems} />
         </div>
 
         {/* Side Panel */}
@@ -102,7 +102,7 @@ export default function DripPage() {
               <CardTitle className="text-base">Time Distribution</CardTitle>
             </CardHeader>
             <CardContent>
-              <DripPieChart data={mockDripData} size="lg" />
+              <ValuePieChart data={mockValueData} size="lg" />
             </CardContent>
           </Card>
 

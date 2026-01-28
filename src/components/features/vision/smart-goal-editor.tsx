@@ -24,7 +24,7 @@ interface SmartGoalData {
   timeBound: Date | null;
 }
 
-interface GeneratedPowerGoal {
+interface GeneratedImpactProject {
   title: string;
   description: string;
   quarter: number;
@@ -34,8 +34,8 @@ interface GeneratedPowerGoal {
 
 interface SmartGoalEditorProps {
   initialData?: Partial<SmartGoalData>;
-  onSave?: (data: SmartGoalData, powerGoals?: GeneratedPowerGoal[]) => void;
-  onPowerGoalsGenerated?: (powerGoals: GeneratedPowerGoal[]) => void;
+  onSave?: (data: SmartGoalData, impactProjects?: GeneratedImpactProject[]) => void;
+  onImpactProjectsGenerated?: (impactProjects: GeneratedImpactProject[]) => void;
   visionId?: string;
   readonly?: boolean;
   isSaving?: boolean;
@@ -79,7 +79,7 @@ const SMART_FIELDS = [
 export function SmartGoalEditor({
   initialData,
   onSave,
-  onPowerGoalsGenerated,
+  onImpactProjectsGenerated,
   visionId,
   readonly = false,
   isSaving = false,
@@ -87,9 +87,9 @@ export function SmartGoalEditor({
   const [isEditing, setIsEditing] = useState(!initialData?.title);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGeneratingVision, setIsGeneratingVision] = useState(false);
-  const [isGeneratingPowerGoals, setIsGeneratingPowerGoals] = useState(false);
-  const [isSavingPowerGoals, setIsSavingPowerGoals] = useState(false);
-  const [generatedPowerGoals, setGeneratedPowerGoals] = useState<GeneratedPowerGoal[] | null>(null);
+  const [isGeneratingImpactProjects, setIsGeneratingImpactProjects] = useState(false);
+  const [isSavingImpactProjects, setIsSavingImpactProjects] = useState(false);
+  const [generatedImpactProjects, setGeneratedImpactProjects] = useState<GeneratedImpactProject[] | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
   const [dateInputValue, setDateInputValue] = useState('');
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -147,11 +147,11 @@ export function SmartGoalEditor({
   };
 
   const handleSave = () => {
-    onSave?.(data, generatedPowerGoals || undefined);
+    onSave?.(data, generatedImpactProjects || undefined);
     setIsEditing(false);
-    // Clear generated power goals after save since they'll be saved with vision
-    if (generatedPowerGoals) {
-      setGeneratedPowerGoals(null);
+    // Clear generated impact projects after save since they'll be saved with vision
+    if (generatedImpactProjects) {
+      setGeneratedImpactProjects(null);
     }
   };
 
@@ -234,7 +234,7 @@ export function SmartGoalEditor({
     }
   };
 
-  const generatePowerGoals = async () => {
+  const generateImpactProjects = async () => {
     if (!data.title) {
       setAiError('Please enter your vision statement first');
       return;
@@ -245,7 +245,7 @@ export function SmartGoalEditor({
       return;
     }
 
-    setIsGeneratingPowerGoals(true);
+    setIsGeneratingImpactProjects(true);
     setAiError(null);
 
     try {
@@ -267,52 +267,52 @@ export function SmartGoalEditor({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate Power Goals');
+        throw new Error(errorData.error || 'Failed to generate Impact Projects');
       }
 
       const result = await response.json();
-      setGeneratedPowerGoals(result.powerGoals);
-      onPowerGoalsGenerated?.(result.powerGoals);
-      toast.success('Power Goals generated! Review them below.');
+      setGeneratedImpactProjects(result.impactProjects);
+      onImpactProjectsGenerated?.(result.impactProjects);
+      toast.success('Impact Projects generated! Review them below.');
     } catch (error) {
-      console.error('Power Goals Generation Error:', error);
-      setAiError(error instanceof Error ? error.message : 'Failed to generate Power Goals');
+      console.error('Impact Projects Generation Error:', error);
+      setAiError(error instanceof Error ? error.message : 'Failed to generate Impact Projects');
     } finally {
-      setIsGeneratingPowerGoals(false);
+      setIsGeneratingImpactProjects(false);
     }
   };
 
-  const savePowerGoals = async () => {
-    if (!generatedPowerGoals?.length || !visionId) return;
+  const saveImpactProjects = async () => {
+    if (!generatedImpactProjects?.length || !visionId) return;
 
-    setIsSavingPowerGoals(true);
+    setIsSavingImpactProjects(true);
     try {
       const response = await fetch('/api/power-goals', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           visionId,
-          powerGoals: generatedPowerGoals.map((goal) => ({
-            title: goal.title,
-            description: goal.description,
-            quarter: goal.quarter,
-            category: goal.category,
+          impactProjects: generatedImpactProjects.map((project) => ({
+            title: project.title,
+            description: project.description,
+            quarter: project.quarter,
+            category: project.category,
           })),
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save Power Goals');
+        throw new Error('Failed to save Impact Projects');
       }
 
       const result = await response.json();
-      toast.success(`Saved ${result.saved} Power Goals!`);
-      setGeneratedPowerGoals(null);
+      toast.success(`Saved ${result.saved} Impact Projects!`);
+      setGeneratedImpactProjects(null);
     } catch (error) {
-      console.error('Save Power Goals Error:', error);
-      toast.error('Failed to save Power Goals. Please try again.');
+      console.error('Save Impact Projects Error:', error);
+      toast.error('Failed to save Impact Projects. Please try again.');
     } finally {
-      setIsSavingPowerGoals(false);
+      setIsSavingImpactProjects(false);
     }
   };
 
@@ -582,27 +582,27 @@ export function SmartGoalEditor({
           </div>
         </div>
 
-        {/* Generate Power Goals Section */}
+        {/* Generate Impact Projects Section */}
         <div className="space-y-4 pt-4 border-t">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-medium flex items-center gap-2">
                 <Zap className="h-4 w-4 text-yellow-500" />
-                Power Goals
+                Impact Projects
               </h3>
               <p className="text-xs text-muted-foreground mt-1">
-                Generate quarterly Power Goals based on your SMART breakdown
+                Generate quarterly Impact Projects based on your SMART breakdown
               </p>
             </div>
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={generatePowerGoals}
-              disabled={isGeneratingPowerGoals || !data.title || (!data.specific && !data.measurable)}
+              onClick={generateImpactProjects}
+              disabled={isGeneratingImpactProjects || !data.title || (!data.specific && !data.measurable)}
               className="gap-2"
             >
-              {isGeneratingPowerGoals ? (
+              {isGeneratingImpactProjects ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Generating...
@@ -610,33 +610,33 @@ export function SmartGoalEditor({
               ) : (
                 <>
                   <Zap className="h-4 w-4" />
-                  Generate Power Goals
+                  Generate Impact Projects
                 </>
               )}
             </Button>
           </div>
 
-          {/* Generated Power Goals Display */}
-          {generatedPowerGoals && generatedPowerGoals.length > 0 && (
+          {/* Generated Impact Projects Display */}
+          {generatedImpactProjects && generatedImpactProjects.length > 0 && (
             <div className="space-y-3">
               <div className="grid gap-3 md:grid-cols-2">
-                {generatedPowerGoals.map((goal, idx) => (
+                {generatedImpactProjects.map((project, idx) => (
                   <div
                     key={idx}
                     className="p-4 border rounded-lg bg-muted/20 space-y-2"
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <h4 className="font-medium text-sm">{goal.title}</h4>
+                      <h4 className="font-medium text-sm">{project.title}</h4>
                       <Badge variant="outline" className="text-xs shrink-0">
-                        Q{goal.quarter}
+                        Q{project.quarter}
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {goal.description}
+                      {project.description}
                     </p>
-                    {goal.metrics && goal.metrics.length > 0 && (
+                    {project.metrics && project.metrics.length > 0 && (
                       <div className="flex flex-wrap gap-1 pt-1">
-                        {goal.metrics.map((metric, mIdx) => (
+                        {project.metrics.map((metric, mIdx) => (
                           <Badge key={mIdx} variant="secondary" className="text-xs">
                             {metric}
                           </Badge>
@@ -648,11 +648,11 @@ export function SmartGoalEditor({
               </div>
               {visionId && (
                 <Button
-                  onClick={savePowerGoals}
-                  disabled={isSavingPowerGoals}
+                  onClick={saveImpactProjects}
+                  disabled={isSavingImpactProjects}
                   className="w-full gap-2"
                 >
-                  {isSavingPowerGoals ? (
+                  {isSavingImpactProjects ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
                       Saving...
@@ -660,7 +660,7 @@ export function SmartGoalEditor({
                   ) : (
                     <>
                       <CheckCircle2 className="h-4 w-4" />
-                      Save {generatedPowerGoals.length} Power Goals
+                      Save {generatedImpactProjects.length} Impact Projects
                     </>
                   )}
                 </Button>

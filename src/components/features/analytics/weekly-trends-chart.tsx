@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
   ComposedChart,
 } from 'recharts';
-import { DRIP_QUADRANTS } from '@/constants/drip';
+import { VALUE_QUADRANTS } from '@/constants/drip';
 
 interface WeeklyTrendData {
   week: string;
@@ -89,12 +89,12 @@ export function WeeklyTrendsChart({ data, showPercentage = true }: WeeklyTrendsC
         />
         <Legend />
 
-        {/* DRIP Category Lines */}
+        {/* Value Category Lines */}
         <Line
           yAxisId="left"
           type="monotone"
           dataKey="delegationHours"
-          stroke={DRIP_QUADRANTS.delegation.color}
+          stroke={VALUE_QUADRANTS.delegation.color}
           name="Delegation"
           strokeWidth={2}
           dot={{ r: 3 }}
@@ -104,7 +104,7 @@ export function WeeklyTrendsChart({ data, showPercentage = true }: WeeklyTrendsC
           yAxisId="left"
           type="monotone"
           dataKey="replacementHours"
-          stroke={DRIP_QUADRANTS.replacement.color}
+          stroke={VALUE_QUADRANTS.replacement.color}
           name="Replacement"
           strokeWidth={2}
           dot={{ r: 3 }}
@@ -114,7 +114,7 @@ export function WeeklyTrendsChart({ data, showPercentage = true }: WeeklyTrendsC
           yAxisId="left"
           type="monotone"
           dataKey="investmentHours"
-          stroke={DRIP_QUADRANTS.investment.color}
+          stroke={VALUE_QUADRANTS.investment.color}
           name="Investment"
           strokeWidth={2}
           dot={{ r: 3 }}
@@ -124,7 +124,7 @@ export function WeeklyTrendsChart({ data, showPercentage = true }: WeeklyTrendsC
           yAxisId="left"
           type="monotone"
           dataKey="productionHours"
-          stroke={DRIP_QUADRANTS.production.color}
+          stroke={VALUE_QUADRANTS.production.color}
           name="Production"
           strokeWidth={2}
           dot={{ r: 3 }}
@@ -176,7 +176,7 @@ export function ProductionTrendChart({ data }: { data: WeeklyTrendData[] }) {
         <Line
           type="monotone"
           dataKey="productionPercentage"
-          stroke={DRIP_QUADRANTS.production.color}
+          stroke={VALUE_QUADRANTS.production.color}
           strokeWidth={2}
           dot={{ r: 4 }}
           activeDot={{ r: 6 }}

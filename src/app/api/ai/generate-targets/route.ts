@@ -9,7 +9,7 @@ import {
   RateLimits,
 } from '@/lib/rate-limit';
 
-interface PowerGoalInput {
+interface ImpactProjectInput {
   id: string;
   title: string;
   description?: string;
@@ -48,16 +48,16 @@ export async function POST(request: NextRequest) {
       return rateLimitExceededResponse(rateLimitResult);
     }
 
-    const { powerGoal, vision, smartGoals, targetDate } = await request.json() as {
-      powerGoal: PowerGoalInput;
+    const { powerGoal: impactProject, vision, smartGoals, targetDate } = await request.json() as {
+      powerGoal: ImpactProjectInput;
       vision: string;
       smartGoals?: SmartGoalsInput;
       targetDate?: string;
     };
 
-    if (!powerGoal || !powerGoal.title) {
+    if (!impactProject || !impactProject.title) {
       return NextResponse.json(
-        { error: 'Power Goal is required' },
+        { error: 'Impact Project is required' },
         { status: 400 }
       );
     }
@@ -74,17 +74,17 @@ export async function POST(request: NextRequest) {
     });
 
     // Calculate quarter months
-    const quarterMonths = getQuarterMonths(powerGoal.quarter);
+    const quarterMonths = getQuarterMonths(impactProject.quarter);
 
-    const prompt = `You are an expert project planner specializing in breaking down quarterly goals into actionable monthly, weekly, and daily targets using Dan Martell's methodology.
+    const prompt = `You are an expert project planner specializing in breaking down quarterly goals into actionable monthly, weekly, and daily targets using proven productivity methodologies.
 
-Given the following Power Goal for Q${powerGoal.quarter}, create a detailed breakdown:
+Given the following Impact Project for Q${impactProject.quarter}, create a detailed breakdown:
 
-Power Goal: "${powerGoal.title}"
-Description: "${powerGoal.description || 'No description provided'}"
-Quarter: Q${powerGoal.quarter} (${quarterMonths.join(', ')})
-Category: ${powerGoal.category || 'general'}
-${powerGoal.keyMilestones?.length ? `Key Milestones: ${powerGoal.keyMilestones.join(', ')}` : ''}
+Impact Project: "${impactProject.title}"
+Description: "${impactProject.description || 'No description provided'}"
+Quarter: Q${impactProject.quarter} (${quarterMonths.join(', ')})
+Category: ${impactProject.category || 'general'}
+${impactProject.keyMilestones?.length ? `Key Milestones: ${impactProject.keyMilestones.join(', ')}` : ''}
 
 Vision Context: "${vision || 'Not specified'}"
 ${smartGoals ? `SMART Goals:
@@ -197,12 +197,12 @@ Respond ONLY with valid JSON in this exact format:
 
     const targetPlan = JSON.parse(cleanedResponse);
 
-    // Add power goal context to response
+    // Add impact project context to response
     return NextResponse.json({
       ...targetPlan,
-      powerGoalId: powerGoal.id,
-      powerGoalTitle: powerGoal.title,
-      quarter: powerGoal.quarter,
+      impactProjectId: impactProject.id,
+      impactProjectTitle: impactProject.title,
+      quarter: impactProject.quarter,
     }, {
       headers: rateLimitResult ? rateLimitHeaders(rateLimitResult) : {},
     });

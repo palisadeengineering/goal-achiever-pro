@@ -92,7 +92,7 @@ interface PlanData {
     status: string;
     progress_percentage: number;
   }>;
-  powerGoals: Array<{
+  impactProjects: Array<{
     id: string;
     quarterly_target_id?: string;
     title: string;
@@ -292,7 +292,7 @@ export default function VisionDetailPage({ params }: { params: Promise<{ id: str
             const planResult = await planResponse.json();
             setPlanData({
               quarterlyTargets: planResult.quarterlyTargets || [],
-              powerGoals: planResult.powerGoals || [],
+              impactProjects: planResult.impactProjects || planResult.powerGoals || [],
               monthlyTargets: planResult.monthlyTargets || [],
               weeklyTargets: planResult.weeklyTargets || [],
               dailyActions: planResult.dailyActions || [],
@@ -775,7 +775,7 @@ export default function VisionDetailPage({ params }: { params: Promise<{ id: str
                     visionTitle={vision.title}
                     visionColor={vision.color || undefined}
                     quarterlyTargets={planData.quarterlyTargets}
-                    powerGoals={planData.powerGoals}
+                    impactProjects={planData.impactProjects}
                     monthlyTargets={planData.monthlyTargets}
                     weeklyTargets={planData.weeklyTargets}
                     dailyActions={planData.dailyActions}
@@ -808,9 +808,9 @@ export default function VisionDetailPage({ params }: { params: Promise<{ id: str
                 realistic: vision.realistic || undefined,
               }}
               targetDate={vision.time_bound ? new Date(vision.time_bound) : null}
-              onPowerGoalsSaved={() => {
+              onImpactProjectsSaved={() => {
                 setShowAIPlanner(false);
-                toast.success('Power Goals saved! View them in the Milestones page.');
+                toast.success('Impact Projects saved! View them in the Milestones page.');
               }}
             />
           ) : (
@@ -843,9 +843,9 @@ export default function VisionDetailPage({ params }: { params: Promise<{ id: str
                     )}
                   </Button>
                   <p className="text-xs text-muted-foreground text-center max-w-sm">
-                    AI generates Power Goals, Monthly/Weekly Targets, and Daily Actions in one click.
+                    AI generates Impact Projects, Monthly/Weekly Targets, and Daily Actions in one click.
                     <br />
-                    Uses Dan Martell, Alex Hormozi, and Grant Cardone methodologies.
+                    Uses proven entrepreneurial methodologies for goal achievement.
                   </p>
 
                   <div className="flex items-center gap-3 w-full">
@@ -857,7 +857,7 @@ export default function VisionDetailPage({ params }: { params: Promise<{ id: str
                   <div className="flex flex-col sm:flex-row gap-3">
                     <Button variant="outline" onClick={() => setShowAIPlanner(true)} className="gap-2 flex-1">
                       <Sparkles className="h-4 w-4" />
-                      Generate Power Goals Only
+                      Generate Impact Projects Only
                     </Button>
                     <Button variant="outline" onClick={() => setShowBacktrackWizard(true)} className="gap-2 flex-1">
                       <GitBranch className="h-4 w-4" />

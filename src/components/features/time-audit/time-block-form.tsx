@@ -28,7 +28,7 @@ import { useTags, type Tag } from '@/lib/hooks/use-tags';
 import { useTagPatterns } from '@/lib/hooks/use-tag-patterns';
 import { Sparkles, Check, X, Loader2, Trash2, Repeat, SkipForward, Brain, Briefcase, Users, Car, Zap, Coffee, FileText, HelpCircle } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
-import type { DripQuadrant, EnergyRating } from '@/types/database';
+import type { ValueQuadrant, EnergyRating } from '@/types/database';
 import type { ActivityType } from '@/lib/hooks/use-enhanced-analytics';
 
 export interface TimeBlock {
@@ -38,7 +38,7 @@ export interface TimeBlock {
   endTime: string;
   activityName: string;
   description?: string;
-  dripQuadrant: DripQuadrant;
+  valueQuadrant: ValueQuadrant;
   energyRating: EnergyRating;
   source?: string;
   externalEventId?: string;
@@ -81,7 +81,7 @@ interface TimeBlockFormProps {
   editBlock?: TimeBlock;
 }
 
-const DRIP_OPTIONS = [
+const VALUE_OPTIONS = [
   { value: 'production', label: 'Production', description: 'High $ + High Energy (Your sweet spot!)', color: 'bg-cyan-500' },
   { value: 'investment', label: 'Investment', description: 'Low $ + High Energy (Long-term growth)', color: 'bg-indigo-500' },
   { value: 'replacement', label: 'Replacement', description: 'High $ + Low Energy (Automate this)', color: 'bg-orange-500' },
@@ -123,7 +123,7 @@ export function TimeBlockForm({
   const [endTime, setEndTime] = useState('09:30');
   const [activityName, setActivityName] = useState('');
   const [description, setDescription] = useState('');
-  const [dripQuadrant, setDripQuadrant] = useState<DripQuadrant>('production');
+  const [valueQuadrant, setValueQuadrant] = useState<ValueQuadrant>('production');
   const [energyRating, setEnergyRating] = useState<EnergyRating>('yellow');
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [showTagManager, setShowTagManager] = useState(false);
@@ -191,7 +191,7 @@ export function TimeBlockForm({
         setEndTime(editBlock.endTime);
         setActivityName(editBlock.activityName);
         setDescription(editBlock.description || '');
-        setDripQuadrant(editBlock.dripQuadrant);
+        setValueQuadrant(editBlock.valueQuadrant);
         setEnergyRating(editBlock.energyRating);
         setSelectedTagIds(editBlock.tagIds || []);
         // Recurring fields
@@ -211,7 +211,7 @@ export function TimeBlockForm({
         setEndTime(initialEndTime || (initialTime ? addMinutes(initialTime, 30) : '09:30'));
         setActivityName('');
         setDescription('');
-        setDripQuadrant('production');
+        setValueQuadrant('production');
         setEnergyRating('yellow');
         setSelectedTagIds([]);
         // Reset recurring fields
@@ -419,7 +419,7 @@ export function TimeBlockForm({
       endTime,
       activityName,
       description: description || undefined,
-      dripQuadrant,
+      valueQuadrant,
       energyRating,
       tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
       // Activity classification fields
@@ -475,7 +475,7 @@ export function TimeBlockForm({
         <DialogHeader draggable>
           <DialogTitle>{editBlock ? 'Edit Time Block' : 'Log Time Block'}</DialogTitle>
           <DialogDescription>
-            Drag to move • Record how you spent your time and categorize it by DRIP quadrant.
+            Drag to move • Record how you spent your time and categorize it by Value quadrant.
           </DialogDescription>
         </DialogHeader>
 
@@ -749,15 +749,15 @@ export function TimeBlockForm({
             )}
           </div>
 
-          {/* DRIP Quadrant */}
+          {/* Value Quadrant */}
           <div className="space-y-3">
-            <Label>DRIP Quadrant</Label>
-            <Select value={dripQuadrant} onValueChange={(v) => setDripQuadrant(v as DripQuadrant)}>
+            <Label>Value Quadrant</Label>
+            <Select value={valueQuadrant} onValueChange={(v) => setValueQuadrant(v as ValueQuadrant)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {DRIP_OPTIONS.map((option) => (
+                {VALUE_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     <div className="flex items-center gap-2">
                       <span className={`h-2 w-2 rounded-full ${option.color}`} />

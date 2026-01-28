@@ -1063,7 +1063,7 @@ export default function MilestoneDetailPage() {
               </DialogHeader>
               {milestone && (
                 <TargetGenerationWizard
-                  powerGoal={{
+                  impactProject={{
                     id: milestone.id,
                     title: milestone.title,
                     description: milestone.description,

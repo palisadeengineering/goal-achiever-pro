@@ -10,8 +10,8 @@ This folder contains 5 carousel graphics for Week 1 of your social media content
 |-----|------|-------|--------|
 | 1 | `day1-smart-vision.html` | SMART Vision Framework | 5 |
 | 2 | `day2-300-rule.html` | The 300% Rule | 7 |
-| 3 | `day3-power-goals.html` | 12 Power Goals | 6 |
-| 4 | `day4-drip-matrix.html` | DRIP Matrix | 7 |
+| 3 | `day3-power-goals.html` | 12 Impact Projects | 6 |
+| 4 | `day4-drip-matrix.html` | Value Matrix | 7 |
 | 7 | `day7-sunday-routine.html` | Sunday Night Routine | 6 |
 
 ## How to Export as Images
@@ -74,7 +74,7 @@ captureSlides('day1-smart-vision.html', 'day1-slide');
 - **Primary (Cyan)**: `#0891B2`
 - **Bright Cyan**: `#00BEFF`
 - **Dark Background**: `#0f172a` to `#1e293b`
-- **DRIP Colors**:
+- **Value Colors**:
   - Delegation (Purple): `#a855f7`
   - Replacement (Amber): `#f59e0b`
   - Investment (Blue): `#3b82f6`

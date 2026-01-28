@@ -99,7 +99,7 @@ export function PositioningSection({ data, onUpdate }: PositioningSectionProps) 
         </Label>
         <Textarea
           id="differentiator"
-          placeholder="e.g., Only tool that combines Dan Martell's DRIP methodology with AI-powered time analysis and automated accountability - it's like having a time management coach built into your workflow"
+          placeholder="e.g., Only tool that combines the Value Matrix methodology with AI-powered time analysis and automated accountability - it's like having a time management coach built into your workflow"
           value={data.differentiator}
           onChange={(e) => onUpdate({ differentiator: e.target.value })}
           rows={3}

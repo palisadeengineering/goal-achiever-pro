@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { DRIP_QUADRANTS, ENERGY_RATINGS } from '@/constants/drip';
+import { VALUE_QUADRANTS, ENERGY_RATINGS } from '@/constants/drip';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -10,14 +10,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import type { DripQuadrant, EnergyRating } from '@/types/database';
+import type { ValueQuadrant, EnergyRating } from '@/types/database';
 
 interface HeatmapCell {
   dayOfWeek: number;
   hour: number;
   value: number;
   dominantEnergy: EnergyRating | null;
-  dominantDrip: DripQuadrant | null;
+  dominantValue: ValueQuadrant | null;
   hoursLogged: number;
 }
 
@@ -28,7 +28,7 @@ interface ProductivityHeatmapProps {
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
-type ColorMode = 'productivity' | 'energy' | 'drip';
+type ColorMode = 'productivity' | 'energy' | 'value';
 
 export function ProductivityHeatmap({ data }: ProductivityHeatmapProps) {
   const [colorMode, setColorMode] = useState<ColorMode>('productivity');
@@ -49,8 +49,8 @@ export function ProductivityHeatmap({ data }: ProductivityHeatmapProps) {
       return `${color}${Math.round(intensity * 255).toString(16).padStart(2, '0')}`;
     }
 
-    if (colorMode === 'drip' && cell.dominantDrip) {
-      const color = DRIP_QUADRANTS[cell.dominantDrip].color;
+    if (colorMode === 'value' && cell.dominantValue) {
+      const color = VALUE_QUADRANTS[cell.dominantValue].color;
       return `${color}${Math.round(intensity * 255).toString(16).padStart(2, '0')}`;
     }
 
@@ -98,11 +98,11 @@ export function ProductivityHeatmap({ data }: ProductivityHeatmapProps) {
             Energy
           </Button>
           <Button
-            variant={colorMode === 'drip' ? 'default' : 'outline'}
+            variant={colorMode === 'value' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setColorMode('drip')}
+            onClick={() => setColorMode('value')}
           >
-            DRIP
+            Value
           </Button>
         </div>
 
@@ -154,13 +154,13 @@ export function ProductivityHeatmap({ data }: ProductivityHeatmapProps) {
                             {cell && cell.hoursLogged > 0 ? (
                               <>
                                 <p>{cell.hoursLogged.toFixed(1)}h logged</p>
-                                {cell.dominantDrip && (
+                                {cell.dominantValue && (
                                   <p>
                                     Primary:{' '}
                                     <span
-                                      style={{ color: DRIP_QUADRANTS[cell.dominantDrip].color }}
+                                      style={{ color: VALUE_QUADRANTS[cell.dominantValue].color }}
                                     >
-                                      {DRIP_QUADRANTS[cell.dominantDrip].name}
+                                      {VALUE_QUADRANTS[cell.dominantValue].name}
                                     </span>
                                   </p>
                                 )}
@@ -231,9 +231,9 @@ export function ProductivityHeatmap({ data }: ProductivityHeatmapProps) {
             </>
           )}
 
-          {colorMode === 'drip' && (
+          {colorMode === 'value' && (
             <>
-              {Object.entries(DRIP_QUADRANTS).map(([key, quadrant]) => (
+              {Object.entries(VALUE_QUADRANTS).map(([key, quadrant]) => (
                 <div key={key} className="flex items-center gap-2">
                   <div
                     className="w-4 h-4 rounded"

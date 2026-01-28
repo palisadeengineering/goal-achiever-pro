@@ -27,7 +27,7 @@ Complete system for managing, reviewing, and scheduling social media content.
 | **Platform** | Social platform | X, LinkedIn, Instagram, YouTube |
 | **Content Type** | Format | Tweet, Thread, Post, Carousel, Reel, Short, Story, Long-form |
 | **Status** | Workflow stage | Draft, Review, Approved, Scheduled, Published |
-| **Theme** | Content theme | Vision, 300% Rule, Power Goals, DRIP, Time Audit, etc. |
+| **Theme** | Content theme | Vision, 300% Rule, Impact Projects, Value, Time Audit, etc. |
 | **Hook/Title** | Opening hook or title | First line/headline |
 | **Full Caption** | Complete post text | Full content with formatting |
 | **Hashtags** | Platform hashtags | #tag1 #tag2 |
@@ -273,7 +273,7 @@ Week 4: Theme D (e.g., Leverage & Scale)
 
 ### LinkedIn
 ```
-#Productivity #Entrepreneurship #TimeManagement #BuyBackYourTime #Leadership #BusinessGrowth #StartupLife #GoalSetting #WorkLifeBalance
+#Productivity #Entrepreneurship #TimeManagement #TimeOptimization #Leadership #BusinessGrowth #StartupLife #GoalSetting #WorkLifeBalance
 ```
 
 ### Instagram

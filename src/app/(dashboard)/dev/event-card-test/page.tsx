@@ -13,7 +13,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { DRIP_QUADRANTS } from '@/constants/drip';
+import { VALUE_QUADRANTS } from '@/constants/drip';
 
 // Test event durations in minutes
 const TEST_DURATIONS = [
@@ -31,7 +31,7 @@ const TEST_ACTIVITIES = [
   'Meeting',
   'Team Standup',
   'Product Strategy Review',
-  'Dan Martell Book Reading Session',
+  'Productivity Book Reading Session',
   'Very Long Activity Name That Should Definitely Truncate in Small Events',
 ];
 
@@ -45,7 +45,7 @@ function MockEventCard({
   activityName: string;
   durationSlots: number;
   isRecurring?: boolean;
-  quadrant?: keyof typeof DRIP_QUADRANTS;
+  quadrant?: keyof typeof VALUE_QUADRANTS;
 }) {
   const heightPx = durationSlots * 14;
   const { ref, sizeBucket } = useEventSize(heightPx);
@@ -116,7 +116,7 @@ function MockEventCard({
               <Badge
                 className="text-[10px] capitalize text-white font-medium px-2 py-0.5"
                 style={{
-                  backgroundColor: DRIP_QUADRANTS[quadrant].color,
+                  backgroundColor: VALUE_QUADRANTS[quadrant].color,
                 }}
               >
                 {quadrant}

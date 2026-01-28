@@ -107,8 +107,8 @@ export const nonNegativeIntSchema = z.number()
 // Status enum for common statuses
 export const statusSchema = z.enum(['pending', 'in_progress', 'completed', 'cancelled']);
 
-// DRIP quadrant validation
-export const dripQuadrantSchema = z.enum(['delegation', 'replacement', 'investment', 'production']);
+// Value quadrant validation
+export const valueQuadrantSchema = z.enum(['delegation', 'replacement', 'investment', 'production']);
 
 // Energy rating validation
 export const energyRatingSchema = z.enum(['green', 'yellow', 'red']);

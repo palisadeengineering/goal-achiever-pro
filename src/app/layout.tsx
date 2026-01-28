@@ -32,13 +32,13 @@ export const metadata: Metadata = {
     template: "%s | Goal Achiever Pro",
   },
   description:
-    "A productivity app based on Dan Martell's proven DRIP methodology. Set your vision, audit your time, build systems, and achieve your goals.",
+    "A comprehensive productivity app for entrepreneurs. Set your vision, audit your time with the Value Matrix, build systems, and achieve your goals.",
   keywords: [
     "goal setting",
     "productivity",
     "time management",
-    "DRIP matrix",
-    "Dan Martell",
+    "Value Matrix",
+    "entrepreneur productivity",
     "goal tracking",
     "time audit",
     "pomodoro",
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Goal Achiever Pro - Achieve Your Goals with Clarity",
     description:
-      "A productivity app based on Dan Martell's proven DRIP methodology.",
+      "A comprehensive productivity app for entrepreneurs with Value Matrix time optimization.",
     type: "website",
     locale: "en_US",
   },
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Goal Achiever Pro",
     description:
-      "A productivity app based on Dan Martell's proven DRIP methodology.",
+      "A comprehensive productivity app for entrepreneurs with Value Matrix time optimization.",
   },
   robots: {
     index: true,

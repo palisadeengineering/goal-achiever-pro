@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import type { DripQuadrant, EnergyRating } from '@/types/database';
+import type { ValueQuadrant, EnergyRating } from '@/types/database';
 
 export interface GoogleCalendarSyncConfig {
   isConnected: boolean;
@@ -19,7 +19,7 @@ export interface TimeBlock {
   activityCategory?: string;
   notes?: string;
   energyRating: EnergyRating;
-  dripQuadrant: DripQuadrant;
+  valueQuadrant: ValueQuadrant;
   source?: string;
   externalEventId?: string;
   // Recurring event fields

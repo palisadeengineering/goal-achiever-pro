@@ -11,7 +11,7 @@
  * - Overlapping events at various times
  * - Multi-day events (not applicable for time blocks, but long events)
  * - Short and long titles
- * - All DRIP categories and energy levels
+ * - All Value categories and energy levels
  */
 
 import { useState, useMemo, useEffect } from 'react';
@@ -21,7 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { WeeklyCalendarView } from '@/components/features/time-audit/weekly-calendar-view';
-import type { DripQuadrant, EnergyRating } from '@/types/database';
+import type { ValueQuadrant, EnergyRating } from '@/types/database';
 
 // Fixture event type matching WeeklyCalendarView's TimeBlock interface
 interface FixtureTimeBlock {
@@ -29,7 +29,7 @@ interface FixtureTimeBlock {
   startTime: string;
   endTime: string;
   activityName: string;
-  dripQuadrant: DripQuadrant;
+  valueQuadrant: ValueQuadrant;
   energyRating: EnergyRating;
   date?: string;
   isRecurring?: boolean;
@@ -54,7 +54,7 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '06:00',
       endTime: '06:05',
       activityName: '5 min event',
-      dripQuadrant: 'production',
+      valueQuadrant: 'production',
       energyRating: 'green',
     },
     // 10 minute event - xs/sm bucket test
@@ -63,7 +63,7 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '06:30',
       endTime: '06:40',
       activityName: '10 minute event test',
-      dripQuadrant: 'investment',
+      valueQuadrant: 'investment',
       energyRating: 'yellow',
     },
     // 15 minute event - sm bucket test
@@ -72,7 +72,7 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '07:00',
       endTime: '07:15',
       activityName: '15 min quick sync',
-      dripQuadrant: 'replacement',
+      valueQuadrant: 'replacement',
       energyRating: 'red',
     },
     // 30 minute event - md bucket test
@@ -81,7 +81,7 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '08:00',
       endTime: '08:30',
       activityName: '30 minute standup meeting',
-      dripQuadrant: 'delegation',
+      valueQuadrant: 'delegation',
       energyRating: 'green',
     },
     // 60 minute event - lg bucket test
@@ -90,7 +90,7 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '09:00',
       endTime: '10:00',
       activityName: 'One hour deep work session on the project',
-      dripQuadrant: 'production',
+      valueQuadrant: 'production',
       energyRating: 'green',
     },
     // 120 minute event - lg bucket test (long)
@@ -99,7 +99,7 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '10:30',
       endTime: '12:30',
       activityName: 'Two hour workshop: Advanced TypeScript patterns and best practices for enterprise applications',
-      dripQuadrant: 'investment',
+      valueQuadrant: 'investment',
       energyRating: 'yellow',
     },
   ];
@@ -113,7 +113,7 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '09:00',
       endTime: '09:30',
       activityName: 'Meeting A',
-      dripQuadrant: 'production',
+      valueQuadrant: 'production',
       energyRating: 'green',
     },
     {
@@ -121,7 +121,7 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '09:15',
       endTime: '09:45',
       activityName: 'Meeting B (overlaps)',
-      dripQuadrant: 'replacement',
+      valueQuadrant: 'replacement',
       energyRating: 'yellow',
     },
     // Three overlapping events
@@ -130,7 +130,7 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '10:00',
       endTime: '11:00',
       activityName: 'Long meeting spans all',
-      dripQuadrant: 'delegation',
+      valueQuadrant: 'delegation',
       energyRating: 'red',
     },
     {
@@ -138,7 +138,7 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '10:15',
       endTime: '10:45',
       activityName: 'Short middle overlap',
-      dripQuadrant: 'investment',
+      valueQuadrant: 'investment',
       energyRating: 'green',
     },
     {
@@ -146,7 +146,7 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '10:30',
       endTime: '11:30',
       activityName: 'Late start overlap',
-      dripQuadrant: 'production',
+      valueQuadrant: 'production',
       energyRating: 'yellow',
     },
     // Dense overlapping - 4 events at same time (stress test)
@@ -155,7 +155,7 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '14:00',
       endTime: '14:30',
       activityName: 'Dense Event 1',
-      dripQuadrant: 'production',
+      valueQuadrant: 'production',
       energyRating: 'green',
     },
     {
@@ -163,7 +163,7 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '14:00',
       endTime: '14:30',
       activityName: 'Dense Event 2',
-      dripQuadrant: 'investment',
+      valueQuadrant: 'investment',
       energyRating: 'yellow',
     },
     {
@@ -171,7 +171,7 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '14:00',
       endTime: '14:30',
       activityName: 'Dense Event 3',
-      dripQuadrant: 'replacement',
+      valueQuadrant: 'replacement',
       energyRating: 'red',
     },
     {
@@ -179,7 +179,7 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '14:00',
       endTime: '14:30',
       activityName: 'Dense Event 4',
-      dripQuadrant: 'delegation',
+      valueQuadrant: 'delegation',
       energyRating: 'green',
     },
   ];
@@ -193,7 +193,7 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '08:00',
       endTime: '08:15',
       activityName: 'A',
-      dripQuadrant: 'na',
+      valueQuadrant: 'na',
       energyRating: 'yellow',
     },
     // Medium title
@@ -202,7 +202,7 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '09:00',
       endTime: '09:15',
       activityName: 'Team sync',
-      dripQuadrant: 'production',
+      valueQuadrant: 'production',
       energyRating: 'green',
     },
     // Long title on short event
@@ -211,7 +211,7 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '10:00',
       endTime: '10:15',
       activityName: 'Very long title that should be truncated on small events to prevent overflow',
-      dripQuadrant: 'investment',
+      valueQuadrant: 'investment',
       energyRating: 'yellow',
     },
     // Long title on medium event
@@ -220,7 +220,7 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '11:00',
       endTime: '11:30',
       activityName: 'This is a moderately long title for a medium duration event to test text handling',
-      dripQuadrant: 'replacement',
+      valueQuadrant: 'replacement',
       energyRating: 'red',
     },
     // Long title on long event
@@ -229,7 +229,7 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '12:00',
       endTime: '13:00',
       activityName: 'This is an extremely long title for a long duration event that should display fully with multiple lines if needed',
-      dripQuadrant: 'delegation',
+      valueQuadrant: 'delegation',
       energyRating: 'green',
     },
   ];
@@ -242,7 +242,7 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '08:00',
       endTime: '08:30',
       activityName: 'Back to back 1',
-      dripQuadrant: 'production',
+      valueQuadrant: 'production',
       energyRating: 'green',
     },
     {
@@ -250,7 +250,7 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '08:30',
       endTime: '09:00',
       activityName: 'Back to back 2',
-      dripQuadrant: 'investment',
+      valueQuadrant: 'investment',
       energyRating: 'yellow',
     },
     {
@@ -258,7 +258,7 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '09:00',
       endTime: '09:30',
       activityName: 'Back to back 3',
-      dripQuadrant: 'replacement',
+      valueQuadrant: 'replacement',
       energyRating: 'red',
     },
     // Gap then more events
@@ -267,52 +267,52 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '10:00',
       endTime: '10:30',
       activityName: 'After gap event',
-      dripQuadrant: 'delegation',
+      valueQuadrant: 'delegation',
       energyRating: 'green',
     },
   ];
 
-  // Day 4: DRIP category showcase (all categories)
+  // Day 4: Value category showcase (all categories)
   const day4 = format(addDays(weekStart, 4), 'yyyy-MM-dd');
   data[day4] = [
     {
-      id: 'fixture-drip-production',
+      id: 'fixture-value-production',
       startTime: '08:00',
       endTime: '09:00',
       activityName: 'Production: Client work',
-      dripQuadrant: 'production',
+      valueQuadrant: 'production',
       energyRating: 'green',
     },
     {
-      id: 'fixture-drip-investment',
+      id: 'fixture-value-investment',
       startTime: '09:30',
       endTime: '10:30',
       activityName: 'Investment: Learning React patterns',
-      dripQuadrant: 'investment',
+      valueQuadrant: 'investment',
       energyRating: 'yellow',
     },
     {
-      id: 'fixture-drip-replacement',
+      id: 'fixture-value-replacement',
       startTime: '11:00',
       endTime: '12:00',
       activityName: 'Replacement: Admin tasks',
-      dripQuadrant: 'replacement',
+      valueQuadrant: 'replacement',
       energyRating: 'red',
     },
     {
-      id: 'fixture-drip-delegation',
+      id: 'fixture-value-delegation',
       startTime: '13:00',
       endTime: '14:00',
       activityName: 'Delegation: Team handoff',
-      dripQuadrant: 'delegation',
+      valueQuadrant: 'delegation',
       energyRating: 'green',
     },
     {
-      id: 'fixture-drip-na',
+      id: 'fixture-value-na',
       startTime: '14:30',
       endTime: '15:30',
       activityName: 'N/A: Personal time',
-      dripQuadrant: 'na',
+      valueQuadrant: 'na',
       energyRating: 'yellow',
     },
   ];
@@ -325,7 +325,7 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '08:00',
       endTime: '09:00',
       activityName: 'Energizing: Creative work',
-      dripQuadrant: 'production',
+      valueQuadrant: 'production',
       energyRating: 'green',
     },
     {
@@ -333,7 +333,7 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '10:00',
       endTime: '11:00',
       activityName: 'Neutral: Regular meeting',
-      dripQuadrant: 'investment',
+      valueQuadrant: 'investment',
       energyRating: 'yellow',
     },
     {
@@ -341,7 +341,7 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '12:00',
       endTime: '13:00',
       activityName: 'Draining: Difficult conversation',
-      dripQuadrant: 'delegation',
+      valueQuadrant: 'delegation',
       energyRating: 'red',
     },
   ];
@@ -354,7 +354,7 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '09:00',
       endTime: '09:30',
       activityName: 'Daily standup',
-      dripQuadrant: 'production',
+      valueQuadrant: 'production',
       energyRating: 'green',
       isRecurring: true,
       recurrenceRule: 'FREQ=DAILY',
@@ -364,7 +364,7 @@ function generateFixtureData(weekStart: Date): Record<string, FixtureTimeBlock[]
       startTime: '14:00',
       endTime: '15:00',
       activityName: 'Weekly team sync',
-      dripQuadrant: 'investment',
+      valueQuadrant: 'investment',
       energyRating: 'yellow',
       isRecurring: true,
       recurrenceRule: 'FREQ=WEEKLY',
@@ -512,7 +512,7 @@ function generateMockGoogleEvents(weekStart: Date) {
 }
 
 export default function TimeAuditFixturePage() {
-  const [colorMode, setColorMode] = useState<'drip' | 'energy'>('drip');
+  const [colorMode, setColorMode] = useState<'value' | 'energy'>('value');
   const [weekStart, setWeekStart] = useState(() =>
     startOfWeek(new Date(), { weekStartsOn: 1 }) // Monday start for consistency
   );
@@ -649,7 +649,7 @@ export default function TimeAuditFixturePage() {
             </div>
             <div>
               <Badge variant="outline" className="mb-2">Day 5</Badge>
-              <p className="text-muted-foreground">DRIP categories: all 5 quadrants</p>
+              <p className="text-muted-foreground">Value categories: all 5 quadrants</p>
             </div>
             <div>
               <Badge variant="outline" className="mb-2">Day 6</Badge>
@@ -666,10 +666,10 @@ export default function TimeAuditFixturePage() {
       {/* Controls */}
       <div className="flex gap-4">
         <Button
-          variant={colorMode === 'drip' ? 'default' : 'outline'}
-          onClick={() => setColorMode('drip')}
+          variant={colorMode === 'value' ? 'default' : 'outline'}
+          onClick={() => setColorMode('value')}
         >
-          DRIP Mode
+          Value Mode
         </Button>
         <Button
           variant={colorMode === 'energy' ? 'default' : 'outline'}

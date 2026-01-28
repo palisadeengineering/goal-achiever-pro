@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A comprehensive fix to Goal Achiever Pro's Vision & Planning features, transforming isolated pages into a unified cascading system where Vision drives KPIs that flow down to quarterly/monthly/weekly/daily goals, with progress rolling back up to the dashboard. Based on Dan Martell's "Buy Back Your Time" methodology.
+A comprehensive fix to Goal Achiever Pro's Vision & Planning features, transforming isolated pages into a unified cascading system where Vision drives KPIs that flow down to quarterly/monthly/weekly/daily goals, with progress rolling back up to the dashboard. Based on a proven time optimization methodology.
 
 ## Core Value
 
@@ -17,7 +17,7 @@ When a user creates a Vision, the entire goal hierarchy cascades automatically -
 - ✓ Vision creation with SMART goal components — existing
 - ✓ 300% Rule tracking (Clarity, Belief, Consistency) — existing
 - ✓ AI-powered SMART goal generation via Claude — existing
-- ✓ Time block tracking with DRIP categorization — existing
+- ✓ Time block tracking with Value Matrix categorization — existing
 - ✓ Daily reviews system — existing
 - ✓ Subscription tier gating (Free/Pro/Premium) — existing
 - ✓ Supabase auth with demo mode — existing
@@ -49,12 +49,12 @@ When a user creates a Vision, the entire goal hierarchy cascades automatically -
 The codebase has Vision, Key Results, Milestones, and MINs pages but they operate in isolation. The database schema has relationships (vision_id foreign keys) but the UI doesn't leverage them for cascading or roll-up.
 
 **Architecture Debt:**
-- Power Goals, Monthly/Weekly/Daily Targets exist but terminology is inconsistent
+- Impact Projects, Monthly/Weekly/Daily Targets exist but terminology is inconsistent
 - No unified "cascade" data flow pattern
 - Dashboard doesn't reflect real-time progress from child items
 
-**Dan Martell Methodology:**
-Based on "Buy Back Your Time" - Visions with SMART components, 300% Rule (Clarity + Belief + Consistency = 300%), Power Goals as quarterly projects.
+**Time Optimization Methodology:**
+Based on proven productivity frameworks - Visions with SMART components, 300% Rule (Clarity + Belief + Consistency = 300%), Impact Projects as quarterly projects.
 
 ## Constraints
 

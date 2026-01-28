@@ -1,7 +1,7 @@
 # The 300% Rule Worksheet
 ## Clarity + Belief + Consistency = Unstoppable Progress
 
-*Based on Dan Martell's goal achievement framework*
+*Based on proven goal achievement methodology*
 
 ---
 

@@ -31,7 +31,7 @@ Also added:
 - JSON repair logic for truncated responses
 - Detailed logging for debugging
 
-**Result**: Plan generates successfully with 4 quarterly targets, 12 power goals, 4 monthly targets, 4 weekly targets, and 15 daily actions.
+**Result**: Plan generates successfully with 4 quarterly targets, 12 impact projects, 4 monthly targets, 4 weekly targets, and 15 daily actions.
 
 ---
 
@@ -66,7 +66,7 @@ Full end-to-end test completed:
 1. ✅ Opened Backtrack Planning Wizard from vision page
 2. ✅ Set time parameters (20 hrs/week, 52 weeks)
 3. ✅ Generated plan via AI (no JSON parsing errors)
-4. ✅ Reviewed generated plan (4 quarterly, 12 power goals, 4 monthly, 4 weekly, 15 daily)
+4. ✅ Reviewed generated plan (4 quarterly, 12 impact projects, 4 monthly, 4 weekly, 15 daily)
 5. ✅ Saved plan to database
 6. ✅ Synced 15 daily actions to Google Calendar
 7. ✅ Verified events appear in Google Calendar with `[GAP]` prefix

@@ -18,7 +18,7 @@
 
 ### TodayPage (`src/app/(dashboard)/today/page.tsx`)
 - ~1080 lines of feature-rich code
-- Shows `daily_actions` from Power Goals → Monthly → Weekly → Daily hierarchy
+- Shows `daily_actions` from Impact Projects → Monthly → Weekly → Daily hierarchy
 - Optimistic updates on completion
 - Calendar sync integration
 - Team member assignment

@@ -530,7 +530,7 @@ Mix:
 
 [TALKING HEAD - Pull back slightly]
 
-"This system is based on Dan Martell's 'Buy Back Your Time' methodology, and I've built it into an app called Goal Achiever Pro. But whether you use the app or do this manually, these principles will transform how you approach goals."
+"This system is based on time optimization methodology, and I've built it into an app called Goal Achiever Pro. But whether you use the app or do this manually, these principles will transform how you approach goals."
 
 [B-ROLL: Quick app interface montage - 3 seconds]
 
@@ -553,7 +553,7 @@ Mix:
 [SCREEN RECORDING or ANIMATION]
 
 "At the top, you have your Vision - your 3-year SMART goal.
-Below that, 12 Power Goals - quarterly projects that move you toward the vision.
+Below that, 12 Impact Projects - quarterly projects that move you toward the vision.
 Below that, Monthly Targets.
 Then Weekly Targets.
 Then Daily Actions."
@@ -611,7 +611,7 @@ T - Time-bound. A real deadline. December 31st, 2027."
 
 [TALKING HEAD]
 
-"Now here's where it gets tactical. Instead of one big annual goal, you set 12 Power Goals - 3 per quarter."
+"Now here's where it gets tactical. Instead of one big annual goal, you set 12 Impact Projects - 3 per quarter."
 
 [B-ROLL: Calendar being marked, quarterly planning]
 
@@ -619,9 +619,9 @@ T - Time-bound. A real deadline. December 31st, 2027."
 
 [SCREEN RECORDING - App demo]
 
-"In the app, you map each Power Goal to a quarter and connect it to your vision. Watch."
+"In the app, you map each Impact Project to a quarter and connect it to your vision. Watch."
 
-[Demonstrate creating Power Goals]
+[Demonstrate creating Impact Projects]
 
 "Q1 might be: Launch group coaching program, build email list to 5,000, create signature framework.
 
@@ -631,9 +631,9 @@ And so on."
 
 [TALKING HEAD]
 
-"The magic is in the breakdown. Each Power Goal gets monthly targets, weekly targets, and daily actions. Let me show you."
+"The magic is in the breakdown. Each Impact Project gets monthly targets, weekly targets, and daily actions. Let me show you."
 
-[SCREEN RECORDING - Drilling down from Power Goal to daily]
+[SCREEN RECORDING - Drilling down from Impact Project to daily]
 
 ---
 
@@ -653,18 +653,18 @@ And so on."
 
 [TALKING HEAD]
 
-"But here's the real insight: we categorize every block using the DRIP matrix."
+"But here's the real insight: we categorize every block using the Value Matrix."
 
-[TEXT ON SCREEN - DRIP appearing]
+[TEXT ON SCREEN - Value Matrix appearing]
 
 "D - Delegation. Tasks that drain you. Someone else should do these.
 R - Replacement. You're good at it, but shouldn't be doing it.
 I - Investment. Builds future capacity - learning, relationships, systems.
 P - Production. Your highest-value work. Where you're 10x better than others."
 
-[SCREEN RECORDING - DRIP categorization]
+[SCREEN RECORDING - Value categorization]
 
-"The app can auto-categorize using AI. You just describe what you did, and it figures out the DRIP category."
+"The app can auto-categorize using AI. You just describe what you did, and it figures out the Value category."
 
 [Demonstrate AI categorization]
 
@@ -680,7 +680,7 @@ P - Production. Your highest-value work. Where you're 10x better than others."
 
 [B-ROLL: Evening planning routine, notebook]
 
-"These aren't a to-do list. They're THE three things that must happen tomorrow, tied directly to your Power Goals."
+"These aren't a to-do list. They're THE three things that must happen tomorrow, tied directly to your Impact Projects."
 
 [SCREEN RECORDING - MINs in app]
 
@@ -746,9 +746,9 @@ The app tracks your 300% score for each goal and shows you what to fix first."
 
 One: Set a SMART Vision - specific, meaningful, aligned, realistic, time-bound.
 
-Two: Break it into 12 Power Goals - 3 per quarter, each 6-8 weeks.
+Two: Break it into 12 Impact Projects - 3 per quarter, each 6-8 weeks.
 
-Three: Track your time in 15-minute blocks with DRIP categorization.
+Three: Track your time in 15-minute blocks with Value categorization.
 
 Four: Execute daily with 3 MINs and three reviews.
 
@@ -785,11 +785,11 @@ See you in the next one."
 | 3:15 | Writing | Close-up of hand writing in notebook | 4s | Stock/self-filmed |
 | 5:00 | App demo | Vision creation screen | 30s | Screen recording |
 | 5:45 | Calendar | Marking quarters on calendar | 3s | Stock footage |
-| 6:30 | App demo | Power Goals screen | 60s | Screen recording |
+| 6:30 | App demo | Impact Projects screen | 60s | Screen recording |
 | 8:45 | Clock | Time passing, clock hands | 3s | Stock footage |
 | 9:00 | Time-lapse | Work day time-lapse | 4s | Stock footage |
 | 9:15 | App demo | Time tracking interface | 45s | Screen recording |
-| 10:30 | App demo | DRIP matrix view | 30s | Screen recording |
+| 10:30 | App demo | Value Matrix view | 30s | Screen recording |
 | 11:00 | App demo | AI categorization | 20s | Screen recording |
 | 11:45 | Evening routine | Person planning at desk, evening | 4s | Stock footage |
 | 12:15 | App demo | MINs screen | 30s | Screen recording |
@@ -1036,8 +1036,8 @@ Hit subscribe if you want more productivity content. I'll see you in the next vi
 | 2:45 | App demo | Time tracking setup | 20s | Screen recording |
 | 3:30 | Honest log | Close-up of accurate time entry | 4s | Self-filmed |
 | 4:00 | App demo | Energy ratings | 15s | Screen recording |
-| 4:30 | DRIP graphic | Animated DRIP matrix | 8s | Motion graphics |
-| 5:00 | App demo | DRIP categorization | 20s | Screen recording |
+| 4:30 | DRIP graphic | Animated Value Matrix | 8s | Motion graphics |
+| 5:00 | App demo | Value categorization | 20s | Screen recording |
 | 5:45 | App demo | Analytics dashboard | 30s | Screen recording |
 | 6:45 | Realization | Person surprised, hand on head | 3s | Stock footage |
 | 7:15 | App demo | Energy heatmap | 20s | Screen recording |
@@ -1250,7 +1250,7 @@ Go win your morning."
 
 ---
 
-### VIDEO 4: DRIP Matrix Masterclass
+### VIDEO 4: Value Matrix Masterclass
 **Format:** Concept Explainer | **Length:** 14-16 min
 
 #### SCRIPT
@@ -1260,7 +1260,7 @@ Go win your morning."
 
 [TALKING HEAD - Direct, confident]
 
-"Some of the work on your calendar should never touch your calendar. It's costing you money to do it yourself. Today I'll show you the DRIP Matrix - the framework that helped me find 20 hours a week of time I was wasting on the wrong tasks."
+"Some of the work on your calendar should never touch your calendar. It's costing you money to do it yourself. Today I'll show you the Value Matrix - the framework that helped me find 20 hours a week of time I was wasting on the wrong tasks."
 
 [TEXT ON SCREEN: "20 hours/week found"]
 
@@ -1270,7 +1270,7 @@ Go win your morning."
 
 [TALKING HEAD]
 
-"The DRIP Matrix comes from Dan Martell's Buy Back Your Time methodology. It's a way of categorizing every task into four quadrants based on two questions: Does it drain or energize you? And is it something you should be doing?"
+"The Value Matrix comes from Dan Martell's Buy Back Your Time methodology. It's a way of categorizing every task into four quadrants based on two questions: Does it drain or energize you? And is it something you should be doing?"
 
 [B-ROLL: 2x2 matrix appearing]
 
@@ -1282,7 +1282,7 @@ Go win your morning."
 
 "Let's break down each quadrant."
 
-[Animation: Full DRIP matrix with icons]
+[Animation: Full Value Matrix with icons]
 
 ```
          DRAINS YOU          |       ENERGIZES YOU
@@ -1482,7 +1482,7 @@ P = ___% (target: >40%)
 
 ---
 
-### VIDEO 5: 12 Power Goals Workshop
+### VIDEO 5: 12 Impact Projects Workshop
 **Format:** Workshop (Interactive) | **Length:** 20-25 min
 
 #### SCRIPT
@@ -1502,21 +1502,21 @@ P = ___% (target: >40%)
 
 [TALKING HEAD]
 
-"Why 12 Power Goals instead of one annual resolution?"
+"Why 12 Impact Projects instead of one annual resolution?"
 
 [B-ROLL: Resolution fails - January gym crowd, February empty]
 
 "One big goal for 365 days = too vague, too distant, too easy to forget."
 
-"12 Power Goals = 12 wins. 12 completions. 12 momentum builders."
+"12 Impact Projects = 12 wins. 12 completions. 12 momentum builders."
 
 [TEXT ON SCREEN:]
 ```
 1 resolution = 1 chance to fail
-12 Power Goals = 12 chances to win
+12 Impact Projects = 12 chances to win
 ```
 
-"Each Power Goal is a 6-8 week project. Small enough to complete. Big enough to matter."
+"Each Impact Project is a 6-8 week project. Small enough to complete. Big enough to matter."
 
 [TALKING HEAD]
 
@@ -1599,9 +1599,9 @@ P = ___% (target: >40%)
 
 [TALKING HEAD]
 
-"Now the main event. 12 Power Goals. 3 per quarter."
+"Now the main event. 12 Impact Projects. 3 per quarter."
 
-[SCREEN RECORDING - Power Goals screen]
+[SCREEN RECORDING - Impact Projects screen]
 
 "For each goal, you need:
 - A specific outcome (not vague)
@@ -1610,7 +1610,7 @@ P = ___% (target: >40%)
 
 [TEXT ON SCREEN:]
 ```
-Power Goal Template:
+Impact Project Template:
 "Complete [SPECIFIC OUTCOME] by [DATE]"
 ```
 
@@ -1660,7 +1660,7 @@ Power Goal Template:
 
 "Now it's your turn. You're going to set all 12."
 
-[TEXT ON SCREEN: "PAUSE: Write your 12 Power Goals (15 minutes)"]
+[TEXT ON SCREEN: "PAUSE: Write your 12 Impact Projects (15 minutes)"]
 
 "Q1: Three goals. What will you complete by end of March?"
 
@@ -1680,7 +1680,7 @@ Power Goal Template:
 
 "Pause the video. Take 15 minutes. Write all 12."
 
-[TEXT ON SCREEN: "PAUSE VIDEO - Write your 12 Power Goals"]
+[TEXT ON SCREEN: "PAUSE VIDEO - Write your 12 Impact Projects"]
 
 [Wait 5 seconds]
 
@@ -1714,13 +1714,13 @@ Power Goal Template:
 
 [TALKING HEAD]
 
-"Now we break it down. Every Power Goal needs monthly, weekly, and daily components."
+"Now we break it down. Every Impact Project needs monthly, weekly, and daily components."
 
 [SCREEN RECORDING - Breakdown in app]
 
 "Let's take one goal: 'Launch group coaching program with 10 founding members by March 15.'"
 
-[TEXT ON SCREEN: "Power Goal → Monthly → Weekly → Daily"]
+[TEXT ON SCREEN: "Impact Project → Monthly → Weekly → Daily"]
 
 "Monthly targets:
 - January: Design program and create landing page
@@ -1743,7 +1743,7 @@ Power Goal Template:
 
 [Animation: Zoom from vision down to daily action]
 
-"Vision → Power Goal → Monthly → Weekly → Daily."
+"Vision → Impact Project → Monthly → Weekly → Daily."
 
 ---
 
@@ -1751,7 +1751,7 @@ Power Goal Template:
 
 [TALKING HEAD - High energy, closing]
 
-"You now have a complete roadmap for your year. 12 Power Goals. Quarterly themes. A clear vision."
+"You now have a complete roadmap for your year. 12 Impact Projects. Quarterly themes. A clear vision."
 
 "The only thing left is execution."
 
@@ -1823,7 +1823,7 @@ Power Goal Template:
 
 ---
 
-### SHORT 3: The DRIP Matrix in 60 Seconds
+### SHORT 3: The Value Matrix in 60 Seconds
 **Length:** 55 seconds | **Format:** Whiteboard Style
 
 ```
@@ -1885,7 +1885,7 @@ Power Goal Template:
 
 ---
 
-### SHORT 5: 12 Power Goals > 1 Resolution
+### SHORT 5: 12 Impact Projects > 1 Resolution
 **Length:** 45 seconds | **Format:** Comparison
 
 ```
@@ -1900,14 +1900,14 @@ Power Goal Template:
 [Visual: Calendar with January enthusiasm fading]
 
 [0:20-0:35] SOLUTION
-"Try 12 Power Goals instead. 3 per quarter. Each one takes 6-8 weeks. Small enough to complete. Big enough to matter."
+"Try 12 Impact Projects instead. 3 per quarter. Each one takes 6-8 weeks. Small enough to complete. Big enough to matter."
 
 [TEXT ON SCREEN: "12 wins vs 1 failure"]
 
 [0:35-0:45] RESULT
 "12 completions. 12 momentum builders. 12 chances to win."
 
-[TEXT ON SCREEN: "What's your Q1 Power Goal #1?"]
+[TEXT ON SCREEN: "What's your Q1 Impact Project #1?"]
 ```
 
 ---
@@ -2101,9 +2101,9 @@ Create these shots once, use across multiple videos.
 | Shot Name | Description | Duration | Usage |
 |-----------|-------------|----------|-------|
 | app_vision | Vision creation screen | 30s | Vision topics |
-| app_goals | Power Goals grid | 30s | Goal setting |
+| app_goals | Impact Projects grid | 30s | Goal setting |
 | app_timetrack | Time tracking interface | 30s | Time audit |
-| app_drip | DRIP matrix view | 30s | DRIP topics |
+| app_drip | Value Matrix view | 30s | DRIP topics |
 | app_mins | MINs scheduling | 30s | Daily planning |
 | app_review | Review screens | 30s | Review topics |
 | app_analytics | Analytics dashboard | 30s | Data topics |
@@ -2115,7 +2115,7 @@ Create these shots once, use across multiple videos.
 | Shot Name | Description | Duration | Usage |
 |-----------|-------------|----------|-------|
 | gfx_hierarchy | Goal hierarchy animation | 8s | System overview |
-| gfx_drip | DRIP matrix appearing | 8s | DRIP explanation |
+| gfx_drip | Value Matrix appearing | 8s | DRIP explanation |
 | gfx_300 | 300% formula animation | 6s | 300% rule |
 | gfx_checklist | Checklist items appearing | 5s | Step-by-step |
 | gfx_compare | Side-by-side comparison | 6s | Before/after |
@@ -2189,8 +2189,8 @@ Create these shots once, use across multiple videos.
 | Complete System | "The Goal System" | "93% Fail" | "Actually Works" |
 | Time Audit | "22 Hours Found" | "Time Audit" | "Stop Wasting" |
 | Morning Routine | "Win By 8AM" | "2-Hour Rule" | "No Phone" |
-| DRIP Matrix | "Find 20 Hours" | "DRIP Matrix" | "Stop This Work" |
-| Power Goals | "12 Not 1" | "Your Year Done" | "The 12 Goals" |
+| Value Matrix | "Find 20 Hours" | "Value Matrix" | "Stop This Work" |
+| Impact Projects | "12 Not 1" | "Your Year Done" | "The 12 Goals" |
 
 ---
 
@@ -2247,7 +2247,7 @@ Want to [achieve result]? In this video, I show you exactly how using [method/sy
 
 📚 FREE RESOURCES:
 - Time Audit Template: [link]
-- DRIP Matrix Worksheet: [link]
+- Value Matrix Worksheet: [link]
 - Goal Setting Workbook: [link]
 
 🔗 CONNECT WITH ME:
@@ -2896,7 +2896,7 @@ TIER 3 ($50/month):
 
 ### Time Management
 4. Time Audit Tutorial: Find 20 Lost Hours (12 min)
-5. The DRIP Matrix Explained (15 min)
+5. The Value Matrix Explained (15 min)
 6. 15-Minute Time Blocking That Works (10 min)
 7. Energy Management > Time Management (12 min)
 8. The $500 Delegation Decision (10 min)
@@ -2904,7 +2904,7 @@ TIER 3 ($50/month):
 10. Time Vampires: What's Stealing Your Hours (12 min)
 
 ### Goal Setting
-11. 12 Power Goals vs 1 Resolution (10 min)
+11. 12 Impact Projects vs 1 Resolution (10 min)
 12. SMART Goals Done Right (12 min)
 13. The 300% Rule for Goal Success (10 min)
 14. Vision Setting Workshop (25 min)
@@ -2939,9 +2939,9 @@ TIER 3 ($50/month):
 ### App Walkthroughs
 36. Goal Achiever Pro Full Tour (15 min)
 37. Setting Up Your Vision (8 min)
-38. Power Goals Configuration (10 min)
+38. Impact Projects Configuration (10 min)
 39. Time Tracking Made Easy (10 min)
-40. Using the DRIP Matrix Feature (8 min)
+40. Using the Value Matrix Feature (8 min)
 41. Daily Reviews in the App (8 min)
 42. Analytics Dashboard Explained (10 min)
 43. AI Features Walkthrough (10 min)
@@ -2964,7 +2964,7 @@ TIER 3 ($50/month):
 ### Quick Tips (30)
 1. The 300% Rule in 60 seconds
 2. Stop checking email first
-3. DRIP Matrix explained
+3. Value Matrix explained
 4. 3 MINs that win your day
 5. 12 goals > 1 resolution
 6. The $500 delegation decision
@@ -3035,9 +3035,9 @@ TIER 3 ($50/month):
 ### App Demos (15)
 66. AI categorizes tasks
 67. Vision creation demo
-68. Power Goals setup
+68. Impact Projects setup
 69. Time tracking UI
-70. DRIP matrix view
+70. Value Matrix view
 71. Morning review flow
 72. Analytics dashboard
 73. 300% scoring

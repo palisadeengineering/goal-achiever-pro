@@ -29,7 +29,7 @@ const TAB_NAMES: Record<string, string> = {
   milestones: 'Milestones',
   mins: 'MINs',
   time_audit: 'Time Audit',
-  drip: 'DRIP Matrix',
+  drip: 'Value Matrix',
   routines: 'Routines',
   pomodoro: 'Pomodoro',
   reviews: 'Reviews',

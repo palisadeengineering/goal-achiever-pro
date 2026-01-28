@@ -9,8 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { useEventPatterns, type IgnoredEvent } from '@/lib/hooks/use-event-patterns';
 import { GoogleEventCategorizer } from './google-event-categorizer';
-import { DRIP_QUADRANTS, ENERGY_RATINGS } from '@/constants/drip';
-import type { DripQuadrant, EnergyRating } from '@/types/database';
+import { VALUE_QUADRANTS, ENERGY_RATINGS } from '@/constants/drip';
+import type { ValueQuadrant, EnergyRating } from '@/types/database';
 import type { GoogleCalendarEvent } from '@/lib/hooks/use-google-calendar';
 import { CheckCircle2, ListTodo, Sparkles, EyeOff, Eye, Undo2, Trash2 } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
@@ -38,7 +38,7 @@ interface GroupedEvents {
   pattern: string;
   events: GoogleCalendarEvent[];
   suggestion: {
-    dripQuadrant: DripQuadrant;
+    valueQuadrant: ValueQuadrant;
     energyRating: EnergyRating;
     confidence: number;
   } | null;
@@ -164,12 +164,12 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
 
   const handleCategorize = (
     eventId: string,
-    dripQuadrant: DripQuadrant,
+    valueQuadrant: ValueQuadrant,
     energyRating: EnergyRating
   ) => {
     const event = uncategorizedEvents.find((e) => e.id === eventId);
     if (event) {
-      saveCategorization(eventId, event.summary, dripQuadrant, energyRating);
+      saveCategorization(eventId, event.summary, valueQuadrant, energyRating);
       // Notify parent to refresh its state
       onCategorize?.();
     }
@@ -209,7 +209,7 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
     eventsWithSuggestions.forEach((event) => {
       const suggestion = getSuggestion(event.summary);
       if (suggestion) {
-        saveCategorization(event.id, event.summary, suggestion.dripQuadrant, suggestion.energyRating);
+        saveCategorization(event.id, event.summary, suggestion.valueQuadrant, suggestion.energyRating);
       }
     });
     // Notify parent to refresh its state
@@ -218,12 +218,12 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
 
   const handleApplyToGroup = (
     group: GroupedEvents,
-    dripQuadrant: DripQuadrant,
+    valueQuadrant: ValueQuadrant,
     energyRating: EnergyRating
   ) => {
     applySuggestionToSimilar(
       group.events.map((e) => ({ id: e.id, summary: e.summary })),
-      dripQuadrant,
+      valueQuadrant,
       energyRating
     );
     // Notify parent to refresh its state
@@ -429,13 +429,13 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
 // Group Card Component
 interface GroupCardProps {
   group: GroupedEvents;
-  onApply: (group: GroupedEvents, dripQuadrant: DripQuadrant, energyRating: EnergyRating) => void;
+  onApply: (group: GroupedEvents, valueQuadrant: ValueQuadrant, energyRating: EnergyRating) => void;
   onIgnore: (group: GroupedEvents) => void;
 }
 
 function GroupCard({ group, onApply, onIgnore }: GroupCardProps) {
-  const [selectedDrip, setSelectedDrip] = useState<DripQuadrant | null>(
-    group.suggestion?.dripQuadrant || null
+  const [selectedValue, setSelectedValue] = useState<ValueQuadrant | null>(
+    group.suggestion?.valueQuadrant || null
   );
   const [selectedEnergy, setSelectedEnergy] = useState<EnergyRating | null>(
     group.suggestion?.energyRating || null
@@ -443,8 +443,8 @@ function GroupCard({ group, onApply, onIgnore }: GroupCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const handleApply = () => {
-    if (selectedDrip && selectedEnergy) {
-      onApply(group, selectedDrip, selectedEnergy);
+    if (selectedValue && selectedEnergy) {
+      onApply(group, selectedValue, selectedEnergy);
     }
   };
 
@@ -526,21 +526,21 @@ function GroupCard({ group, onApply, onIgnore }: GroupCardProps) {
 
         {/* Quick category selection */}
         <div className="flex flex-wrap gap-2">
-          {(Object.entries(DRIP_QUADRANTS) as [DripQuadrant, typeof DRIP_QUADRANTS[DripQuadrant]][]).map(
+          {(Object.entries(VALUE_QUADRANTS) as [ValueQuadrant, typeof VALUE_QUADRANTS[ValueQuadrant]][]).map(
             ([key, quadrant]) => (
               <Badge
                 key={key}
                 variant="outline"
                 className={cn(
                   'cursor-pointer transition-colors',
-                  selectedDrip === key && 'ring-2 ring-offset-1'
+                  selectedValue === key && 'ring-2 ring-offset-1'
                 )}
                 style={{
-                  borderColor: selectedDrip === key ? quadrant.color : undefined,
-                  backgroundColor: selectedDrip === key ? `${quadrant.color}15` : undefined,
+                  borderColor: selectedValue === key ? quadrant.color : undefined,
+                  backgroundColor: selectedValue === key ? `${quadrant.color}15` : undefined,
                   ['--tw-ring-color' as string]: quadrant.color,
                 }}
-                onClick={() => setSelectedDrip(key)}
+                onClick={() => setSelectedValue(key)}
               >
                 <span
                   className="w-2 h-2 rounded-full mr-1"
@@ -592,7 +592,7 @@ function GroupCard({ group, onApply, onIgnore }: GroupCardProps) {
           <Button
             size="sm"
             onClick={handleApply}
-            disabled={!selectedDrip || !selectedEnergy}
+            disabled={!selectedValue || !selectedEnergy}
           >
             Apply to {group.events.length} event{group.events.length !== 1 ? 's' : ''}
           </Button>

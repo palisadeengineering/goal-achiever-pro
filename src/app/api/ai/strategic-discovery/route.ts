@@ -82,7 +82,7 @@ function getInitialQuestions(): CategoryQuestion[] {
       category: 'positioning',
       question: 'Why would someone choose you over alternatives?',
       type: 'text',
-      placeholder: 'e.g., Only tool that integrates DRIP methodology with automated time tracking',
+      placeholder: 'e.g., Only tool that integrates Value Matrix methodology with automated time tracking',
       required: true,
     },
     // Product
@@ -91,7 +91,7 @@ function getInitialQuestions(): CategoryQuestion[] {
       category: 'product',
       question: 'What are the 3-5 core features that deliver your value?',
       type: 'text',
-      placeholder: 'e.g., Time audit, DRIP matrix, Power Goals tracking, AI coaching',
+      placeholder: 'e.g., Time audit, Value Matrix, Power Goals tracking, AI coaching',
       required: true,
     },
     {
@@ -451,7 +451,7 @@ export async function POST(request: NextRequest) {
 
       case 'generate-insights':
         response.aiInsights = aiResult.aiInsights;
-        response.powerGoalRecommendations = aiResult.powerGoalRecommendations;
+        response.impactProjectRecommendations = aiResult.impactProjectRecommendations;
         break;
 
       case 'calculate-revenue':

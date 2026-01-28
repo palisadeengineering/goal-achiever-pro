@@ -2,65 +2,65 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
 const PRO_TIPS = [
-  // Dan Martell Quotes
+  // Productivity Wisdom
   {
-    category: 'dan_martell',
+    category: 'productivity_tip',
     content: "You don't get what you want. You get what you focus on.",
-    source: 'Dan Martell',
+    source: null,
     timeOfDay: ['morning'],
   },
   {
-    category: 'dan_martell',
+    category: 'productivity_tip',
     content: "100% clarity, 100% belief, 100% of the time.",
-    source: 'Dan Martell',
+    source: null,
     timeOfDay: ['morning'],
   },
   {
-    category: 'dan_martell',
+    category: 'productivity_tip',
     content: "You don't rise to the level of your goals—you fall to the level of your standards.",
-    source: 'Dan Martell',
+    source: null,
     timeOfDay: ['morning', 'evening'],
   },
   {
-    category: 'dan_martell',
+    category: 'productivity_tip',
     content: "The extremities expand the capacities.",
-    source: 'Dan Martell',
+    source: null,
     timeOfDay: ['morning'],
   },
   {
-    category: 'dan_martell',
+    category: 'productivity_tip',
     content: "Complexity is easy. Simplicity is hard.",
-    source: 'Dan Martell',
+    source: null,
     timeOfDay: null,
   },
   {
-    category: 'dan_martell',
+    category: 'productivity_tip',
     content: "We don't need to be taught—we need to be reminded.",
-    source: 'Dan Martell',
+    source: null,
     timeOfDay: null,
   },
   {
-    category: 'dan_martell',
+    category: 'productivity_tip',
     content: "Write it down. If you don't write it down, you won't remember it.",
-    source: 'Dan Martell',
+    source: null,
     timeOfDay: ['morning'],
   },
   {
-    category: 'dan_martell',
+    category: 'productivity_tip',
     content: "Treat every person you talk to as someone who will buy.",
-    source: 'Dan Martell',
+    source: null,
     timeOfDay: ['morning', 'afternoon'],
   },
   {
-    category: 'dan_martell',
+    category: 'productivity_tip',
     content: "Stop making it about you. Start making it about them.",
-    source: 'Dan Martell',
+    source: null,
     timeOfDay: null,
   },
   {
-    category: 'dan_martell',
-    content: "Buy back your time by delegating tasks that drain your energy.",
-    source: 'Dan Martell - Buy Back Your Time',
+    category: 'productivity_tip',
+    content: "Reclaim your time by delegating tasks that drain your energy.",
+    source: null,
     timeOfDay: ['afternoon'],
   },
 

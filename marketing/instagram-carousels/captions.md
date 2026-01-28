@@ -55,7 +55,7 @@ Which one is YOUR bottleneck? Drop a number in the comments:
 
 ---
 
-### Day 3 - 12 Power Goals
+### Day 3 - 12 Impact Projects
 
 **Caption:**
 
@@ -63,7 +63,7 @@ How many goals do you have right now?
 
 If the answer is more than 12, that's why you're not hitting them.
 
-Swipe for the Power Goals system that forces focus and drives results.
+Swipe for the Impact Projects system that forces focus and drives results.
 
 3 goals per quarter.
 12 goals per year.
@@ -75,11 +75,11 @@ Save this and audit your goal list this weekend.
 .
 .
 
-#powergoals #goalsetting #focusmode #productivitytips #quartelyplanning #businessstrategy #entrepreneurlife #goalplanning #successhabits #annualgoals
+#impactprojects #goalsetting #focusmode #productivitytips #quartelyplanning #businessstrategy #entrepreneurlife #goalplanning #successhabits #annualgoals
 
 ---
 
-### Day 4 - DRIP Matrix
+### Day 4 - Value Matrix
 
 **Caption:**
 
@@ -87,7 +87,7 @@ You're busy.
 
 But are you busy on the RIGHT things?
 
-The DRIP Matrix shows you exactly where your time should go:
+The Value Matrix shows you exactly where your time should go:
 
 D - Delegation
 R - Replacement
@@ -100,15 +100,15 @@ Swipe to see where high performers spend their hours (hint: it's not where you t
 .
 .
 
-#dripmatrix #timemanagement #productivitytips #delegationtips #entrepreneurlife #worksmarter #businessgrowth #leverageyourtime #ceolife #prioritization
+#valuematrix #timemanagement #productivitytips #delegationtips #entrepreneurlife #worksmarter #businessgrowth #leverageyourtime #ceolife #prioritization
 
 ---
 
-### Day 5 - DRIP Deep Dive
+### Day 5 - Value Deep Dive
 
 **Caption:**
 
-Let's go deeper on the DRIP Matrix.
+Let's go deeper on the Value Matrix.
 
 Each quadrant has specific task types. Once you know them, you can't unsee where your time is being wasted.
 
@@ -125,7 +125,7 @@ Screenshot the quadrant you need to focus on.
 .
 .
 
-#dripmatrix #delegation #timemanagement #businesssystems #entrepreneurtips #productivityhacks #workingonthebusiness #scalingbusiness #ceotime #efficiency
+#valuematrix #delegation #timemanagement #businesssystems #entrepreneurtips #productivityhacks #workingonthebusiness #scalingbusiness #ceotime #efficiency
 
 ---
 
@@ -139,8 +139,8 @@ Here's everything we covered:
 
 SMART Visions - Your GPS coordinates
 300% Rule - Find your weak link
-12 Power Goals - Forced focus
-DRIP Matrix - Where time should go
+12 Impact Projects - Forced focus
+Value Matrix - Where time should go
 
 Swipe for the quick recap.
 
@@ -234,13 +234,13 @@ Hint: It's not in the morning.
 
 Building in public update:
 
-I took everything from Dan Martell's "Buy Back Your Time" and built it into one app.
+I took everything from time optimization methodology and built it into one app.
 
 Swipe to see what's inside Goal Achiever Pro:
 
 - SMART Visions
-- 12 Power Goals
-- Time Tracking with DRIP
+- 12 Impact Projects
+- Time Tracking with Value
 - Daily MINs
 - Routines
 - Reviews

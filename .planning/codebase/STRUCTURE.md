@@ -26,7 +26,7 @@ goal-achiever-pro/
 │   │   ├── utils/              # Utility functions
 │   │   └── validations/        # Zod schemas
 │   ├── types/                  # TypeScript definitions
-│   ├── constants/              # Routes, subscription plans, DRIP
+│   ├── constants/              # Routes, subscription plans, Value Matrix
 │   └── middleware.ts           # Auth middleware
 ├── drizzle/                    # Database migrations
 ├── .planning/                  # GSD planning documents

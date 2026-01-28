@@ -1,9 +1,9 @@
 'use client';
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { DRIP_QUADRANTS } from '@/constants/drip';
+import { VALUE_QUADRANTS } from '@/constants/drip';
 
-interface DripPieChartProps {
+interface ValuePieChartProps {
   data: {
     delegation: number;
     replacement: number;
@@ -15,13 +15,13 @@ interface DripPieChartProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
-export function DripPieChart({ data, showLegend = true, size = 'md' }: DripPieChartProps) {
+export function ValuePieChart({ data, showLegend = true, size = 'md' }: ValuePieChartProps) {
   const chartData = [
-    { name: 'Production', value: data.production, color: DRIP_QUADRANTS.production.color },
-    { name: 'Investment', value: data.investment, color: DRIP_QUADRANTS.investment.color },
-    { name: 'Replacement', value: data.replacement, color: DRIP_QUADRANTS.replacement.color },
-    { name: 'Delegation', value: data.delegation, color: DRIP_QUADRANTS.delegation.color },
-    ...(data.na ? [{ name: 'N/A', value: data.na, color: DRIP_QUADRANTS.na.color }] : []),
+    { name: 'Production', value: data.production, color: VALUE_QUADRANTS.production.color },
+    { name: 'Investment', value: data.investment, color: VALUE_QUADRANTS.investment.color },
+    { name: 'Replacement', value: data.replacement, color: VALUE_QUADRANTS.replacement.color },
+    { name: 'Delegation', value: data.delegation, color: VALUE_QUADRANTS.delegation.color },
+    ...(data.na ? [{ name: 'N/A', value: data.na, color: VALUE_QUADRANTS.na.color }] : []),
   ].filter(item => item.value > 0);
 
   const total = Object.values(data).reduce((sum, val) => sum + val, 0);

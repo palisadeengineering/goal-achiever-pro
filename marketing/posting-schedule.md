@@ -38,20 +38,20 @@
 |-----|------|----------|---------|------|---------|
 | 1 | Mon | IG + LI | SMART Vision Framework | `instagram-carousels/week1/day1-smart-vision.html` | Share post to stories |
 | 2 | Tue | IG + LI | 300% Rule | `instagram-carousels/week1/day2-300-rule.html` | Share post to stories |
-| 3 | Wed | IG + LI | 12 Power Goals | `instagram-carousels/week1/day3-power-goals.html` | Share post to stories |
-| 4 | Thu | IG + LI | DRIP Matrix | `instagram-carousels/week1/day4-drip-matrix.html` | Share post to stories |
-| 5 | Fri | IG + LI | DRIP Deep Dive | `instagram-carousels/week1/day5-drip-deep-dive.html` | Share post to stories |
+| 3 | Wed | IG + LI | 12 Impact Projects | `instagram-carousels/week1/day3-power-goals.html` | Share post to stories |
+| 4 | Thu | IG + LI | Value Matrix | `instagram-carousels/week1/day4-drip-matrix.html` | Share post to stories |
+| 5 | Fri | IG + LI | Value Deep Dive | `instagram-carousels/week1/day5-drip-deep-dive.html` | Share post to stories |
 | 6 | Sat | Stories | Rest Day Engagement | -- | `instagram-stories/week1/day6-rest-day.html` (5 stories) |
 | 7 | Sun | IG + LI | Week 1 Recap | `instagram-carousels/week1/day7-weekly-recap.html` | Share post to stories |
 
 ### Day 6 Stories Content (5 slides)
 1. **Poll:** "Have you written your SMART Vision yet?" (4 options)
 2. **Slider:** "Your Clarity Score" - rate goal specificity
-3. **Q&A Box:** "Questions about SMART Visions, 300% Rule, Power Goals?"
+3. **Q&A Box:** "Questions about SMART Visions, 300% Rule, Impact Projects?"
 4. **Quiz:** "What are the 3 components of the 300% Rule?" (4 options)
 5. **Action Items:** Weekend homework checklist
 
-**Week 1 Theme:** Establishing the foundation - Vision, Goals, and the DRIP framework
+**Week 1 Theme:** Establishing the foundation - Vision, Goals, and the Value framework
 
 ---
 
@@ -305,8 +305,8 @@ D22   D23   D24   D25   D26   D27   D28   D29   D30
 |-----|-------|---------------|
 | 1 | SMART Vision | "Stop setting goals. Start setting SMART Visions." |
 | 2 | 300% Rule | "Your goals are only as strong as your weakest link." |
-| 3 | Power Goals | "12 goals per year. That's it." |
-| 4 | DRIP Matrix | "Not all tasks are created equal." |
+| 3 | Impact Projects | "12 goals per year. That's it." |
+| 4 | Value Matrix | "Not all tasks are created equal." |
 | 5 | DRIP Deep | "Each quadrant has specific task types." |
 | 6 | Stories | Poll: "Have you written your SMART Vision yet?" |
 | 7 | Recap | "Week 1 complete." |

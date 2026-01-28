@@ -31,7 +31,7 @@ import { useTimeBlocks, TimeBlock as DbTimeBlock } from '@/lib/hooks/use-time-bl
 import { startOfWeek, endOfWeek, addDays, addWeeks, addMonths } from 'date-fns';
 import { BiweeklyCalendarView } from '@/components/features/time-audit/biweekly-calendar-view';
 import { MonthlyCalendarView } from '@/components/features/time-audit/monthly-calendar-view';
-import { DripPieChart } from '@/components/features/time-audit/drip-pie-chart';
+import { ValuePieChart } from '@/components/features/time-audit/drip-pie-chart';
 import { EnergyPieChart } from '@/components/features/time-audit/energy-pie-chart';
 import { TimeSummaryStats } from '@/components/features/time-audit/time-summary-stats';
 import { TimeBlockForm, TimeBlock } from '@/components/features/time-audit/time-block-form';
@@ -44,7 +44,7 @@ import { EventList, EventListItem } from '@/components/features/time-audit/event
 import { BulkDeleteDialog, CleanupSuggestions } from '@/components/features/time-audit/bulk-delete-dialog';
 import { ROUTES } from '@/constants/routes';
 import { expandRecurringEvents } from '@/lib/utils/recurrence';
-import type { DripQuadrant, EnergyRating } from '@/types/database';
+import type { ValueQuadrant, EnergyRating } from '@/types/database';
 import { ShareButton } from '@/components/features/sharing';
 
 type SubscriptionTier = 'free' | 'pro' | 'elite';
@@ -62,7 +62,7 @@ interface CalendarTimeBlock {
   startTime: string;
   endTime: string;
   activityName: string;
-  dripQuadrant: DripQuadrant;
+  valueQuadrant: ValueQuadrant;
   energyRating: EnergyRating;
   // Recurring event properties
   isRecurring?: boolean;
@@ -152,7 +152,7 @@ export default function TimeAuditPage() {
       startTime: b.startTime,
       endTime: b.endTime,
       activityName: b.activityName,
-      dripQuadrant: b.dripQuadrant as DripQuadrant,
+      valueQuadrant: b.valueQuadrant as ValueQuadrant,
       energyRating: b.energyRating as EnergyRating,
       source: b.source,
       externalEventId: b.externalEventId,
@@ -217,7 +217,7 @@ export default function TimeAuditPage() {
 
   // Sidebar state
   const [sidebarCollapsed, setSidebarCollapsed] = useLocalStorage<boolean>('time-audit-sidebar-collapsed', false);
-  const [calendarColorMode, setCalendarColorMode] = useState<'drip' | 'energy'>('drip');
+  const [calendarColorMode, setCalendarColorMode] = useState<'value' | 'energy'>('value');
 
   // Track currently viewed date range from calendar views
   // Use weekStartsOn: 0 (Sunday) to match WeeklyCalendarView's default
@@ -408,7 +408,7 @@ export default function TimeAuditPage() {
         startTime: block.startTime,
         endTime: block.endTime,
         activityName: block.activityName,
-        dripQuadrant: block.dripQuadrant,
+        valueQuadrant: block.valueQuadrant,
         energyRating: block.energyRating,
         // Include recurring event properties
         isRecurring: block.isRecurring,
@@ -449,7 +449,7 @@ export default function TimeAuditPage() {
             endTime: format(endDate, 'HH:mm'),
             activityName: event.summary,
             // Use categorization if available, otherwise default to 'na' (neutral/uncategorized)
-            dripQuadrant: categorization?.dripQuadrant || 'na',
+            valueQuadrant: categorization?.valueQuadrant || 'na',
             energyRating: categorization?.energyRating || 'yellow',
           });
         } catch {
@@ -468,7 +468,7 @@ export default function TimeAuditPage() {
       date: string;
       startTime: string;
       endTime: string;
-      dripQuadrant: DripQuadrant;
+      valueQuadrant: ValueQuadrant;
       energyRating: EnergyRating;
       source: string;
     }> = [];
@@ -484,7 +484,7 @@ export default function TimeAuditPage() {
           date: block.date,
           startTime: block.startTime,
           endTime: block.endTime,
-          dripQuadrant: block.dripQuadrant,
+          valueQuadrant: block.valueQuadrant,
           energyRating: block.energyRating,
           source: block.source || 'manual',
         });
@@ -519,7 +519,7 @@ export default function TimeAuditPage() {
               startTime: format(startDate, 'HH:mm'),
               endTime: format(endDate, 'HH:mm'),
               // Use categorization if available, otherwise use defaults
-              dripQuadrant: categorization?.dripQuadrant || 'na',
+              valueQuadrant: categorization?.valueQuadrant || 'na',
               energyRating: categorization?.energyRating || 'yellow',
               source: 'google_calendar',
             });
@@ -542,7 +542,7 @@ export default function TimeAuditPage() {
       startTime: string;
       endTime: string;
       activityName: string;
-      dripQuadrant: DripQuadrant;
+      valueQuadrant: ValueQuadrant;
       energyRating: EnergyRating;
       tagIds?: string[];
       durationMinutes: number;
@@ -556,7 +556,7 @@ export default function TimeAuditPage() {
         startTime: block.startTime,
         endTime: block.endTime,
         activityName: block.activityName,
-        dripQuadrant: block.dripQuadrant,
+        valueQuadrant: block.valueQuadrant,
         energyRating: block.energyRating,
         tagIds: 'tagIds' in block ? (block.tagIds as string[]) : undefined,
         durationMinutes: calculateDuration(block.startTime, block.endTime),
@@ -590,7 +590,7 @@ export default function TimeAuditPage() {
             startTime: format(startDate, 'HH:mm'),
             endTime: format(endDate, 'HH:mm'),
             activityName: event.summary || 'Untitled Event',
-            dripQuadrant: categorization?.dripQuadrant || 'na',
+            valueQuadrant: categorization?.valueQuadrant || 'na',
             energyRating: categorization?.energyRating || 'yellow',
             durationMinutes,
           });
@@ -615,7 +615,7 @@ export default function TimeAuditPage() {
         startTime: block.startTime,
         endTime: block.endTime,
         activityName: block.activityName,
-        dripQuadrant: block.dripQuadrant,
+        valueQuadrant: block.valueQuadrant,
         energyRating: block.energyRating,
         source: block.source || 'manual',
         externalEventId: block.externalEventId,
@@ -648,7 +648,7 @@ export default function TimeAuditPage() {
             startTime: format(startDate, 'HH:mm'),
             endTime: format(endDate, 'HH:mm'),
             activityName: event.summary || 'Untitled Event',
-            dripQuadrant: categorization?.dripQuadrant || 'na',
+            valueQuadrant: categorization?.valueQuadrant || 'na',
             energyRating: categorization?.energyRating || 'yellow',
             source: 'google_calendar',
             externalEventId: event.id,
@@ -680,10 +680,10 @@ export default function TimeAuditPage() {
 
       totalMinutes += duration;
 
-      if (block.dripQuadrant === 'production') {
+      if (block.valueQuadrant === 'production') {
         productionMinutes += duration;
       }
-      if (block.dripQuadrant === 'delegation') {
+      if (block.valueQuadrant === 'delegation') {
         delegationCount++;
       }
       if (block.energyRating === 'green') {
@@ -707,13 +707,13 @@ export default function TimeAuditPage() {
     };
   }, [allTimeData]);
 
-  // Calculate DRIP distribution from ALL time data
-  const dripData = useMemo(() => {
+  // Calculate Value distribution from ALL time data
+  const valueData = useMemo(() => {
     const data = { delegation: 0, replacement: 0, investment: 0, production: 0, na: 0 };
     allTimeData.forEach((block) => {
       const duration = calculateDuration(block.startTime, block.endTime);
       if (duration > 0) {
-        data[block.dripQuadrant] += duration;
+        data[block.valueQuadrant] += duration;
       }
     });
     return data;
@@ -736,7 +736,7 @@ export default function TimeAuditPage() {
     const blockInfos = timeBlocks.map(b => ({
       id: b.id,
       activityName: b.activityName,
-      dripQuadrant: b.dripQuadrant,
+      valueQuadrant: b.valueQuadrant,
       energyRating: b.energyRating,
     }));
     return getPatternSuggestion(blockInfos);
@@ -746,13 +746,13 @@ export default function TimeAuditPage() {
   const handleSaveBlock = async (blockData: Omit<TimeBlock, 'id' | 'createdAt'>) => {
     if (editingBlock) {
       // Track the edit for pattern detection
-      if (editingBlock.dripQuadrant !== blockData.dripQuadrant ||
+      if (editingBlock.valueQuadrant !== blockData.valueQuadrant ||
           editingBlock.energyRating !== blockData.energyRating) {
         trackEdit(
           editingBlock.id,
           editingBlock.activityName,
-          editingBlock.dripQuadrant,
-          blockData.dripQuadrant,
+          editingBlock.valueQuadrant,
+          blockData.valueQuadrant,
           editingBlock.energyRating,
           blockData.energyRating
         );
@@ -769,7 +769,7 @@ export default function TimeAuditPage() {
           startTime: blockData.startTime,
           endTime: blockData.endTime,
           activityName: blockData.activityName,
-          dripQuadrant: blockData.dripQuadrant,
+          valueQuadrant: blockData.valueQuadrant,
           energyRating: blockData.energyRating,
           source: 'calendar_sync',
           externalEventId: editingBlock.externalEventId,
@@ -783,7 +783,7 @@ export default function TimeAuditPage() {
         saveCategorization(
           editingBlock.externalEventId!,
           blockData.activityName,
-          blockData.dripQuadrant,
+          blockData.valueQuadrant,
           blockData.energyRating
         );
 
@@ -800,7 +800,7 @@ export default function TimeAuditPage() {
               body: JSON.stringify({
                 eventId,
                 summary: blockData.activityName,
-                description: `DRIP: ${blockData.dripQuadrant} | Energy: ${blockData.energyRating}`,
+                description: `Value: ${blockData.valueQuadrant} | Energy: ${blockData.energyRating}`,
                 start: startDateTime.toISOString(),
                 end: endDateTime.toISOString(),
               }),
@@ -821,7 +821,7 @@ export default function TimeAuditPage() {
           startTime: blockData.startTime,
           endTime: blockData.endTime,
           activityName: blockData.activityName,
-          dripQuadrant: blockData.dripQuadrant,
+          valueQuadrant: blockData.valueQuadrant,
           energyRating: blockData.energyRating,
           // Recurring event fields
           isRecurring: blockData.isRecurring,
@@ -842,7 +842,7 @@ export default function TimeAuditPage() {
               body: JSON.stringify({
                 eventId,
                 summary: blockData.activityName,
-                description: `DRIP: ${blockData.dripQuadrant} | Energy: ${blockData.energyRating}`,
+                description: `Value: ${blockData.valueQuadrant} | Energy: ${blockData.energyRating}`,
                 start: startDateTime.toISOString(),
                 end: endDateTime.toISOString(),
               }),
@@ -877,7 +877,7 @@ export default function TimeAuditPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               summary: blockData.activityName,
-              description: `DRIP: ${blockData.dripQuadrant} | Energy: ${blockData.energyRating}`,
+              description: `Value: ${blockData.valueQuadrant} | Energy: ${blockData.energyRating}`,
               start: startDateTime.toISOString(),
               end: endDateTime.toISOString(),
             }),
@@ -900,7 +900,7 @@ export default function TimeAuditPage() {
         startTime: blockData.startTime,
         endTime: blockData.endTime,
         activityName: blockData.activityName,
-        dripQuadrant: blockData.dripQuadrant,
+        valueQuadrant: blockData.valueQuadrant,
         energyRating: blockData.energyRating,
         source: externalEventId ? 'calendar_sync' : 'manual',
         externalEventId,
@@ -917,7 +917,7 @@ export default function TimeAuditPage() {
         saveCategorization(
           `gcal_${externalEventId}`,
           blockData.activityName,
-          blockData.dripQuadrant,
+          blockData.valueQuadrant,
           blockData.energyRating
         );
       }
@@ -965,7 +965,7 @@ export default function TimeAuditPage() {
             startTime: format(startDate, 'HH:mm'),
             endTime: format(endDate, 'HH:mm'),
             activityName: event.summary || 'Untitled Event',
-            dripQuadrant: categorization.dripQuadrant,
+            valueQuadrant: categorization.valueQuadrant,
             energyRating: categorization.energyRating,
             source: 'calendar_sync',
             externalEventId: event.id,
@@ -1005,7 +1005,7 @@ export default function TimeAuditPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           summary: block.activityName,
-          description: `DRIP: ${block.dripQuadrant} | Energy: ${block.energyRating}`,
+          description: `Value: ${block.valueQuadrant} | Energy: ${block.energyRating}`,
           start: startDateTime.toISOString(),
           end: endDateTime.toISOString(),
         }),
@@ -1081,7 +1081,7 @@ export default function TimeAuditPage() {
         startTime: startDateTime ? format(new Date(startDateTime), 'HH:mm') : '09:00',
         endTime: endDateTime ? format(new Date(endDateTime), 'HH:mm') : '09:30',
         activityName: googleEvent.summary || 'Untitled Event',
-        dripQuadrant: categorization?.dripQuadrant || 'production',
+        valueQuadrant: categorization?.valueQuadrant || 'production',
         energyRating: categorization?.energyRating || 'yellow',
         source: 'google_calendar',
         externalEventId: googleEvent.id,
@@ -1105,9 +1105,9 @@ export default function TimeAuditPage() {
   const handleApplyPattern = async () => {
     if (!patternSuggestion) return;
 
-    const updates: { dripQuadrant?: DripQuadrant; energyRating?: EnergyRating } = {};
-    if (patternSuggestion.suggestedDrip) {
-      updates.dripQuadrant = patternSuggestion.suggestedDrip;
+    const updates: { valueQuadrant?: ValueQuadrant; energyRating?: EnergyRating } = {};
+    if (patternSuggestion.suggestedValue) {
+      updates.valueQuadrant = patternSuggestion.suggestedValue;
     }
     if (patternSuggestion.suggestedEnergy) {
       updates.energyRating = patternSuggestion.suggestedEnergy;
@@ -1352,7 +1352,7 @@ export default function TimeAuditPage() {
             startTime: newStartTime,
             endTime: newEndTime,
             activityName: googleEvent.summary || 'Untitled Event',
-            dripQuadrant: categorization?.dripQuadrant || 'production',
+            valueQuadrant: categorization?.valueQuadrant || 'production',
             energyRating: categorization?.energyRating || 'yellow',
             source: 'calendar_sync',
             externalEventId: googleEvent.id,
@@ -1454,7 +1454,7 @@ export default function TimeAuditPage() {
     <div className="space-y-6">
       <PageHeader
         title="Time & Energy Audit"
-        description="Track how you spend your time and energy across DRIP quadrants"
+        description="Track how you spend your time and energy across Value quadrants"
         actions={
           <div className="flex items-center gap-2 flex-wrap">
             <ShareButton tabName="time_audit" />
@@ -1565,7 +1565,7 @@ export default function TimeAuditPage() {
           <DialogHeader draggable>
             <DialogTitle className="text-lg">Categorize Events</DialogTitle>
             <DialogDescription className="text-sm">
-              Drag header to move • Tap to set DRIP quadrant and energy level
+              Drag header to move • Tap to set Value quadrant and energy level
             </DialogDescription>
           </DialogHeader>
           <BulkCategorizationView
@@ -1633,7 +1633,7 @@ export default function TimeAuditPage() {
             </TabsList>
 
             <TabsContent value="weekly">
-              {/* Unified Calendar with DRIP/Energy toggle */}
+              {/* Unified Calendar with Value/Energy toggle */}
               <div className="relative">
                 <WeeklyCalendarView
                   timeBlocks={calendarTimeBlocks}
@@ -1705,7 +1705,7 @@ export default function TimeAuditPage() {
                     <Lock className="h-12 w-12 text-muted-foreground mb-4" />
                     <h3 className="text-lg font-semibold mb-2">Monthly View</h3>
                     <p className="text-muted-foreground mb-4 max-w-md">
-                      Get a bird&apos;s eye view of your entire month with detailed DRIP breakdowns for each day.
+                      Get a bird&apos;s eye view of your entire month with detailed Value breakdowns for each day.
                     </p>
                     <Button asChild>
                       <Link href={ROUTES.settingsSubscription}>
@@ -1723,20 +1723,20 @@ export default function TimeAuditPage() {
         {!sidebarCollapsed && (
           <div className="space-y-3 hidden lg:block pt-[52px]">
             {/* Show active chart first based on calendar color mode */}
-            {calendarColorMode === 'drip' ? (
+            {calendarColorMode === 'value' ? (
               <>
-                {/* DRIP Distribution - Primary when in DRIP mode */}
+                {/* Value Distribution - Primary when in Value mode */}
                 <Card className="p-0 ring-2 ring-primary/20">
                   <CardHeader className="p-3 pb-1">
                     <CardTitle className="text-sm flex items-center gap-2">
-                      DRIP
+                      Value
                       <Badge variant="secondary" className="text-[10px]">Active</Badge>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-3 pt-0">
                     {hasData ? (
                       <>
-                        <DripPieChart data={dripData} size="sm" showLegend={false} />
+                        <ValuePieChart data={valueData} size="sm" showLegend={false} />
                         <div className="mt-2 space-y-1 text-xs">
                           <div className="flex justify-between items-center">
                             <span className="flex items-center gap-1.5 text-muted-foreground">
@@ -1744,7 +1744,7 @@ export default function TimeAuditPage() {
                               Production
                             </span>
                             <span className="font-medium text-cyan-600">
-                              {totalHours > 0 ? Math.round((dripData.production / totalHours) * 100) : 0}%
+                              {totalHours > 0 ? Math.round((valueData.production / totalHours) * 100) : 0}%
                             </span>
                           </div>
                           <div className="flex justify-between items-center">
@@ -1753,7 +1753,7 @@ export default function TimeAuditPage() {
                               Investment
                             </span>
                             <span className="font-medium text-purple-600">
-                              {totalHours > 0 ? Math.round((dripData.investment / totalHours) * 100) : 0}%
+                              {totalHours > 0 ? Math.round((valueData.investment / totalHours) * 100) : 0}%
                             </span>
                           </div>
                           <div className="flex justify-between items-center">
@@ -1762,7 +1762,7 @@ export default function TimeAuditPage() {
                               Replacement
                             </span>
                             <span className="font-medium text-amber-600">
-                              {totalHours > 0 ? Math.round((dripData.replacement / totalHours) * 100) : 0}%
+                              {totalHours > 0 ? Math.round((valueData.replacement / totalHours) * 100) : 0}%
                             </span>
                           </div>
                           <div className="flex justify-between items-center">
@@ -1771,7 +1771,7 @@ export default function TimeAuditPage() {
                               Delegation
                             </span>
                             <span className="font-medium text-red-600">
-                              {totalHours > 0 ? Math.round((dripData.delegation / totalHours) * 100) : 0}%
+                              {totalHours > 0 ? Math.round((valueData.delegation / totalHours) * 100) : 0}%
                             </span>
                           </div>
                           <div className="flex justify-between items-center">
@@ -1780,7 +1780,7 @@ export default function TimeAuditPage() {
                               N/A
                             </span>
                             <span className="font-medium text-blue-600">
-                              {totalHours > 0 ? Math.round((dripData.na / totalHours) * 100) : 0}%
+                              {totalHours > 0 ? Math.round((valueData.na / totalHours) * 100) : 0}%
                             </span>
                           </div>
                         </div>
@@ -1892,15 +1892,15 @@ export default function TimeAuditPage() {
                   </CardContent>
                 </Card>
 
-                {/* DRIP Distribution - Secondary */}
+                {/* Value Distribution - Secondary */}
                 <Card className="p-0 opacity-70">
                   <CardHeader className="p-3 pb-1">
-                    <CardTitle className="text-sm">DRIP</CardTitle>
+                    <CardTitle className="text-sm">Value</CardTitle>
                   </CardHeader>
                   <CardContent className="p-3 pt-0">
                     {hasData ? (
                       <>
-                        <DripPieChart data={dripData} size="sm" showLegend={false} />
+                        <ValuePieChart data={valueData} size="sm" showLegend={false} />
                         <div className="mt-2 space-y-1 text-xs">
                           <div className="flex justify-between items-center">
                             <span className="flex items-center gap-1.5 text-muted-foreground">
@@ -1908,7 +1908,7 @@ export default function TimeAuditPage() {
                               Production
                             </span>
                             <span className="font-medium text-cyan-600">
-                              {totalHours > 0 ? Math.round((dripData.production / totalHours) * 100) : 0}%
+                              {totalHours > 0 ? Math.round((valueData.production / totalHours) * 100) : 0}%
                             </span>
                           </div>
                           <div className="flex justify-between items-center">
@@ -1917,7 +1917,7 @@ export default function TimeAuditPage() {
                               Investment
                             </span>
                             <span className="font-medium text-purple-600">
-                              {totalHours > 0 ? Math.round((dripData.investment / totalHours) * 100) : 0}%
+                              {totalHours > 0 ? Math.round((valueData.investment / totalHours) * 100) : 0}%
                             </span>
                           </div>
                           <div className="flex justify-between items-center">
@@ -1926,7 +1926,7 @@ export default function TimeAuditPage() {
                               Replacement
                             </span>
                             <span className="font-medium text-amber-600">
-                              {totalHours > 0 ? Math.round((dripData.replacement / totalHours) * 100) : 0}%
+                              {totalHours > 0 ? Math.round((valueData.replacement / totalHours) * 100) : 0}%
                             </span>
                           </div>
                           <div className="flex justify-between items-center">
@@ -1935,7 +1935,7 @@ export default function TimeAuditPage() {
                               Delegation
                             </span>
                             <span className="font-medium text-red-600">
-                              {totalHours > 0 ? Math.round((dripData.delegation / totalHours) * 100) : 0}%
+                              {totalHours > 0 ? Math.round((valueData.delegation / totalHours) * 100) : 0}%
                             </span>
                           </div>
                           <div className="flex justify-between items-center">
@@ -1944,7 +1944,7 @@ export default function TimeAuditPage() {
                               N/A
                             </span>
                             <span className="font-medium text-blue-600">
-                              {totalHours > 0 ? Math.round((dripData.na / totalHours) * 100) : 0}%
+                              {totalHours > 0 ? Math.round((valueData.na / totalHours) * 100) : 0}%
                             </span>
                           </div>
                         </div>
@@ -1967,7 +1967,7 @@ export default function TimeAuditPage() {
               <CardContent className="p-3 pt-0 space-y-1.5">
                 <Button variant="outline" size="sm" className="w-full justify-start text-xs h-8" asChild>
                   <Link href={ROUTES.drip}>
-                    View DRIP Matrix
+                    View Value Matrix
                   </Link>
                 </Button>
                 {isGoogleConnected && (
@@ -2218,7 +2218,7 @@ export default function TimeAuditPage() {
                 </p>
                 <div className="flex gap-2 mt-2">
                   <Badge variant="outline" className="capitalize">
-                    {blockToPush.dripQuadrant}
+                    {blockToPush.valueQuadrant}
                   </Badge>
                   <Badge
                     variant="outline"

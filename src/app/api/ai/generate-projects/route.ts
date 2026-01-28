@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       apiKey: process.env.ANTHROPIC_API_KEY,
     });
 
-    const prompt = `You are an expert project planner specializing in Dan Martell's 12 Power Goals methodology. Given the following vision and SMART goals, create a 12-month project plan broken into quarterly Power Goals.
+    const prompt = `You are an expert project planner specializing in the 12 Power Goals methodology. Given the following vision and SMART goals, create a 12-month project plan broken into quarterly Power Goals.
 
 Vision: "${vision}"
 

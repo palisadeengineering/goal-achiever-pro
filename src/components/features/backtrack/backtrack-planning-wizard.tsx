@@ -55,7 +55,7 @@ interface GeneratedPlan {
     targetValue: number;
     estimatedHours: number;
   }>;
-  powerGoals: Array<{
+  impactProjects: Array<{
     title: string;
     description: string;
     quarter: number;
@@ -69,7 +69,7 @@ interface GeneratedPlan {
     description: string;
     keyMetric: string;
     targetValue: number;
-    powerGoalIndex: number;
+    impactProjectIndex: number;
   }>;
   weeklyTargets: Array<{
     weekNumber: number;
@@ -835,28 +835,28 @@ export function BacktrackPlanningWizard({
                 </div>
               </div>
 
-              {/* Power Goals */}
+              {/* Impact Projects */}
               <div className="space-y-3">
-                <h4 className="font-medium">Power Goals ({generatedPlan.powerGoals.length})</h4>
+                <h4 className="font-medium">Impact Projects ({generatedPlan.impactProjects.length})</h4>
                 <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                  {generatedPlan.powerGoals.slice(0, 6).map((pg, idx) => (
+                  {generatedPlan.impactProjects.slice(0, 6).map((ip, idx) => (
                     <div key={idx} className="p-3 border rounded-lg">
                       <div className="flex items-start justify-between gap-2 mb-1">
-                        <span className="font-medium text-sm">{pg.title}</span>
+                        <span className="font-medium text-sm">{ip.title}</span>
                         <div className="flex gap-1">
-                          <Badge variant="secondary" className="text-xs">Q{pg.quarter}</Badge>
-                          <Badge className={cn('text-xs', CATEGORY_COLORS[pg.category])}>
-                            {pg.category}
+                          <Badge variant="secondary" className="text-xs">Q{ip.quarter}</Badge>
+                          <Badge className={cn('text-xs', CATEGORY_COLORS[ip.category])}>
+                            {ip.category}
                           </Badge>
                         </div>
                       </div>
-                      <p className="text-xs text-muted-foreground line-clamp-2">{pg.description}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{ip.description}</p>
                     </div>
                   ))}
                 </div>
-                {generatedPlan.powerGoals.length > 6 && (
+                {generatedPlan.impactProjects.length > 6 && (
                   <p className="text-sm text-muted-foreground">
-                    +{generatedPlan.powerGoals.length - 6} more power goals
+                    +{generatedPlan.impactProjects.length - 6} more impact projects
                   </p>
                 )}
               </div>
@@ -902,8 +902,8 @@ export function BacktrackPlanningWizard({
                   <div className="text-xs text-muted-foreground">Total Hours</div>
                 </div>
                 <div className="p-3 bg-muted/30 rounded-lg text-center">
-                  <div className="text-2xl font-bold">{generatedPlan.powerGoals.length}</div>
-                  <div className="text-xs text-muted-foreground">Power Goals</div>
+                  <div className="text-2xl font-bold">{generatedPlan.impactProjects.length}</div>
+                  <div className="text-xs text-muted-foreground">Impact Projects</div>
                 </div>
                 <div className="p-3 bg-muted/30 rounded-lg text-center">
                   <div className="text-2xl font-bold">{generatedPlan.dailyActions.length}</div>
@@ -930,7 +930,7 @@ export function BacktrackPlanningWizard({
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-cyan-500" />
-                    <span>{generatedPlan?.powerGoals.length} power goals</span>
+                    <span>{generatedPlan?.impactProjects.length} impact projects</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-cyan-500" />

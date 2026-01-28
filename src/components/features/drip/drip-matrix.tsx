@@ -22,25 +22,25 @@ import { CSS } from '@dnd-kit/utilities';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { DRIP_QUADRANTS } from '@/constants/drip';
+import { VALUE_QUADRANTS } from '@/constants/drip';
 import { Users, Cog, TrendingUp, Zap, GripVertical, MinusCircle } from 'lucide-react';
-import type { DripQuadrant } from '@/types/database';
+import type { ValueQuadrant } from '@/types/database';
 
-interface DripItem {
+interface ValueItem {
   id: string;
   title: string;
   description?: string;
-  quadrant: DripQuadrant;
+  quadrant: ValueQuadrant;
   timeSpent?: number; // minutes
 }
 
-interface DripMatrixProps {
-  items: DripItem[];
-  onItemMove?: (itemId: string, newQuadrant: DripQuadrant) => void;
+interface ValueMatrixProps {
+  items: ValueItem[];
+  onItemMove?: (itemId: string, newQuadrant: ValueQuadrant) => void;
   readonly?: boolean;
 }
 
-const QUADRANT_ICONS: Record<DripQuadrant, typeof Users> = {
+const QUADRANT_ICONS: Record<ValueQuadrant, typeof Users> = {
   delegation: Users,
   replacement: Cog,
   investment: TrendingUp,
@@ -48,7 +48,7 @@ const QUADRANT_ICONS: Record<DripQuadrant, typeof Users> = {
   na: MinusCircle,
 };
 
-function SortableItem({ item, readonly }: { item: DripItem; readonly?: boolean }) {
+function SortableItem({ item, readonly }: { item: ValueItem; readonly?: boolean }) {
   const {
     attributes,
     listeners,
@@ -95,7 +95,7 @@ function SortableItem({ item, readonly }: { item: DripItem; readonly?: boolean }
   );
 }
 
-function ItemOverlay({ item }: { item: DripItem }) {
+function ItemOverlay({ item }: { item: ValueItem }) {
   return (
     <div className="bg-background border rounded-lg p-3 shadow-lg cursor-grabbing">
       <div className="flex items-start gap-2">
@@ -112,7 +112,7 @@ function ItemOverlay({ item }: { item: DripItem }) {
 }
 
 // Static item component for SSR (no dnd-kit hooks)
-function StaticItem({ item }: { item: DripItem }) {
+function StaticItem({ item }: { item: ValueItem }) {
   return (
     <div className="bg-background border rounded-lg p-3 shadow-sm">
       <div className="flex items-start gap-2">
@@ -138,12 +138,12 @@ function QuadrantBox({
   readonly,
   staticMode,
 }: {
-  quadrant: DripQuadrant;
-  items: DripItem[];
+  quadrant: ValueQuadrant;
+  items: ValueItem[];
   readonly?: boolean;
   staticMode?: boolean;
 }) {
-  const config = DRIP_QUADRANTS[quadrant];
+  const config = VALUE_QUADRANTS[quadrant];
   const Icon = QUADRANT_ICONS[quadrant];
 
   return (
@@ -207,7 +207,7 @@ function QuadrantBox({
   );
 }
 
-export function DripMatrix({ items, onItemMove, readonly = false }: DripMatrixProps) {
+export function ValueMatrix({ items, onItemMove, readonly = false }: ValueMatrixProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -248,14 +248,14 @@ export function DripMatrix({ items, onItemMove, readonly = false }: DripMatrixPr
     }
   };
 
-  const getItemsByQuadrant = (quadrant: DripQuadrant) =>
+  const getItemsByQuadrant = (quadrant: ValueQuadrant) =>
     items.filter((item) => item.quadrant === quadrant);
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span>DRIP Matrix</span>
+          <span>Value Matrix</span>
           <div className="flex items-center gap-4 text-sm font-normal text-muted-foreground">
             <span className="flex items-center gap-1">
               <span className="text-xs">←</span> Lights You Up <span className="text-xs">→</span>
@@ -351,12 +351,12 @@ export function DripMatrix({ items, onItemMove, readonly = false }: DripMatrixPr
 
         {/* Legend */}
         <div className="mt-6 p-4 bg-muted/30 rounded-lg">
-          <h4 className="text-sm font-medium mb-2">DRIP Action Guide</h4>
+          <h4 className="text-sm font-medium mb-2">Value Matrix Action Guide</h4>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
             <div className="flex items-start gap-2">
               <div
                 className="h-3 w-3 rounded mt-0.5"
-                style={{ backgroundColor: DRIP_QUADRANTS.delegation.color }}
+                style={{ backgroundColor: VALUE_QUADRANTS.delegation.color }}
               />
               <div>
                 <p className="font-medium">Delegation</p>
@@ -366,7 +366,7 @@ export function DripMatrix({ items, onItemMove, readonly = false }: DripMatrixPr
             <div className="flex items-start gap-2">
               <div
                 className="h-3 w-3 rounded mt-0.5"
-                style={{ backgroundColor: DRIP_QUADRANTS.replacement.color }}
+                style={{ backgroundColor: VALUE_QUADRANTS.replacement.color }}
               />
               <div>
                 <p className="font-medium">Replacement</p>
@@ -376,7 +376,7 @@ export function DripMatrix({ items, onItemMove, readonly = false }: DripMatrixPr
             <div className="flex items-start gap-2">
               <div
                 className="h-3 w-3 rounded mt-0.5"
-                style={{ backgroundColor: DRIP_QUADRANTS.investment.color }}
+                style={{ backgroundColor: VALUE_QUADRANTS.investment.color }}
               />
               <div>
                 <p className="font-medium">Investment</p>
@@ -386,7 +386,7 @@ export function DripMatrix({ items, onItemMove, readonly = false }: DripMatrixPr
             <div className="flex items-start gap-2">
               <div
                 className="h-3 w-3 rounded mt-0.5"
-                style={{ backgroundColor: DRIP_QUADRANTS.production.color }}
+                style={{ backgroundColor: VALUE_QUADRANTS.production.color }}
               />
               <div>
                 <p className="font-medium">Production</p>

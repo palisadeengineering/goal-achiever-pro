@@ -20,8 +20,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Loader2 } from 'lucide-react';
-import { DRIP_QUADRANTS } from '@/constants/drip';
-import type { DripQuadrant } from '@/types/database';
+import { VALUE_QUADRANTS } from '@/constants/drip';
+import type { ValueQuadrant } from '@/types/database';
 
 export interface MinFormData {
   title: string;
@@ -30,8 +30,8 @@ export interface MinFormData {
   scheduledTime: string;
   durationMinutes: number;
   priority: number;
-  dripQuadrant: DripQuadrant | '';
-  powerGoalId: string | null;
+  valueQuadrant: ValueQuadrant | '';
+  impactProjectId: string | null;
   timeScope: 'daily' | 'weekly';
   weekStartDate: string | null;
   weekEndDate: string | null;
@@ -41,7 +41,7 @@ interface MinFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialData?: Partial<MinFormData>;
-  powerGoals?: Array<{ id: string; title: string }>;
+  impactProjects?: Array<{ id: string; title: string }>;
   onSubmit: (data: MinFormData) => Promise<void>;
   isEditing?: boolean;
 }
@@ -66,7 +66,7 @@ export function MinForm({
   open,
   onOpenChange,
   initialData,
-  powerGoals = [],
+  impactProjects = [],
   onSubmit,
   isEditing = false,
 }: MinFormProps) {
@@ -80,8 +80,8 @@ export function MinForm({
     scheduledTime: initialData?.scheduledTime || '',
     durationMinutes: initialData?.durationMinutes || 30,
     priority: initialData?.priority || 2,
-    dripQuadrant: initialData?.dripQuadrant || '',
-    powerGoalId: initialData?.powerGoalId || null,
+    valueQuadrant: initialData?.valueQuadrant || '',
+    impactProjectId: initialData?.impactProjectId || null,
     timeScope: initialData?.timeScope || 'daily',
     weekStartDate: initialData?.weekStartDate || null,
     weekEndDate: initialData?.weekEndDate || null,
@@ -251,11 +251,11 @@ export function MinForm({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>DRIP Quadrant</Label>
+              <Label>Value Quadrant</Label>
               <Select
-                value={formData.dripQuadrant}
+                value={formData.valueQuadrant}
                 onValueChange={(value) =>
-                  updateField('dripQuadrant', value as DripQuadrant | '')
+                  updateField('valueQuadrant', value as ValueQuadrant | '')
                 }
               >
                 <SelectTrigger>
@@ -263,7 +263,7 @@ export function MinForm({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">Not categorized</SelectItem>
-                  {Object.entries(DRIP_QUADRANTS).map(([key, quadrant]) => (
+                  {Object.entries(VALUE_QUADRANTS).map(([key, quadrant]) => (
                     <SelectItem key={key} value={key}>
                       <span style={{ color: quadrant.color }}>
                         {quadrant.name}
@@ -274,23 +274,23 @@ export function MinForm({
               </Select>
             </div>
 
-            {powerGoals.length > 0 && (
+            {impactProjects.length > 0 && (
               <div className="space-y-2">
-                <Label>Link to Milestone</Label>
+                <Label>Link to Impact Project</Label>
                 <Select
-                  value={formData.powerGoalId || ''}
+                  value={formData.impactProjectId || ''}
                   onValueChange={(value) =>
-                    updateField('powerGoalId', value || null)
+                    updateField('impactProjectId', value || null)
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select milestone (optional)" />
+                    <SelectValue placeholder="Select impact project (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No linked milestone</SelectItem>
-                    {powerGoals.map((goal) => (
-                      <SelectItem key={goal.id} value={goal.id}>
-                        {goal.title}
+                    <SelectItem value="">No linked impact project</SelectItem>
+                    {impactProjects.map((project) => (
+                      <SelectItem key={project.id} value={project.id}>
+                        {project.title}
                       </SelectItem>
                     ))}
                   </SelectContent>

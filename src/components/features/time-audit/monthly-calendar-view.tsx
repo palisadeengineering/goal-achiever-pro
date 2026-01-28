@@ -18,8 +18,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { DRIP_QUADRANTS } from '@/constants/drip';
-import type { DripQuadrant } from '@/types/database';
+import { VALUE_QUADRANTS } from '@/constants/drip';
+import type { ValueQuadrant } from '@/types/database';
 
 interface TimeBlock {
   id: string;
@@ -27,13 +27,13 @@ interface TimeBlock {
   startTime: string;
   endTime: string;
   activityName: string;
-  dripQuadrant: DripQuadrant;
+  valueQuadrant: ValueQuadrant;
 }
 
 interface DayData {
   date: Date;
   totalMinutes: number;
-  dripBreakdown: {
+  valueBreakdown: {
     delegation: number;
     replacement: number;
     investment: number;
@@ -114,18 +114,18 @@ export function MonthlyCalendarView({
           dayDataMap.set(dateKey, {
             date: parseISO(dateKey),
             totalMinutes: 0,
-            dripBreakdown: { delegation: 0, replacement: 0, investment: 0, production: 0 },
+            valueBreakdown: { delegation: 0, replacement: 0, investment: 0, production: 0 },
           });
         }
 
         const dayData = dayDataMap.get(dateKey)!;
         dayData.totalMinutes += duration;
 
-        // Add duration to the appropriate DRIP quadrant
-        const quadrant = block.dripQuadrant;
+        // Add duration to the appropriate Value quadrant
+        const quadrant = block.valueQuadrant;
         if (quadrant === 'delegation' || quadrant === 'replacement' ||
             quadrant === 'investment' || quadrant === 'production') {
-          dayData.dripBreakdown[quadrant] += duration;
+          dayData.valueBreakdown[quadrant] += duration;
         }
       }
     });
@@ -153,10 +153,10 @@ export function MonthlyCalendarView({
   const monthTotals = monthData.reduce(
     (acc, day) => ({
       totalMinutes: acc.totalMinutes + day.totalMinutes,
-      delegation: acc.delegation + day.dripBreakdown.delegation,
-      replacement: acc.replacement + day.dripBreakdown.replacement,
-      investment: acc.investment + day.dripBreakdown.investment,
-      production: acc.production + day.dripBreakdown.production,
+      delegation: acc.delegation + day.valueBreakdown.delegation,
+      replacement: acc.replacement + day.valueBreakdown.replacement,
+      investment: acc.investment + day.valueBreakdown.investment,
+      production: acc.production + day.valueBreakdown.production,
     }),
     { totalMinutes: 0, delegation: 0, replacement: 0, investment: 0, production: 0 }
   );
@@ -164,7 +164,7 @@ export function MonthlyCalendarView({
   const DayCell = ({ date }: { date: Date }) => {
     const data = getDayData(date);
     const total = data?.totalMinutes || 0;
-    const breakdown = data?.dripBreakdown || { delegation: 0, replacement: 0, investment: 0, production: 0 };
+    const breakdown = data?.valueBreakdown || { delegation: 0, replacement: 0, investment: 0, production: 0 };
     const isToday = isSameDay(date, new Date());
     const isCurrentMonth = isSameMonth(date, currentMonth);
 
@@ -184,7 +184,7 @@ export function MonthlyCalendarView({
           {format(date, 'd')}
         </span>
 
-        {/* Mini DRIP Distribution Bar */}
+        {/* Mini Value Distribution Bar */}
         {total > 0 && (
           <div className="flex-1 flex flex-col justify-end">
             <div className="h-2 rounded-full overflow-hidden flex">
@@ -192,7 +192,7 @@ export function MonthlyCalendarView({
                 <div
                   style={{
                     width: `${(breakdown.production / total) * 100}%`,
-                    backgroundColor: DRIP_QUADRANTS.production.color,
+                    backgroundColor: VALUE_QUADRANTS.production.color,
                   }}
                 />
               )}
@@ -200,7 +200,7 @@ export function MonthlyCalendarView({
                 <div
                   style={{
                     width: `${(breakdown.investment / total) * 100}%`,
-                    backgroundColor: DRIP_QUADRANTS.investment.color,
+                    backgroundColor: VALUE_QUADRANTS.investment.color,
                   }}
                 />
               )}
@@ -208,7 +208,7 @@ export function MonthlyCalendarView({
                 <div
                   style={{
                     width: `${(breakdown.replacement / total) * 100}%`,
-                    backgroundColor: DRIP_QUADRANTS.replacement.color,
+                    backgroundColor: VALUE_QUADRANTS.replacement.color,
                   }}
                 />
               )}
@@ -216,7 +216,7 @@ export function MonthlyCalendarView({
                 <div
                   style={{
                     width: `${(breakdown.delegation / total) * 100}%`,
-                    backgroundColor: DRIP_QUADRANTS.delegation.color,
+                    backgroundColor: VALUE_QUADRANTS.delegation.color,
                   }}
                 />
               )}
@@ -301,7 +301,7 @@ export function MonthlyCalendarView({
 
         {/* Legend */}
         <div className="flex flex-wrap gap-3 justify-center pt-2">
-          {Object.entries(DRIP_QUADRANTS).map(([key, quadrant]) => (
+          {Object.entries(VALUE_QUADRANTS).map(([key, quadrant]) => (
             <Badge
               key={key}
               variant="outline"

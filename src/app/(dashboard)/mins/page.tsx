@@ -20,7 +20,7 @@ import {
 import { MinsList } from '@/components/features/mins/mins-list';
 import { MinForm, MinFormData } from '@/components/features/mins/min-form';
 import { ShareButton } from '@/components/features/sharing';
-import type { DripQuadrant } from '@/types/database';
+import type { ValueQuadrant } from '@/types/database';
 
 type MinStatus = 'pending' | 'in_progress' | 'completed';
 
@@ -32,8 +32,8 @@ interface MockMin {
   durationMinutes: number;
   priority: number;
   status: MinStatus;
-  dripQuadrant?: DripQuadrant;
-  powerGoalTitle?: string;
+  valueQuadrant?: ValueQuadrant;
+  impactProjectTitle?: string;
 }
 
 // Mock data
@@ -46,8 +46,8 @@ const mockMins: MockMin[] = [
     durationMinutes: 45,
     priority: 1,
     status: 'completed',
-    dripQuadrant: 'production',
-    powerGoalTitle: 'Launch online course',
+    valueQuadrant: 'production',
+    impactProjectTitle: 'Launch online course',
   },
   {
     id: '2',
@@ -57,8 +57,8 @@ const mockMins: MockMin[] = [
     durationMinutes: 60,
     priority: 1,
     status: 'in_progress',
-    dripQuadrant: 'production',
-    powerGoalTitle: 'Launch online course',
+    valueQuadrant: 'production',
+    impactProjectTitle: 'Launch online course',
   },
   {
     id: '3',
@@ -67,7 +67,7 @@ const mockMins: MockMin[] = [
     durationMinutes: 30,
     priority: 2,
     status: 'pending',
-    dripQuadrant: 'delegation',
+    valueQuadrant: 'delegation',
   },
   {
     id: '4',
@@ -75,7 +75,7 @@ const mockMins: MockMin[] = [
     durationMinutes: 15,
     priority: 3,
     status: 'pending',
-    dripQuadrant: 'replacement',
+    valueQuadrant: 'replacement',
   },
   {
     id: '5',
@@ -84,8 +84,8 @@ const mockMins: MockMin[] = [
     durationMinutes: 30,
     priority: 2,
     status: 'pending',
-    dripQuadrant: 'investment',
-    powerGoalTitle: 'Run a marathon',
+    valueQuadrant: 'investment',
+    impactProjectTitle: 'Run a marathon',
   },
   {
     id: '6',
@@ -93,11 +93,11 @@ const mockMins: MockMin[] = [
     durationMinutes: 15,
     priority: 4,
     status: 'pending',
-    dripQuadrant: 'investment',
+    valueQuadrant: 'investment',
   },
 ];
 
-const mockPowerGoals = [
+const mockImpactProjects = [
   { id: 'g1', title: 'Launch online course' },
   { id: 'g2', title: 'Run a marathon' },
   { id: 'g3', title: 'Build emergency fund' },
@@ -156,7 +156,7 @@ export default function MinsPage() {
       durationMinutes: data.durationMinutes,
       priority: data.priority,
       status: 'pending',
-      dripQuadrant: data.dripQuadrant as DripQuadrant | undefined,
+      valueQuadrant: data.valueQuadrant as ValueQuadrant | undefined,
     };
     setMins((prev) => [...prev, newMin]);
   };
@@ -418,30 +418,30 @@ export default function MinsPage() {
                 </p>
               </div>
               <div className="p-3 bg-muted/50 rounded-lg">
-                <p className="font-medium mb-1">Link to Milestones</p>
+                <p className="font-medium mb-1">Link to Impact Projects</p>
                 <p className="text-muted-foreground">
-                  Connect MINS to your Milestones for better tracking.
+                  Connect MINS to your Impact Projects for better tracking.
                 </p>
               </div>
             </CardContent>
           </Card>
 
-          {/* Linked Milestones Summary */}
+          {/* Linked Impact Projects Summary */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">Linked Milestones</CardTitle>
+              <CardTitle className="text-base">Linked Impact Projects</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {mockPowerGoals.slice(0, 3).map((goal) => {
+              {mockImpactProjects.slice(0, 3).map((project) => {
                 const linkedMins = mins.filter(
-                  (m) => m.powerGoalTitle === goal.title
+                  (m) => m.impactProjectTitle === project.title
                 );
                 const completed = linkedMins.filter(
                   (m) => m.status === 'completed'
                 ).length;
                 return (
-                  <div key={goal.id} className="flex items-center justify-between">
-                    <span className="text-sm truncate flex-1">{goal.title}</span>
+                  <div key={project.id} className="flex items-center justify-between">
+                    <span className="text-sm truncate flex-1">{project.title}</span>
                     <Badge variant="outline">
                       {completed}/{linkedMins.length}
                     </Badge>
@@ -457,7 +457,7 @@ export default function MinsPage() {
       <MinForm
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
-        powerGoals={mockPowerGoals}
+        impactProjects={mockImpactProjects}
         onSubmit={handleAddMin}
       />
     </div>

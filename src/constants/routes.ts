@@ -49,7 +49,7 @@ export const ROUTES = {
   timeAuditMonthly: '/time-audit/monthly',
   timeAuditProjects: '/time-audit/projects',
 
-  // DRIP Matrix
+  // Value Matrix
   drip: '/drip',
   dripAnalysis: '/drip/analysis',
 

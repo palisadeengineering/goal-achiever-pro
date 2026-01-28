@@ -42,12 +42,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { dripQuadrant, energyRating } = updates;
+    const { valueQuadrant, energyRating } = updates;
 
     // Ensure at least one field is being updated
-    if (dripQuadrant === undefined && energyRating === undefined) {
+    if (valueQuadrant === undefined && energyRating === undefined) {
       return NextResponse.json(
-        { error: 'At least one update field (dripQuadrant or energyRating) is required' },
+        { error: 'At least one update field (valueQuadrant or energyRating) is required' },
         { status: 400 }
       );
     }
@@ -57,8 +57,8 @@ export async function POST(request: NextRequest) {
       updated_at: new Date().toISOString(),
     };
 
-    if (dripQuadrant !== undefined) {
-      updateData.drip_quadrant = dripQuadrant;
+    if (valueQuadrant !== undefined) {
+      updateData.drip_quadrant = valueQuadrant;
     }
 
     if (energyRating !== undefined) {
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
       activityCategory: block.activity_category,
       notes: block.notes,
       energyRating: block.energy_rating,
-      dripQuadrant: block.drip_quadrant,
+      valueQuadrant: block.drip_quadrant,
       source: block.source,
       externalEventId: block.external_event_id,
       createdAt: block.created_at,

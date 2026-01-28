@@ -6,7 +6,7 @@ import {
   parseISO,
   isWithinInterval,
 } from 'date-fns';
-import type { DripQuadrant, EnergyRating } from '@/types/database';
+import type { ValueQuadrant, EnergyRating } from '@/types/database';
 
 // Activity types
 export type ActivityType = 'project' | 'meeting' | 'commute' | 'deep_work' | 'admin' | 'break' | 'other';
@@ -17,7 +17,7 @@ interface TimeBlock {
   startTime: string;
   endTime: string;
   activityName: string;
-  dripQuadrant: DripQuadrant;
+  valueQuadrant: ValueQuadrant;
   energyRating: EnergyRating;
   activityType?: ActivityType;
   detectedProjectId?: string;
@@ -466,7 +466,7 @@ export function useEnhancedAnalytics(
 
         summary.totalMinutes += duration;
 
-        if (block.dripQuadrant === 'production') {
+        if (block.valueQuadrant === 'production') {
           summary.productionMinutes += duration;
         }
 

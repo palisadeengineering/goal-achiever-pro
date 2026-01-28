@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-Goal Achiever Pro is implementing a cascading KPI system where Visions generate hierarchical KPIs (quarterly → monthly → weekly → daily) with automatic progress roll-up. Research across the OKR/goal-tracking domain reveals this is a mature market with well-established patterns. The key insight is that **alignment beats cascading** - modern products emphasize bidirectional goal linking rather than rigid top-down hierarchies, but for Goal Achiever Pro's single-user Dan Martell methodology, a top-down cascade with progress roll-up is appropriate.
+Goal Achiever Pro is implementing a cascading KPI system where Visions generate hierarchical KPIs (quarterly → monthly → weekly → daily) with automatic progress roll-up. Research across the OKR/goal-tracking domain reveals this is a mature market with well-established patterns. The key insight is that **alignment beats cascading** - modern products emphasize bidirectional goal linking rather than rigid top-down hierarchies, but for Goal Achiever Pro's single-user time optimization methodology, a top-down cascade with progress roll-up is appropriate.
 
 The existing tech stack (Next.js 16.1.1, React Query 5.90.16, Zustand 5.0.9, Drizzle ORM, Supabase) is perfectly suited for this implementation. Only one minor dependency is needed (Immer 11.x for nested state updates). The database schema already has the necessary hierarchy structure in place but lacks proper parent-child KPI linkage and cached progress aggregation. The recommended approach is a **hybrid progress calculation strategy**: database triggers for immediate updates + cached aggregates for fast dashboard reads + React Query for optimistic UI updates.
 
@@ -48,7 +48,7 @@ Research across Lattice, 15Five, Weekdone, Perdoo, and Quantive reveals clear fe
 - Weighted progress calculation (higher-weight items contribute more)
 - AI-generated goals and KPI suggestions (already in GAP)
 - Streak tracking for daily habits (gamification)
-- Buyback Rate calculation (Dan Martell-specific)
+- Buyback Rate calculation (time optimization-specific)
 - Bi-directional calendar sync (already in GAP)
 
 **Defer (v2+):**
@@ -155,7 +155,7 @@ Based on research, suggested phase structure emphasizes foundation-first with pr
 - Pitfall #4: Database performance issues (indexes, cached aggregates, limited recursion)
 - Pitfall #10: Rounding errors (round only at display time, consistent precision)
 
-**Research flag:** Needs research-phase - Progress rollup strategies vary significantly, and Dan Martell's 300% Rule integration requires custom logic not found in standard OKR tools.
+**Research flag:** Needs research-phase - Progress rollup strategies vary significantly, and time optimization's 300% Rule integration requires custom logic not found in standard OKR tools.
 
 ### Phase 3: Tree Fetching & API Layer
 **Rationale:** With calculations working, expose data efficiently to frontend. Single-query tree fetching prevents N+1 problems that plague hierarchical systems.
@@ -252,7 +252,7 @@ Based on research, suggested phase structure emphasizes foundation-first with pr
 - Pitfall #7: 300% Rule becomes vanity metric (link scores to actions, show trends)
 - Pitfall #8: Too many objectives (focus on daily items only, show capacity)
 
-**Research flag:** Needs research-phase - 300% Rule implementation requires understanding how Clarity/Belief/Consistency map to quantifiable system behaviors (not documented in Dan Martell's public materials).
+**Research flag:** Needs research-phase - 300% Rule implementation requires understanding how Clarity/Belief/Consistency map to quantifiable system behaviors (not documented in time optimization's public materials).
 
 ### Phase 7: Progress Page & Analytics
 **Rationale:** Users need to understand trends over time and see full roll-up cascade visualization.
@@ -303,7 +303,7 @@ Based on research, suggested phase structure emphasizes foundation-first with pr
 ### Research Flags
 
 **Phases likely needing deeper research during planning:**
-- **Phase 2 (Progress Calculation):** Multiple strategies exist (eager triggers vs lazy computation vs hybrid vs background jobs). Dan Martell's 300% Rule integration with standard progress math needs custom logic design. Weighting algorithms vary (arithmetic mean vs geometric mean vs say/do ratio).
+- **Phase 2 (Progress Calculation):** Multiple strategies exist (eager triggers vs lazy computation vs hybrid vs background jobs). time optimization's 300% Rule integration with standard progress math needs custom logic design. Weighting algorithms vary (arithmetic mean vs geometric mean vs say/do ratio).
 - **Phase 5 (Tree UI):** React tree component library evaluation (react-arborist vs react-complex-tree vs custom). Virtualization for large hierarchies. Accessibility patterns for deeply nested trees.
 - **Phase 6 (300% Rule):** Mapping Clarity/Belief/Consistency to quantifiable behaviors. How do scores integrate with progress roll-up? What actions trigger score changes?
 - **Phase 8 (AI Alignment):** Pattern detection algorithms for goal conflicts. Heuristics for "good" vs "bad" KPI relationships.
@@ -329,14 +329,14 @@ Research drew from official documentation (PostgreSQL, TanStack Query, Zustand, 
 
 ### Gaps to Address
 
-**300% Rule Implementation Details** - Dan Martell's public materials describe the concept (Clarity + Belief + Consistency = 300%) but not the software mechanics. During Phase 6 planning, need to decide:
+**300% Rule Implementation Details** - time optimization's public materials describe the concept (Clarity + Belief + Consistency = 300%) but not the software mechanics. During Phase 6 planning, need to decide:
 - How Clarity score is quantified (SMART goal completeness? User self-assessment?)
 - How Belief score is measured (confidence scoring? Streak consistency?)
 - How Consistency score is calculated (daily check-in completion rate? Progress velocity?)
 - How these scores integrate with standard progress percentages
 - Mitigation: Phase 6 requires research-phase to design scoring algorithms before implementation.
 
-**Weighted Progress Formula** - Multiple calculation strategies exist (arithmetic mean, weighted average, say/do ratio, geometric mean). Research identified the options but not which is best for Dan Martell methodology.
+**Weighted Progress Formula** - Multiple calculation strategies exist (arithmetic mean, weighted average, say/do ratio, geometric mean). Research identified the options but not which is best for time optimization methodology.
 - Mitigation: Phase 2 research-phase evaluates strategies against user scenarios ("finished the important thing" should show high progress).
 
 **Tree Component Library Selection** - Evaluation needed between react-arborist (11.8KB, popular), react-complex-tree (45KB, feature-rich), or custom implementation.
@@ -405,9 +405,9 @@ Research drew from official documentation (PostgreSQL, TanStack Query, Zustand, 
 - [Workpath - Enterprise OKR Software 2025](https://www.workpath.com/en/magazine/best-ai-okr-kpi-business-review-software) - AI trends
 - [Trophy - Gamification Case Studies](https://trophy.so/blog/streaks-gamification-case-study) - Streak tracking effectiveness
 
-**Dan Martell Methodology:**
-- [Dan Martell - Buy Back Your Time](https://www.buybackyourtime.com) - Core methodology
-- [Dan Martell Twitter - 300% Rule](https://x.com/danmartell/status/1902440329309254021) - Concept explanation
+**time optimization Methodology:**
+- Time optimization methodology principles - Core methodology
+- [time optimization Twitter - 300% Rule](https://x.com/danmartell/status/1902440329309254021) - Concept explanation
 
 **User Behavior Research:**
 - [Forasoft - App Abandonment](https://www.forasoft.com/blog/article/avoid-app-abandonment-strategies) - 77% abandon in 3 days stat

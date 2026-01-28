@@ -3,7 +3,7 @@
 export type SubscriptionTier = 'free' | 'pro' | 'elite' | 'founding_member';
 export type SubscriptionStatus = 'active' | 'canceled' | 'past_due' | 'trialing';
 
-export type DripQuadrant = 'delegation' | 'replacement' | 'investment' | 'production' | 'na';
+export type ValueQuadrant = 'delegation' | 'replacement' | 'investment' | 'production' | 'na';
 export type EnergyRating = 'green' | 'yellow' | 'red';
 
 export type GoalStatus = 'active' | 'completed' | 'abandoned' | 'archived';
@@ -56,8 +56,8 @@ export interface Vision {
   updatedAt: Date;
 }
 
-// Power Goal (12 annual projects)
-export interface PowerGoal {
+// Impact Project (12 annual projects)
+export interface ImpactProject {
   id: string;
   userId: string;
   visionId: string | null;
@@ -74,14 +74,17 @@ export interface PowerGoal {
   updatedAt: Date;
 }
 
+// Backwards compatibility alias
+export type PowerGoal = ImpactProject;
+
 // Target Status
 export type TargetStatus = 'pending' | 'in_progress' | 'completed';
 
-// Monthly Target (Links to Power Goals)
+// Monthly Target (Links to Impact Projects)
 export interface MonthlyTarget {
   id: string;
   userId: string;
-  powerGoalId: string;
+  impactProjectId: string;
   title: string;
   description: string | null;
   targetMonth: number; // 1-12
@@ -137,14 +140,14 @@ export interface DailyAction {
 export interface Min {
   id: string;
   userId: string;
-  powerGoalId: string | null;
+  impactProjectId: string | null;
   title: string;
   description: string | null;
   scheduledDate: Date;
   scheduledTime: string | null;
   durationMinutes: number;
   priority: number;
-  dripQuadrant: DripQuadrant | null;
+  valueQuadrant: ValueQuadrant | null;
   makesMoneyScore: number | null;
   energyScore: number | null;
   status: MinStatus;
@@ -170,7 +173,7 @@ export interface TimeBlock {
   notes: string | null;
   energyRating: EnergyRating;
   energyScore: number | null;
-  dripQuadrant: DripQuadrant | null;
+  valueQuadrant: ValueQuadrant | null;
   makesMoneyScore: number | null;
   lightsUpScore: number | null;
   source: 'manual' | 'calendar_sync' | 'ai_suggested';
@@ -186,7 +189,7 @@ export interface ActivityCategory {
   name: string;
   color: string;
   icon: string | null;
-  defaultDripQuadrant: DripQuadrant | null;
+  defaultValueQuadrant: ValueQuadrant | null;
   defaultMakesMoneyScore: number | null;
   defaultEnergyScore: number | null;
   isSystemDefault: boolean;
@@ -264,7 +267,7 @@ export interface DailyReview {
 export interface LeverageItem {
   id: string;
   userId: string;
-  powerGoalId: string | null;
+  impactProjectId: string | null;
   leverageType: LeverageType;
   actionType: ActionType;
   title: string;

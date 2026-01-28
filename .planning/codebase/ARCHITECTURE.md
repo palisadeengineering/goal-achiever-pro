@@ -92,12 +92,12 @@
 **Time Block Data Model (`src/lib/db/schema.ts:337`):**
 - `activityName` - User-entered activity description
 - `activityCategory` - Free-text category (NOT linked to projects)
-- `dripQuadrant` - DRIP categorization (delegation/replacement/investment/production)
+- `dripQuadrant` - Value Matrix categorization (delegation/replacement/investment/production)
 - `energyRating` - green/yellow/red energy level
 - `time_block_tags` - Many-to-many custom tags via junction table
 
 **Missing Features (No AI/Project Recognition):**
-- ❌ No `project_id` field linking to projects or power goals
+- ❌ No `project_id` field linking to projects or impact projects
 - ❌ No `meeting` type flag or meeting detection
 - ❌ No AI endpoint for recognizing projects/meetings from activity names
 - ❌ No automatic categorization based on patterns
@@ -125,12 +125,12 @@
 - Components: `src/components/features/analytics/weekly-trends-chart.tsx`, `productivity-heatmap.tsx`
 
 **Metrics Displayed:**
-- Production percentage (DRIP)
+- Production percentage (Value Matrix)
 - Total hours tracked
 - Energy balance
 - Peak productivity hour/day
 - Weekly trends chart
-- DRIP/Energy pie charts
+- Value Matrix/Energy pie charts
 - Productivity heatmap
 
 **Time Range Filtering:**

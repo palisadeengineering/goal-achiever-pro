@@ -17,7 +17,7 @@ import { useAnalyticsData } from '@/lib/hooks/use-analytics-data';
 import { useEnhancedAnalytics, type TimeGranularity } from '@/lib/hooks/use-enhanced-analytics';
 import { WeeklyTrendsChart } from '@/components/features/analytics/weekly-trends-chart';
 import { ProductivityHeatmap } from '@/components/features/analytics/productivity-heatmap';
-import { DripPieChart } from '@/components/features/time-audit/drip-pie-chart';
+import { ValuePieChart } from '@/components/features/time-audit/drip-pie-chart';
 import { EnergyPieChart } from '@/components/features/time-audit/energy-pie-chart';
 import { CategoryBreakdownChart } from '@/components/features/analytics/category-breakdown-chart';
 import { TimeByProjectChart } from '@/components/features/analytics/time-by-project-chart';
@@ -136,8 +136,8 @@ export default function AnalyticsPage() {
               {analytics.productionPercentage}%
             </div>
             <p className="text-xs text-muted-foreground">
-              {analytics.dripBreakdown.production > 0
-                ? `${(analytics.dripBreakdown.production / 60).toFixed(1)}h in production`
+              {analytics.valueBreakdown.production > 0
+                ? `${(analytics.valueBreakdown.production / 60).toFixed(1)}h in production`
                 : 'Start tracking to see data'}
             </p>
           </CardContent>
@@ -222,7 +222,7 @@ export default function AnalyticsPage() {
                 Weekly Trends
               </CardTitle>
               <CardDescription>
-                Hours spent in each DRIP category over time
+                Hours spent in each Value category over time
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -234,14 +234,14 @@ export default function AnalyticsPage() {
           <div className="grid gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>DRIP Distribution</CardTitle>
+                <CardTitle>Value Distribution</CardTitle>
                 <CardDescription>
                   How your time breaks down across quadrants
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {analytics.totalHours > 0 ? (
-                  <DripPieChart data={analytics.dripBreakdown} size="lg" />
+                  <ValuePieChart data={analytics.valueBreakdown} size="lg" />
                 ) : (
                   <div className="flex items-center justify-center h-[200px] text-muted-foreground">
                     No data available
@@ -258,7 +258,7 @@ export default function AnalyticsPage() {
                     <span className="text-muted-foreground">Investment (Growth)</span>
                     <span className="font-medium text-blue-600">
                       {analytics.totalHours > 0
-                        ? Math.round((analytics.dripBreakdown.investment / (analytics.totalHours * 60)) * 100)
+                        ? Math.round((analytics.valueBreakdown.investment / (analytics.totalHours * 60)) * 100)
                         : 0}%
                     </span>
                   </div>
@@ -266,7 +266,7 @@ export default function AnalyticsPage() {
                     <span className="text-muted-foreground">Replacement (Automate)</span>
                     <span className="font-medium text-orange-600">
                       {analytics.totalHours > 0
-                        ? Math.round((analytics.dripBreakdown.replacement / (analytics.totalHours * 60)) * 100)
+                        ? Math.round((analytics.valueBreakdown.replacement / (analytics.totalHours * 60)) * 100)
                         : 0}%
                     </span>
                   </div>
@@ -274,7 +274,7 @@ export default function AnalyticsPage() {
                     <span className="text-muted-foreground">Delegation (Delegate)</span>
                     <span className="font-medium text-purple-600">
                       {analytics.totalHours > 0
-                        ? Math.round((analytics.dripBreakdown.delegation / (analytics.totalHours * 60)) * 100)
+                        ? Math.round((analytics.valueBreakdown.delegation / (analytics.totalHours * 60)) * 100)
                         : 0}%
                     </span>
                   </div>

@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useEventPatterns } from '@/lib/hooks/use-event-patterns';
-import { DRIP_QUADRANTS, ENERGY_RATINGS } from '@/constants/drip';
-import type { DripQuadrant, EnergyRating } from '@/types/database';
+import { VALUE_QUADRANTS, ENERGY_RATINGS } from '@/constants/drip';
+import type { ValueQuadrant, EnergyRating } from '@/types/database';
 import type { GoogleCalendarEvent } from '@/lib/hooks/use-google-calendar';
 import { Calendar, Clock, Sparkles, SkipForward, EyeOff } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
@@ -27,7 +27,7 @@ function safeParseDate(dateString: string | undefined | null): Date | null {
 
 interface GoogleEventCategorizerProps {
   event: GoogleCalendarEvent;
-  onCategorize: (eventId: string, dripQuadrant: DripQuadrant, energyRating: EnergyRating) => void;
+  onCategorize: (eventId: string, valueQuadrant: ValueQuadrant, energyRating: EnergyRating) => void;
   onSkip: () => void;
   onIgnore?: (eventId: string, eventName: string) => void;
 }
@@ -41,8 +41,8 @@ export function GoogleEventCategorizer({
   const { getSuggestion } = useEventPatterns();
   const suggestion = getSuggestion(event.summary);
 
-  const [selectedDrip, setSelectedDrip] = useState<DripQuadrant | null>(
-    suggestion?.dripQuadrant || null
+  const [selectedValue, setSelectedValue] = useState<ValueQuadrant | null>(
+    suggestion?.valueQuadrant || null
   );
   const [selectedEnergy, setSelectedEnergy] = useState<EnergyRating | null>(
     suggestion?.energyRating || null
@@ -60,11 +60,11 @@ export function GoogleEventCategorizer({
       // Get fresh suggestion for the new event
       const newSuggestion = getSuggestion(event.summary);
       if (newSuggestion) {
-        setSelectedDrip(newSuggestion.dripQuadrant); // eslint-disable-line react-hooks/set-state-in-effect
+        setSelectedValue(newSuggestion.valueQuadrant); // eslint-disable-line react-hooks/set-state-in-effect
         setSelectedEnergy(newSuggestion.energyRating); // eslint-disable-line react-hooks/set-state-in-effect
       } else {
         // No suggestion - reset to null
-        setSelectedDrip(null); // eslint-disable-line react-hooks/set-state-in-effect
+        setSelectedValue(null); // eslint-disable-line react-hooks/set-state-in-effect
         setSelectedEnergy(null); // eslint-disable-line react-hooks/set-state-in-effect
       }
       // Update the ref to current event ID
@@ -73,13 +73,13 @@ export function GoogleEventCategorizer({
   }, [event.id, event.summary, getSuggestion]);
 
   const handleCategorize = () => {
-    if (!selectedDrip || !selectedEnergy) return;
-    onCategorize(event.id, selectedDrip, selectedEnergy);
+    if (!selectedValue || !selectedEnergy) return;
+    onCategorize(event.id, selectedValue, selectedEnergy);
   };
 
   const handleApplySuggestion = () => {
     if (!suggestion) return;
-    onCategorize(event.id, suggestion.dripQuadrant, suggestion.energyRating);
+    onCategorize(event.id, suggestion.valueQuadrant, suggestion.energyRating);
   };
 
   // Get event time info - use safe parsing to handle invalid/empty dates
@@ -132,11 +132,11 @@ export function GoogleEventCategorizer({
               <Badge
                 variant="outline"
                 style={{
-                  borderColor: DRIP_QUADRANTS[suggestion.dripQuadrant].color,
-                  backgroundColor: `${DRIP_QUADRANTS[suggestion.dripQuadrant].color}15`,
+                  borderColor: VALUE_QUADRANTS[suggestion.valueQuadrant].color,
+                  backgroundColor: `${VALUE_QUADRANTS[suggestion.valueQuadrant].color}15`,
                 }}
               >
-                {DRIP_QUADRANTS[suggestion.dripQuadrant].name}
+                {VALUE_QUADRANTS[suggestion.valueQuadrant].name}
               </Badge>
               <Badge
                 variant="outline"
@@ -151,25 +151,25 @@ export function GoogleEventCategorizer({
           </div>
         )}
 
-        {/* DRIP Category Selection */}
+        {/* Value Category Selection */}
         <div>
-          <label className="text-sm font-medium mb-2 block">DRIP Category</label>
+          <label className="text-sm font-medium mb-2 block">Value Category</label>
           <div className="grid grid-cols-2 gap-2">
-            {(Object.entries(DRIP_QUADRANTS) as [DripQuadrant, typeof DRIP_QUADRANTS[DripQuadrant]][]).map(
+            {(Object.entries(VALUE_QUADRANTS) as [ValueQuadrant, typeof VALUE_QUADRANTS[ValueQuadrant]][]).map(
               ([key, quadrant]) => (
                 <Button
                   key={key}
                   variant="outline"
                   className={cn(
                     'h-auto py-2 px-3 justify-start',
-                    selectedDrip === key && 'ring-2 ring-offset-1'
+                    selectedValue === key && 'ring-2 ring-offset-1'
                   )}
                   style={{
-                    borderColor: selectedDrip === key ? quadrant.color : undefined,
-                    backgroundColor: selectedDrip === key ? `${quadrant.color}10` : undefined,
+                    borderColor: selectedValue === key ? quadrant.color : undefined,
+                    backgroundColor: selectedValue === key ? `${quadrant.color}10` : undefined,
                     ['--tw-ring-color' as string]: quadrant.color,
                   }}
-                  onClick={() => setSelectedDrip(key)}
+                  onClick={() => setSelectedValue(key)}
                 >
                   <div
                     className="w-3 h-3 rounded-full mr-2 shrink-0"
@@ -230,7 +230,7 @@ export function GoogleEventCategorizer({
             <SkipForward className="h-4 w-4 mr-2" />
             Skip
           </Button>
-          <Button onClick={handleCategorize} disabled={!selectedDrip || !selectedEnergy}>
+          <Button onClick={handleCategorize} disabled={!selectedValue || !selectedEnergy}>
             Categorize
           </Button>
         </div>

@@ -19,7 +19,7 @@ interface ImportTimeBlock {
   activityCategory?: string;
   notes?: string;
   energyRating: string;
-  dripQuadrant: string;
+  valueQuadrant: string;
   source: string;
   externalEventId?: string;
 }
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
           activity_category: block.activityCategory || null,
           notes: block.notes || null,
           energy_rating: block.energyRating || 'yellow',
-          drip_quadrant: block.dripQuadrant || 'production',
+          drip_quadrant: block.valueQuadrant || 'production',
           source: block.source || 'calendar_sync',
           external_event_id: block.externalEventId || null,
         };
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
       activityCategory: block.activity_category,
       notes: block.notes,
       energyRating: block.energy_rating,
-      dripQuadrant: block.drip_quadrant,
+      valueQuadrant: block.drip_quadrant,
       source: block.source,
       externalEventId: block.external_event_id,
       createdAt: block.created_at,

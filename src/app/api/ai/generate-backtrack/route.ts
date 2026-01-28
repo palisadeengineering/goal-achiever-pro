@@ -195,7 +195,7 @@ export async function POST(request: NextRequest) {
       apiKey: process.env.ANTHROPIC_API_KEY,
     });
 
-    const prompt = `You are an expert goal-setting and accountability coach using Dan Martell's "Buy Back Your Time" methodology. Create a comprehensive BACKTRACK PLAN.
+    const prompt = `You are an expert goal-setting and accountability coach using proven time optimization methodologies. Create a comprehensive BACKTRACK PLAN.
 
 ## BACKTRACKING PLANNING METHOD
 Start with the END VISION, then work BACKWARDS to determine what must be accomplished at each level:

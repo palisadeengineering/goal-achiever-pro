@@ -37,9 +37,9 @@ POSTING SCHEDULE
 WEEK 1 (Vision & Goals):
 - Day 1: Mon - SMART Vision
 - Day 2: Tue - 300% Rule
-- Day 3: Wed - 12 Power Goals
-- Day 4: Thu - DRIP Matrix
-- Day 5: Fri - DRIP Deep Dive
+- Day 3: Wed - 12 Impact Projects
+- Day 4: Thu - Value Matrix
+- Day 5: Fri - Value Deep Dive
 - Day 6: Sat - (Stories only, skip)
 - Day 7: Sun - Week 1 Recap
 

@@ -55,7 +55,7 @@ Copy and paste these templates into your Supabase Dashboard under **Authenticati
 
                     <p style="margin: 0 0 16px 0; color: #64748b; font-size: 16px; line-height: 1.6;">Hi there,</p>
 
-                    <p style="margin: 0 0 16px 0; color: #64748b; font-size: 16px; line-height: 1.6;">Thank you for joining Goal Achiever Pro! We're excited to help you achieve your goals with clarity and focus using Dan Martell's proven "Buy Back Your Time" methodology.</p>
+                    <p style="margin: 0 0 16px 0; color: #64748b; font-size: 16px; line-height: 1.6;">Thank you for joining Goal Achiever Pro! We're excited to help you achieve your goals with clarity and focus using our proven time optimization methodology.</p>
 
                     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin: 24px 0;">
                       <tr>

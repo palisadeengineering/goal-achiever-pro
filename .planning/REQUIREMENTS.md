@@ -84,10 +84,10 @@ Deferred to future release. Tracked but not in current roadmap.
 - **TEAM-02**: Real-time progress sync via Supabase Realtime
 - **TEAM-03**: Goal owner assignment with accountability
 
-### Buyback Rate & Time Optimization (Martell Core)
+### Buyback Rate & Time Optimization (time optimization Core)
 
 - **BUYBACK-01**: Buyback Rate Calculator - user inputs income target and available hours to calculate effective hourly rate
-- **BUYBACK-02**: Flag activities in Delegation/Replacement DRIP quadrants that fall below buyback rate threshold
+- **BUYBACK-02**: Flag activities in Delegation/Replacement Value Matrix quadrants that fall below buyback rate threshold
 - **BUYBACK-03**: "Don't Do List" feature to track activities user commits to eliminate
 - **BUYBACK-04**: Track eliminated activities over time to measure delegation progress
 
@@ -95,16 +95,16 @@ Deferred to future release. Tracked but not in current roadmap.
 
 - **WEEK-01**: "Perfect Week" template designer - user defines ideal weekly structure
 - **WEEK-02**: Compare actual week against Perfect Week template with variance highlights
-- **WEEK-03**: Weekly Review ritual prompts pulling in DRIP distribution, goal progress, energy patterns
+- **WEEK-03**: Weekly Review ritual prompts pulling in Value Matrix distribution, goal progress, energy patterns
 - **WEEK-04**: Weekly Review asks "What should I delegate or delete next week?"
 - **WEEK-05**: Extend daily_reviews system to support weekly review entries
 
-### Delegation & DRIP Integration
+### Delegation & Value Matrix Integration
 
-- **DRIP-01**: "Delegate This" button on Delegation-tagged activities in DRIP Matrix
-- **DRIP-02**: Delegate button creates task assignment to team members (requires TEAM features)
-- **DRIP-03**: Auto-suggest DRIP category based on calendar event titles (AI classification)
-- **DRIP-04**: Track delegation success rate (tasks delegated vs completed by delegate)
+- **Value Matrix-01**: "Delegate This" button on Delegation-tagged activities in Value Matrix Matrix
+- **Value Matrix-02**: Delegate button creates task assignment to team members (requires TEAM features)
+- **Value Matrix-03**: Auto-suggest Value Matrix category based on calendar event titles (AI classification)
+- **Value Matrix-04**: Track delegation success rate (tasks delegated vs completed by delegate)
 
 ### Network & Relationships
 
@@ -114,11 +114,11 @@ Deferred to future release. Tracked but not in current roadmap.
 
 ### Onboarding & UX
 
-- **UX-01**: SaaS Academy member onboarding flow with Martell sequence: Define Direction → Audit → Build Systems
+- **UX-01**: SaaS Academy member onboarding flow with time optimization sequence: Define Direction → Audit → Build Systems
 - **UX-02**: Quick Start Tour for first-time users walking through core workflow
 - **UX-03**: Progressive disclosure in nav - reduce "New" badges, reveal features gradually
-- **UX-04**: Dark theme contrast improvements for DRIP quadrant descriptions
-- **UX-05**: Guide page video integration with Martell content clips (requires licensing)
+- **UX-04**: Dark theme contrast improvements for Value Matrix quadrant descriptions
+- **UX-05**: Guide page video integration with time optimization content clips (requires licensing)
 
 ## Out of Scope
 
@@ -184,4 +184,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-23*
-*Last updated: 2026-01-24 - added Martell-inspired v2 requirements*
+*Last updated: 2026-01-24 - added time optimization-inspired v2 requirements*

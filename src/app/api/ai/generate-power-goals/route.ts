@@ -96,16 +96,16 @@ ACQUISITION:
 - Launch Date: ${acquisition?.launchDate || 'Not specified'}
 - Milestones: ${acquisition?.milestones?.map(m => `${m.title} by ${m.targetDate}`).join('; ') || 'Not specified'}
 
-IMPORTANT: Generate Power Goals that use SPECIFIC NUMBERS from this data. For example:
+IMPORTANT: Generate Impact Projects that use SPECIFIC NUMBERS from this data. For example:
 - "Reach $5,000 MRR" instead of "Grow revenue"
 - "Acquire 150 paying customers at $29/mo" instead of "Get more customers"
 - "Launch content marketing to reach 500 qualified leads" instead of "Build marketing funnel"
 `;
     }
 
-    const prompt = `You are an expert goal-setting coach specializing in Dan Martell's Power Goals methodology from "Buy Back Your Time".
+    const prompt = `You are an expert goal-setting coach specializing in strategic Impact Projects methodology for achieving ambitious visions.
 
-Given the following vision and SMART goals, generate ${count} Power Goals that will directly help achieve this vision.
+Given the following vision and SMART goals, generate ${count} Impact Projects that will directly help achieve this vision.
 
 Vision: "${vision}"
 
@@ -116,13 +116,13 @@ SMART Goals:
 - Realistic: ${smartGoals?.realistic || 'Not specified'}
 ${targetDate ? `Target Completion Date: ${targetDate}` : ''}
 ${strategicContext}
-Power Goals are:
-1. High-impact goals that move you closer to your vision
+Impact Projects are:
+1. High-impact projects that move you closer to your vision
 2. Specific and measurable with real numbers
 3. Achievable within a quarter (90 days)
 4. Directly derived from the SMART goal breakdown${strategicDiscovery ? ' and strategic discovery data' : ''}
 
-Generate ${count} Power Goals distributed across the 4 quarters. Each goal should:
+Generate ${count} Impact Projects distributed across the 4 quarters. Each project should:
 - Be action-oriented (start with a verb)
 - Have clear success criteria with SPECIFIC NUMBERS (revenue targets, customer counts, etc.)
 - Build on the previous quarter's progress
@@ -138,9 +138,9 @@ Categories to assign:
 
 Respond ONLY with valid JSON in this exact format:
 {
-  "powerGoals": [
+  "impactProjects": [
     {
-      "title": "Action-oriented goal title with specific number",
+      "title": "Action-oriented project title with specific number",
       "description": "What this achieves and why it matters",
       "quarter": 1,
       "category": "business",
@@ -170,7 +170,7 @@ Respond ONLY with valid JSON in this exact format:
       model: 'claude-opus-4-20250514',
       promptTokens: message.usage?.input_tokens || 0,
       completionTokens: message.usage?.output_tokens || 0,
-      requestType: 'generate-power-goals',
+      requestType: 'generate-impact-projects',
       success: true,
       responseTimeMs,
     });
@@ -205,7 +205,7 @@ Respond ONLY with valid JSON in this exact format:
       headers: rateLimitResult ? rateLimitHeaders(rateLimitResult) : {},
     });
   } catch (error) {
-    console.error('AI Power Goals Generation Error:', error);
+    console.error('AI Impact Projects Generation Error:', error);
     const responseTimeMs = Date.now() - startTime;
 
     // Log the failure (only if we have a userId)
@@ -216,7 +216,7 @@ Respond ONLY with valid JSON in this exact format:
         model: 'claude-opus-4-20250514',
         promptTokens: 0,
         completionTokens: 0,
-        requestType: 'generate-power-goals',
+        requestType: 'generate-impact-projects',
         success: false,
         errorMessage: error instanceof Error ? error.message : 'Unknown error',
         responseTimeMs,
@@ -231,7 +231,7 @@ Respond ONLY with valid JSON in this exact format:
     }
 
     return NextResponse.json(
-      { error: 'Failed to generate Power Goals' },
+      { error: 'Failed to generate Impact Projects' },
       { status: 500 }
     );
   }

@@ -37,7 +37,7 @@ import {
 } from '@/lib/hooks/use-insights-data';
 import { useEnhancedAnalytics } from '@/lib/hooks/use-enhanced-analytics';
 import type { Tag } from '@/lib/hooks/use-tags';
-import type { DripQuadrant, EnergyRating } from '@/types/database';
+import type { ValueQuadrant, EnergyRating } from '@/types/database';
 import {
   HorizontalBarChart,
   DonutChart,
@@ -57,7 +57,7 @@ interface InsightsViewProps {
 type DateRangePreset = 'lastWeek' | 'week' | 'month' | '30days' | '90days' | 'custom';
 type ChartType = 'bar' | 'pie' | 'stacked' | 'line';
 
-const DRIP_COLORS: Record<string, string> = {
+const VALUE_COLORS: Record<string, string> = {
   production: '#06b6d4', // Cyan
   investment: '#6366f1', // Indigo
   replacement: '#f97316', // Orange
@@ -75,13 +75,13 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
   const [dateRangePreset, setDateRangePreset] = useState<DateRangePreset>('30days');
   const [customStartDate, setCustomStartDate] = useState<Date>(subDays(new Date(), 30));
   const [customEndDate, setCustomEndDate] = useState<Date>(new Date());
-  const [groupBy, setGroupBy] = useState<GroupByOption>('drip');
+  const [groupBy, setGroupBy] = useState<GroupByOption>('value');
   const [granularity, setGranularity] = useState<GranularityOption>('day');
   const [measure, setMeasure] = useState<MeasureOption>('hours');
   const [chartType, setChartType] = useState<ChartType>('bar');
 
   // Filter states
-  const [selectedDrip, setSelectedDrip] = useState<DripQuadrant[]>([]);
+  const [selectedValue, setSelectedValue] = useState<ValueQuadrant[]>([]);
   const [selectedEnergy, setSelectedEnergy] = useState<EnergyRating[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
@@ -121,7 +121,7 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
     granularity,
     measure,
     filters: {
-      dripQuadrants: selectedDrip.length > 0 ? selectedDrip : undefined,
+      valueQuadrants: selectedValue.length > 0 ? selectedValue : undefined,
       energyRatings: selectedEnergy.length > 0 ? selectedEnergy : undefined,
       tagIds: selectedTags.length > 0 ? selectedTags : undefined,
     },
@@ -139,9 +139,9 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
     let colors: Record<string, string> = {};
 
     switch (groupBy) {
-      case 'drip':
+      case 'value':
         keys = ['production', 'investment', 'replacement', 'delegation', 'na'];
-        colors = DRIP_COLORS;
+        colors = VALUE_COLORS;
         break;
       case 'energy':
         keys = ['green', 'yellow', 'red'];
@@ -169,8 +169,8 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
     return { chartKeys: keys, chartColors: colors };
   }, [groupBy, tags, insightsData.timeSeriesData]);
 
-  const toggleDripFilter = (quadrant: DripQuadrant) => {
-    setSelectedDrip(prev =>
+  const toggleValueFilter = (quadrant: ValueQuadrant) => {
+    setSelectedValue(prev =>
       prev.includes(quadrant)
         ? prev.filter(q => q !== quadrant)
         : [...prev, quadrant]
@@ -194,14 +194,14 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
   };
 
   const clearFilters = () => {
-    setSelectedDrip([]);
+    setSelectedValue([]);
     setSelectedEnergy([]);
     setSelectedTags([]);
   };
 
-  const hasFilters = selectedDrip.length > 0 || selectedEnergy.length > 0 || selectedTags.length > 0;
+  const hasFilters = selectedValue.length > 0 || selectedEnergy.length > 0 || selectedTags.length > 0;
 
-  // Calculate productivity score (weighted by DRIP + Energy)
+  // Calculate productivity score (weighted by Value + Energy)
   const productivityMetrics = useMemo(() => {
     // Normalize date range to start/end of day for consistent comparison
     const rangeStart = startOfDay(startDate);
@@ -220,7 +220,7 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
     // Calculate production ratio (production + investment hours / total hours)
     const totalMinutes = blocks.reduce((sum, b) => sum + (b.durationMinutes || 0), 0);
     const productiveMinutes = blocks
-      .filter(b => b.dripQuadrant === 'production' || b.dripQuadrant === 'investment')
+      .filter(b => b.valueQuadrant === 'production' || b.valueQuadrant === 'investment')
       .reduce((sum, b) => sum + (b.durationMinutes || 0), 0);
     const productionRatio = totalMinutes > 0 ? (productiveMinutes / totalMinutes) * 100 : 0;
 
@@ -247,7 +247,7 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
     if (prevBlocks.length > 0) {
       const prevTotalMinutes = prevBlocks.reduce((sum, b) => sum + (b.durationMinutes || 0), 0);
       const prevProductiveMinutes = prevBlocks
-        .filter(b => b.dripQuadrant === 'production' || b.dripQuadrant === 'investment')
+        .filter(b => b.valueQuadrant === 'production' || b.valueQuadrant === 'investment')
         .reduce((sum, b) => sum + (b.durationMinutes || 0), 0);
       const prevProductionRatio = prevTotalMinutes > 0 ? (prevProductiveMinutes / prevTotalMinutes) * 100 : 0;
       weeklyChange = productionRatio - prevProductionRatio;
@@ -269,10 +269,10 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
     });
 
     // Group by activity name
-    const activityMap = new Map<string, { name: string; minutes: number; events: number; drip: string; energy: string }>();
+    const activityMap = new Map<string, { name: string; minutes: number; events: number; value: string; energy: string }>();
     blocks.forEach(block => {
       const name = block.activityName.toLowerCase().trim();
-      const existing = activityMap.get(name) || { name: block.activityName, minutes: 0, events: 0, drip: block.dripQuadrant, energy: block.energyRating };
+      const existing = activityMap.get(name) || { name: block.activityName, minutes: 0, events: 0, value: block.valueQuadrant, energy: block.energyRating };
       existing.minutes += block.durationMinutes || 0;
       existing.events += 1;
       activityMap.set(name, existing);
@@ -388,7 +388,7 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="drip">DRIP</SelectItem>
+              <SelectItem value="value">Value</SelectItem>
               <SelectItem value="energy">Energy</SelectItem>
               <SelectItem value="tag">Tag</SelectItem>
             </SelectContent>
@@ -438,16 +438,16 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          {/* DRIP Filters */}
+          {/* Value Filters */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm text-muted-foreground w-16">DRIP:</span>
-            {(['production', 'investment', 'replacement', 'delegation', 'na'] as DripQuadrant[]).map(quadrant => (
+            <span className="text-sm text-muted-foreground w-16">Value:</span>
+            {(['production', 'investment', 'replacement', 'delegation', 'na'] as ValueQuadrant[]).map(quadrant => (
               <Badge
                 key={quadrant}
-                variant={selectedDrip.includes(quadrant) ? 'default' : 'outline'}
+                variant={selectedValue.includes(quadrant) ? 'default' : 'outline'}
                 className="cursor-pointer capitalize"
-                style={selectedDrip.includes(quadrant) ? { backgroundColor: DRIP_COLORS[quadrant] } : {}}
-                onClick={() => toggleDripFilter(quadrant)}
+                style={selectedValue.includes(quadrant) ? { backgroundColor: VALUE_COLORS[quadrant] } : {}}
+                onClick={() => toggleValueFilter(quadrant)}
               >
                 {quadrant === 'na' ? 'N/A' : quadrant}
               </Badge>
@@ -511,7 +511,7 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
             </div>
             <Progress value={productivityMetrics.score} className="mt-2 h-2" />
             <p className="text-xs text-muted-foreground mt-1">
-              Based on DRIP quadrant + energy balance
+              Based on Value quadrant + energy balance
             </p>
           </CardContent>
         </Card>
@@ -603,7 +603,7 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Breakdown by {groupBy === 'drip' ? 'DRIP' : groupBy === 'energy' ? 'Energy' : 'Tag'}</CardTitle>
+                <CardTitle>Breakdown by {groupBy === 'value' ? 'Value' : groupBy === 'energy' ? 'Energy' : 'Tag'}</CardTitle>
                 <CardDescription>
                   {measure === 'hours' ? 'Hours' : 'Events'} distribution
                 </CardDescription>
@@ -711,14 +711,14 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
 
       {/* Detailed Breakdown Tables */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* DRIP Breakdown */}
+        {/* Value Breakdown */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">DRIP Breakdown</CardTitle>
+            <CardTitle className="text-sm">Value Breakdown</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {insightsData.breakdown.drip.map(item => (
+              {insightsData.breakdown.value.map(item => (
                 <div key={item.label} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span
@@ -831,9 +831,9 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
                       <Badge
                         variant="outline"
                         className="text-xs capitalize"
-                        style={{ borderColor: DRIP_COLORS[activity.drip], color: DRIP_COLORS[activity.drip] }}
+                        style={{ borderColor: VALUE_COLORS[activity.value], color: VALUE_COLORS[activity.value] }}
                       >
-                        {activity.drip === 'na' ? 'N/A' : activity.drip}
+                        {activity.value === 'na' ? 'N/A' : activity.value}
                       </Badge>
                     </div>
                     <div className="flex items-center gap-4">

@@ -1,6 +1,6 @@
 # Goal Achiever Pro - 30-Day Marketing Campaign
 
-A complete social media marketing campaign for Goal Achiever Pro, based on Dan Martell's "Buy Back Your Time" methodology.
+A complete social media marketing campaign for Goal Achiever Pro, based on time optimization and productivity methodology.
 
 ## Campaign Overview
 
@@ -33,9 +33,9 @@ marketing/
 │   │   ├── assets/              # Logo, icons
 │   │   ├── day1-smart-vision.html
 │   │   ├── day2-300-rule.html
-│   │   ├── day3-power-goals.html
-│   │   ├── day4-drip-matrix.html
-│   │   ├── day5-drip-deep-dive.html
+│   │   ├── day3-impact-projects.html
+│   │   ├── day4-value-matrix.html
+│   │   ├── day5-value-deep-dive.html
 │   │   ├── day7-weekly-recap.html
 │   │   └── exports/             # PNG exports
 │   ├── week2/
@@ -67,9 +67,9 @@ marketing/
 │   ├── week1/
 │   │   ├── day1-smart-vision.html
 │   │   ├── day2-300-rule.html
-│   │   ├── day3-power-goals.html
-│   │   ├── day4-drip-matrix.html
-│   │   ├── day5-drip-deep-dive.html
+│   │   ├── day3-impact-projects.html
+│   │   ├── day4-value-matrix.html
+│   │   ├── day5-value-deep-dive.html
 │   │   ├── day7-weekly-recap.html
 │   │   └── exports/
 │   ├── week2/
@@ -119,7 +119,7 @@ marketing/
 
 | Week | Theme | Core Concepts |
 |------|-------|---------------|
-| 1 | Vision & Goals | SMART Vision, 300% Rule, 12 Power Goals, DRIP Matrix |
+| 1 | Vision & Goals | SMART Vision, 300% Rule, 12 Impact Projects, Value Matrix |
 | 2 | Time & Energy | 15-min Time Tracking, Energy Ratings, Daily MINs, App Reveal |
 | 3 | Routines & Systems | Morning Routine, Shutdown Ritual, 3x Reviews, Pomodoro |
 | 4 | Leverage & Scale | 4 C's of Leverage, Delegation Math, Friend Inventory, Full System |
@@ -168,9 +168,9 @@ Each carousel is 5-7 slides at 1080x1080px:
 |-----|-------|--------|------|
 | 1 | SMART Vision | 5 | "You're Working Hard. But Toward What?" |
 | 2 | 300% Rule | 7 | "Why 99% of Goals Fail" |
-| 3 | Power Goals | 6 | "12 Goals. That's It." |
-| 4 | DRIP Matrix | 7 | "Not All Tasks Are Equal" |
-| 5 | DRIP Deep Dive | 7 | "Know Your Task Value" |
+| 3 | Impact Projects | 6 | "12 Goals. That's It." |
+| 4 | Value Matrix | 7 | "Not All Tasks Are Equal" |
+| 5 | Value Deep Dive | 7 | "Know Your Task Value" |
 | 7 | Week 1 Recap | 6 | "Week 1 Complete" |
 | 8 | Time Tracking | 6 | "I Don't Have Time" |
 | 9 | Energy Tracking | 6 | "Time Management Is a Myth" |
@@ -217,10 +217,10 @@ Vertical format at 1080x1920px with interactive elements:
 | Brand Cyan | `#0891B2` | Primary brand color |
 | Bright Cyan | `#00BEFF` | Accents, CTAs |
 | Cyan | `#00BEFF` | Success, highlights |
-| Purple | `#a855f7` | DRIP Delegation |
-| Amber | `#f59e0b` | DRIP Replacement |
-| Blue | `#3b82f6` | DRIP Investment |
-| Cyan | `#00BEFF` | DRIP Production |
+| Purple | `#a855f7` | Value Delegation |
+| Amber | `#f59e0b` | Value Replacement |
+| Blue | `#3b82f6` | Value Investment |
+| Cyan | `#00BEFF` | Value Production |
 
 ### Gradients
 

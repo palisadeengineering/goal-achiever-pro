@@ -205,7 +205,6 @@ Update `STRIPE_WEBHOOK_SECRET` with the webhook signing secret from the CLI outp
 - [Supabase Documentation](https://supabase.com/docs)
 - [Drizzle ORM Documentation](https://orm.drizzle.team)
 - [Claude Code Documentation](https://github.com/anthropics/claude-code)
-- [Dan Martell's "Buy Back Your Time"](https://buybackyourtime.com)
 
 ## Key Features to Test
 

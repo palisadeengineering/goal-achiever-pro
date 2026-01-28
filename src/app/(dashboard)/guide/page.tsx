@@ -32,13 +32,13 @@ export default function GuidePage() {
     <div className="space-y-6">
       <PageHeader
         title="How-To Guide"
-        description="Master the DRIP framework and become a productivity powerhouse"
+        description="Master the Value Matrix framework and become a productivity powerhouse"
       />
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="flex flex-wrap h-auto gap-2">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="drip">DRIP Framework</TabsTrigger>
+          <TabsTrigger value="value">Value Matrix Framework</TabsTrigger>
           <TabsTrigger value="time-audit">Time Audit</TabsTrigger>
           <TabsTrigger value="energy">Energy Management</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
@@ -60,15 +60,15 @@ export default function GuidePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-muted-foreground">
-                Goal Achiever Pro is built on Dan Martell&apos;s proven DRIP framework from
-                &quot;Buy Back Your Time.&quot; It helps entrepreneurs and high-performers
+                Goal Achiever Pro is built on the proven Value Matrix framework for
+                time optimization. It helps entrepreneurs and high-performers
                 identify where their time goes and strategically reclaim it.
               </p>
               <div className="bg-muted/50 p-4 rounded-lg">
                 <p className="font-medium mb-2">The Core Principle:</p>
                 <p className="text-muted-foreground">
                   &quot;You don&apos;t need more time. You need to make better decisions about
-                  the time you have.&quot; - Dan Martell
+                  the time you have.&quot;
                 </p>
               </div>
             </CardContent>
@@ -85,7 +85,7 @@ export default function GuidePage() {
               <div className="space-y-4">
                 {[
                   { step: 1, title: 'Complete a Time Audit', description: 'Track every 15-minute block for 2 weeks' },
-                  { step: 2, title: 'Categorize with DRIP', description: 'Label each activity by quadrant' },
+                  { step: 2, title: 'Categorize with Value Matrix', description: 'Label each activity by quadrant' },
                   { step: 3, title: 'Rate Your Energy', description: 'Mark what energizes vs drains you' },
                   { step: 4, title: 'Identify Patterns', description: 'Review your analytics dashboard' },
                   { step: 5, title: 'Create a Replacement Plan', description: 'Delegate or automate low-value tasks' },
@@ -140,18 +140,18 @@ export default function GuidePage() {
           </Card>
         </TabsContent>
 
-        {/* DRIP Framework Tab */}
-        <TabsContent value="drip" className="space-y-6">
+        {/* Value Matrix Framework Tab */}
+        <TabsContent value="value" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>The DRIP Framework</CardTitle>
+              <CardTitle>The Value Matrix Framework</CardTitle>
               <CardDescription>
                 Every task you do falls into one of four quadrants
               </CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-6">
-                DRIP stands for Delegation, Replacement, Investment, and Production.
+                Value Matrix stands for Delegation, Replacement, Investment, and Production.
                 Understanding which quadrant your activities fall into is the key to
                 buying back your time.
               </p>
@@ -365,7 +365,7 @@ export default function GuidePage() {
                     4
                   </div>
                   <div>
-                    <p className="font-medium">Select DRIP Quadrant</p>
+                    <p className="font-medium">Select Value Quadrant</p>
                     <p className="text-sm text-muted-foreground">
                       Choose: Delegation (pink), Replacement (orange), Investment
                       (indigo), or Production (cyan)
@@ -416,7 +416,7 @@ export default function GuidePage() {
                   <li>Click &quot;Sync Calendar&quot; on the Time Audit page</li>
                   <li>Connect your Google account (one-time setup)</li>
                   <li>Your calendar events appear on the time grid</li>
-                  <li>Click &quot;Categorize Events&quot; to assign DRIP + Energy ratings</li>
+                  <li>Click &quot;Categorize Events&quot; to assign Value + Energy ratings</li>
                   <li>The system learns your patterns for future suggestions</li>
                 </ol>
               </div>
@@ -635,7 +635,7 @@ export default function GuidePage() {
                 <div className="border rounded-lg p-4">
                   <h4 className="font-medium mb-2">Weekly Trends Chart</h4>
                   <p className="text-sm text-muted-foreground">
-                    Track how your DRIP distribution changes over time. Watch for:
+                    Track how your Value distribution changes over time. Watch for:
                   </p>
                   <ul className="text-sm text-muted-foreground mt-2 space-y-1 list-disc list-inside">
                     <li>Production trending up (good!)</li>
@@ -645,7 +645,7 @@ export default function GuidePage() {
                 </div>
 
                 <div className="border rounded-lg p-4">
-                  <h4 className="font-medium mb-2">DRIP Distribution Pie Chart</h4>
+                  <h4 className="font-medium mb-2">Value Distribution Pie Chart</h4>
                   <p className="text-sm text-muted-foreground">
                     Visual breakdown of time across all four quadrants. If D+R
                     (Delegation + Replacement) is more than 40%, prioritize offloading.
@@ -701,7 +701,7 @@ export default function GuidePage() {
         <TabsContent value="tips" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Dan Martell&apos;s Top Productivity Principles</CardTitle>
+              <CardTitle>Top Productivity Principles</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4">
@@ -764,7 +764,7 @@ export default function GuidePage() {
                   </p>
                 </div>
                 <div>
-                  <p className="font-medium">I&apos;m a solopreneur. Does DRIP still apply?</p>
+                  <p className="font-medium">I&apos;m a solopreneur. Does Value Matrix still apply?</p>
                   <p className="text-sm text-muted-foreground">
                     Absolutely. Focus on Investment time to build skills that turn D&R tasks
                     into automated systems or low-cost outsourcing.
@@ -821,16 +821,16 @@ export default function GuidePage() {
           </Card>
         </TabsContent>
 
-        {/* Videos Tab - Dan Martell YouTube Resources */}
+        {/* Videos Tab - Productivity Video Resources */}
         <TabsContent value="videos" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Youtube className="h-5 w-5 text-red-500" />
-                Dan Martell Video Resources
+                Productivity Video Resources
               </CardTitle>
               <CardDescription>
-                Learn directly from Dan Martell - author of &quot;Buy Back Your Time&quot;
+                Learn productivity strategies from leading entrepreneurs
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -840,18 +840,18 @@ export default function GuidePage() {
                     <Youtube className="h-6 w-6 text-red-500" />
                   </div>
                   <div>
-                    <p className="font-medium">@DanMartell on YouTube</p>
+                    <p className="font-medium">Productivity YouTube Channels</p>
                     <p className="text-sm text-muted-foreground">
-                      Subscribe for weekly videos on productivity, delegation, and scaling your business
+                      Discover videos on productivity, delegation, and scaling your business
                     </p>
                   </div>
                   <a
-                    href="https://www.youtube.com/@DanMartell"
+                    href="https://www.youtube.com/results?search_query=time+management+productivity"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="ml-auto flex items-center gap-1.5 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
                   >
-                    Subscribe
+                    Explore
                     <ExternalLink className="h-3.5 w-3.5" />
                   </a>
                 </div>
@@ -867,40 +867,40 @@ export default function GuidePage() {
                 Featured Videos
               </CardTitle>
               <CardDescription>
-                Curated videos covering key Buy Back Your Time concepts
+                Curated videos covering key time optimization concepts
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 {[
                   {
-                    title: 'How To Buy Back Your Time & Increase Profit',
-                    description: 'Dan introduces the Buyback Principle and how to reclaim your time to grow your business',
-                    url: 'https://www.youtube.com/watch?v=0n77p5b-Wu4',
-                    topic: 'Buyback Principle',
+                    title: 'Time Management for Entrepreneurs',
+                    description: 'Learn how to reclaim your time and grow your business with proven strategies',
+                    url: 'https://www.youtube.com/results?search_query=entrepreneur+time+management',
+                    topic: 'Time Optimization',
                   },
                   {
-                    title: 'How I Manage My Time (as an Entrepreneur)',
-                    description: 'A deep dive into Dan\'s personal time management system and daily routines',
-                    url: 'https://www.youtube.com/watch?v=AECP5NsWRkE',
-                    topic: 'Time Management',
+                    title: 'Effective Daily Routines',
+                    description: 'Discover time management systems and daily routines used by successful entrepreneurs',
+                    url: 'https://www.youtube.com/results?search_query=entrepreneur+morning+routine',
+                    topic: 'Routines',
                   },
                   {
-                    title: '7 Things I Quit to Go From Broke to Millionaire',
-                    description: 'The habits and behaviors Dan eliminated to transform his productivity and wealth',
-                    url: 'https://www.youtube.com/watch?v=bbaf3eAfyd4',
+                    title: 'Productivity Habits That Work',
+                    description: 'The habits and behaviors that transform productivity and help you achieve more',
+                    url: 'https://www.youtube.com/results?search_query=productivity+habits+entrepreneurs',
                     topic: 'Productivity',
                   },
                   {
-                    title: '27 Years of Business Advice in 27 Minutes',
-                    description: 'Condensed wisdom from Dan\'s entrepreneurial journey - delegation, hiring, and scaling',
-                    url: 'https://www.youtube.com/watch?v=aOQndPlfNhU',
+                    title: 'Delegation and Scaling Your Business',
+                    description: 'Learn delegation strategies, hiring tips, and how to scale effectively',
+                    url: 'https://www.youtube.com/results?search_query=delegation+scaling+business',
                     topic: 'Business Growth',
                   },
                   {
-                    title: 'Find Your Life\'s Purpose By Doing These 3 Things',
+                    title: 'Finding Your Purpose and Energy',
                     description: 'How to discover what energizes you and align your work with your purpose',
-                    url: 'https://www.youtube.com/watch?v=CugrVcvcaso',
+                    url: 'https://www.youtube.com/results?search_query=find+purpose+entrepreneur',
                     topic: 'Energy & Purpose',
                   },
                 ].map((video, i) => (
@@ -930,21 +930,21 @@ export default function GuidePage() {
 
           {/* Topic Search Sections */}
           <div className="grid gap-6 md:grid-cols-2">
-            {/* DRIP Framework & Buyback */}
+            {/* Value Matrix Framework */}
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Target className="h-4 w-4 text-primary" />
-                  DRIP Framework & Buyback
+                  Value Matrix Framework
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
                   {[
-                    { topic: 'The Buyback Principle', query: 'Dan Martell buyback principle' },
-                    { topic: 'DRIP Matrix Explained', query: 'Dan Martell DRIP matrix' },
-                    { topic: 'Calculate Your Buyback Rate', query: 'Dan Martell buyback rate calculate' },
-                    { topic: '$1000/Hour Activities', query: 'Dan Martell 1000 dollar hour' },
+                    { topic: 'Time Value Matrix', query: 'time value matrix productivity' },
+                    { topic: 'High-Value Activities', query: 'high value activities entrepreneur' },
+                    { topic: 'Calculate Your Hourly Rate', query: 'calculate hourly rate entrepreneur' },
+                    { topic: '$1000/Hour Activities', query: '1000 dollar hour activities' },
                   ].map((item, i) => (
                     <a
                       key={i}
@@ -973,10 +973,10 @@ export default function GuidePage() {
               <CardContent>
                 <div className="space-y-2">
                   {[
-                    { topic: 'The Replacement Ladder', query: 'Dan Martell replacement ladder hiring' },
-                    { topic: 'Camcorder Method for SOPs', query: 'Dan Martell camcorder method SOP' },
-                    { topic: 'How to Hire Your First VA', query: 'Dan Martell hire virtual assistant' },
-                    { topic: '10-80-10 Rule', query: 'Dan Martell 10 80 10 rule delegation' },
+                    { topic: 'The Replacement Ladder', query: 'replacement ladder hiring entrepreneur' },
+                    { topic: 'Creating SOPs', query: 'create SOP standard operating procedure' },
+                    { topic: 'How to Hire Your First VA', query: 'hire virtual assistant entrepreneur' },
+                    { topic: 'Effective Delegation', query: 'delegation rules entrepreneur' },
                   ].map((item, i) => (
                     <a
                       key={i}
@@ -1005,10 +1005,10 @@ export default function GuidePage() {
               <CardContent>
                 <div className="space-y-2">
                   {[
-                    { topic: 'Perfect Week Planning', query: 'Dan Martell perfect week' },
-                    { topic: 'Time Audit How-To', query: 'Dan Martell time audit' },
-                    { topic: 'Energy Management', query: 'Dan Martell energy management entrepreneur' },
-                    { topic: 'Morning Routines', query: 'Dan Martell morning routine' },
+                    { topic: 'Perfect Week Planning', query: 'perfect week planning entrepreneur' },
+                    { topic: 'Time Audit How-To', query: 'time audit productivity' },
+                    { topic: 'Energy Management', query: 'energy management entrepreneur' },
+                    { topic: 'Morning Routines', query: 'morning routine successful entrepreneur' },
                   ].map((item, i) => (
                     <a
                       key={i}
@@ -1037,10 +1037,10 @@ export default function GuidePage() {
               <CardContent>
                 <div className="space-y-2">
                   {[
-                    { topic: 'Scaling Your Business', query: 'Dan Martell scale business' },
-                    { topic: 'SaaS Growth Strategies', query: 'Dan Martell SaaS growth' },
-                    { topic: 'Building Systems', query: 'Dan Martell systems business' },
-                    { topic: 'Founder Mindset', query: 'Dan Martell founder mindset entrepreneur' },
+                    { topic: 'Scaling Your Business', query: 'scale business entrepreneur' },
+                    { topic: 'SaaS Growth Strategies', query: 'SaaS growth strategies' },
+                    { topic: 'Building Systems', query: 'business systems scaling' },
+                    { topic: 'Founder Mindset', query: 'founder mindset entrepreneur' },
                   ].map((item, i) => (
                     <a
                       key={i}
@@ -1070,7 +1070,7 @@ export default function GuidePage() {
             <CardContent>
               <div className="grid gap-4 md:grid-cols-2">
                 <a
-                  href="https://www.buybackyourtime.com"
+                  href="https://www.amazon.com/s?k=time+management+books+entrepreneurs"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
@@ -1080,18 +1080,18 @@ export default function GuidePage() {
                       <Target className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <p className="font-medium group-hover:text-primary transition-colors">Buy Back Your Time</p>
-                      <p className="text-xs text-muted-foreground">Official Book Website</p>
+                      <p className="font-medium group-hover:text-primary transition-colors">Productivity Books</p>
+                      <p className="text-xs text-muted-foreground">Recommended Reading</p>
                     </div>
                     <ExternalLink className="h-4 w-4 text-muted-foreground ml-auto" />
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Get the Wall Street Journal bestselling book and free resources including the Buyback Blueprint
+                    Discover top-rated books on time management, productivity, and business growth
                   </p>
                 </a>
 
                 <a
-                  href="https://www.danmartell.com"
+                  href="https://www.youtube.com/results?search_query=entrepreneur+productivity+tips"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
@@ -1101,8 +1101,8 @@ export default function GuidePage() {
                       <Users className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <p className="font-medium group-hover:text-primary transition-colors">DanMartell.com</p>
-                      <p className="text-xs text-muted-foreground">Official Website</p>
+                      <p className="font-medium group-hover:text-primary transition-colors">Productivity Channels</p>
+                      <p className="text-xs text-muted-foreground">Video Resources</p>
                     </div>
                     <ExternalLink className="h-4 w-4 text-muted-foreground ml-auto" />
                   </div>

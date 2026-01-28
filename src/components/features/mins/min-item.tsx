@@ -19,8 +19,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { DRIP_QUADRANTS } from '@/constants/drip';
-import type { DripQuadrant } from '@/types/database';
+import { VALUE_QUADRANTS } from '@/constants/drip';
+import type { ValueQuadrant } from '@/types/database';
 
 export interface MinItemProps {
   id: string;
@@ -30,8 +30,8 @@ export interface MinItemProps {
   durationMinutes: number;
   priority: number;
   status: 'pending' | 'in_progress' | 'completed';
-  dripQuadrant?: DripQuadrant;
-  powerGoalTitle?: string;
+  valueQuadrant?: ValueQuadrant;
+  impactProjectTitle?: string;
   onToggleComplete: (id: string, completed: boolean) => void;
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
@@ -47,8 +47,8 @@ export function MinItem({
   durationMinutes,
   priority,
   status,
-  dripQuadrant,
-  powerGoalTitle,
+  valueQuadrant,
+  impactProjectTitle,
   onToggleComplete,
   onEdit,
   onDelete,
@@ -56,7 +56,7 @@ export function MinItem({
   isDraggable = false,
 }: MinItemProps) {
   const isCompleted = status === 'completed';
-  const quadrantInfo = dripQuadrant ? DRIP_QUADRANTS[dripQuadrant] : null;
+  const quadrantInfo = valueQuadrant ? VALUE_QUADRANTS[valueQuadrant] : null;
 
   const formatDuration = (minutes: number) => {
     if (minutes < 60) return `${minutes}m`;
@@ -186,10 +186,10 @@ export function MinItem({
             </div>
           )}
 
-          {powerGoalTitle && (
+          {impactProjectTitle && (
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Target className="h-3 w-3" />
-              {powerGoalTitle}
+              {impactProjectTitle}
             </div>
           )}
         </div>

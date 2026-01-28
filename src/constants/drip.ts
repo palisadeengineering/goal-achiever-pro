@@ -1,8 +1,9 @@
-// DRIP Matrix constants and helpers
+// Value Matrix constants and helpers
+// Categorizes tasks by money/energy to optimize time allocation
 
-import { DripQuadrant, EnergyRating } from '@/types/database';
+import { ValueQuadrant, EnergyRating } from '@/types/database';
 
-export const DRIP_QUADRANTS: Record<DripQuadrant, {
+export const VALUE_QUADRANTS: Record<ValueQuadrant, {
   name: string;
   description: string;
   action: string;
@@ -90,8 +91,8 @@ export const ENERGY_RATINGS: Record<EnergyRating, {
   },
 };
 
-// Helper to determine DRIP quadrant from money and energy scores
-export function getDripQuadrant(moneyScore: number, energyScore: number): DripQuadrant {
+// Helper to determine Value quadrant from money and energy scores
+export function getValueQuadrant(moneyScore: number, energyScore: number): ValueQuadrant {
   const isHighMoney = moneyScore >= 6;
   const isHighEnergy = energyScore >= 6;
 
@@ -108,8 +109,8 @@ export function getEnergyRating(score: number): EnergyRating {
   return 'red';
 }
 
-// DRIP quadrant icons (Lucide icon names)
-export const DRIP_ICONS: Record<DripQuadrant, string> = {
+// Value quadrant icons (Lucide icon names)
+export const VALUE_ICONS: Record<ValueQuadrant, string> = {
   delegation: 'Users',
   replacement: 'Cog',
   investment: 'TrendingUp',

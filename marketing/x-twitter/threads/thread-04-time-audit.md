@@ -193,7 +193,7 @@ Goal Achiever Pro tracks every 15-minute block:
 - Simple logging (one tap)
 - Auto-categorization
 - Energy tracking
-- DRIP analysis
+- Value analysis
 - Weekly reports
 
 Find your hidden hours.

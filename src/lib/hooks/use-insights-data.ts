@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { startOfDay, endOfDay } from 'date-fns';
 import type { Tag } from './use-tags';
-import type { DripQuadrant, EnergyRating } from '@/types/database';
+import type { ValueQuadrant, EnergyRating } from '@/types/database';
 
 // Helper to parse date string as local date (avoids UTC timezone issues)
 function parseLocalDate(dateString: string): Date {
@@ -17,18 +17,18 @@ export interface TimeBlockData {
   startTime: string;
   endTime: string;
   activityName: string;
-  dripQuadrant: DripQuadrant;
+  valueQuadrant: ValueQuadrant;
   energyRating: EnergyRating;
   tagIds?: string[];
   durationMinutes?: number;
 }
 
-export type GroupByOption = 'drip' | 'energy' | 'tag' | 'day' | 'week';
+export type GroupByOption = 'value' | 'energy' | 'tag' | 'day' | 'week';
 export type GranularityOption = 'day' | 'week' | 'month';
 export type MeasureOption = 'hours' | 'events';
 
 interface InsightsFilters {
-  dripQuadrants?: DripQuadrant[];
+  valueQuadrants?: ValueQuadrant[];
   energyRatings?: EnergyRating[];
   tagIds?: string[];
 }
@@ -77,13 +77,13 @@ interface UseInsightsDataReturn {
     avgHoursPerDay: number;
   };
   breakdown: {
-    drip: ChartDataPoint[];
+    value: ChartDataPoint[];
     energy: ChartDataPoint[];
     tags: ChartDataPoint[];
   };
 }
 
-const DRIP_COLORS: Record<DripQuadrant, string> = {
+const VALUE_COLORS: Record<ValueQuadrant, string> = {
   production: '#22c55e',
   investment: '#9333ea',
   replacement: '#eab308',
@@ -91,7 +91,7 @@ const DRIP_COLORS: Record<DripQuadrant, string> = {
   na: '#94a3b8',
 };
 
-const DRIP_LABELS: Record<DripQuadrant, string> = {
+const VALUE_LABELS: Record<ValueQuadrant, string> = {
   production: 'Production',
   investment: 'Investment',
   replacement: 'Replacement',
@@ -165,7 +165,7 @@ export function useInsightsData({
       const blockDate = parseLocalDate(block.date);
       if (blockDate < rangeStart || blockDate > rangeEnd) return false;
 
-      if (filters?.dripQuadrants?.length && !filters.dripQuadrants.includes(block.dripQuadrant)) {
+      if (filters?.valueQuadrants?.length && !filters.valueQuadrants.includes(block.valueQuadrant)) {
         return false;
       }
 
@@ -210,9 +210,9 @@ export function useInsightsData({
     return { totalHours, totalEvents, avgHoursPerDay };
   }, [blocksWithDuration, startDate, endDate]);
 
-  // Calculate breakdown by DRIP
-  const dripBreakdown = useMemo(() => {
-    const totals: Record<DripQuadrant, number> = {
+  // Calculate breakdown by Value
+  const valueBreakdown = useMemo(() => {
+    const totals: Record<ValueQuadrant, number> = {
       production: 0,
       investment: 0,
       replacement: 0,
@@ -222,15 +222,15 @@ export function useInsightsData({
 
     blocksWithDuration.forEach(block => {
       const value = measure === 'hours' ? block.durationMinutes / 60 : 1;
-      totals[block.dripQuadrant] += value;
+      totals[block.valueQuadrant] += value;
     });
 
     const total = Object.values(totals).reduce((sum, v) => sum + v, 0);
 
-    return (['production', 'investment', 'replacement', 'delegation', 'na'] as DripQuadrant[]).map(quadrant => ({
-      label: DRIP_LABELS[quadrant],
+    return (['production', 'investment', 'replacement', 'delegation', 'na'] as ValueQuadrant[]).map(quadrant => ({
+      label: VALUE_LABELS[quadrant],
       value: Math.round(totals[quadrant] * 10) / 10,
-      color: DRIP_COLORS[quadrant],
+      color: VALUE_COLORS[quadrant],
       percentage: total > 0 ? Math.round((totals[quadrant] / total) * 100) : 0,
     }));
   }, [blocksWithDuration, measure]);
@@ -293,16 +293,16 @@ export function useInsightsData({
   // Bar chart data based on groupBy
   const barChartData = useMemo(() => {
     switch (groupBy) {
-      case 'drip':
-        return dripBreakdown;
+      case 'value':
+        return valueBreakdown;
       case 'energy':
         return energyBreakdown;
       case 'tag':
         return tagsBreakdown;
       default:
-        return dripBreakdown;
+        return valueBreakdown;
     }
-  }, [groupBy, dripBreakdown, energyBreakdown, tagsBreakdown]);
+  }, [groupBy, valueBreakdown, energyBreakdown, tagsBreakdown]);
 
   // Time series data
   const timeSeriesData = useMemo(() => {
@@ -341,8 +341,8 @@ export function useInsightsData({
       }
 
       switch (groupBy) {
-        case 'drip':
-          periodData[periodKey][block.dripQuadrant] = (periodData[periodKey][block.dripQuadrant] || 0) + value;
+        case 'value':
+          periodData[periodKey][block.valueQuadrant] = (periodData[periodKey][block.valueQuadrant] || 0) + value;
           break;
         case 'energy':
           periodData[periodKey][block.energyRating] = (periodData[periodKey][block.energyRating] || 0) + value;
@@ -528,7 +528,7 @@ export function useInsightsData({
     energyFlowData,
     totals,
     breakdown: {
-      drip: dripBreakdown,
+      value: valueBreakdown,
       energy: energyBreakdown,
       tags: tagsBreakdown,
     },

@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, ChevronRight, Plus, Loader2, Palette, Repeat } from 'lucide-react';
 import { cn, formatHour } from '@/lib/utils';
-import { DRIP_QUADRANTS } from '@/constants/drip';
+import { VALUE_QUADRANTS } from '@/constants/drip';
 import { useLocalStorage } from '@/lib/hooks/use-local-storage';
 import { useEventSize, getAdaptiveEventStyles, SIZE_BUCKET_CLASSES } from '@/lib/hooks/use-event-size';
 import {
@@ -33,7 +33,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import type { DripQuadrant, EnergyRating } from '@/types/database';
+import type { ValueQuadrant, EnergyRating } from '@/types/database';
 import { describeRecurrence } from '@/lib/utils/recurrence';
 
 interface TimeBlock {
@@ -41,7 +41,7 @@ interface TimeBlock {
   startTime: string;
   endTime: string;
   activityName: string;
-  dripQuadrant: DripQuadrant;
+  valueQuadrant: ValueQuadrant;
   energyRating: EnergyRating;
   date?: string;
   syncStatus?: 'synced' | 'pending' | 'error';
@@ -72,8 +72,8 @@ interface WeeklyCalendarViewProps {
   onBlockClick?: (block: TimeBlock) => void;
   onBlockMove?: (blockId: string, newDate: string, newStartTime: string, newEndTime: string) => Promise<boolean>;
   isLoading?: boolean;
-  colorMode?: 'drip' | 'energy';
-  onColorModeChange?: (mode: 'drip' | 'energy') => void;
+  colorMode?: 'value' | 'energy';
+  onColorModeChange?: (mode: 'value' | 'energy') => void;
   onWeekChange?: (weekStart: Date, weekEnd: Date) => void;
 }
 
@@ -149,11 +149,11 @@ function EventDetailsContent({
         <Badge
           className="text-[10px] capitalize text-white font-medium px-2 py-0.5"
           style={{
-            backgroundColor: DRIP_QUADRANTS[block.dripQuadrant].color,
-            borderColor: DRIP_QUADRANTS[block.dripQuadrant].color,
+            backgroundColor: VALUE_QUADRANTS[block.valueQuadrant].color,
+            borderColor: VALUE_QUADRANTS[block.valueQuadrant].color,
           }}
         >
-          {block.dripQuadrant === 'na' ? 'N/A' : block.dripQuadrant}
+          {block.valueQuadrant === 'na' ? 'N/A' : block.valueQuadrant}
         </Badge>
         <Badge
           className="text-[10px] text-white font-medium px-2 py-0.5"
@@ -182,10 +182,10 @@ function EventCard({
   block: TimeBlock;
   durationSlots: number;
   onBlockClick?: (block: TimeBlock) => void;
-  getBlockColor: (quadrant: DripQuadrant) => string;
+  getBlockColor: (quadrant: ValueQuadrant) => string;
   onResizeStart?: (block: TimeBlock, e: React.MouseEvent) => void;
   isResizing?: boolean;
-  colorMode: 'drip' | 'energy';
+  colorMode: 'value' | 'energy';
 }) {
   // _getBlockColor is kept for API compatibility but we use inline styles
   const { attributes, listeners, setNodeRef: setDragRef, transform, isDragging } = useDraggable({
@@ -242,7 +242,7 @@ function EventCard({
         case 'red': return 'bg-red-500 hover:bg-red-600';
       }
     }
-    switch (block.dripQuadrant) {
+    switch (block.valueQuadrant) {
       case 'production': return 'bg-cyan-600 hover:bg-cyan-700';
       case 'investment': return 'bg-purple-600 hover:bg-purple-700';
       case 'replacement': return 'bg-amber-500 hover:bg-amber-600';
@@ -549,11 +549,11 @@ export function WeeklyCalendarView({
   onWeekChange,
 }: WeeklyCalendarViewProps) {
   const [settings] = useLocalStorage<UserSettings>('user-settings', DEFAULT_SETTINGS);
-  const [internalColorMode, setInternalColorMode] = useState<'drip' | 'energy'>('drip');
+  const [internalColorMode, setInternalColorMode] = useState<'value' | 'energy'>('value');
   const colorMode = externalColorMode ?? internalColorMode;
 
   // Notify parent of color mode changes
-  const handleColorModeChange = (newMode: 'drip' | 'energy') => {
+  const handleColorModeChange = (newMode: 'value' | 'energy') => {
     setInternalColorMode(newMode);
     onColorModeChange?.(newMode);
   };
@@ -628,7 +628,7 @@ export function WeeklyCalendarView({
           case 'c':
           case 'C':
             e.preventDefault();
-            handleColorModeChange(colorMode === 'drip' ? 'energy' : 'drip');
+            handleColorModeChange(colorMode === 'value' ? 'energy' : 'value');
             break;
         }
       }
@@ -762,11 +762,11 @@ export function WeeklyCalendarView({
     });
   };
 
-  const getBlockColor = useCallback((quadrant: DripQuadrant, energyRating?: EnergyRating) => {
+  const getBlockColor = useCallback((quadrant: ValueQuadrant, energyRating?: EnergyRating) => {
     if (colorMode === 'energy' && energyRating) {
       return ENERGY_COLORS[energyRating];
     }
-    return DRIP_QUADRANTS[quadrant].color;
+    return VALUE_QUADRANTS[quadrant].color;
   }, [colorMode]);
 
   // Drag selection handlers
@@ -1181,7 +1181,7 @@ export function WeeklyCalendarView({
                   className="w-full text-left p-3 rounded-xl bg-card border shadow-sm transition-all hover:shadow-lg active:scale-[0.98]"
                   style={{
                     borderLeftWidth: '4px',
-                    borderLeftColor: colorMode === 'energy' ? ENERGY_COLORS[block.energyRating] : DRIP_QUADRANTS[block.dripQuadrant].color,
+                    borderLeftColor: colorMode === 'energy' ? ENERGY_COLORS[block.energyRating] : VALUE_QUADRANTS[block.valueQuadrant].color,
                   }}
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -1196,7 +1196,7 @@ export function WeeklyCalendarView({
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       <Badge variant="outline" className="text-[10px] capitalize">
-                        {block.dripQuadrant}
+                        {block.valueQuadrant}
                       </Badge>
                     </div>
                   </div>
@@ -1257,11 +1257,11 @@ export function WeeklyCalendarView({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => handleColorModeChange(colorMode === 'drip' ? 'energy' : 'drip')}
+                onClick={() => handleColorModeChange(colorMode === 'value' ? 'energy' : 'value')}
                 className="gap-2 text-xs"
               >
                 <Palette className="h-3.5 w-3.5" />
-                {colorMode === 'drip' ? 'DRIP' : 'Energy'}
+                {colorMode === 'value' ? 'Value' : 'Energy'}
               </Button>
             </div>
           )}
@@ -1480,8 +1480,8 @@ export function WeeklyCalendarView({
           {/* Legend */}
           <div className="px-4 py-3 border-t bg-muted/20 flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap gap-2">
-              {colorMode === 'drip' ? (
-                Object.entries(DRIP_QUADRANTS).map(([key, quadrant]) => (
+              {colorMode === 'value' ? (
+                Object.entries(VALUE_QUADRANTS).map(([key, quadrant]) => (
                   <div key={key} className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: quadrant.color }} />
                     {quadrant.name}
@@ -1518,7 +1518,7 @@ export function WeeklyCalendarView({
           <div
             className="px-2 py-1.5 rounded shadow-2xl text-white font-bold text-xs"
             style={{
-              backgroundColor: getBlockColor(activeBlock.dripQuadrant, activeBlock.energyRating),
+              backgroundColor: getBlockColor(activeBlock.valueQuadrant, activeBlock.energyRating),
               minWidth: '100px',
               maxWidth: '180px',
               opacity: 0.9,

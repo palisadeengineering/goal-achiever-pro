@@ -27,7 +27,7 @@ export function generateWelcomeEmailHtml(props: WelcomeEmailProps): string {
 
     ${emailParagraph(greeting)}
 
-    ${emailParagraph("Thank you for joining Goal Achiever Pro! We're excited to help you achieve your goals with clarity and focus using Dan Martell's proven \"Buy Back Your Time\" methodology.")}
+    ${emailParagraph("Thank you for joining Goal Achiever Pro! We're excited to help you achieve your goals with clarity and focus using our proven time optimization methodology.")}
 
     ${confirmUrl ? emailButton("Confirm Your Email", confirmUrl) : ''}
 

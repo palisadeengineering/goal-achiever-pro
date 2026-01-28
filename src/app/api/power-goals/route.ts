@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import {
-  bulkCreatePowerGoalsSchema,
-  updatePowerGoalSchema,
-  deletePowerGoalSchema,
+  bulkCreateImpactProjectsSchema,
+  updateImpactProjectSchema,
+  deleteImpactProjectSchema,
   parseWithErrors,
 } from '@/lib/validations';
 
@@ -28,7 +28,7 @@ export async function GET() {
 
     const currentYear = new Date().getFullYear();
 
-    const { data: powerGoals, error } = await supabase
+    const { data: impactProjects, error } = await supabase
       .from('power_goals')
       .select('*')
       .eq('user_id', userId)
@@ -37,18 +37,18 @@ export async function GET() {
       .order('sort_order', { ascending: true });
 
     if (error) {
-      console.error('Error fetching power goals:', error);
+      console.error('Error fetching impact projects:', error);
       return NextResponse.json(
-        { error: 'Failed to fetch power goals' },
+        { error: 'Failed to fetch impact projects' },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ powerGoals: powerGoals || [] });
+    return NextResponse.json({ impactProjects: impactProjects || [] });
   } catch (error) {
-    console.error('Get power goals error:', error);
+    console.error('Get impact projects error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch power goals' },
+      { error: 'Failed to fetch impact projects' },
       { status: 500 }
     );
   }
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     // Validate request body
     const body = await request.json();
-    const validation = parseWithErrors(bulkCreatePowerGoalsSchema, body);
+    const validation = parseWithErrors(bulkCreateImpactProjectsSchema, body);
 
     if (!validation.success) {
       return NextResponse.json(
@@ -83,10 +83,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { powerGoals, visionId } = validation.data;
+    const { impactProjects, visionId } = validation.data;
 
     const currentYear = new Date().getFullYear();
-    const savedGoals = [];
+    const savedProjects = [];
 
     // Get current max sort order for user's goals this year
     const { data: existingGoals } = await supabase
@@ -99,18 +99,18 @@ export async function POST(request: NextRequest) {
 
     let sortOrder = (existingGoals?.[0]?.sort_order || 0) + 1;
 
-    for (const goal of powerGoals) {
-      const { data: savedGoal, error } = await supabase
+    for (const project of impactProjects) {
+      const { data: savedProject, error } = await supabase
         .from('power_goals')
         .insert({
           user_id: userId,
           vision_id: visionId || null,
-          title: goal.title,
-          description: goal.description || null,
-          target_date: goal.targetDate || null,
+          title: project.title,
+          description: project.description || null,
+          target_date: project.targetDate || null,
           year: currentYear,
-          quarter: goal.quarter,
-          category: goal.category || null,
+          quarter: project.quarter,
+          category: project.category || null,
           progress_percentage: 0,
           status: 'active',
           sort_order: sortOrder++,
@@ -119,22 +119,22 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (error) {
-        console.error('Error saving power goal:', error);
+        console.error('Error saving impact project:', error);
         continue;
       }
 
-      savedGoals.push(savedGoal);
+      savedProjects.push(savedProject);
     }
 
     return NextResponse.json({
       success: true,
-      saved: savedGoals.length,
-      powerGoals: savedGoals,
+      saved: savedProjects.length,
+      impactProjects: savedProjects,
     });
   } catch (error) {
-    console.error('Create power goals error:', error);
+    console.error('Create impact projects error:', error);
     return NextResponse.json(
-      { error: 'Failed to create power goals' },
+      { error: 'Failed to create impact projects' },
       { status: 500 }
     );
   }
@@ -160,7 +160,7 @@ export async function PUT(request: NextRequest) {
 
     // Validate request body
     const body = await request.json();
-    const validation = parseWithErrors(updatePowerGoalSchema, body);
+    const validation = parseWithErrors(updateImpactProjectSchema, body);
 
     if (!validation.success) {
       return NextResponse.json(
@@ -171,7 +171,7 @@ export async function PUT(request: NextRequest) {
 
     const { id, title, description, quarter, category, targetDate, progressPercentage, status } = validation.data;
 
-    const { data: powerGoal, error } = await supabase
+    const { data: impactProject, error } = await supabase
       .from('power_goals')
       .update({
         title,
@@ -189,18 +189,18 @@ export async function PUT(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error updating power goal:', error);
+      console.error('Error updating impact project:', error);
       return NextResponse.json(
-        { error: 'Failed to update power goal' },
+        { error: 'Failed to update impact project' },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ powerGoal });
+    return NextResponse.json({ impactProject });
   } catch (error) {
-    console.error('Update power goal error:', error);
+    console.error('Update impact project error:', error);
     return NextResponse.json(
-      { error: 'Failed to update power goal' },
+      { error: 'Failed to update impact project' },
       { status: 500 }
     );
   }
@@ -226,7 +226,7 @@ export async function DELETE(request: NextRequest) {
 
     // Validate query params
     const { searchParams } = new URL(request.url);
-    const validation = parseWithErrors(deletePowerGoalSchema, {
+    const validation = parseWithErrors(deleteImpactProjectSchema, {
       id: searchParams.get('id'),
     });
 
@@ -246,18 +246,18 @@ export async function DELETE(request: NextRequest) {
       .eq('user_id', userId);
 
     if (error) {
-      console.error('Error deleting power goal:', error);
+      console.error('Error deleting impact project:', error);
       return NextResponse.json(
-        { error: 'Failed to delete power goal' },
+        { error: 'Failed to delete impact project' },
         { status: 500 }
       );
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Delete power goal error:', error);
+    console.error('Delete impact project error:', error);
     return NextResponse.json(
-      { error: 'Failed to delete power goal' },
+      { error: 'Failed to delete impact project' },
       { status: 500 }
     );
   }

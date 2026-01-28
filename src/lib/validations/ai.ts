@@ -16,8 +16,8 @@ export const generateSmartSchema = z.object({
   context: safeStringSchema(2000).optional(),
 });
 
-// Generate power goals from SMART goals
-export const generatePowerGoalsSchema = z.object({
+// Generate impact projects from SMART goals
+export const generateImpactProjectsSchema = z.object({
   visionId: uuidSchema,
   vision: safeStringSchema(2000),
   specific: safeStringSchema(2000).optional(),
@@ -41,9 +41,9 @@ export const generateKpisSchema = z.object({
 
 // Generate targets (monthly/weekly)
 export const generateTargetsSchema = z.object({
-  powerGoalId: uuidSchema,
-  powerGoalTitle: safeStringSchema(200),
-  powerGoalDescription: safeStringSchema(2000).optional(),
+  impactProjectId: uuidSchema,
+  impactProjectTitle: safeStringSchema(200),
+  impactProjectDescription: safeStringSchema(2000).optional(),
   targetMonth: monthSchema.optional(),
   targetYear: yearSchema.optional(),
   granularity: z.enum(['monthly', 'weekly', 'daily']).optional().default('monthly'),
@@ -102,9 +102,9 @@ export const generateBacktrackSchema = z.object({
 
 // Generate monthly projects
 export const generateMonthlyProjectsSchema = z.object({
-  powerGoalId: uuidSchema,
-  powerGoalTitle: safeStringSchema(200),
-  powerGoalDescription: safeStringSchema(2000).optional(),
+  impactProjectId: uuidSchema,
+  impactProjectTitle: safeStringSchema(200),
+  impactProjectDescription: safeStringSchema(2000).optional(),
   quarter: quarterSchema,
   year: yearSchema,
 });
@@ -158,7 +158,10 @@ export const suggestEventCleanupSchema = z.object({
 });
 
 export type GenerateSmartInput = z.infer<typeof generateSmartSchema>;
-export type GeneratePowerGoalsInput = z.infer<typeof generatePowerGoalsSchema>;
+export type GenerateImpactProjectsInput = z.infer<typeof generateImpactProjectsSchema>;
+// Backwards compatibility alias
+export const generatePowerGoalsSchema = generateImpactProjectsSchema;
+export type GeneratePowerGoalsInput = GenerateImpactProjectsInput;
 export type GenerateKpisInput = z.infer<typeof generateKpisSchema>;
 export type GenerateTargetsInput = z.infer<typeof generateTargetsSchema>;
 export type SuggestVisionInput = z.infer<typeof suggestVisionSchema>;

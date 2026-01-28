@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-Research across Lattice, 15Five, Weekdone, Perdoo, and Quantive reveals a mature OKR/goal cascading market with well-established table stakes. The key insight is that **alignment beats cascading** - modern products emphasize bidirectional goal linking rather than rigid top-down hierarchies. For Goal Achiever Pro's Dan Martell methodology integration, the differentiation opportunity lies in combining the 300% Rule (Clarity + Belief + Consistency) with standard progress roll-up mechanics.
+Research across Lattice, 15Five, Weekdone, Perdoo, and Quantive reveals a mature OKR/goal cascading market with well-established table stakes. The key insight is that **alignment beats cascading** - modern products emphasize bidirectional goal linking rather than rigid top-down hierarchies. For Goal Achiever Pro's time optimization methodology integration, the differentiation opportunity lies in combining the 300% Rule (Clarity + Belief + Consistency) with standard progress roll-up mechanics.
 
 ---
 
@@ -41,7 +41,7 @@ Features that set products apart. Not expected, but valued when present.
 
 | Feature | Value Proposition | Complexity | Dependencies | Notes |
 |---------|-------------------|------------|--------------|-------|
-| **300% Rule Tracking (Clarity/Belief/Consistency)** | Unique to Dan Martell methodology - no competitor has this | Medium | Vision + daily reviews | **GAP Opportunity**: No OKR tool tracks belief/conviction alongside progress |
+| **300% Rule Tracking (Clarity/Belief/Consistency)** | Unique to time optimization methodology - no competitor has this | Medium | Vision + daily reviews | **GAP Opportunity**: No OKR tool tracks belief/conviction alongside progress |
 | **Confidence Scoring** | Predictive indicator separate from progress | Low | Goals + weekly check-in | Perdoo, Viva Goals feature this; 0-10 scale asking "how confident are you?" |
 | **Weighted Progress Calculation** | Higher-weight items contribute more to roll-up | Medium | Progress calculation | 15Five: "assign weight to each key result and child objective" |
 | **AI-Generated Goals/KPIs** | Reduce friction in goal creation | High | AI integration | Already in GAP; Lattice has "AI recommends goal alignments" |
@@ -49,7 +49,7 @@ Features that set products apart. Not expected, but valued when present.
 | **Streak Tracking for Habits** | Gamification for daily/weekly activities | Medium | Completion logs + dates | Already in GAP schema (`kpiStreaks`); Duolingo-style motivation |
 | **Strategy Map Visualization** | Shows how initiatives connect to strategic pillars | High | Full hierarchy + UI | Perdoo specialty: "Strategy Map communicates strategy understood by people" |
 | **Non-Negotiables/Habits Integration** | Daily behaviors tied to goals | Medium | Routine system | Already in GAP; unique integration opportunity |
-| **Buyback Rate Calculation** | Time value of delegation decisions | Medium | Time audit data | Dan Martell-specific; no competitor has this |
+| **Buyback Rate Calculation** | Time value of delegation decisions | Medium | Time audit data | time optimization-specific; no competitor has this |
 | **Pulse Surveys + OKRs Combined** | Engagement meets performance | High | Survey system | 15Five, Lattice combine these; not in GAP scope |
 | **Bi-directional Calendar Sync** | Goals appear on calendar, calendar affects goals | High | Calendar API | Already in GAP; two-way sync is premium feature |
 | **OKR Retrospectives** | End-of-quarter learnings capture | Low-Medium | Review system | Often overlooked but high value |
@@ -252,7 +252,7 @@ For MVP KPI cascade features, prioritize:
 - [Perdoo - Common OKR Mistakes](https://www.perdoo.com/resources/blog/common-okr-mistakes-and-how-to-overcome-them)
 - [OKR Quickstart - Confidence Scoring](https://okrquickstart.com/okrtemplates/okr-confidence-scoring)
 - [Trophy - Gamification Case Studies](https://trophy.so/blog/streaks-gamification-case-study)
-- [Dan Martell - 300% Rule (Twitter/X)](https://x.com/danmartell/status/1902440329309254021)
+- [time optimization - 300% Rule (Twitter/X)](https://x.com/danmartell/status/1902440329309254021)
 
 ### Market Research (MEDIUM confidence)
 - [Datalligence - 15 Must-Have OKR Features 2025](https://datalligence.ai/blogs/okr-software-features/)

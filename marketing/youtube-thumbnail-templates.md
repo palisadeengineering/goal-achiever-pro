@@ -323,7 +323,7 @@ Before: Stressed / After: Balanced
 │                                                        │
 │              ┌─────────┬─────────┐                     │
 │              │    D    │    R    │                     │
-│   DRIP       ├─────────┼─────────┤      FACE           │
+│   Value       ├─────────┼─────────┤      FACE           │
 │   MATRIX     │    I    │    P    │     (corner)        │
 │              └─────────┴─────────┘                     │
 │                                                        │
@@ -366,10 +366,10 @@ Title/Hook: Below or above framework
 
 ### Framework Examples
 ```
-DRIP Matrix (2x2 grid)
+Value Matrix (2x2 grid)
 300% Rule (3 circles: Clarity, Belief, Consistency)
 Goal Hierarchy (pyramid)
-Power Goals (12 boxes in 4 rows)
+Impact Projects (12 boxes in 4 rows)
 Daily Reviews (3 icons: morning, midday, evening)
 ```
 
@@ -548,7 +548,7 @@ Face: Right side
 "3 MINs that win your day"
 "5 habits that change everything"
 "7 time vampires to eliminate"
-"12 Power Goals for 2025"
+"12 Impact Projects for 2025"
 "The 300% Rule"
 ```
 
@@ -646,7 +646,7 @@ Color: Primary (dark + cyan)
 ### Concept Explainers
 ```
 Template: Framework/Matrix OR Big Number
-Text: The concept name ("DRIP MATRIX", "300% RULE")
+Text: The concept name ("Value MATRIX", "300% RULE")
 Visual: Framework graphic
 Color: Primary or gradient
 ```

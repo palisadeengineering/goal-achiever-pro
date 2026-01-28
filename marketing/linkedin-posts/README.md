@@ -30,8 +30,8 @@ linkedin-posts/
 ### Week 1: Vision & Goals
 - Day 1: SMART Vision Framework
 - Day 2: 300% Rule (Clarity + Belief + Consistency)
-- Day 3: 12 Power Goals System
-- Day 4: DRIP Matrix
+- Day 3: 12 Impact Projects System
+- Day 4: Value Matrix
 
 ### Week 2: Time & Energy
 - Day 8: Time Tracking (15-min blocks)

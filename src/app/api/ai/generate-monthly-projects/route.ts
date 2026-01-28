@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const prompt = `You are an expert project planner helping someone achieve their 1-year goal using Dan Martell's Achievement Roadmap methodology.
+    const prompt = `You are an expert project planner helping someone achieve their 1-year goal using the Achievement Roadmap methodology.
 
 The user has a vision and a 1-year SMART goal. Generate monthly projects that progressively build toward achieving the goal.
 

@@ -177,9 +177,9 @@ export const quarterlyTargets = pgTable('quarterly_targets', {
 }));
 
 // =============================================
-// POWER GOALS (12 Annual Projects)
+// IMPACT PROJECTS (12 Annual Projects)
 // =============================================
-export const powerGoals = pgTable('power_goals', {
+export const impactProjects = pgTable('power_goals', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
   visionId: uuid('vision_id').references(() => visions.id, { onDelete: 'set null' }),
@@ -209,12 +209,12 @@ export const powerGoals = pgTable('power_goals', {
 }));
 
 // =============================================
-// MONTHLY TARGETS (Links to Power Goals)
+// MONTHLY TARGETS (Links to Impact Projects)
 // =============================================
 export const monthlyTargets = pgTable('monthly_targets', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
-  powerGoalId: uuid('power_goal_id').notNull().references(() => powerGoals.id, { onDelete: 'cascade' }),
+  impactProjectId: uuid('power_goal_id').notNull().references(() => impactProjects.id, { onDelete: 'cascade' }),
   // Backtrack planning connection
   quarterlyTargetId: uuid('quarterly_target_id').references(() => quarterlyTargets.id, { onDelete: 'set null' }),
   title: text('title').notNull(),
@@ -302,7 +302,7 @@ export const dailyActions = pgTable('daily_actions', {
 export const mins = pgTable('mins', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
-  powerGoalId: uuid('power_goal_id').references(() => powerGoals.id, { onDelete: 'set null' }),
+  impactProjectId: uuid('power_goal_id').references(() => impactProjects.id, { onDelete: 'set null' }),
   title: text('title').notNull(),
   description: text('description'),
   scheduledDate: date('scheduled_date').notNull(),
@@ -313,8 +313,8 @@ export const mins = pgTable('mins', {
   timeScope: text('time_scope').default('daily'), // 'daily' | 'weekly'
   weekStartDate: date('week_start_date'), // for weekly MINS
   weekEndDate: date('week_end_date'), // for weekly MINS
-  // DRIP categorization
-  dripQuadrant: text('drip_quadrant'),
+  // Value Matrix categorization
+  valueQuadrant: text('drip_quadrant'),
   makesMoneyScore: integer('makes_money_score'),
   energyScore: integer('energy_score'),
   // Status
@@ -340,8 +340,8 @@ export const detectedProjects = pgTable('detected_projects', {
   name: text('name').notNull(),
   normalizedName: text('normalized_name').notNull(), // lowercase, trimmed for matching
   color: text('color').default('#6366f1'),
-  // Optional link to Power Goal
-  powerGoalId: uuid('power_goal_id').references(() => powerGoals.id, { onDelete: 'set null' }),
+  // Optional link to Impact Project
+  impactProjectId: uuid('power_goal_id').references(() => impactProjects.id, { onDelete: 'set null' }),
   // Cached aggregates
   totalMinutes: integer('total_minutes').default(0),
   eventCount: integer('event_count').default(0),
@@ -354,7 +354,7 @@ export const detectedProjects = pgTable('detected_projects', {
 }, (table) => ({
   userIdx: index('detected_projects_user_idx').on(table.userId),
   normalizedNameIdx: uniqueIndex('detected_projects_normalized_name_idx').on(table.userId, table.normalizedName),
-  powerGoalIdx: index('detected_projects_power_goal_idx').on(table.powerGoalId),
+  impactProjectIdx: index('detected_projects_power_goal_idx').on(table.impactProjectId),
 }));
 
 // =============================================
@@ -399,8 +399,8 @@ export const timeBlocks = pgTable('time_blocks', {
   // Energy rating
   energyRating: text('energy_rating').notNull(), // green, yellow, red
   energyScore: integer('energy_score'),
-  // DRIP categorization
-  dripQuadrant: text('drip_quadrant'),
+  // Value Matrix categorization
+  valueQuadrant: text('drip_quadrant'),
   makesMoneyScore: integer('makes_money_score'),
   lightsUpScore: integer('lights_up_score'),
   // Source tracking
@@ -417,7 +417,7 @@ export const timeBlocks = pgTable('time_blocks', {
   updatedAt: timestamp('updated_at').defaultNow(),
 }, (table) => ({
   userDateIdx: index('time_blocks_user_date_idx').on(table.userId, table.blockDate),
-  dripIdx: index('time_blocks_drip_idx').on(table.userId, table.dripQuadrant),
+  valueIdx: index('time_blocks_drip_idx').on(table.userId, table.valueQuadrant),
   recurringIdx: index('time_blocks_recurring_idx').on(table.userId, table.isRecurring),
   parentIdx: index('time_blocks_parent_idx').on(table.parentBlockId),
   activityTypeIdx: index('time_blocks_activity_type_idx').on(table.userId, table.activityType),
@@ -450,7 +450,7 @@ export const activityCategories = pgTable('activity_categories', {
   name: text('name').notNull(),
   color: text('color').default('#6366f1'),
   icon: text('icon'),
-  defaultDripQuadrant: text('default_drip_quadrant'),
+  defaultValueQuadrant: text('default_drip_quadrant'),
   defaultMakesMoneyScore: integer('default_makes_money_score'),
   defaultEnergyScore: integer('default_energy_score'),
   isSystemDefault: boolean('is_system_default').default(false),
@@ -562,7 +562,7 @@ export const pomodoroSessions = pgTable('pomodoro_sessions', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
   minId: uuid('min_id').references(() => mins.id, { onDelete: 'set null' }),
-  powerGoalId: uuid('power_goal_id').references(() => powerGoals.id, { onDelete: 'set null' }),
+  impactProjectId: uuid('power_goal_id').references(() => impactProjects.id, { onDelete: 'set null' }),
   sessionDate: date('session_date').notNull(),
   startedAt: timestamp('started_at').notNull(),
   endedAt: timestamp('ended_at'),
@@ -610,7 +610,7 @@ export const dailyReviews = pgTable('daily_reviews', {
 export const leverageItems = pgTable('leverage_items', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
-  powerGoalId: uuid('power_goal_id').references(() => powerGoals.id, { onDelete: 'set null' }),
+  impactProjectId: uuid('power_goal_id').references(() => impactProjects.id, { onDelete: 'set null' }),
   leverageType: text('leverage_type').notNull(), // code, content, capital, collaboration
   actionType: text('action_type').notNull(), // automate, delegate, duplicate
   title: text('title').notNull(),
@@ -853,7 +853,7 @@ export const profilesRelations = relations(profiles, ({ many, one }) => ({
   visions: many(visions),
   backtrackPlans: many(backtrackPlans),
   quarterlyTargets: many(quarterlyTargets),
-  powerGoals: many(powerGoals),
+  impactProjects: many(impactProjects),
   mins: many(mins),
   timeBlocks: many(timeBlocks),
   routines: many(routines),
@@ -896,7 +896,7 @@ export const visionsRelations = relations(visions, ({ one, many }) => ({
   user: one(profiles, { fields: [visions.userId], references: [profiles.id] }),
   backtrackPlans: many(backtrackPlans),
   quarterlyTargets: many(quarterlyTargets),
-  powerGoals: many(powerGoals),
+  impactProjects: many(impactProjects),
   northStarMetrics: many(northStarMetrics),
   visionBoardImages: many(visionBoardImages),
   dailyAffirmationCompletions: many(dailyAffirmationCompletions),
@@ -909,22 +909,22 @@ export const backtrackPlansRelations = relations(backtrackPlans, ({ one, many })
   user: one(profiles, { fields: [backtrackPlans.userId], references: [profiles.id] }),
   vision: one(visions, { fields: [backtrackPlans.visionId], references: [visions.id] }),
   quarterlyTargets: many(quarterlyTargets),
-  powerGoals: many(powerGoals),
+  impactProjects: many(impactProjects),
 }));
 
 export const quarterlyTargetsRelations = relations(quarterlyTargets, ({ one, many }) => ({
   user: one(profiles, { fields: [quarterlyTargets.userId], references: [profiles.id] }),
   vision: one(visions, { fields: [quarterlyTargets.visionId], references: [visions.id] }),
   backtrackPlan: one(backtrackPlans, { fields: [quarterlyTargets.backtrackPlanId], references: [backtrackPlans.id] }),
-  powerGoals: many(powerGoals),
+  impactProjects: many(impactProjects),
   monthlyTargets: many(monthlyTargets),
 }));
 
-export const powerGoalsRelations = relations(powerGoals, ({ one, many }) => ({
-  user: one(profiles, { fields: [powerGoals.userId], references: [profiles.id] }),
-  vision: one(visions, { fields: [powerGoals.visionId], references: [visions.id] }),
-  quarterlyTarget: one(quarterlyTargets, { fields: [powerGoals.quarterlyTargetId], references: [quarterlyTargets.id] }),
-  backtrackPlan: one(backtrackPlans, { fields: [powerGoals.backtrackPlanId], references: [backtrackPlans.id] }),
+export const impactProjectsRelations = relations(impactProjects, ({ one, many }) => ({
+  user: one(profiles, { fields: [impactProjects.userId], references: [profiles.id] }),
+  vision: one(visions, { fields: [impactProjects.visionId], references: [visions.id] }),
+  quarterlyTarget: one(quarterlyTargets, { fields: [impactProjects.quarterlyTargetId], references: [quarterlyTargets.id] }),
+  backtrackPlan: one(backtrackPlans, { fields: [impactProjects.backtrackPlanId], references: [backtrackPlans.id] }),
   mins: many(mins),
   leverageItems: many(leverageItems),
   monthlyTargets: many(monthlyTargets),
@@ -933,7 +933,7 @@ export const powerGoalsRelations = relations(powerGoals, ({ one, many }) => ({
 
 export const monthlyTargetsRelations = relations(monthlyTargets, ({ one, many }) => ({
   user: one(profiles, { fields: [monthlyTargets.userId], references: [profiles.id] }),
-  powerGoal: one(powerGoals, { fields: [monthlyTargets.powerGoalId], references: [powerGoals.id] }),
+  impactProject: one(impactProjects, { fields: [monthlyTargets.impactProjectId], references: [impactProjects.id] }),
   quarterlyTarget: one(quarterlyTargets, { fields: [monthlyTargets.quarterlyTargetId], references: [quarterlyTargets.id] }),
   weeklyTargets: many(weeklyTargets),
 }));
@@ -951,7 +951,7 @@ export const dailyActionsRelations = relations(dailyActions, ({ one }) => ({
 
 export const minsRelations = relations(mins, ({ one, many }) => ({
   user: one(profiles, { fields: [mins.userId], references: [profiles.id] }),
-  powerGoal: one(powerGoals, { fields: [mins.powerGoalId], references: [powerGoals.id] }),
+  impactProject: one(impactProjects, { fields: [mins.impactProjectId], references: [impactProjects.id] }),
   timeBlocks: many(timeBlocks),
 }));
 
@@ -964,7 +964,7 @@ export const timeBlocksRelations = relations(timeBlocks, ({ one }) => ({
 
 export const detectedProjectsRelations = relations(detectedProjects, ({ one, many }) => ({
   user: one(profiles, { fields: [detectedProjects.userId], references: [profiles.id] }),
-  powerGoal: one(powerGoals, { fields: [detectedProjects.powerGoalId], references: [powerGoals.id] }),
+  impactProject: one(impactProjects, { fields: [detectedProjects.impactProjectId], references: [impactProjects.id] }),
   mergedInto: one(detectedProjects, { fields: [detectedProjects.mergedIntoId], references: [detectedProjects.id], relationName: 'projectMerge' }),
   mergedFrom: many(detectedProjects, { relationName: 'projectMerge' }),
   timeBlocks: many(timeBlocks),
@@ -1125,7 +1125,7 @@ export const kpiProgressCache = pgTable('kpi_progress_cache', {
 export const milestoneKpis = pgTable('milestone_kpis', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
-  milestoneId: uuid('milestone_id').notNull().references(() => powerGoals.id, { onDelete: 'cascade' }),
+  milestoneId: uuid('milestone_id').notNull().references(() => impactProjects.id, { onDelete: 'cascade' }),
   kpiId: uuid('kpi_id').references(() => visionKpis.id, { onDelete: 'cascade' }),
   // Custom KPI fields (when not linking to existing vision KPI)
   customKpiName: text('custom_kpi_name'),
@@ -1242,7 +1242,7 @@ export const kpiStreaksRelations = relations(kpiStreaks, ({ one }) => ({
 
 export const milestoneKpisRelations = relations(milestoneKpis, ({ one }) => ({
   user: one(profiles, { fields: [milestoneKpis.userId], references: [profiles.id] }),
-  milestone: one(powerGoals, { fields: [milestoneKpis.milestoneId], references: [powerGoals.id] }),
+  milestone: one(impactProjects, { fields: [milestoneKpis.milestoneId], references: [impactProjects.id] }),
   kpi: one(visionKpis, { fields: [milestoneKpis.kpiId], references: [visionKpis.id] }),
 }));
 
@@ -1398,8 +1398,8 @@ export const keyResults = pgTable('key_results', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
   visionId: uuid('vision_id').notNull().references(() => visions.id, { onDelete: 'cascade' }),
-  // Optional link to power goal
-  powerGoalId: uuid('power_goal_id').references(() => powerGoals.id, { onDelete: 'set null' }),
+  // Optional link to impact project (DB column still named power_goal_id)
+  impactProjectId: uuid('power_goal_id').references(() => impactProjects.id, { onDelete: 'set null' }),
   // Key Result details
   title: text('title').notNull(),
   description: text('description'),
@@ -1493,7 +1493,7 @@ export const teamMembersRelations = relations(teamMembers, ({ one, many }) => ({
 export const keyResultsRelations = relations(keyResults, ({ one, many }) => ({
   user: one(profiles, { fields: [keyResults.userId], references: [profiles.id] }),
   vision: one(visions, { fields: [keyResults.visionId], references: [visions.id] }),
-  powerGoal: one(powerGoals, { fields: [keyResults.powerGoalId], references: [powerGoals.id] }),
+  impactProject: one(impactProjects, { fields: [keyResults.impactProjectId], references: [impactProjects.id] }),
   assignee: one(teamMembers, { fields: [keyResults.assigneeId], references: [teamMembers.id] }),
   updates: many(keyResultUpdates),
 }));

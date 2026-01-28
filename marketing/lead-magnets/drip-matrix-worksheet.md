@@ -1,13 +1,13 @@
-# DRIP Matrix Worksheet
+# Value Matrix Worksheet
 ## Reclaim 20+ Hours Per Week by Categorizing Your Tasks
 
-*Based on Dan Martell's "Buy Back Your Time" methodology*
+*Based on time optimization methodology*
 
 ---
 
-## What is the DRIP Matrix?
+## What is the Value Matrix?
 
-The DRIP Matrix helps you categorize every activity in your life based on two factors:
+The Value Matrix helps you categorize every activity in your life based on two factors:
 1. **Energy Level** - Does this task give you energy (+) or drain you (-)?
 2. **Dollar Value** - Is this worth more or less than your hourly rate?
 
@@ -37,7 +37,7 @@ Before categorizing tasks, calculate your effective hourly rate:
 
 ---
 
-## DRIP Categories Explained
+## Value Categories Explained
 
 ### D - DELEGATION ZONE (Low $ + Drains Energy)
 **Action:** Hire someone else to do these ASAP
@@ -120,7 +120,7 @@ These tasks:
 
 ---
 
-## DRIP Matrix Analysis Worksheet
+## Value Matrix Analysis Worksheet
 
 ### Step 1: Brain Dump All Your Tasks
 
@@ -160,7 +160,7 @@ List every task you do in a typical week (work and personal):
 
 Go back through your list and add these ratings:
 
-| # | Task | Energy (-2 to +2) | $ Value (L/M/H) | DRIP Category |
+| # | Task | Energy (-2 to +2) | $ Value (L/M/H) | Value Category |
 |---|---|---|---|---|
 | 1 | | | | |
 | 2 | | | | |
@@ -202,7 +202,7 @@ Go back through your list and add these ratings:
 
 ---
 
-### Step 3: Sort Into Your DRIP Matrix
+### Step 3: Sort Into Your Value Matrix
 
 #### D - DELEGATE (Low $ + Negative Energy)
 | Task | Hours/Week | Cost to Delegate | Potential Hire |
@@ -262,7 +262,7 @@ Go back through your list and add these ratings:
 
 ---
 
-## Your DRIP Summary
+## Your Value Summary
 
 ### Current Time Distribution
 
@@ -373,7 +373,7 @@ Now that you're freeing up time, how will you spend it in your Production zone?
 
 ---
 
-## Common DRIP Mistakes to Avoid
+## Common Value Matrix Mistakes to Avoid
 
 ### Mistake #1: Delegating P Zone Tasks
 **Problem:** Hiring someone for your genius work
@@ -425,7 +425,7 @@ Now that you're freeing up time, how will you spend it in your Production zone?
 
 ---
 
-## Weekly DRIP Review Template
+## Weekly Value Review Template
 
 ### Date: _______________
 
@@ -462,7 +462,7 @@ Now that you're freeing up time, how will you spend it in your Production zone?
 - **Communication:** Slack, Voxer
 
 ### Recommended Reading
-- "Buy Back Your Time" by Dan Martell
+- "The 4-Hour Workweek" by Tim Ferriss (another great time management resource)
 - "Who Not How" by Dan Sullivan
 - "The 4-Hour Workweek" by Tim Ferriss
 - "Clockwork" by Mike Michalowicz
@@ -475,17 +475,17 @@ Now that you're freeing up time, how will you spend it in your Production zone?
 2. **Calculate your hourly rate** - Know your true value
 3. **Identify 3 quick delegation wins** - Start small
 4. **Create your first SOP** - Make delegation repeatable
-5. **Track your DRIP weekly** - What gets measured gets managed
+5. **Track your Value weekly** - What gets measured gets managed
 
 ---
 
-## Ready to Automate Your DRIP Analysis?
+## Ready to Automate Your Value Analysis?
 
-Goal Achiever Pro automatically categorizes your time blocks into DRIP zones, calculates your weekly distribution, and shows you exactly where to focus.
+Goal Achiever Pro automatically categorizes your time blocks into Value zones, calculates your weekly distribution, and shows you exactly where to focus.
 
 **Features include:**
-- Automatic DRIP categorization
-- Weekly DRIP distribution reports
+- Automatic Value categorization
+- Weekly Value distribution reports
 - Energy pattern tracking
 - Delegation opportunity alerts
 - Progress tracking over time
@@ -494,4 +494,4 @@ Goal Achiever Pro automatically categorizes your time blocks into DRIP zones, ca
 
 ---
 
-*Created with Goal Achiever Pro - The complete system for buying back your time*
+*Created with Goal Achiever Pro - The complete time optimization system*

@@ -35,7 +35,7 @@
 - "The 300% Rule changed how I set goals."
 - "3 questions that predict if your goal will succeed."
 - "I tracked 10,000 hours of my time. Here's what I learned:"
-- "12 Power Goals in 12 months. Here's the system:"
+- "12 Impact Projects in 12 months. Here's the system:"
 - "15 minutes every morning. Life-changing results."
 
 ### The Secret
@@ -71,9 +71,9 @@
 - "The habit that doubled my productivity."
 
 ### The Framework
-- "The DRIP Matrix: 4 quadrants that change everything."
+- "The Value Matrix: 4 quadrants that change everything."
 - "The 300% Rule: Clarity + Belief + Consistency."
-- "The Power Goal System: 12 months, 12 achievements."
+- "The Impact Project System: 12 months, 12 achievements."
 - "The Time Audit Method: Find your hidden hours."
 - "The MINs Framework: 3 tasks that move the needle."
 
@@ -139,7 +139,7 @@
 - "8 morning routine mistakes killing your productivity:"
 
 ### The Guide
-- "Complete guide to the DRIP Matrix:"
+- "Complete guide to the Value Matrix:"
 - "How to find 20+ hours in your week (step-by-step):"
 - "The 7-day time audit that exposes hidden hours:"
 - "Everything I know about goal achievement in one thread:"
@@ -149,7 +149,7 @@
 - "Let me break down exactly how I plan my week:"
 - "Here's my exact morning routine (taken 3 years to perfect):"
 - "Breaking down the 300% Rule for goal achievement:"
-- "How I set and achieve 12 Power Goals per year:"
+- "How I set and achieve 12 Impact Projects per year:"
 - "The complete system for tracking your time:"
 
 ---
@@ -223,9 +223,9 @@
 
 ### Formula 4: The + Framework
 "The [name] [framework/rule/method]:"
-- "The DRIP Matrix:"
+- "The Value Matrix:"
 - "The 300% Rule:"
-- "The Power Goals System:"
+- "The Impact Projects System:"
 
 ### Formula 5: Question + Answer
 "[Provocative question]? [One-word answer]. Here's why:"

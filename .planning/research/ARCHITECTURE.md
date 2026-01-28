@@ -20,7 +20,7 @@ Vision (visions)
   |
   +-- Quarterly Targets (quarterly_targets)
   |     |
-  |     +-- Power Goals (power_goals)
+  |     +-- Impact Projects (power_goals)
   |           |
   |           +-- Monthly Targets (monthly_targets)
   |                 |
@@ -298,7 +298,7 @@ interface ProgressSummary {
   daily: { completed: number; total: number; rate: number };
   weekly: { progress: number; kpisOnTrack: number };
   monthly: { progress: number; milestonesHit: number };
-  quarterly: { progress: number; powerGoalsOnTrack: number };
+  quarterly: { progress: number; impactProjectsOnTrack: number };
   streaks: { best: number; average: number; total: number };
 }
 ```

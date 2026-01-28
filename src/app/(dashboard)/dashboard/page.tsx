@@ -96,7 +96,7 @@ export default function DashboardPage() {
   const consistency = stats?.threeHundredRule.consistency || 0;
   const threeHundredTotal = stats?.threeHundredRule.total || 0;
 
-  const dripDistribution = stats?.drip.distribution || {
+  const valueDistribution = stats?.drip.distribution || {
     delegation: 0,
     replacement: 0,
     investment: 0,
@@ -215,19 +215,19 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* DRIP Overview */}
+        {/* Value Distribution Overview */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
-              This Week&apos;s DRIP Distribution
+              This Week&apos;s Value Distribution
             </CardTitle>
             <CardDescription>
               How you&apos;re spending your time across quadrants ({stats?.drip.totalHours || 0}h tracked)
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* DRIP Distribution Bars */}
+            {/* Value Distribution Bars */}
             <div className="space-y-3">
               <div className="space-y-1">
                 <div className="flex justify-between text-sm">
@@ -235,9 +235,9 @@ export default function DashboardPage() {
                     <span className="h-3 w-3 rounded bg-cyan-500" />
                     Production
                   </span>
-                  <span className="font-medium">{dripDistribution.production}%</span>
+                  <span className="font-medium">{valueDistribution.production}%</span>
                 </div>
-                <Progress value={dripDistribution.production} className="h-2 bg-cyan-100" />
+                <Progress value={valueDistribution.production} className="h-2 bg-cyan-100" />
               </div>
 
               <div className="space-y-1">
@@ -246,9 +246,9 @@ export default function DashboardPage() {
                     <span className="h-3 w-3 rounded bg-blue-500" />
                     Investment
                   </span>
-                  <span className="font-medium">{dripDistribution.investment}%</span>
+                  <span className="font-medium">{valueDistribution.investment}%</span>
                 </div>
-                <Progress value={dripDistribution.investment} className="h-2 bg-blue-100" />
+                <Progress value={valueDistribution.investment} className="h-2 bg-blue-100" />
               </div>
 
               <div className="space-y-1">
@@ -257,9 +257,9 @@ export default function DashboardPage() {
                     <span className="h-3 w-3 rounded bg-orange-500" />
                     Replacement
                   </span>
-                  <span className="font-medium">{dripDistribution.replacement}%</span>
+                  <span className="font-medium">{valueDistribution.replacement}%</span>
                 </div>
-                <Progress value={dripDistribution.replacement} className="h-2 bg-orange-100" />
+                <Progress value={valueDistribution.replacement} className="h-2 bg-orange-100" />
               </div>
 
               <div className="space-y-1">
@@ -268,9 +268,9 @@ export default function DashboardPage() {
                     <span className="h-3 w-3 rounded bg-purple-500" />
                     Delegation
                   </span>
-                  <span className="font-medium">{dripDistribution.delegation}%</span>
+                  <span className="font-medium">{valueDistribution.delegation}%</span>
                 </div>
-                <Progress value={dripDistribution.delegation} className="h-2 bg-purple-100" />
+                <Progress value={valueDistribution.delegation} className="h-2 bg-purple-100" />
               </div>
             </div>
 

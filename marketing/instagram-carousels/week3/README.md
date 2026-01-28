@@ -38,7 +38,7 @@ This folder contains 5 carousel graphics focusing on morning routines, evening s
 
 ### Day 18 - Pomodoro
 - Standard Pomodoro is incomplete
-- Add: outcome, energy, DRIP category
+- Add: outcome, energy, Value category
 - Track what drains vs energizes you
 - Understand your patterns, not just time
 

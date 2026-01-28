@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       apiKey: process.env.ANTHROPIC_API_KEY,
     });
 
-    const prompt = `You are an expert in personal development and goal achievement, specializing in Dan Martell's "Buy Back Your Time" methodology.
+    const prompt = `You are an expert in personal development and goal achievement, specializing in proven time optimization methodologies.
 
 Create a powerful, personalized affirmation for someone with this vision:
 

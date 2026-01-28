@@ -128,15 +128,15 @@ This test plan covers the Enhanced Analytics feature including:
 **Endpoint**: `GET /api/detected-projects`
 **Expected**: Returns array of projects with stats
 
-### Test 3.3: Link Project to Power Goal
+### Test 3.3: Link Project to Impact Project
 **Endpoint**: `PUT /api/detected-projects/[id]`
 **Input**:
 ```json
 {
-  "powerGoalId": "<valid-power-goal-id>"
+  "impactProjectId": "<valid-impact-project-id>"
 }
 ```
-**Expected**: Project linked to power goal
+**Expected**: Project linked to impact project
 
 ### Test 3.4: Archive Project
 **Endpoint**: `PUT /api/detected-projects/[id]`
@@ -255,7 +255,7 @@ This test plan covers the Enhanced Analytics feature including:
 
 **Expected**:
 - Insights view loads
-- Existing DRIP/Energy analytics visible
+- Existing Value Matrix/Energy analytics visible
 - New enhanced analytics sections visible below existing content
 
 ### Test 6.2: Enhanced Analytics in Insights Tab
@@ -280,12 +280,12 @@ This test plan covers the Enhanced Analytics feature including:
 
 ### Test 6.4: Filter Interaction
 **Steps**:
-1. Apply DRIP filter (e.g., "Production" only)
+1. Apply Value Matrix filter (e.g., "Production" only)
 2. Observe enhanced analytics
 
 **Expected**:
 - Note: Enhanced analytics fetch from API independently
-- Enhanced analytics should still show all activity types (not filtered by DRIP)
+- Enhanced analytics should still show all activity types (not filtered by Value Matrix)
 
 ---
 
@@ -471,6 +471,6 @@ Run these tests for a quick sanity check:
 
 ## Known Limitations
 
-1. Enhanced analytics in Insights tab fetch data independently from API; they don't use the DRIP/Energy/Tag filters
+1. Enhanced analytics in Insights tab fetch data independently from API; they don't use the Value Matrix/Energy/Tag filters
 2. Activity type inference is heuristic-based; complex activity names may miscategorize
 3. Period comparison assumes symmetrical periods (7 days vs 7 days)

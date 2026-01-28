@@ -76,7 +76,7 @@ Currently, users create backtrack plans but:
    ```
    ┌─────────────────────────────────────────────────────────┐
    │ [✓] Action Title                              [📅] 45m │
-   │     From: Vision > Power Goal > Weekly Target          │
+   │     From: Vision > Impact Project > Weekly Target          │
    │     ─────────────────────────────────────────────────── │
    │     [On Calendar ✓] or [Add to Calendar]               │
    └─────────────────────────────────────────────────────────┘
@@ -168,9 +168,9 @@ Weekly Target (X of Y actions complete = Z%)
     ↓ aggregates to
 Monthly Target (avg of weekly targets = Z%)
     ↓ aggregates to
-Power Goal (avg of monthly targets = Z%)
+Impact Project (avg of monthly targets = Z%)
     ↓ aggregates to
-Quarterly Target (avg of power goals = Z%)
+Quarterly Target (avg of impact projects = Z%)
     ↓ aggregates to
 Vision (avg of quarterly targets = Z%)
 ```

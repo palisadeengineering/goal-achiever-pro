@@ -71,7 +71,7 @@ export default function TermsPage() {
             <ul>
               <li>Vision and SMART goal planning tools</li>
               <li>Time tracking and audit features</li>
-              <li>DRIP Matrix for activity categorization</li>
+              <li>Value Matrix for activity categorization</li>
               <li>Daily routines and Pomodoro timer</li>
               <li>Progress analytics and reporting</li>
               <li>AI-assisted goal generation and suggestions</li>

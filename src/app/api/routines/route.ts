@@ -10,7 +10,7 @@ async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
   return user?.id || DEMO_USER_ID;
 }
 
-// Default routines based on Dan Martell's framework
+// Default routines based on proven productivity frameworks
 const DEFAULT_ROUTINES = [
   {
     name: 'Morning Routine',
@@ -31,7 +31,7 @@ const DEFAULT_ROUTINES = [
     description: 'Wind down and prepare for tomorrow',
     steps: [
       { title: 'Review today\'s accomplishments', durationMinutes: 10, sortOrder: 0 },
-      { title: 'Log time blocks & DRIP categories', durationMinutes: 10, sortOrder: 1 },
+      { title: 'Log time blocks & Value categories', durationMinutes: 10, sortOrder: 1 },
       { title: 'Set MINS for tomorrow', durationMinutes: 10, sortOrder: 2 },
       { title: 'Gratitude journaling (3 things)', durationMinutes: 5, sortOrder: 3 },
       { title: 'Screen-free wind down', durationMinutes: 30, sortOrder: 4 },

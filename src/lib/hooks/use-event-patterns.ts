@@ -2,11 +2,11 @@
 
 import { useCallback } from 'react';
 import { useLocalStorage } from './use-local-storage';
-import type { DripQuadrant, EnergyRating } from '@/types/database';
+import type { ValueQuadrant, EnergyRating } from '@/types/database';
 
 export interface EventPattern {
   pattern: string; // Normalized event name (lowercase, trimmed)
-  dripQuadrant: DripQuadrant;
+  valueQuadrant: ValueQuadrant;
   energyRating: EnergyRating;
   confidence: number; // 0-1, increases with each use
   usageCount: number;
@@ -16,7 +16,7 @@ export interface EventPattern {
 export interface EventCategorization {
   eventId: string;
   eventName: string;
-  dripQuadrant: DripQuadrant;
+  valueQuadrant: ValueQuadrant;
   energyRating: EnergyRating;
   categorizedAt: string;
 }
@@ -28,7 +28,7 @@ export interface IgnoredEvent {
 }
 
 interface PatternSuggestion {
-  dripQuadrant: DripQuadrant;
+  valueQuadrant: ValueQuadrant;
   energyRating: EnergyRating;
   confidence: number;
   pattern: string;
@@ -126,7 +126,7 @@ export function useEventPatterns() {
    * Learn a new pattern or update existing one
    */
   const learnPattern = useCallback(
-    (eventName: string, dripQuadrant: DripQuadrant, energyRating: EnergyRating) => {
+    (eventName: string, valueQuadrant: ValueQuadrant, energyRating: EnergyRating) => {
       const normalized = normalizeEventName(eventName);
 
       if (!normalized) return;
@@ -140,7 +140,7 @@ export function useEventPatterns() {
             p.pattern === normalized
               ? {
                   ...p,
-                  dripQuadrant,
+                  valueQuadrant,
                   energyRating,
                   usageCount: p.usageCount + 1,
                   confidence: Math.min(1, p.confidence + 0.15),
@@ -155,7 +155,7 @@ export function useEventPatterns() {
           ...prev,
           {
             pattern: normalized,
-            dripQuadrant,
+            valueQuadrant,
             energyRating,
             confidence: 0.5,
             usageCount: 1,
@@ -177,7 +177,7 @@ export function useEventPatterns() {
       // Only suggest if confidence is above threshold
       if (match && match.confidence >= 0.3) {
         return {
-          dripQuadrant: match.dripQuadrant,
+          valueQuadrant: match.valueQuadrant,
           energyRating: match.energyRating,
           confidence: match.confidence,
           pattern: match.pattern,
@@ -196,11 +196,11 @@ export function useEventPatterns() {
     (
       eventId: string,
       eventName: string,
-      dripQuadrant: DripQuadrant,
+      valueQuadrant: ValueQuadrant,
       energyRating: EnergyRating
     ) => {
       // Learn the pattern
-      learnPattern(eventName, dripQuadrant, energyRating);
+      learnPattern(eventName, valueQuadrant, energyRating);
 
       // Save the categorization
       setCategorizations((prev) => {
@@ -212,7 +212,7 @@ export function useEventPatterns() {
           {
             eventId,
             eventName,
-            dripQuadrant,
+            valueQuadrant,
             energyRating,
             categorizedAt: new Date().toISOString(),
           },
@@ -270,11 +270,11 @@ export function useEventPatterns() {
   const applySuggestionToSimilar = useCallback(
     (
       events: Array<{ id: string; summary: string }>,
-      dripQuadrant: DripQuadrant,
+      valueQuadrant: ValueQuadrant,
       energyRating: EnergyRating
     ) => {
       events.forEach((event) => {
-        saveCategorization(event.id, event.summary, dripQuadrant, energyRating);
+        saveCategorization(event.id, event.summary, valueQuadrant, energyRating);
       });
     },
     [saveCategorization]

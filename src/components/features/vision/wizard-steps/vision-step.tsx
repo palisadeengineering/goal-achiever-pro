@@ -243,7 +243,7 @@ export function VisionStep({ data, updateData }: VisionStepProps) {
               )}
               {selectedMethodology === 'martell' && (
                 <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                  Dan Martell Buy Back Your Time
+                  Time Optimization Framework
                 </span>
               )}
             </div>

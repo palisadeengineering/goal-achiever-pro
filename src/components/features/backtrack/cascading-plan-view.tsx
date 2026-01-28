@@ -31,7 +31,7 @@ interface QuarterlyTarget {
   estimated_hours_total?: number;
 }
 
-interface PowerGoal {
+interface ImpactProject {
   id: string;
   quarterly_target_id?: string;
   title: string;
@@ -80,7 +80,7 @@ interface CascadingPlanViewProps {
   visionTitle: string;
   visionColor?: string;
   quarterlyTargets: QuarterlyTarget[];
-  powerGoals: PowerGoal[];
+  impactProjects: ImpactProject[];
   monthlyTargets: MonthlyTarget[];
   weeklyTargets: WeeklyTarget[];
   dailyActions: DailyAction[];
@@ -110,7 +110,7 @@ export function CascadingPlanView({
   visionTitle,
   visionColor = '#6366f1',
   quarterlyTargets,
-  powerGoals,
+  impactProjects,
   monthlyTargets,
   weeklyTargets,
   dailyActions,
@@ -118,7 +118,7 @@ export function CascadingPlanView({
   const [expandedQuarters, setExpandedQuarters] = useState<Set<string>>(
     new Set(quarterlyTargets.map((q) => q.id))
   );
-  const [expandedPowerGoals, setExpandedPowerGoals] = useState<Set<string>>(new Set());
+  const [expandedImpactProjects, setExpandedImpactProjects] = useState<Set<string>>(new Set());
   const [expandedMonthly, setExpandedMonthly] = useState<Set<string>>(new Set());
   const [expandedWeekly, setExpandedWeekly] = useState<Set<string>>(new Set());
 
@@ -138,12 +138,12 @@ export function CascadingPlanView({
     });
   };
 
-  const getPowerGoalsForQuarter = (quarterlyTargetId: string) => {
-    return powerGoals.filter((pg) => pg.quarterly_target_id === quarterlyTargetId);
+  const getImpactProjectsForQuarter = (quarterlyTargetId: string) => {
+    return impactProjects.filter((ip) => ip.quarterly_target_id === quarterlyTargetId);
   };
 
-  const getMonthlyTargetsForPowerGoal = (powerGoalId: string) => {
-    return monthlyTargets.filter((mt) => mt.power_goal_id === powerGoalId);
+  const getMonthlyTargetsForImpactProject = (impactProjectId: string) => {
+    return monthlyTargets.filter((mt) => mt.power_goal_id === impactProjectId);
   };
 
   const getWeeklyTargetsForMonthly = (monthlyTargetId: string) => {
@@ -213,38 +213,38 @@ export function CascadingPlanView({
 
           {expandedQuarters.has(qt.id) && (
             <CardContent className="pt-0 space-y-3">
-              {getPowerGoalsForQuarter(qt.id).map((pg) => (
+              {getImpactProjectsForQuarter(qt.id).map((ip) => (
                 <div
-                  key={pg.id}
+                  key={ip.id}
                   className="ml-6 border rounded-lg"
                 >
                   <button
-                    onClick={() => toggleExpanded(expandedPowerGoals, setExpandedPowerGoals, pg.id)}
+                    onClick={() => toggleExpanded(expandedImpactProjects, setExpandedImpactProjects, ip.id)}
                     className="w-full p-3 flex items-center justify-between hover:bg-muted/30 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      {expandedPowerGoals.has(pg.id) ? (
+                      {expandedImpactProjects.has(ip.id) ? (
                         <ChevronDown className="h-4 w-4 text-muted-foreground" />
                       ) : (
                         <ChevronRight className="h-4 w-4 text-muted-foreground" />
                       )}
                       <Target className="h-4 w-4 text-primary" />
-                      <span className="font-medium text-sm">{pg.title}</span>
-                      {pg.category && (
-                        <Badge className={cn('text-xs', CATEGORY_COLORS[pg.category])}>
-                          {pg.category}
+                      <span className="font-medium text-sm">{ip.title}</span>
+                      {ip.category && (
+                        <Badge className={cn('text-xs', CATEGORY_COLORS[ip.category])}>
+                          {ip.category}
                         </Badge>
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      {STATUS_ICONS[pg.status]}
-                      <Progress value={pg.progress_percentage} className="w-16 h-1.5" />
+                      {STATUS_ICONS[ip.status]}
+                      <Progress value={ip.progress_percentage} className="w-16 h-1.5" />
                     </div>
                   </button>
 
-                  {expandedPowerGoals.has(pg.id) && (
+                  {expandedImpactProjects.has(ip.id) && (
                     <div className="px-3 pb-3 space-y-2">
-                      {getMonthlyTargetsForPowerGoal(pg.id).map((mt) => (
+                      {getMonthlyTargetsForImpactProject(ip.id).map((mt) => (
                         <div key={mt.id} className="ml-6 border rounded-lg">
                           <button
                             onClick={() => toggleExpanded(expandedMonthly, setExpandedMonthly, mt.id)}

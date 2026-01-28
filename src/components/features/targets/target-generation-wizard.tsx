@@ -40,12 +40,12 @@ interface TargetPlan {
   summary: string;
   totalEstimatedHours: number;
   criticalMilestones: string[];
-  powerGoalId: string;
-  powerGoalTitle: string;
+  impactProjectId: string;
+  impactProjectTitle: string;
   quarter: number;
 }
 
-interface PowerGoalInput {
+interface ImpactProjectInput {
   id: string;
   title: string;
   description?: string;
@@ -55,7 +55,7 @@ interface PowerGoalInput {
 }
 
 interface TargetGenerationWizardProps {
-  powerGoal: PowerGoalInput;
+  impactProject: ImpactProjectInput;
   vision?: string;
   smartGoals?: {
     specific?: string;
@@ -69,7 +69,7 @@ interface TargetGenerationWizardProps {
 }
 
 export function TargetGenerationWizard({
-  powerGoal,
+  impactProject,
   vision,
   smartGoals,
   targetDate,
@@ -106,7 +106,7 @@ export function TargetGenerationWizard({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          powerGoal,
+          impactProject,
           vision,
           smartGoals,
           targetDate: targetDate?.toISOString(),
@@ -145,7 +145,7 @@ export function TargetGenerationWizard({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          powerGoalId: powerGoal.id,
+          impactProjectId: impactProject.id,
           year: new Date().getFullYear(),
           monthlyTargets: plan.monthlyTargets,
         }),
@@ -175,7 +175,7 @@ export function TargetGenerationWizard({
             Generate Detailed Plan
           </CardTitle>
           <CardDescription>
-            Create monthly, weekly, and daily targets for: <strong>{powerGoal.title}</strong>
+            Create monthly, weekly, and daily targets for: <strong>{impactProject.title}</strong>
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -191,9 +191,9 @@ export function TargetGenerationWizard({
             </div>
 
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-              <Badge variant="outline">Q{powerGoal.quarter}</Badge>
-              {powerGoal.category && (
-                <Badge variant="secondary">{powerGoal.category}</Badge>
+              <Badge variant="outline">Q{impactProject.quarter}</Badge>
+              {impactProject.category && (
+                <Badge variant="secondary">{impactProject.category}</Badge>
               )}
             </div>
 
@@ -241,7 +241,7 @@ export function TargetGenerationWizard({
           <div>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-primary" />
-              Detailed Plan for Q{powerGoal.quarter}
+              Detailed Plan for Q{impactProject.quarter}
             </CardTitle>
             <CardDescription className="mt-1">
               {plan.summary}

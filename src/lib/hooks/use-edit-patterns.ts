@@ -2,13 +2,13 @@
 
 import { useCallback, useMemo } from 'react';
 import { useLocalStorage } from './use-local-storage';
-import type { DripQuadrant, EnergyRating } from '@/types/database';
+import type { ValueQuadrant, EnergyRating } from '@/types/database';
 
 interface EditRecord {
   activityName: string;
   normalizedName: string;
-  oldDripQuadrant: DripQuadrant;
-  newDripQuadrant: DripQuadrant;
+  oldValueQuadrant: ValueQuadrant;
+  newValueQuadrant: ValueQuadrant;
   oldEnergyRating: EnergyRating;
   newEnergyRating: EnergyRating;
   timestamp: number;
@@ -17,7 +17,7 @@ interface EditRecord {
 export interface EditPattern {
   activityName: string;
   normalizedName: string;
-  suggestedDrip?: DripQuadrant;
+  suggestedValue?: ValueQuadrant;
   suggestedEnergy?: EnergyRating;
   editCount: number;
   matchingBlockIds: string[];
@@ -26,7 +26,7 @@ export interface EditPattern {
 interface TimeBlockInfo {
   id: string;
   activityName: string;
-  dripQuadrant: DripQuadrant;
+  valueQuadrant: ValueQuadrant;
   energyRating: EnergyRating;
 }
 
@@ -34,8 +34,8 @@ interface UseEditPatternsReturn {
   trackEdit: (
     blockId: string,
     activityName: string,
-    oldDrip: DripQuadrant,
-    newDrip: DripQuadrant,
+    oldValue: ValueQuadrant,
+    newValue: ValueQuadrant,
     oldEnergy: EnergyRating,
     newEnergy: EnergyRating
   ) => void;
@@ -96,21 +96,21 @@ export function useEditPatterns(): UseEditPatternsReturn {
   const trackEdit = useCallback((
     blockId: string,
     activityName: string,
-    oldDrip: DripQuadrant,
-    newDrip: DripQuadrant,
+    oldValue: ValueQuadrant,
+    newValue: ValueQuadrant,
     oldEnergy: EnergyRating,
     newEnergy: EnergyRating
   ) => {
     // Only track if something actually changed
-    if (oldDrip === newDrip && oldEnergy === newEnergy) return;
+    if (oldValue === newValue && oldEnergy === newEnergy) return;
 
     const normalizedName = normalizeActivityName(activityName);
 
     const newRecord: EditRecord = {
       activityName,
       normalizedName,
-      oldDripQuadrant: oldDrip,
-      newDripQuadrant: newDrip,
+      oldValueQuadrant: oldValue,
+      newValueQuadrant: newValue,
       oldEnergyRating: oldEnergy,
       newEnergyRating: newEnergy,
       timestamp: Date.now(),
@@ -129,7 +129,7 @@ export function useEditPatterns(): UseEditPatternsReturn {
     // Group edits by normalized activity name and change type
     const patternGroups = new Map<string, {
       records: EditRecord[];
-      dripChanges: Map<DripQuadrant, number>;
+      valueChanges: Map<ValueQuadrant, number>;
       energyChanges: Map<EnergyRating, number>;
     }>();
 
@@ -139,7 +139,7 @@ export function useEditPatterns(): UseEditPatternsReturn {
       if (!patternGroups.has(key)) {
         patternGroups.set(key, {
           records: [],
-          dripChanges: new Map(),
+          valueChanges: new Map(),
           energyChanges: new Map(),
         });
       }
@@ -147,10 +147,10 @@ export function useEditPatterns(): UseEditPatternsReturn {
       const group = patternGroups.get(key)!;
       group.records.push(record);
 
-      // Track DRIP changes
-      if (record.oldDripQuadrant !== record.newDripQuadrant) {
-        const count = group.dripChanges.get(record.newDripQuadrant) || 0;
-        group.dripChanges.set(record.newDripQuadrant, count + 1);
+      // Track Value changes
+      if (record.oldValueQuadrant !== record.newValueQuadrant) {
+        const count = group.valueChanges.get(record.newValueQuadrant) || 0;
+        group.valueChanges.set(record.newValueQuadrant, count + 1);
       }
 
       // Track energy changes
@@ -171,13 +171,13 @@ export function useEditPatterns(): UseEditPatternsReturn {
       // Check if we have enough edits
       if (group.records.length < PATTERN_THRESHOLD) continue;
 
-      // Find the most common DRIP change
-      let suggestedDrip: DripQuadrant | undefined;
-      let maxDripCount = 0;
-      for (const [drip, count] of group.dripChanges) {
-        if (count >= PATTERN_THRESHOLD && count > maxDripCount) {
-          suggestedDrip = drip;
-          maxDripCount = count;
+      // Find the most common Value change
+      let suggestedValue: ValueQuadrant | undefined;
+      let maxValueCount = 0;
+      for (const [value, count] of group.valueChanges) {
+        if (count >= PATTERN_THRESHOLD && count > maxValueCount) {
+          suggestedValue = value;
+          maxValueCount = count;
         }
       }
 
@@ -192,7 +192,7 @@ export function useEditPatterns(): UseEditPatternsReturn {
       }
 
       // If no significant pattern, skip
-      if (!suggestedDrip && !suggestedEnergy) continue;
+      if (!suggestedValue && !suggestedEnergy) continue;
 
       // Find matching blocks that could be updated
       const matchingBlockIds = allBlocks
@@ -201,10 +201,10 @@ export function useEditPatterns(): UseEditPatternsReturn {
           if (!activityNamesMatch(block.activityName, normalizedName)) return false;
 
           // Check if block needs the suggested change
-          const needsDripChange = suggestedDrip && block.dripQuadrant !== suggestedDrip;
+          const needsValueChange = suggestedValue && block.valueQuadrant !== suggestedValue;
           const needsEnergyChange = suggestedEnergy && block.energyRating !== suggestedEnergy;
 
-          return needsDripChange || needsEnergyChange;
+          return needsValueChange || needsEnergyChange;
         })
         .map(block => block.id);
 
@@ -219,7 +219,7 @@ export function useEditPatterns(): UseEditPatternsReturn {
         bestPattern = {
           activityName: group.records[0].activityName, // Use original name for display
           normalizedName,
-          suggestedDrip,
+          suggestedValue,
           suggestedEnergy,
           editCount: group.records.length,
           matchingBlockIds,

@@ -57,7 +57,7 @@ export interface KeyResult {
   id: string;
   userId: string;
   visionId: string;
-  powerGoalId?: string;
+  impactProjectId?: string; // DB column still named power_goal_id
   title: string;
   description?: string;
   targetValue: number;
@@ -97,7 +97,7 @@ export interface KeyResultUpdate {
 
 export interface CreateKeyResultInput {
   visionId: string;
-  powerGoalId?: string;
+  impactProjectId?: string; // DB column still named power_goal_id
   title: string;
   description?: string;
   targetValue: number;
@@ -132,7 +132,7 @@ export interface UpdateKeyResultInput {
 
 // Task Comment Types
 
-export type CommentEntityType = 'daily_action' | 'weekly_target' | 'monthly_target' | 'power_goal' | 'key_result';
+export type CommentEntityType = 'daily_action' | 'weekly_target' | 'monthly_target' | 'power_goal' | 'impact_project' | 'key_result';
 
 export interface TaskComment {
   id: string;
