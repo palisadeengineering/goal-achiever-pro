@@ -121,7 +121,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 09-01-PLAN.md - Gamification database schema (achievements, user_achievements, user_gamification tables)
+- [x] 09-01-PLAN.md - Gamification database schema (achievements, user_achievements, user_gamification tables)
 - [ ] 09-02-PLAN.md - Gamification service, API endpoints, and KPI integration
 
 #### Phase 10: Streaks & Daily Goals
@@ -200,7 +200,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 8 -> **8.1** -> 9 -> 10 -> 11 
 | 7. Today Dashboard | v1.0 | 1/1 | Complete | 2026-01-25 |
 | 8. Progress Page | v1.0 | 3/3 | Complete | 2026-01-25 |
 | **8.1. Critical Bug Fixes** | v2.0 | 1/1 | **Complete** | 2026-01-28 |
-| 9. Gamification Foundation | v2.0 | 0/2 | Planned | - |
+| 9. Gamification Foundation | v2.0 | 1/2 | In progress | - |
 | 10. Streaks & Daily Goals | v2.0 | 0/? | Not started | - |
 | 11. Visual Celebrations | v2.0 | 0/? | Not started | - |
 | 12. Value Matrix Charts | v2.0 | 0/? | Not started | - |
@@ -208,4 +208,4 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 8 -> **8.1** -> 9 -> 10 -> 11 
 
 ---
 *Roadmap created: 2026-01-23*
-*Last updated: 2026-01-28*
+*Last updated: 2026-01-29*
