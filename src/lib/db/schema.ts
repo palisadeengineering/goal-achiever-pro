@@ -2,8 +2,10 @@
 
 import {
   pgTable,
+  pgEnum,
   uuid,
   text,
+  varchar,
   timestamp,
   boolean,
   integer,
@@ -13,9 +15,20 @@ import {
   jsonb,
   index,
   uniqueIndex,
+  unique,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+
+// =============================================
+// ENUMS
+// =============================================
+export const achievementCategoryEnum = pgEnum('achievement_category', [
+  'milestone',    // Completion count milestones
+  'streak',       // Streak-based achievements
+  'exploration',  // Using features for first time
+  'mastery',      // Advanced usage patterns
+]);
 
 // =============================================
 // PROFILES (extends Supabase auth.users)
