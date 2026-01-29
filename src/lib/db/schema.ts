@@ -1103,6 +1103,53 @@ export const kpiStreaks = pgTable('kpi_streaks', {
 });
 
 // =============================================
+// ACHIEVEMENTS (Predefined achievement definitions)
+// =============================================
+export const achievements = pgTable('achievements', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  key: varchar('key', { length: 50 }).notNull().unique(), // e.g., 'first_kpi', 'streak_7'
+  name: varchar('name', { length: 100 }).notNull(),
+  description: text('description').notNull(),
+  category: achievementCategoryEnum('category').notNull(),
+  iconName: varchar('icon_name', { length: 50 }), // Lucide icon name
+  xpReward: integer('xp_reward').default(0),
+  requiredValue: integer('required_value'), // e.g., 7 for 7-day streak
+  isSecret: boolean('is_secret').default(false), // Hidden until unlocked
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// =============================================
+// USER_ACHIEVEMENTS (Junction table for unlocked achievements)
+// =============================================
+export const userAchievements = pgTable('user_achievements', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  achievementId: uuid('achievement_id').notNull().references(() => achievements.id, { onDelete: 'cascade' }),
+  unlockedAt: timestamp('unlocked_at').defaultNow(),
+  progressValue: integer('progress_value'), // Current progress toward achievement
+}, (table) => ({
+  uniqueUserAchievement: unique().on(table.userId, table.achievementId),
+  userIdx: index('user_achievements_user_idx').on(table.userId),
+}));
+
+// =============================================
+// USER_GAMIFICATION (XP/Level tracking per user)
+// =============================================
+export const userGamification = pgTable('user_gamification', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }).unique(),
+  totalXp: integer('total_xp').default(0),
+  currentLevel: integer('current_level').default(1),
+  kpisCompleted: integer('kpis_completed').default(0),
+  visionsCreated: integer('visions_created').default(0),
+  longestStreak: integer('longest_streak').default(0),
+  currentStreak: integer('current_streak').default(0),
+  lastActivityDate: date('last_activity_date'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// =============================================
 // KPI PROGRESS CACHE (Pre-computed Aggregates)
 // =============================================
 export const kpiProgressCache = pgTable('kpi_progress_cache', {
