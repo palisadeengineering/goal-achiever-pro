@@ -15,6 +15,13 @@
       "when": 1769387100864,
       "tag": "0001_adorable_vin_gonzales",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1769663535135,
+      "tag": "0002_spicy_vapor",
+      "breakpoints": true
     }
   ]
 }
