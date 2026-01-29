@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { rollupProgressToAncestors, type AncestorProgressUpdate } from '@/lib/progress';
+import { awardXp } from '@/lib/services/gamification';
 
 // Demo user ID for development
 const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
@@ -143,12 +144,34 @@ export async function POST(
     // Roll up progress to all ancestors (PROG-01, PROG-02)
     const rollupResult = await rollupProgressToAncestors(supabase, id);
 
+    // Award XP for KPI completion (only when marking as completed)
+    let gamificationResult = null;
+    if (isCompleted) {
+      try {
+        // Get current streak from kpi_streaks if exists
+        const { data: streakData } = await supabase
+          .from('kpi_streaks')
+          .select('current_streak')
+          .eq('kpi_id', id)
+          .single();
+
+        gamificationResult = await awardXp(userId, 'KPI_COMPLETED', {
+          kpiId: id,
+          streakCount: streakData?.current_streak,
+        });
+      } catch (gamificationError) {
+        // Log but don't fail the request
+        console.error('Gamification error:', gamificationError);
+      }
+    }
+
     return NextResponse.json({
       log,
       rollup: {
         updatedKpis: rollupResult.updatedKpis,
         duration: rollupResult.duration,
       },
+      gamification: gamificationResult,
     });
   } catch (error) {
     console.error('Log KPI error:', error);
