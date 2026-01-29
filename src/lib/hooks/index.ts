@@ -33,3 +33,11 @@ export {
   type GenerateCascadeInput,
   type GenerateCascadeResponse,
 } from './use-cascade-generation';
+
+// Gamification hooks
+export {
+  useGamificationStats,
+  useAchievements,
+  gamificationKeys,
+  type AchievementWithProgress,
+} from './use-gamification';
