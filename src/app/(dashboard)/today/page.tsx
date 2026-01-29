@@ -636,7 +636,7 @@ export default function TodayPage() {
                 <li>1. Create or select a Vision</li>
                 <li>2. Go to the Plan tab</li>
                 <li>3. Click &quot;Generate Daily Actions&quot;</li>
-                <li>4. AI creates Power Goals → Monthly → Weekly → Daily tasks</li>
+                <li>4. AI creates Impact Projects → Monthly → Weekly → Daily tasks</li>
                 <li>5. Come back here to track your daily progress!</li>
               </ol>
             </div>
@@ -1068,7 +1068,7 @@ export default function TodayPage() {
               <Link href="/goals">
                 <Button variant="outline" className="w-full justify-start gap-2">
                   <CheckCircle2 className="h-4 w-4" />
-                  View Power Goals
+                  View Impact Projects
                 </Button>
               </Link>
             </CardContent>

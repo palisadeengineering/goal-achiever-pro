@@ -500,7 +500,7 @@ function SettingsContent() {
             </Select>
           </div>
           <p className="text-xs text-muted-foreground border-t pt-3">
-            AI is used for generating vision suggestions, SMART goals, Power Goals, KPIs, and more.
+            AI is used for generating vision suggestions, SMART goals, Impact Projects, KPIs, and more.
             Powered by Claude from Anthropic for best-in-class reasoning.
           </p>
         </CardContent>

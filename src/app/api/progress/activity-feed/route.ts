@@ -42,7 +42,7 @@ export async function GET(request: Request) {
 
     // Get recent completed KPI logs with KPI and vision details
     let query = supabase
-      .from('vision_kpi_logs')
+      .from('kpi_logs')
       .select(`
         id,
         kpi_id,

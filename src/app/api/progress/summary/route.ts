@@ -51,7 +51,7 @@ export async function GET() {
 
     // Get today's KPI logs
     const { data: todayLogs, error: logsError } = await supabase
-      .from('vision_kpi_logs')
+      .from('kpi_logs')
       .select('kpi_id, is_completed, value')
       .eq('user_id', userId)
       .eq('log_date', today);
@@ -66,9 +66,8 @@ export async function GET() {
     const allKpiIds = visions?.flatMap(v => v.vision_kpis?.map(k => k.id) || []) || [];
 
     const { data: streakData } = await supabase
-      .from('vision_kpi_streaks')
+      .from('kpi_streaks')
       .select('kpi_id, current_streak, longest_streak, last_completed_date')
-      .eq('user_id', userId)
       .in('kpi_id', allKpiIds);
 
     const streaksMap = new Map(streakData?.map(s => [s.kpi_id, s]) || []);
@@ -153,7 +152,7 @@ export async function GET() {
 
     // Detect zombie goals (no activity in 14+ days)
     const { data: lastActivityData } = await supabase
-      .from('vision_kpi_logs')
+      .from('kpi_logs')
       .select('kpi_id, log_date')
       .eq('user_id', userId)
       .in('kpi_id', allKpiIds)

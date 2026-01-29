@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
       notes: block.notes,
       energyRating: block.energy_rating,
       energyScore: block.energy_score,
-      valueQuadrant: block.drip_quadrant,
+      valueQuadrant: block.drip_quadrant || 'na',
       makesMoneyScore: block.makes_money_score,
       lightsUpScore: block.lights_up_score,
       source: block.source,
@@ -228,7 +228,7 @@ export async function POST(request: NextRequest) {
       activityCategory: timeBlock.activity_category,
       notes: timeBlock.notes,
       energyRating: timeBlock.energy_rating,
-      valueQuadrant: timeBlock.drip_quadrant,
+      valueQuadrant: timeBlock.drip_quadrant || 'na',
       source: timeBlock.source,
       externalEventId: timeBlock.external_event_id,
       // Recurring event fields
@@ -386,7 +386,7 @@ export async function PUT(request: NextRequest) {
       activityCategory: timeBlock.activity_category,
       notes: timeBlock.notes,
       energyRating: timeBlock.energy_rating,
-      valueQuadrant: timeBlock.drip_quadrant,
+      valueQuadrant: timeBlock.drip_quadrant || 'na',
       source: timeBlock.source,
       externalEventId: timeBlock.external_event_id,
       // Recurring event fields

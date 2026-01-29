@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
       activityCategory: block.activity_category,
       notes: block.notes,
       energyRating: block.energy_rating,
-      valueQuadrant: block.drip_quadrant,
+      valueQuadrant: block.drip_quadrant || 'na',
       source: block.source,
       externalEventId: block.external_event_id,
       createdAt: block.created_at,
