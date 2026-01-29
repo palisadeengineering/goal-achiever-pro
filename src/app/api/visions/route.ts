@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import { createVisionSchema, updateVisionSchema, deleteVisionSchema, parseWithErrors } from '@/lib/validations';
+import { awardXp } from '@/lib/services/gamification';
 
 // Demo user ID - only used in development when DEMO_MODE_ENABLED=true
 const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
@@ -172,8 +173,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Award XP for vision creation
+    let gamificationResult = null;
+    try {
+      gamificationResult = await awardXp(userId, 'VISION_CREATED');
+    } catch (gamificationError) {
+      // Log but don't fail the request
+      console.error('Gamification error:', gamificationError);
+    }
+
     console.log('[Vision API] Vision created successfully:', { id: vision?.id, title: vision?.title });
-    return NextResponse.json({ vision });
+    return NextResponse.json({ vision, gamification: gamificationResult });
   } catch (error) {
     console.error('Create vision error:', error);
     return NextResponse.json(
