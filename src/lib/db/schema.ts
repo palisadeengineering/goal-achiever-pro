@@ -903,6 +903,9 @@ export const profilesRelations = relations(profiles, ({ many, one }) => ({
   // Time audit enhanced analytics
   detectedProjects: many(detectedProjects),
   meetingCategories: many(meetingCategories),
+  // Gamification
+  userAchievements: many(userAchievements),
+  userGamification: one(userGamification),
 }));
 
 export const visionsRelations = relations(visions, ({ one, many }) => ({
@@ -1645,4 +1648,29 @@ export const itemPermissionsRelations = relations(itemPermissions, ({ one }) => 
 export const shareInvitationsRelations = relations(shareInvitations, ({ one }) => ({
   owner: one(profiles, { fields: [shareInvitations.ownerId], references: [profiles.id] }),
   acceptedByUser: one(profiles, { fields: [shareInvitations.acceptedBy], references: [profiles.id] }),
+}));
+
+// =============================================
+// GAMIFICATION RELATIONS
+// =============================================
+export const achievementsRelations = relations(achievements, ({ many }) => ({
+  userAchievements: many(userAchievements),
+}));
+
+export const userAchievementsRelations = relations(userAchievements, ({ one }) => ({
+  user: one(profiles, {
+    fields: [userAchievements.userId],
+    references: [profiles.id],
+  }),
+  achievement: one(achievements, {
+    fields: [userAchievements.achievementId],
+    references: [achievements.id],
+  }),
+}));
+
+export const userGamificationRelations = relations(userGamification, ({ one }) => ({
+  user: one(profiles, {
+    fields: [userGamification.userId],
+    references: [profiles.id],
+  }),
 }));
