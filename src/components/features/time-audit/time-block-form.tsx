@@ -887,23 +887,24 @@ export function TimeBlockForm({
                   )}
                 </Button>
               )}
-              {editBlock && onSkip && isGoogleCalendarEvent && (
+              {editBlock && onSkip && (
                 <Button
                   type="button"
                   variant="outline"
                   onClick={handleSkip}
                   disabled={isDeleting || isSkipping}
                   className="text-muted-foreground hover:text-foreground"
+                  title={isGoogleCalendarEvent ? "Ignore this calendar event" : "Remove this time block"}
                 >
                   {isSkipping ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Skipping...
+                      {isGoogleCalendarEvent ? 'Ignoring...' : 'Removing...'}
                     </>
                   ) : (
                     <>
                       <SkipForward className="h-4 w-4 mr-2" />
-                      Skip
+                      {isGoogleCalendarEvent ? 'Ignore' : 'Skip'}
                     </>
                   )}
                 </Button>

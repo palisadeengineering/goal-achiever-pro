@@ -17,7 +17,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Plus, Loader2, Palette, Repeat } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Loader2, Palette, Repeat, EyeOff } from 'lucide-react';
 import { cn, formatHour } from '@/lib/utils';
 import { VALUE_QUADRANTS } from '@/constants/drip';
 import { useLocalStorage } from '@/lib/hooks/use-local-storage';
@@ -44,6 +44,9 @@ interface TimeBlock {
   valueQuadrant: ValueQuadrant;
   energyRating: EnergyRating;
   date?: string;
+  externalEventId?: string;
+  source?: string;
+  createdAt?: string;
   syncStatus?: 'synced' | 'pending' | 'error';
   // Recurring event properties
   isRecurring?: boolean;
@@ -66,11 +69,19 @@ const DEFAULT_SETTINGS: UserSettings = {
   weekStartsOn: 'sunday',
 };
 
+// Minimal block info needed for ignore/skip functionality
+interface IgnoreableBlock {
+  id: string;
+  activityName: string;
+  externalEventId?: string;
+}
+
 interface WeeklyCalendarViewProps {
   timeBlocks?: Record<string, TimeBlock[]>;
   onAddBlock?: (date: Date, startTime: string, endTime?: string) => void;
   onBlockClick?: (block: TimeBlock) => void;
   onBlockMove?: (blockId: string, newDate: string, newStartTime: string, newEndTime: string) => Promise<boolean>;
+  onIgnoreBlock?: (block: IgnoreableBlock) => Promise<void>;
   isLoading?: boolean;
   colorMode?: 'value' | 'energy';
   onColorModeChange?: (mode: 'value' | 'energy') => void;
@@ -128,16 +139,36 @@ function EventDetailsContent({
   block,
   timeRange,
   durationDisplay,
+  onIgnore,
+  showIgnoreButton = false,
 }: {
   block: TimeBlock;
   timeRange: string;
   durationDisplay: string;
+  onIgnore?: (block: IgnoreableBlock) => void;
+  showIgnoreButton?: boolean;
 }) {
   const isRecurring = block.isRecurring || block.isRecurrenceInstance;
 
   return (
     <div className="space-y-2">
-      <p className="font-semibold text-sm">{block.activityName}</p>
+      <div className="flex items-start justify-between gap-2">
+        <p className="font-semibold text-sm">{block.activityName}</p>
+        {showIgnoreButton && onIgnore && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onIgnore(block);
+            }}
+            className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
+            title="Ignore this event"
+          >
+            <EyeOff className="h-3.5 w-3.5" />
+          </Button>
+        )}
+      </div>
       <p className="text-xs text-muted-foreground">{timeRange} · {durationDisplay}</p>
       {isRecurring && block.recurrenceRule && (
         <p className="text-xs text-muted-foreground flex items-center gap-1">
@@ -178,6 +209,7 @@ function EventCard({
   onResizeStart,
   isResizing,
   colorMode,
+  onIgnore,
 }: {
   block: TimeBlock;
   durationSlots: number;
@@ -186,6 +218,7 @@ function EventCard({
   onResizeStart?: (block: TimeBlock, e: React.MouseEvent) => void;
   isResizing?: boolean;
   colorMode: 'value' | 'energy';
+  onIgnore?: (block: IgnoreableBlock) => void;
 }) {
   // _getBlockColor is kept for API compatibility but we use inline styles
   const { attributes, listeners, setNodeRef: setDragRef, transform, isDragging } = useDraggable({
@@ -437,6 +470,8 @@ function EventCard({
             block={block}
             timeRange={timeRange}
             durationDisplay={durationDisplay}
+            onIgnore={onIgnore ? (b) => { setPopoverOpen(false); onIgnore(b); } : undefined}
+            showIgnoreButton={!!onIgnore}
           />
           <Button
             variant="outline"
@@ -466,6 +501,8 @@ function EventCard({
             block={block}
             timeRange={timeRange}
             durationDisplay={durationDisplay}
+            onIgnore={onIgnore}
+            showIgnoreButton={!!onIgnore}
           />
         </TooltipContent>
       </Tooltip>
@@ -543,6 +580,7 @@ export function WeeklyCalendarView({
   onAddBlock,
   onBlockClick,
   onBlockMove,
+  onIgnoreBlock,
   isLoading = false,
   colorMode: externalColorMode,
   onColorModeChange,
@@ -1175,32 +1213,50 @@ export function WeeklyCalendarView({
               sortedBlocks.map((block) => {
                 const isBlockRecurring = block.isRecurring || block.isRecurrenceInstance;
                 return (
-                <button
+                <div
                   key={block.id}
-                  onClick={() => onBlockClick?.(block)}
-                  className="w-full text-left p-3 rounded-xl bg-card border shadow-sm transition-all hover:shadow-lg active:scale-[0.98]"
-                  style={{
-                    borderLeftWidth: '4px',
-                    borderLeftColor: colorMode === 'energy' ? ENERGY_COLORS[block.energyRating] : VALUE_QUADRANTS[block.valueQuadrant].color,
-                  }}
+                  className="relative group"
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold truncate flex items-center gap-1.5">
-                        {isBlockRecurring && <Repeat className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />}
-                        {block.activityName}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {formatTimeShort(block.startTime)} - {formatTimeShort(block.endTime)}
-                      </p>
+                  <button
+                    onClick={() => onBlockClick?.(block)}
+                    className="w-full text-left p-3 rounded-xl bg-card border shadow-sm transition-all hover:shadow-lg active:scale-[0.98]"
+                    style={{
+                      borderLeftWidth: '4px',
+                      borderLeftColor: colorMode === 'energy' ? ENERGY_COLORS[block.energyRating] : VALUE_QUADRANTS[block.valueQuadrant].color,
+                    }}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold truncate flex items-center gap-1.5">
+                          {isBlockRecurring && <Repeat className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />}
+                          {block.activityName}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatTimeShort(block.startTime)} - {formatTimeShort(block.endTime)}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {onIgnoreBlock && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onIgnoreBlock(block);
+                            }}
+                            className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                            title="Ignore this event"
+                          >
+                            <EyeOff className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Badge variant="outline" className="text-[10px] capitalize">
+                          {block.valueQuadrant}
+                        </Badge>
+                      </div>
                     </div>
-                    <div className="flex flex-col items-end gap-1">
-                      <Badge variant="outline" className="text-[10px] capitalize">
-                        {block.valueQuadrant}
-                      </Badge>
-                    </div>
-                  </div>
-                </button>
+                  </button>
+                </div>
               );})
             )}
           </div>
@@ -1464,6 +1520,7 @@ export function WeeklyCalendarView({
                                   onResizeStart={handleResizeStart}
                                   isResizing={isBeingResized}
                                   colorMode={colorMode}
+                                  onIgnore={onIgnoreBlock}
                                 />
                               </div>
                             );
