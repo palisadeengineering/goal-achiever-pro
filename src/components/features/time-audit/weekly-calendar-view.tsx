@@ -70,7 +70,7 @@ const DEFAULT_SETTINGS: UserSettings = {
 };
 
 // Minimal block info needed for ignore/skip functionality
-interface IgnoreableBlock {
+export interface IgnoreableBlock {
   id: string;
   activityName: string;
   externalEventId?: string;

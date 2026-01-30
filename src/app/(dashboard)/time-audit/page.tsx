@@ -23,7 +23,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { WeeklyCalendarView } from '@/components/features/time-audit/weekly-calendar-view';
+import { WeeklyCalendarView, IgnoreableBlock } from '@/components/features/time-audit/weekly-calendar-view';
 import { BulkCategorizationView } from '@/components/features/time-audit/bulk-categorization-view';
 import { useGoogleCalendar } from '@/lib/hooks/use-google-calendar';
 import { useEventPatterns } from '@/lib/hooks/use-event-patterns';
@@ -73,6 +73,7 @@ interface CalendarTimeBlock {
   isRecurrenceInstance?: boolean;
   parentBlockId?: string;
 }
+
 
 function checkProAccess(tier: SubscriptionTier): boolean {
   return tier === 'pro' || tier === 'elite';
@@ -507,7 +508,7 @@ export default function TimeAuditPage() {
 
     googleEvents.forEach((event) => {
       // Skip if already imported as a time block
-      if (importedExternalIds.has(event.id) || importedExternalIds.has(`gcal_${event.id}`)) {
+      if (importedExternalIds.has(event.id)) {
         return;
       }
 
@@ -579,7 +580,7 @@ export default function TimeAuditPage() {
 
     googleEvents.forEach((event) => {
       // Skip if already imported as a time block
-      if (importedExternalIds.has(event.id) || importedExternalIds.has(`gcal_${event.id}`)) {
+      if (importedExternalIds.has(event.id)) {
         return;
       }
 
@@ -642,7 +643,7 @@ export default function TimeAuditPage() {
 
     googleEvents.forEach((event) => {
       // Skip if already imported
-      if (importedExternalIds.has(event.id) || importedExternalIds.has(`gcal_${event.id}`)) {
+      if (importedExternalIds.has(event.id)) {
         return;
       }
 
@@ -959,7 +960,7 @@ export default function TimeAuditPage() {
       const eventsToImport = googleEvents
         .filter(event => {
           // Skip if already imported
-          if (importedExternalIds.has(event.id) || importedExternalIds.has(`gcal_${event.id}`)) {
+          if (importedExternalIds.has(event.id)) {
             return false;
           }
           // Only import categorized events
@@ -1047,7 +1048,7 @@ export default function TimeAuditPage() {
     );
 
     return googleEvents.filter(event => {
-      if (importedExternalIds.has(event.id) || importedExternalIds.has(`gcal_${event.id}`)) {
+      if (importedExternalIds.has(event.id)) {
         return false;
       }
       return getCategorization(event.id) !== null;
@@ -1206,7 +1207,7 @@ export default function TimeAuditPage() {
   }, [deleteTimeBlock, setLocalTimeBlocks, isGoogleConnected, fetchTimeBlocks, dbTimeBlocks, removeGoogleEvent]);
 
   // Handle skipping (uncategorizing) a time block - keeps event in Google Calendar but removes from tracking
-  const handleSkipBlock = useCallback(async (block: TimeBlock) => {
+  const handleSkipBlock = useCallback(async (block: IgnoreableBlock) => {
     // Add to ignored events list (prevents it from appearing in categorization dialog)
     if (block.externalEventId) {
       ignoreEvent(block.externalEventId, block.activityName);
