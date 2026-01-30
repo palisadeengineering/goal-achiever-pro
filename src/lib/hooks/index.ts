@@ -55,3 +55,10 @@ export {
   type CreateMinInput,
   type UpdateMinInput,
 } from './use-mins';
+
+// Impact Projects hooks
+export {
+  useImpactProjects,
+  impactProjectsKeys,
+  type ImpactProject,
+} from './use-impact-projects';
