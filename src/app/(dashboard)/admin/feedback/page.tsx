@@ -230,7 +230,7 @@ export default function AdminFeedbackPage() {
                 <SelectItem value="in_progress">In Progress</SelectItem>
                 <SelectItem value="resolved">Resolved</SelectItem>
                 <SelectItem value="closed">Closed</SelectItem>
-                <SelectItem value="wont_fix">Won't Fix</SelectItem>
+                <SelectItem value="wont_fix">Won&apos;t Fix</SelectItem>
               </SelectContent>
             </Select>
             <Select value={filterType} onValueChange={setFilterType}>
@@ -410,7 +410,7 @@ export default function AdminFeedbackPage() {
                       <SelectItem value="in_progress">In Progress</SelectItem>
                       <SelectItem value="resolved">Resolved</SelectItem>
                       <SelectItem value="closed">Closed</SelectItem>
-                      <SelectItem value="wont_fix">Won't Fix</SelectItem>
+                      <SelectItem value="wont_fix">Won&apos;t Fix</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

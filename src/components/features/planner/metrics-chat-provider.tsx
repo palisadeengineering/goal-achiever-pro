@@ -99,9 +99,48 @@ export interface SmartSummary {
   timeBound: string;
 }
 
+interface PlanKpi {
+  currentValue: number;
+  targetValue: number;
+  unit: string;
+}
+
+interface DailyAction {
+  title: string;
+  description: string;
+}
+
+interface WeeklyTarget {
+  weekNumber: number;
+  title: string;
+  description: string;
+  dailyActions: DailyAction[];
+}
+
+interface MonthlyTarget {
+  month: number;
+  title: string;
+  description: string;
+  kpi?: PlanKpi;
+  weeklyTargets: WeeklyTarget[];
+}
+
+interface QuarterlyTarget {
+  quarter: number;
+  title: string;
+  description: string;
+  kpi?: PlanKpi;
+  monthlyTargets: MonthlyTarget[];
+}
+
+interface DailyHabit {
+  title: string;
+  description: string;
+}
+
 export interface GeneratedPlan {
-  quarterlyTargets: any[];
-  dailyHabits: any[];
+  quarterlyTargets: QuarterlyTarget[];
+  dailyHabits: DailyHabit[];
   smartSummary: SmartSummary;
   suggestedAffirmation: string;
   successFormula: string;

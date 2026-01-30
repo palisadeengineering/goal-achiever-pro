@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useMetricsChat, type MetricAnswer } from './metrics-chat-provider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,23 +28,33 @@ export function MetricsChatPanel() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [inputValue, setInputValue] = useState('');
-  const [formAnswers, setFormAnswers] = useState<Record<string, string>>({});
+  const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
+
+  // Compute form answers by merging initial empty values with user edits
+  const formAnswers = useMemo(() => {
+    const initialAnswers: Record<string, string> = {};
+    state.questions.forEach(q => {
+      initialAnswers[q.id] = '';
+    });
+    return { ...initialAnswers, ...userAnswers };
+  }, [state.questions, userAnswers]);
+
+  // Wrapper to update user answers
+  const setFormAnswers = (updater: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => {
+    if (typeof updater === 'function') {
+      setUserAnswers(prev => {
+        const newAnswers = updater({ ...formAnswers });
+        return newAnswers;
+      });
+    } else {
+      setUserAnswers(updater);
+    }
+  };
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [state.messages]);
-
-  // Initialize form answers when questions load
-  useEffect(() => {
-    if (state.questions.length > 0 && Object.keys(formAnswers).length === 0) {
-      const initialAnswers: Record<string, string> = {};
-      state.questions.forEach(q => {
-        initialAnswers[q.id] = '';
-      });
-      setFormAnswers(initialAnswers);
-    }
-  }, [state.questions, formAnswers]);
 
   const allQuestionsAnswered = state.questions.length > 0 &&
     state.questions.every(q => formAnswers[q.id]?.trim());

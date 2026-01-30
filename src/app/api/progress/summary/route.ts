@@ -3,6 +3,17 @@ import { createClient } from '@/lib/supabase/server';
 
 const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
 
+interface ZombieGoal {
+  id: string;
+  title: string;
+  level: string;
+  visionId: string;
+  visionTitle: string;
+  visionColor: string;
+  daysSinceActivity: number | null;
+  lastActivity: string | null;
+}
+
 async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
   if (!supabase) return DEMO_USER_ID;
   const { data: { user } } = await supabase.auth.getUser();
@@ -202,7 +213,7 @@ export async function GET() {
           return null;
         })
         .filter(Boolean);
-    })?.sort((a: any, b: any) => {
+    })?.sort((a: ZombieGoal, b: ZombieGoal) => {
       // Sort by most neglected first
       const aVal = a?.daysSinceActivity ?? 999;
       const bVal = b?.daysSinceActivity ?? 999;

@@ -21,6 +21,20 @@ export interface ActivityItem {
   value?: number | null;
 }
 
+interface VisionData {
+  id: string;
+  title: string;
+  color: string;
+}
+
+interface KpiData {
+  id: string;
+  title: string;
+  level: string;
+  vision_id: string;
+  visions: VisionData;
+}
+
 export async function GET(request: Request) {
   try {
     const supabase = await createClient();
@@ -80,8 +94,8 @@ export async function GET(request: Request) {
 
     // Transform to ActivityItem format
     const activities: ActivityItem[] = (logs || []).map(log => {
-      const kpi = log.vision_kpis as any;
-      const vision = kpi?.visions as any;
+      const kpi = log.vision_kpis as unknown as KpiData;
+      const vision = kpi?.visions as VisionData | undefined;
 
       return {
         id: log.id,

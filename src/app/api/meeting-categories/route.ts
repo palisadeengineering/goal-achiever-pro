@@ -25,11 +25,13 @@ export async function GET() {
       return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
     }
 
-    let { data: categories, error } = await adminClient
+    const result = await adminClient
       .from('meeting_categories')
       .select('*')
       .eq('user_id', auth.userId)
       .order('sort_order', { ascending: true });
+    const { error } = result;
+    let categories = result.data;
 
     if (error) {
       console.error('Error fetching meeting categories:', error);
