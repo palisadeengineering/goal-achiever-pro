@@ -81,6 +81,12 @@ interface UseInsightsDataReturn {
     energy: ChartDataPoint[];
     tags: ChartDataPoint[];
   };
+  dataQuality: {
+    totalBlocks: number;
+    daysWithData: number;
+    uncategorizedPercentage: number;
+    dateRange: { start: string; end: string };
+  };
 }
 
 const VALUE_COLORS: Record<ValueQuadrant, string> = {
@@ -193,7 +199,8 @@ export function useInsightsData({
   const blocksWithDuration = useMemo(() => {
     return filteredBlocks.map(block => ({
       ...block,
-      durationMinutes: block.durationMinutes || calculateDuration(block.startTime, block.endTime),
+      // Use ?? instead of || to properly handle 0-duration blocks
+      durationMinutes: block.durationMinutes ?? calculateDuration(block.startTime, block.endTime),
     }));
   }, [filteredBlocks]);
 
@@ -528,6 +535,38 @@ export function useInsightsData({
       });
   }, [blocksWithDuration]);
 
+  // Calculate data quality metrics
+  const dataQuality = useMemo(() => {
+    const totalBlocks = blocksWithDuration.length;
+
+    // Count unique days with data
+    const uniqueDays = new Set(blocksWithDuration.map(b => b.date));
+    const daysWithData = uniqueDays.size;
+
+    // Calculate uncategorized percentage (blocks with 'na' value quadrant)
+    const uncategorizedBlocks = blocksWithDuration.filter(b => b.valueQuadrant === 'na').length;
+    const uncategorizedPercentage = totalBlocks > 0
+      ? Math.round((uncategorizedBlocks / totalBlocks) * 100)
+      : 0;
+
+    // Format date range
+    const formatDate = (date: Date) => date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+
+    return {
+      totalBlocks,
+      daysWithData,
+      uncategorizedPercentage,
+      dateRange: {
+        start: formatDate(startDate),
+        end: formatDate(endDate),
+      },
+    };
+  }, [blocksWithDuration, startDate, endDate]);
+
   return {
     barChartData,
     timeSeriesData,
@@ -538,5 +577,6 @@ export function useInsightsData({
       energy: energyBreakdown,
       tags: tagsBreakdown,
     },
+    dataQuality,
   };
 }

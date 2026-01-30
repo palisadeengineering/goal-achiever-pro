@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { CalendarIcon, Clock, Target, Zap, ArrowUpRight, ArrowDownRight, BarChart2 } from 'lucide-react';
+import { useState, useMemo, useCallback } from 'react';
+import { CalendarIcon, Clock, Target, Zap, ArrowUpRight, ArrowDownRight, BarChart2, Sparkles, Lightbulb, TrendingUp, Goal, Battery, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
@@ -54,6 +54,23 @@ interface InsightsViewProps {
   dateRange: { start: Date; end: Date };
 }
 
+// AI Insights types
+interface AIInsight {
+  type: 'optimization' | 'pattern' | 'goal_alignment' | 'energy';
+  title: string;
+  description: string;
+  priority: 'high' | 'medium' | 'low';
+  metric?: string;
+}
+
+interface AIInsightsState {
+  insights: AIInsight[];
+  summary: string;
+  isLoading: boolean;
+  error: string | null;
+  lastGenerated: Date | null;
+}
+
 type ChartType = 'bar' | 'pie' | 'stacked' | 'line';
 
 const VALUE_COLORS: Record<string, string> = {
@@ -81,9 +98,73 @@ export function InsightsView({ timeBlocks, tags, dateRange }: InsightsViewProps)
   const [selectedEnergy, setSelectedEnergy] = useState<EnergyRating[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
+  // AI Insights state
+  const [aiInsights, setAiInsights] = useState<AIInsightsState>({
+    insights: [],
+    summary: '',
+    isLoading: false,
+    error: null,
+    lastGenerated: null,
+  });
+
   // Use date range from parent (synced with calendar view)
   const startDate = dateRange.start;
   const endDate = dateRange.end;
+
+  // Generate AI insights
+  const generateInsights = useCallback(async () => {
+    if (timeBlocks.length === 0) {
+      setAiInsights(prev => ({
+        ...prev,
+        error: 'No time blocks to analyze. Track some activities first.',
+      }));
+      return;
+    }
+
+    setAiInsights(prev => ({ ...prev, isLoading: true, error: null }));
+
+    try {
+      const response = await fetch('/api/ai/generate-time-insights', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          timeBlocks: timeBlocks.map(b => ({
+            date: b.date,
+            startTime: b.startTime,
+            endTime: b.endTime,
+            activityName: b.activityName,
+            valueQuadrant: b.valueQuadrant,
+            energyRating: b.energyRating,
+            durationMinutes: b.durationMinutes || 0,
+          })),
+          dateRange: {
+            start: format(startDate, 'yyyy-MM-dd'),
+            end: format(endDate, 'yyyy-MM-dd'),
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate insights');
+      }
+
+      const data = await response.json();
+      setAiInsights({
+        insights: data.insights || [],
+        summary: data.summary || '',
+        isLoading: false,
+        error: null,
+        lastGenerated: new Date(),
+      });
+    } catch (error) {
+      setAiInsights(prev => ({
+        ...prev,
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Failed to generate insights',
+      }));
+    }
+  }, [timeBlocks, startDate, endDate]);
 
   const insightsData = useInsightsData({
     timeBlocks,
@@ -410,6 +491,21 @@ export function InsightsView({ timeBlocks, tags, dateRange }: InsightsViewProps)
           )}
         </CardContent>
       </Card>
+
+      {/* Data Quality Summary */}
+      <div className="flex items-center justify-between text-sm text-muted-foreground bg-muted/50 rounded-lg px-4 py-2">
+        <span>
+          Analyzing {insightsData.dataQuality.totalBlocks} time blocks from {insightsData.dataQuality.dateRange.start} - {insightsData.dataQuality.dateRange.end}
+          {insightsData.dataQuality.daysWithData > 0 && (
+            <span className="ml-2">({insightsData.dataQuality.daysWithData} days with data)</span>
+          )}
+        </span>
+        {insightsData.dataQuality.uncategorizedPercentage > 30 && (
+          <Badge variant="outline" className="text-yellow-600 border-yellow-600">
+            {insightsData.dataQuality.uncategorizedPercentage}% uncategorized
+          </Badge>
+        )}
+      </div>
 
       {/* Summary Cards - Enhanced */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
