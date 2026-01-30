@@ -41,3 +41,17 @@ export {
   gamificationKeys,
   type AchievementWithProgress,
 } from './use-gamification';
+
+// MINS hooks
+export {
+  useMins,
+  useMin,
+  useCreateMin,
+  useUpdateMin,
+  useDeleteMin,
+  useToggleMinComplete,
+  minsKeys,
+  type Min,
+  type CreateMinInput,
+  type UpdateMinInput,
+} from './use-mins';
