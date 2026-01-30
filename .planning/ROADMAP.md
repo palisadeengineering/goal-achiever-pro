@@ -127,17 +127,21 @@ Plans:
 #### Phase 10: Streaks & Daily Goals
 **Goal**: Track consecutive completion days, daily targets, visual streak indicators, MINS integration
 **Depends on**: Phase 9
-**Research**: Unlikely (CRUD, streak calculation logic)
-**Plans**: TBD
+**Research**: None (scope analyzed, patterns established)
+**Plans**: 3 plans
 
-**Additional scope (from user feedback):**
-- Daily actions from vision plan auto-populate in Daily & Weekly MINS
-- When MINS are completed, mark corresponding plan actions complete
-- Calendar heat map for habit/action tracking (like GitHub contribution graph)
-- Success rate metric (% of days goal was met)
+**Scope (refined from analysis):**
+- MINS database integration (currently uses mock data) - **CRITICAL**
+- Daily actions ↔ MINS bidirectional sync
+- Global daily streak service integrated with gamification
+- Success rate metrics API
+- Gamification dashboard widget on Today page
+- Note: Heat map already exists (vision-activity-heatmap.tsx)
 
 Plans:
-- [ ] 10-01: TBD
+- [x] 10-01-PLAN.md - MINS CRUD API and database integration
+- [ ] 10-02-PLAN.md - Daily streak service and gamification dashboard
+- [ ] 10-03-PLAN.md - Daily Actions ↔ MINS bidirectional sync
 
 #### Phase 11: Visual Celebrations
 **Goal**: Confetti, animations, level-up celebrations, satisfying micro-interactions
@@ -201,7 +205,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 8 -> **8.1** -> 9 -> 10 -> 11 
 | 8. Progress Page | v1.0 | 3/3 | Complete | 2026-01-25 |
 | **8.1. Critical Bug Fixes** | v2.0 | 1/1 | **Complete** | 2026-01-28 |
 | 9. Gamification Foundation | v2.0 | 2/2 | **Complete** | 2026-01-29 |
-| 10. Streaks & Daily Goals | v2.0 | 0/? | Not started | - |
+| 10. Streaks & Daily Goals | v2.0 | 1/3 | **In Progress** | - |
 | 11. Visual Celebrations | v2.0 | 0/? | Not started | - |
 | 12. Value Matrix Charts | v2.0 | 0/? | Not started | - |
 | 13. Leverage Analytics | v2.0 | 0/? | Not started | - |
