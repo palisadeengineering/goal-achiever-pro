@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -71,9 +71,10 @@ export function MinForm({
   isEditing = false,
 }: MinFormProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const today = new Date().toISOString().split('T')[0];
 
-  const [formData, setFormData] = useState<MinFormData>({
+  const getInitialFormData = (): MinFormData => ({
     title: initialData?.title || '',
     description: initialData?.description || '',
     scheduledDate: initialData?.scheduledDate || today,
@@ -87,12 +88,28 @@ export function MinForm({
     weekEndDate: initialData?.weekEndDate || null,
   });
 
+  const [formData, setFormData] = useState<MinFormData>(getInitialFormData());
+
+  // Reset form when dialog opens/closes or initialData changes
+  useEffect(() => {
+    if (open) {
+      setFormData(getInitialFormData());
+      setError(null);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initialData]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
     try {
       await onSubmit(formData);
+      // Reset form on successful submission
+      setFormData(getInitialFormData());
       onOpenChange(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save MIN');
     } finally {
       setIsLoading(false);
     }
@@ -298,6 +315,12 @@ export function MinForm({
               </div>
             )}
           </div>
+
+          {error && (
+            <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+              {error}
+            </div>
+          )}
 
           <DialogFooter>
             <Button
