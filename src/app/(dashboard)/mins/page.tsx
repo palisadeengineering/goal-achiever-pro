@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { PageHeader } from '@/components/layout/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Plus,
   CheckCircle2,
@@ -16,107 +17,78 @@ import {
   ChevronLeft,
   ChevronRight,
   Zap,
+  AlertCircle,
 } from 'lucide-react';
 import { MinsList } from '@/components/features/mins/mins-list';
 import { MinForm, MinFormData } from '@/components/features/mins/min-form';
 import { ShareButton } from '@/components/features/sharing';
+import { useMins, useCreateMin, useUpdateMin, useDeleteMin, useToggleMinComplete, type Min } from '@/lib/hooks';
+import { useImpactProjects } from '@/lib/hooks/use-impact-projects';
 import type { ValueQuadrant } from '@/types/database';
 
-type MinStatus = 'pending' | 'in_progress' | 'completed';
-
-interface MockMin {
-  id: string;
-  title: string;
-  description?: string;
-  scheduledTime?: string;
-  durationMinutes: number;
-  priority: number;
-  status: MinStatus;
-  valueQuadrant?: ValueQuadrant;
-  impactProjectTitle?: string;
+// Transform API response to component props
+function transformMinToProps(min: Min) {
+  return {
+    id: min.id,
+    title: min.title,
+    description: min.description || undefined,
+    scheduledTime: min.scheduled_time || undefined,
+    durationMinutes: min.duration_minutes,
+    priority: min.priority,
+    status: min.status,
+    valueQuadrant: min.drip_quadrant as ValueQuadrant | undefined,
+    impactProjectTitle: min.impact_projects?.title,
+  };
 }
-
-// Mock data
-const mockMins: MockMin[] = [
-  {
-    id: '1',
-    title: 'Review marketing proposal',
-    description: 'Go through the Q1 marketing plan and provide feedback',
-    scheduledTime: '09:00',
-    durationMinutes: 45,
-    priority: 1,
-    status: 'completed',
-    valueQuadrant: 'production',
-    impactProjectTitle: 'Launch online course',
-  },
-  {
-    id: '2',
-    title: 'Record module 2 intro video',
-    description: 'Script is ready, just need to record and edit',
-    scheduledTime: '10:00',
-    durationMinutes: 60,
-    priority: 1,
-    status: 'in_progress',
-    valueQuadrant: 'production',
-    impactProjectTitle: 'Launch online course',
-  },
-  {
-    id: '3',
-    title: 'Reply to client emails',
-    scheduledTime: '11:30',
-    durationMinutes: 30,
-    priority: 2,
-    status: 'pending',
-    valueQuadrant: 'delegation',
-  },
-  {
-    id: '4',
-    title: 'Weekly team meeting prep',
-    durationMinutes: 15,
-    priority: 3,
-    status: 'pending',
-    valueQuadrant: 'replacement',
-  },
-  {
-    id: '5',
-    title: '30-min run (marathon training)',
-    scheduledTime: '17:00',
-    durationMinutes: 30,
-    priority: 2,
-    status: 'pending',
-    valueQuadrant: 'investment',
-    impactProjectTitle: 'Run a marathon',
-  },
-  {
-    id: '6',
-    title: 'Read industry newsletter',
-    durationMinutes: 15,
-    priority: 4,
-    status: 'pending',
-    valueQuadrant: 'investment',
-  },
-];
-
-const mockImpactProjects = [
-  { id: 'g1', title: 'Launch online course' },
-  { id: 'g2', title: 'Run a marathon' },
-  { id: 'g3', title: 'Build emergency fund' },
-];
 
 export default function MinsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [mins, setMins] = useState(mockMins);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [timeScopeFilter, setTimeScopeFilter] = useState<'all' | 'daily' | 'weekly'>('all');
+
+  const dateString = selectedDate.toISOString().split('T')[0];
+
+  // Fetch MINS for selected date
+  const {
+    data: mins = [],
+    isLoading,
+    isError,
+    error,
+  } = useMins({
+    date: dateString,
+    timeScope: timeScopeFilter === 'all' ? undefined : timeScopeFilter,
+  });
+
+  // Fetch impact projects for the form dropdown
+  const { data: impactProjects = [] } = useImpactProjects();
+
+  // Mutations
+  const createMin = useCreateMin();
+  const updateMin = useUpdateMin();
+  const deleteMin = useDeleteMin();
+  const toggleComplete = useToggleMinComplete();
+
+  // Transform impact projects for the form
+  const formImpactProjects = useMemo(() => {
+    return impactProjects.map((p) => ({
+      id: p.id,
+      title: p.title,
+    }));
+  }, [impactProjects]);
+
+  // Transform mins for the list component
+  const transformedMins = useMemo(() => {
+    return mins.map(transformMinToProps);
+  }, [mins]);
 
   // Calculate stats
   const totalMins = mins.length;
   const completedMins = mins.filter((m) => m.status === 'completed').length;
   const completionRate = totalMins > 0 ? Math.round((completedMins / totalMins) * 100) : 0;
-  const totalMinutes = mins.reduce((sum, m) => sum + m.durationMinutes, 0);
+  const totalMinutes = mins.reduce((sum, m) => sum + m.duration_minutes, 0);
   const completedMinutes = mins
     .filter((m) => m.status === 'completed')
-    .reduce((sum, m) => sum + m.durationMinutes, 0);
+    .reduce((sum, m) => sum + m.duration_minutes, 0);
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {
@@ -138,50 +110,88 @@ export default function MinsPage() {
   };
 
   const handleToggleComplete = (id: string, completed: boolean) => {
-    setMins((prev) =>
-      prev.map((m) =>
-        m.id === id
-          ? { ...m, status: completed ? 'completed' : 'pending' }
-          : m
-      )
-    );
+    const min = mins.find((m) => m.id === id);
+    const isCurrentlyCompleted = min?.status === 'completed';
+    toggleComplete.mutate(id, isCurrentlyCompleted);
   };
 
   const handleAddMin = async (data: MinFormData) => {
-    const newMin: MockMin = {
-      id: `new-${Date.now()}`,
+    await createMin.mutateAsync({
       title: data.title,
-      description: data.description,
-      scheduledTime: data.scheduledTime,
+      description: data.description || undefined,
+      scheduledDate: data.scheduledDate,
+      scheduledTime: data.scheduledTime || undefined,
       durationMinutes: data.durationMinutes,
       priority: data.priority,
-      status: 'pending',
-      valueQuadrant: data.valueQuadrant as ValueQuadrant | undefined,
-    };
-    setMins((prev) => [...prev, newMin]);
+      timeScope: data.timeScope,
+      weekStartDate: data.weekStartDate || undefined,
+      weekEndDate: data.weekEndDate || undefined,
+      valueQuadrant: data.valueQuadrant || undefined,
+      impactProjectId: data.impactProjectId || undefined,
+    });
   };
 
   const handleEditMin = (id: string) => {
+    // TODO: Implement edit functionality
     console.log('Edit MIN:', id);
   };
 
   const handleDeleteMin = (id: string) => {
-    setMins((prev) => prev.filter((m) => m.id !== id));
+    deleteMin.mutate(id);
   };
 
   const handleStartPomodoro = (id: string) => {
-    console.log('Start Pomodoro for:', id);
-    setMins((prev) =>
-      prev.map((m) =>
-        m.id === id ? { ...m, status: 'in_progress' } : m
-      )
-    );
+    // Set status to in_progress
+    updateMin.mutate({
+      id,
+      status: 'in_progress',
+    });
   };
 
   // Filter mins by status
-  const pendingMins = mins.filter((m) => m.status === 'pending');
-  const inProgressMins = mins.filter((m) => m.status === 'in_progress');
-  const completedMinsList = mins.filter((m) => m.status === 'completed');
+  const pendingMins = transformedMins.filter((m) => m.status === 'pending');
+  const inProgressMins = transformedMins.filter((m) => m.status === 'in_progress');
+  const completedMinsList = transformedMins.filter((m) => m.status === 'completed');
+
+  // Impact projects summary for sidebar
+  const impactProjectSummary = useMemo(() => {
+    const projectMap = new Map<string, { title: string; total: number; completed: number }>();
+
+    mins.forEach((min) => {
+      if (min.impact_projects) {
+        const projectId = min.impact_projects.id;
+        const existing = projectMap.get(projectId) || {
+          title: min.impact_projects.title,
+          total: 0,
+          completed: 0,
+        };
+        existing.total += 1;
+        if (min.status === 'completed') {
+          existing.completed += 1;
+        }
+        projectMap.set(projectId, existing);
+      }
+    });
+
+    return Array.from(projectMap.values()).slice(0, 3);
+  }, [mins]);
+
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Daily & Weekly MINS"
+          description="Most Important Next Steps - your daily & weekly action items"
+        />
+        <Card className="p-6">
+          <div className="flex items-center gap-3 text-red-600">
+            <AlertCircle className="h-5 w-5" />
+            <p>Failed to load MINS: {error?.message || 'Unknown error'}</p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -225,7 +235,11 @@ export default function MinsPage() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total MINS</p>
-                <p className="text-2xl font-bold">{totalMins}</p>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-12" />
+                ) : (
+                  <p className="text-2xl font-bold">{totalMins}</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -239,7 +253,11 @@ export default function MinsPage() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Completed</p>
-                <p className="text-2xl font-bold">{completedMins}/{totalMins}</p>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-16" />
+                ) : (
+                  <p className="text-2xl font-bold">{completedMins}/{totalMins}</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -253,9 +271,13 @@ export default function MinsPage() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Time Planned</p>
-                <p className="text-2xl font-bold">
-                  {Math.floor(totalMinutes / 60)}h {totalMinutes % 60}m
-                </p>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-20" />
+                ) : (
+                  <p className="text-2xl font-bold">
+                    {Math.floor(totalMinutes / 60)}h {totalMinutes % 60}m
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -269,7 +291,11 @@ export default function MinsPage() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Completion</p>
-                <p className="text-2xl font-bold">{completionRate}%</p>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-14" />
+                ) : (
+                  <p className="text-2xl font-bold">{completionRate}%</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -317,63 +343,71 @@ export default function MinsPage() {
             </Button>
           </div>
 
-          <Tabs defaultValue="all">
-            <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 mb-4 scrollbar-hide">
-              <TabsList className="inline-flex w-max sm:w-auto">
-                <TabsTrigger value="all">All ({mins.length})</TabsTrigger>
-                <TabsTrigger value="pending">
-                  To Do ({pendingMins.length})
-                </TabsTrigger>
-                <TabsTrigger value="in_progress">
-                  In Progress ({inProgressMins.length})
-                </TabsTrigger>
-                <TabsTrigger value="completed">
-                  Done ({completedMinsList.length})
-                </TabsTrigger>
-              </TabsList>
+          {isLoading ? (
+            <div className="space-y-2">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-20 w-full" />
+              ))}
             </div>
+          ) : (
+            <Tabs defaultValue="all">
+              <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 mb-4 scrollbar-hide">
+                <TabsList className="inline-flex w-max sm:w-auto">
+                  <TabsTrigger value="all">All ({transformedMins.length})</TabsTrigger>
+                  <TabsTrigger value="pending">
+                    To Do ({pendingMins.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="in_progress">
+                    In Progress ({inProgressMins.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="completed">
+                    Done ({completedMinsList.length})
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
-            <TabsContent value="all">
-              <MinsList
-                mins={mins}
-                onToggleComplete={handleToggleComplete}
-                onEdit={handleEditMin}
-                onDelete={handleDeleteMin}
-                onStartPomodoro={handleStartPomodoro}
-              />
-            </TabsContent>
+              <TabsContent value="all">
+                <MinsList
+                  mins={transformedMins}
+                  onToggleComplete={handleToggleComplete}
+                  onEdit={handleEditMin}
+                  onDelete={handleDeleteMin}
+                  onStartPomodoro={handleStartPomodoro}
+                />
+              </TabsContent>
 
-            <TabsContent value="pending">
-              <MinsList
-                mins={pendingMins}
-                onToggleComplete={handleToggleComplete}
-                onEdit={handleEditMin}
-                onDelete={handleDeleteMin}
-                onStartPomodoro={handleStartPomodoro}
-                emptyMessage="All caught up! No pending MINS."
-              />
-            </TabsContent>
+              <TabsContent value="pending">
+                <MinsList
+                  mins={pendingMins}
+                  onToggleComplete={handleToggleComplete}
+                  onEdit={handleEditMin}
+                  onDelete={handleDeleteMin}
+                  onStartPomodoro={handleStartPomodoro}
+                  emptyMessage="All caught up! No pending MINS."
+                />
+              </TabsContent>
 
-            <TabsContent value="in_progress">
-              <MinsList
-                mins={inProgressMins}
-                onToggleComplete={handleToggleComplete}
-                onEdit={handleEditMin}
-                onDelete={handleDeleteMin}
-                emptyMessage="Nothing in progress. Start a Pomodoro session!"
-              />
-            </TabsContent>
+              <TabsContent value="in_progress">
+                <MinsList
+                  mins={inProgressMins}
+                  onToggleComplete={handleToggleComplete}
+                  onEdit={handleEditMin}
+                  onDelete={handleDeleteMin}
+                  emptyMessage="Nothing in progress. Start a Pomodoro session!"
+                />
+              </TabsContent>
 
-            <TabsContent value="completed">
-              <MinsList
-                mins={completedMinsList}
-                onToggleComplete={handleToggleComplete}
-                onEdit={handleEditMin}
-                onDelete={handleDeleteMin}
-                emptyMessage="No completed MINS yet today."
-              />
-            </TabsContent>
-          </Tabs>
+              <TabsContent value="completed">
+                <MinsList
+                  mins={completedMinsList}
+                  onToggleComplete={handleToggleComplete}
+                  onEdit={handleEditMin}
+                  onDelete={handleDeleteMin}
+                  emptyMessage="No completed MINS yet today."
+                />
+              </TabsContent>
+            </Tabs>
+          )}
         </div>
 
         {/* Sidebar */}
@@ -432,22 +466,26 @@ export default function MinsPage() {
               <CardTitle className="text-base">Linked Impact Projects</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {mockImpactProjects.slice(0, 3).map((project) => {
-                const linkedMins = mins.filter(
-                  (m) => m.impactProjectTitle === project.title
-                );
-                const completed = linkedMins.filter(
-                  (m) => m.status === 'completed'
-                ).length;
-                return (
-                  <div key={project.id} className="flex items-center justify-between">
+              {isLoading ? (
+                <div className="space-y-2">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-6 w-full" />
+                  ))}
+                </div>
+              ) : impactProjectSummary.length > 0 ? (
+                impactProjectSummary.map((project, index) => (
+                  <div key={index} className="flex items-center justify-between">
                     <span className="text-sm truncate flex-1">{project.title}</span>
                     <Badge variant="outline">
-                      {completed}/{linkedMins.length}
+                      {project.completed}/{project.total}
                     </Badge>
                   </div>
-                );
-              })}
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No linked projects for today
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -457,7 +495,7 @@ export default function MinsPage() {
       <MinForm
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
-        impactProjects={mockImpactProjects}
+        impactProjects={formImpactProjects}
         onSubmit={handleAddMin}
       />
     </div>
