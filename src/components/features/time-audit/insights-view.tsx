@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { CalendarIcon, Clock, Activity, TrendingUp, Target, Zap, ArrowUpRight, ArrowDownRight, Minus, BarChart2 } from 'lucide-react';
+import { CalendarIcon, Clock, Target, Zap, ArrowUpRight, ArrowDownRight, BarChart2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
@@ -12,15 +12,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, differenceInDays, subWeeks, startOfDay, endOfDay } from 'date-fns';
+import { format, subWeeks } from 'date-fns';
+
+// Helper to format Date to yyyy-MM-dd string for reliable comparison
+function formatDateStr(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
 
 // Helper to parse date string as local date (avoids UTC timezone issues)
 function parseLocalDate(dateString: string): Date {
@@ -52,9 +51,9 @@ import { MeetingLoadWidget } from '@/components/features/analytics/meeting-load-
 interface InsightsViewProps {
   timeBlocks: TimeBlockData[];
   tags: Tag[];
+  dateRange: { start: Date; end: Date };
 }
 
-type DateRangePreset = 'lastWeek' | 'week' | 'month' | '30days' | '90days' | 'custom';
 type ChartType = 'bar' | 'pie' | 'stacked' | 'line';
 
 const VALUE_COLORS: Record<string, string> = {
@@ -71,10 +70,7 @@ const ENERGY_COLORS: Record<string, string> = {
   red: '#ef4444',
 };
 
-export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
-  const [dateRangePreset, setDateRangePreset] = useState<DateRangePreset>('30days');
-  const [customStartDate, setCustomStartDate] = useState<Date>(subDays(new Date(), 30));
-  const [customEndDate, setCustomEndDate] = useState<Date>(new Date());
+export function InsightsView({ timeBlocks, tags, dateRange }: InsightsViewProps) {
   const [groupBy, setGroupBy] = useState<GroupByOption>('value');
   const [granularity, setGranularity] = useState<GranularityOption>('day');
   const [measure, setMeasure] = useState<MeasureOption>('hours');
@@ -85,32 +81,9 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
   const [selectedEnergy, setSelectedEnergy] = useState<EnergyRating[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
-  // Use weekStartsOn: 0 (Sunday) to match WeeklyCalendarView
-  const { startDate, endDate } = useMemo(() => {
-    const now = new Date();
-    switch (dateRangePreset) {
-      case 'lastWeek':
-        return {
-          startDate: startOfWeek(subWeeks(now, 1), { weekStartsOn: 0 }),
-          endDate: endOfWeek(subWeeks(now, 1), { weekStartsOn: 0 })
-        };
-      case 'week':
-        return {
-          startDate: startOfWeek(now, { weekStartsOn: 0 }),
-          endDate: endOfWeek(now, { weekStartsOn: 0 })
-        };
-      case 'month':
-        return { startDate: startOfMonth(now), endDate: endOfMonth(now) };
-      case '30days':
-        return { startDate: subDays(now, 30), endDate: now };
-      case '90days':
-        return { startDate: subDays(now, 90), endDate: now };
-      case 'custom':
-        return { startDate: customStartDate, endDate: customEndDate };
-      default:
-        return { startDate: subDays(now, 30), endDate: now };
-    }
-  }, [dateRangePreset, customStartDate, customEndDate]);
+  // Use date range from parent (synced with calendar view)
+  const startDate = dateRange.start;
+  const endDate = dateRange.end;
 
   const insightsData = useInsightsData({
     timeBlocks,
@@ -203,14 +176,13 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
 
   // Calculate productivity score (weighted by Value + Energy)
   const productivityMetrics = useMemo(() => {
-    // Normalize date range to start/end of day for consistent comparison
-    const rangeStart = startOfDay(startDate);
-    const rangeEnd = endOfDay(endDate);
+    // Use string comparison for reliable date filtering
+    const rangeStartStr = formatDateStr(startDate);
+    const rangeEndStr = formatDateStr(endDate);
 
     const blocks = timeBlocks.filter(b => {
-      // Parse date string as local date to avoid UTC timezone issues
-      const blockDate = parseLocalDate(b.date);
-      return blockDate >= rangeStart && blockDate <= rangeEnd;
+      if (!b.date || typeof b.date !== 'string') return false;
+      return b.date >= rangeStartStr && b.date <= rangeEndStr;
     });
 
     if (blocks.length === 0) {
@@ -235,12 +207,11 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
     const score = Math.round(productionRatio * 0.6 + normalizedEnergyBalance * 0.4);
 
     // Calculate week-over-week change
-    const prevWeekStart = startOfDay(subWeeks(startDate, 1));
-    const prevWeekEnd = endOfDay(subWeeks(endDate, 1));
+    const prevWeekStartStr = formatDateStr(subWeeks(startDate, 1));
+    const prevWeekEndStr = formatDateStr(subWeeks(endDate, 1));
     const prevBlocks = timeBlocks.filter(b => {
-      // Parse date string as local date to avoid UTC timezone issues
-      const blockDate = parseLocalDate(b.date);
-      return blockDate >= prevWeekStart && blockDate <= prevWeekEnd;
+      if (!b.date || typeof b.date !== 'string') return false;
+      return b.date >= prevWeekStartStr && b.date <= prevWeekEndStr;
     });
 
     let weeklyChange = 0;
@@ -258,14 +229,13 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
 
   // Calculate top activities
   const topActivities = useMemo(() => {
-    // Normalize date range to start/end of day for consistent comparison
-    const rangeStart = startOfDay(startDate);
-    const rangeEnd = endOfDay(endDate);
+    // Use string comparison for reliable date filtering
+    const rangeStartStr = formatDateStr(startDate);
+    const rangeEndStr = formatDateStr(endDate);
 
     const blocks = timeBlocks.filter(b => {
-      // Parse date string as local date to avoid UTC timezone issues
-      const blockDate = parseLocalDate(b.date);
-      return blockDate >= rangeStart && blockDate <= rangeEnd;
+      if (!b.date || typeof b.date !== 'string') return false;
+      return b.date >= rangeStartStr && b.date <= rangeEndStr;
     });
 
     // Group by activity name
@@ -294,14 +264,13 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
   // Calculate day of week distribution
   const dayOfWeekData = useMemo(() => {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    // Normalize date range to start/end of day for consistent comparison
-    const rangeStart = startOfDay(startDate);
-    const rangeEnd = endOfDay(endDate);
+    // Use string comparison for reliable date filtering
+    const rangeStartStr = formatDateStr(startDate);
+    const rangeEndStr = formatDateStr(endDate);
 
     const blocks = timeBlocks.filter(b => {
-      // Parse date string as local date to avoid UTC timezone issues
-      const blockDate = parseLocalDate(b.date);
-      return blockDate >= rangeStart && blockDate <= rangeEnd;
+      if (!b.date || typeof b.date !== 'string') return false;
+      return b.date >= rangeStartStr && b.date <= rangeEndStr;
     });
 
     const dayMinutes: number[] = [0, 0, 0, 0, 0, 0, 0];
@@ -324,60 +293,12 @@ export function InsightsView({ timeBlocks, tags }: InsightsViewProps) {
     <div className="space-y-6">
       {/* Controls Row */}
       <div className="flex flex-wrap items-center gap-4">
-        {/* Date Range */}
+        {/* Date Range Display (synced with calendar view) */}
         <div className="flex items-center gap-2">
-          <Label className="text-sm whitespace-nowrap">Date Range:</Label>
-          <Select value={dateRangePreset} onValueChange={(v) => setDateRangePreset(v as DateRangePreset)}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="lastWeek">Last Week</SelectItem>
-              <SelectItem value="week">This Week</SelectItem>
-              <SelectItem value="month">This Month</SelectItem>
-              <SelectItem value="30days">Last 30 Days</SelectItem>
-              <SelectItem value="90days">Last 90 Days</SelectItem>
-              <SelectItem value="custom">Custom</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {dateRangePreset === 'custom' && (
-            <div className="flex items-center gap-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <CalendarIcon className="h-4 w-4" />
-                    {format(customStartDate, 'MMM d')}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={customStartDate}
-                    onSelect={(date) => date && setCustomStartDate(date)}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              <span className="text-muted-foreground">to</span>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <CalendarIcon className="h-4 w-4" />
-                    {format(customEndDate, 'MMM d')}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={customEndDate}
-                    onSelect={(date) => date && setCustomEndDate(date)}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          )}
+          <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium">
+            {format(startDate, 'MMM d')} - {format(endDate, 'MMM d, yyyy')}
+          </span>
         </div>
 
         {/* Group By */}

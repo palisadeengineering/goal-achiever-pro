@@ -160,10 +160,16 @@ export function useInsightsData({
     const rangeStart = startOfDay(startDate);
     const rangeEnd = endOfDay(endDate);
 
+    // Use string comparison for date filtering (more reliable than Date object comparison)
+    const rangeStartStr = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`;
+    const rangeEndStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
+
     return timeBlocks.filter(block => {
-      // Parse date string as local date to avoid UTC timezone issues
-      const blockDate = parseLocalDate(block.date);
-      if (blockDate < rangeStart || blockDate > rangeEnd) return false;
+      // Skip blocks without valid date
+      if (!block.date || typeof block.date !== 'string') return false;
+
+      // Use string comparison for yyyy-MM-dd format (lexicographic ordering works correctly)
+      if (block.date < rangeStartStr || block.date > rangeEndStr) return false;
 
       if (filters?.valueQuadrants?.length && !filters.valueQuadrants.includes(block.valueQuadrant)) {
         return false;

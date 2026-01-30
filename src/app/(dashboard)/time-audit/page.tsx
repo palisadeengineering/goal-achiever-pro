@@ -64,6 +64,9 @@ interface CalendarTimeBlock {
   activityName: string;
   valueQuadrant: ValueQuadrant;
   energyRating: EnergyRating;
+  externalEventId?: string;
+  source?: string;
+  createdAt?: string;
   // Recurring event properties
   isRecurring?: boolean;
   recurrenceRule?: string;
@@ -410,6 +413,9 @@ export default function TimeAuditPage() {
         activityName: block.activityName,
         valueQuadrant: block.valueQuadrant,
         energyRating: block.energyRating,
+        externalEventId: block.externalEventId,
+        source: block.source,
+        createdAt: block.createdAt,
         // Include recurring event properties
         isRecurring: block.isRecurring,
         recurrenceRule: block.recurrenceRule,
@@ -451,6 +457,9 @@ export default function TimeAuditPage() {
             // Use categorization if available, otherwise default to 'na' (neutral/uncategorized)
             valueQuadrant: categorization?.valueQuadrant || 'na',
             energyRating: categorization?.energyRating || 'yellow',
+            externalEventId: event.id,
+            source: 'google_calendar',
+            createdAt: new Date().toISOString(),
           });
         } catch {
           // Skip events with invalid dates
@@ -582,13 +591,17 @@ export default function TimeAuditPage() {
         try {
           const startDate = new Date(startDateTime);
           const endDate = new Date(endDateTime);
-          const durationMinutes = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60));
+          const startTimeStr = format(startDate, 'HH:mm');
+          const endTimeStr = format(endDate, 'HH:mm');
+          // Use calculateDuration for consistency with time blocks
+          // This properly handles all-day events (00:00 to 00:00 = 0 duration)
+          const durationMinutes = calculateDuration(startTimeStr, endTimeStr);
 
           allBlocks.push({
             id: event.id,
             date: format(startDate, 'yyyy-MM-dd'),
-            startTime: format(startDate, 'HH:mm'),
-            endTime: format(endDate, 'HH:mm'),
+            startTime: startTimeStr,
+            endTime: endTimeStr,
             activityName: event.summary || 'Untitled Event',
             valueQuadrant: categorization?.valueQuadrant || 'na',
             energyRating: categorization?.energyRating || 'yellow',
@@ -1640,6 +1653,7 @@ export default function TimeAuditPage() {
                   onAddBlock={handleAddBlock}
                   onBlockClick={handleBlockClick}
                   onBlockMove={handleBlockMove}
+                  onIgnoreBlock={handleSkipBlock}
                   onColorModeChange={setCalendarColorMode}
                   onWeekChange={handleDateRangeChange}
                 />
@@ -2011,6 +2025,7 @@ export default function TimeAuditPage() {
           <InsightsView
             timeBlocks={insightsTimeBlocks}
             tags={tags}
+            dateRange={viewedDateRange}
           />
         </TabsContent>
 
