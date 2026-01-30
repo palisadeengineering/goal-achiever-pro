@@ -370,8 +370,141 @@ export function InsightsView({ timeBlocks, tags, dateRange }: InsightsViewProps)
     }));
   }, [timeBlocks, startDate, endDate]);
 
+  // Helper to get icon for insight type
+  const getInsightIcon = (type: AIInsight['type']) => {
+    switch (type) {
+      case 'optimization': return <Lightbulb className="h-4 w-4" />;
+      case 'pattern': return <TrendingUp className="h-4 w-4" />;
+      case 'goal_alignment': return <Goal className="h-4 w-4" />;
+      case 'energy': return <Battery className="h-4 w-4" />;
+    }
+  };
+
+  // Helper to get priority badge color
+  const getPriorityColor = (priority: AIInsight['priority']) => {
+    switch (priority) {
+      case 'high': return 'bg-red-100 text-red-700 border-red-200';
+      case 'medium': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+      case 'low': return 'bg-green-100 text-green-700 border-green-200';
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* AI Insights Panel */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-purple-500" />
+              <CardTitle className="text-lg">AI Insights</CardTitle>
+            </div>
+            <Button
+              onClick={generateInsights}
+              disabled={aiInsights.isLoading || timeBlocks.length === 0}
+              size="sm"
+              variant={aiInsights.insights.length > 0 ? 'outline' : 'default'}
+            >
+              {aiInsights.isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Analyzing...
+                </>
+              ) : aiInsights.insights.length > 0 ? (
+                'Regenerate'
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Generate Insights
+                </>
+              )}
+            </Button>
+          </div>
+          {aiInsights.lastGenerated && (
+            <CardDescription>
+              Last generated {format(aiInsights.lastGenerated, 'MMM d, h:mm a')}
+            </CardDescription>
+          )}
+        </CardHeader>
+        <CardContent>
+          {/* Error State */}
+          {aiInsights.error && (
+            <div className="flex items-center gap-2 text-red-600 bg-red-50 rounded-lg p-3">
+              <AlertCircle className="h-4 w-4 flex-shrink-0" />
+              <span className="text-sm">{aiInsights.error}</span>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!aiInsights.isLoading && !aiInsights.error && aiInsights.insights.length === 0 && (
+            <div className="text-center py-6 text-muted-foreground">
+              <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">Click &quot;Generate Insights&quot; to get AI-powered productivity recommendations</p>
+              <p className="text-xs mt-1">Based on your time tracking data from the selected date range</p>
+            </div>
+          )}
+
+          {/* Loading State */}
+          {aiInsights.isLoading && (
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="animate-pulse rounded-lg border p-4">
+                  <div className="h-4 bg-muted rounded w-3/4 mb-2" />
+                  <div className="h-3 bg-muted rounded w-full mb-1" />
+                  <div className="h-3 bg-muted rounded w-2/3" />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Insights Display */}
+          {!aiInsights.isLoading && aiInsights.insights.length > 0 && (
+            <div className="space-y-4">
+              {/* Summary */}
+              {aiInsights.summary && (
+                <div className="bg-purple-50 dark:bg-purple-950/20 rounded-lg p-3 border border-purple-200 dark:border-purple-800">
+                  <p className="text-sm font-medium text-purple-900 dark:text-purple-100">
+                    {aiInsights.summary}
+                  </p>
+                </div>
+              )}
+
+              {/* Insight Cards */}
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                {aiInsights.insights.map((insight, index) => (
+                  <div
+                    key={index}
+                    className="rounded-lg border p-4 hover:shadow-sm transition-shadow"
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        {getInsightIcon(insight.type)}
+                        <span className="text-xs uppercase tracking-wide">
+                          {insight.type.replace('_', ' ')}
+                        </span>
+                      </div>
+                      <Badge
+                        variant="outline"
+                        className={`text-xs ${getPriorityColor(insight.priority)}`}
+                      >
+                        {insight.priority}
+                      </Badge>
+                    </div>
+                    <h4 className="font-medium text-sm mb-1">{insight.title}</h4>
+                    <p className="text-xs text-muted-foreground">{insight.description}</p>
+                    {insight.metric && (
+                      <div className="mt-2 text-xs font-medium text-purple-600 dark:text-purple-400">
+                        {insight.metric}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Controls Row */}
       <div className="flex flex-wrap items-center gap-4">
         {/* Date Range Display (synced with calendar view) */}

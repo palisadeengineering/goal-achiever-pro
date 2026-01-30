@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Calendar, CalendarDays, CalendarRange, Lock, RefreshCw, ChevronDown, Upload, ArrowUpRight, BarChart3, ListChecks, Trash2, ChevronRight, PanelRightClose, PanelRight, Settings2 } from 'lucide-react';
+import { Plus, Calendar, CalendarDays, CalendarRange, Lock, RefreshCw, ChevronDown, Upload, ArrowUpRight, BarChart3, ListChecks, Trash2, ChevronRight, PanelRightClose, PanelRight, Settings2, EyeOff, Eye } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -198,7 +198,7 @@ export default function TimeAuditPage() {
   const [isImporting, setIsImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ imported: number; skipped: number } | null>(null);
 
-  const { getUncategorizedEventIds, getCategorization, saveCategorization, categorizations, refreshFromStorage, clearCategorizations, ignoreEvent, removeCategorization } = useEventPatterns();
+  const { getUncategorizedEventIds, getCategorization, saveCategorization, categorizations, refreshFromStorage, clearCategorizations, ignoreEvent, removeCategorization, isIgnored, unignoreEvent, ignoredEvents } = useEventPatterns();
 
   const { tags } = useTags();
 
@@ -425,11 +425,16 @@ export default function TimeAuditPage() {
       });
     });
 
-    // Merge Google Calendar events (skip if already imported)
+    // Merge Google Calendar events (skip if already imported or ignored)
     // Show ALL events, even uncategorized ones (with default 'na' quadrant and 'yellow' energy)
     googleEvents.forEach((event) => {
       // Skip if this event is already imported as a time block
       if (importedGoogleEventIds.has(event.id)) {
+        return;
+      }
+
+      // Skip if this event is ignored
+      if (isIgnored(event.id)) {
         return;
       }
 
@@ -469,7 +474,7 @@ export default function TimeAuditPage() {
     });
 
     return grouped;
-  }, [timeBlocks, googleEvents, getCategorization, categorizations]);
+  }, [timeBlocks, googleEvents, getCategorization, categorizations, isIgnored]);
 
   // Get all data sources for stats: time blocks + categorized Google events
   // FILTERED by currently viewed date range
@@ -2052,6 +2057,67 @@ export default function TimeAuditPage() {
               />
             </CardContent>
           </Card>
+
+          {/* Ignored Events */}
+          {ignoredEvents.length > 0 && (
+            <Card className="mt-4">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <EyeOff className="h-5 w-5" />
+                  Ignored Events
+                  <Badge variant="secondary" className="ml-2">{ignoredEvents.length}</Badge>
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Events you&apos;ve chosen to hide from the calendar. Click to restore them.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Group ignored events by date */}
+                  {Object.entries(
+                    ignoredEvents.reduce((acc, event) => {
+                      const date = event.ignoredAt.split('T')[0];
+                      if (!acc[date]) acc[date] = [];
+                      acc[date].push(event);
+                      return acc;
+                    }, {} as Record<string, typeof ignoredEvents>)
+                  )
+                    .sort(([a], [b]) => b.localeCompare(a)) // Sort by date descending (most recent first)
+                    .map(([date, events]) => (
+                      <div key={date} className="space-y-2">
+                        <h4 className="text-sm font-medium text-muted-foreground">
+                          Ignored on {format(new Date(date), 'MMM d, yyyy')}
+                        </h4>
+                        <div className="space-y-2">
+                          {events.map((event) => (
+                            <div
+                              key={event.eventId}
+                              className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border"
+                            >
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">{event.eventName}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  ID: {event.eventId.slice(0, 20)}...
+                                </p>
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => unignoreEvent(event.eventId)}
+                                className="ml-2 gap-2"
+                              >
+                                <Eye className="h-4 w-4" />
+                                Restore
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Debug Panel */}
           <Card className="mt-4">
