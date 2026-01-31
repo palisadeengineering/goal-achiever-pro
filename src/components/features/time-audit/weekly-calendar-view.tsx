@@ -1384,15 +1384,12 @@ export function WeeklyCalendarView({
                 <div ref={calendarGridRef} className="grid grid-cols-[48px_repeat(7,1fr)]">
                   {/* Time column */}
                   <div className="border-r border-border/30">
-                    {hourLabels.map((hourSlot: string, index: number) => {
+                    {hourLabels.map((hourSlot: string) => {
                       const hourNum = parseInt(hourSlot.split(':')[0]);
                       return (
                         <div
                           key={hourSlot}
-                          className={cn(
-                            "h-[56px] pr-2 text-[11px] text-muted-foreground flex items-start justify-end whitespace-nowrap",
-                            index === 0 ? "pt-2" : "pt-0 -mt-2"
-                          )}
+                          className="h-[56px] pr-2 text-[11px] text-muted-foreground flex items-start justify-end whitespace-nowrap"
                         >
                           {formatHour(hourNum, settings.timeFormat, true)}
                         </div>
