@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { format, subDays, startOfWeek, endOfWeek } from 'date-fns';
 import { Plus, Settings, Trash2, BarChart3, PieChart, TrendingUp, Tag } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -325,6 +325,9 @@ export function ChartsView({ dateRange, availableTags, onManageTags }: ChartsVie
   const [formShowValues, setFormShowValues] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Track if we've already attempted to generate defaults (prevents duplicates)
+  const hasGeneratedDefaults = useRef(false);
+
   // Generate default charts if none exist
   const generateDefaultCharts = useCallback(async () => {
     const defaultCharts = [
@@ -378,8 +381,9 @@ export function ChartsView({ dateRange, availableTags, onManageTags }: ChartsVie
         const data = await response.json();
         let fetchedCharts = data.charts || [];
 
-        // If no charts exist but we have tags, generate defaults
-        if (fetchedCharts.length === 0 && availableTags.length > 0) {
+        // If no charts exist but we have tags, generate defaults (only once)
+        if (fetchedCharts.length === 0 && availableTags.length > 0 && !hasGeneratedDefaults.current) {
+          hasGeneratedDefaults.current = true;
           const defaultCharts = await generateDefaultCharts();
           fetchedCharts = defaultCharts;
         }
