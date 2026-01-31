@@ -270,16 +270,16 @@ export function MinForm({
             <div className="space-y-2">
               <Label>Value Quadrant</Label>
               <Select
-                value={formData.valueQuadrant}
+                value={formData.valueQuadrant || '__none__'}
                 onValueChange={(value) =>
-                  updateField('valueQuadrant', value as ValueQuadrant | '')
+                  updateField('valueQuadrant', value === '__none__' ? '' : value as ValueQuadrant)
                 }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select quadrant" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Not categorized</SelectItem>
+                  <SelectItem value="__none__">Not categorized</SelectItem>
                   {Object.entries(VALUE_QUADRANTS).map(([key, quadrant]) => (
                     <SelectItem key={key} value={key}>
                       <span style={{ color: quadrant.color }}>
@@ -295,16 +295,16 @@ export function MinForm({
               <div className="space-y-2">
                 <Label>Link to Impact Project</Label>
                 <Select
-                  value={formData.impactProjectId || ''}
+                  value={formData.impactProjectId || '__none__'}
                   onValueChange={(value) =>
-                    updateField('impactProjectId', value || null)
+                    updateField('impactProjectId', value === '__none__' ? null : value)
                   }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select impact project (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No linked impact project</SelectItem>
+                    <SelectItem value="__none__">No linked impact project</SelectItem>
                     {impactProjects.map((project) => (
                       <SelectItem key={project.id} value={project.id}>
                         {project.title}

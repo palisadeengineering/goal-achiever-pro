@@ -6,9 +6,14 @@
 
 ## Open Issues
 
-### UAT-001: MinForm crashes with empty string Select value
+[None]
+
+## Resolved Issues
+
+### UAT-001: MinForm crashes with empty string Select value ✅
 
 **Discovered:** 2026-01-29
+**Resolved:** 2026-01-31
 **Phase/Plan:** 10-01
 **Severity:** Blocker
 **Feature:** Create MIN form
@@ -22,11 +27,7 @@
 
 **Root Cause:** Lines 282 and 307 in `src/components/features/mins/min-form.tsx` use `value=""` for the "Not categorized" and "No linked impact project" options. Radix Select component doesn't allow empty string values.
 
-**Fix:** Change `value=""` to a sentinel value like `value="none"` and handle the transformation in the form logic.
-
-## Resolved Issues
-
-[None yet]
+**Fix Applied:** Changed `value=""` to `value="__none__"` sentinel value and updated the `onValueChange` handlers to transform `__none__` back to empty string or null as appropriate.
 
 ---
 
