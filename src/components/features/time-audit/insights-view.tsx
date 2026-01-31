@@ -47,11 +47,13 @@ import {
 import { CategoryBreakdownChart } from '@/components/features/analytics/category-breakdown-chart';
 import { TimeByProjectChart } from '@/components/features/analytics/time-by-project-chart';
 import { MeetingLoadWidget } from '@/components/features/analytics/meeting-load-widget';
+import { InsightsDateRangePicker } from './insights-date-range-picker';
 
 interface InsightsViewProps {
   timeBlocks: TimeBlockData[];
   tags: Tag[];
   dateRange: { start: Date; end: Date };
+  onDateRangeChange?: (start: Date, end: Date) => void;
 }
 
 // AI Insights types
@@ -87,7 +89,7 @@ const ENERGY_COLORS: Record<string, string> = {
   red: '#ef4444',
 };
 
-export function InsightsView({ timeBlocks, tags, dateRange }: InsightsViewProps) {
+export function InsightsView({ timeBlocks, tags, dateRange, onDateRangeChange }: InsightsViewProps) {
   const [groupBy, setGroupBy] = useState<GroupByOption>('value');
   const [granularity, setGranularity] = useState<GranularityOption>('day');
   const [measure, setMeasure] = useState<MeasureOption>('hours');
@@ -507,13 +509,20 @@ export function InsightsView({ timeBlocks, tags, dateRange }: InsightsViewProps)
 
       {/* Controls Row */}
       <div className="flex flex-wrap items-center gap-4">
-        {/* Date Range Display (synced with calendar view) */}
-        <div className="flex items-center gap-2">
-          <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">
-            {format(startDate, 'MMM d')} - {format(endDate, 'MMM d, yyyy')}
-          </span>
-        </div>
+        {/* Date Range Picker */}
+        {onDateRangeChange ? (
+          <InsightsDateRangePicker
+            dateRange={dateRange}
+            onDateRangeChange={onDateRangeChange}
+          />
+        ) : (
+          <div className="flex items-center gap-2">
+            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">
+              {format(startDate, 'MMM d')} - {format(endDate, 'MMM d, yyyy')}
+            </span>
+          </div>
+        )}
 
         {/* Group By */}
         <div className="flex items-center gap-2">

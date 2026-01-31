@@ -2032,6 +2032,7 @@ export default function TimeAuditPage() {
             timeBlocks={insightsTimeBlocks}
             tags={tags}
             dateRange={viewedDateRange}
+            onDateRangeChange={handleDateRangeChange}
           />
         </TabsContent>
 
