@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { rollupProgressToAncestors, type AncestorProgressUpdate } from '@/lib/progress';
 import { awardXp } from '@/lib/services/gamification';
+import { updateUserDailyStreak } from '@/lib/services/streaks';
 
 // Demo user ID for development
 const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
@@ -159,6 +160,9 @@ export async function POST(
           kpiId: id,
           streakCount: streakData?.current_streak,
         });
+
+        // Update global daily streak
+        await updateUserDailyStreak(userId);
       } catch (gamificationError) {
         // Log but don't fail the request
         console.error('Gamification error:', gamificationError);

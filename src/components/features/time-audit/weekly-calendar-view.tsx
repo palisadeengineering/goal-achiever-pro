@@ -33,8 +33,21 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  ContextMenu,
+  ContextMenuTrigger,
+  ContextMenuContent,
+  ContextMenuSub,
+  ContextMenuSubTrigger,
+  ContextMenuSubContent,
+  ContextMenuCheckboxItem,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuLabel,
+} from '@/components/ui/context-menu';
 import type { ValueQuadrant, EnergyRating } from '@/types/database';
 import { describeRecurrence } from '@/lib/utils/recurrence';
+import { Tag, Settings } from 'lucide-react';
 
 interface TimeBlock {
   id: string;
@@ -53,6 +66,16 @@ interface TimeBlock {
   recurrenceRule?: string;
   isRecurrenceInstance?: boolean;
   parentBlockId?: string;
+  // Tags
+  tagIds?: string[];
+  tags?: TagInfo[];
+}
+
+// Tag type for display - exported for consumers
+export interface TagInfo {
+  id: string;
+  name: string;
+  color: string;
 }
 
 interface UserSettings {
@@ -86,6 +109,10 @@ interface WeeklyCalendarViewProps {
   colorMode?: 'value' | 'energy';
   onColorModeChange?: (mode: 'value' | 'energy') => void;
   onWeekChange?: (weekStart: Date, weekEnd: Date) => void;
+  // Tag management props
+  availableTags?: TagInfo[];
+  onToggleTag?: (blockId: string, tagId: string, isAdding: boolean) => Promise<void>;
+  onManageTags?: () => void;
 }
 
 // Generate time slots for given hour range in 15-min increments
@@ -210,6 +237,9 @@ function EventCard({
   isResizing,
   colorMode,
   onIgnore,
+  availableTags,
+  onToggleTag,
+  onManageTags,
 }: {
   block: TimeBlock;
   durationSlots: number;
@@ -219,6 +249,9 @@ function EventCard({
   isResizing?: boolean;
   colorMode: 'value' | 'energy';
   onIgnore?: (block: IgnoreableBlock) => void;
+  availableTags?: TagInfo[];
+  onToggleTag?: (blockId: string, tagId: string, isAdding: boolean) => Promise<void>;
+  onManageTags?: () => void;
 }) {
   // _getBlockColor is kept for API compatibility but we use inline styles
   const { attributes, listeners, setNodeRef: setDragRef, transform, isDragging } = useDraggable({
@@ -293,6 +326,31 @@ function EventCard({
     return block.activityName;
   };
 
+  // Render tag dots - small colored circles for assigned tags
+  const renderTagDots = (maxDots: number = 3) => {
+    const tags = block.tags || [];
+    if (tags.length === 0) return null;
+
+    const displayTags = tags.slice(0, maxDots);
+    const remainingCount = tags.length - maxDots;
+
+    return (
+      <div className="flex items-center gap-0.5 flex-shrink-0">
+        {displayTags.map((tag) => (
+          <span
+            key={tag.id}
+            className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+            style={{ backgroundColor: tag.color || '#888' }}
+            title={tag.name}
+          />
+        ))}
+        {remainingCount > 0 && (
+          <span className="text-[8px] text-white/70 ml-0.5">+{remainingCount}</span>
+        )}
+      </div>
+    );
+  };
+
   // Render event content based on size bucket
   // FAIL-SAFE: All text must have overflow:hidden + text-overflow:ellipsis
   // Content is rendered inside a flex-centered button, so we just need proper width
@@ -314,11 +372,14 @@ function EventCard({
             adaptiveStyles.containerClass
           )}
         >
-          <div
-            className={cn('text-white truncate whitespace-nowrap leading-none', adaptiveStyles.titleClass)}
-            style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}
-          >
-            {getDisplayTitle()}
+          <div className="flex items-center gap-1 min-w-0 flex-1">
+            <div
+              className={cn('text-white truncate whitespace-nowrap leading-none flex-1 min-w-0', adaptiveStyles.titleClass)}
+              style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}
+            >
+              {getDisplayTitle()}
+            </div>
+            {renderTagDots(2)}
           </div>
         </div>
       );
@@ -334,11 +395,14 @@ function EventCard({
             adaptiveStyles.containerClass
           )}
         >
-          <div
-            className={cn('text-white truncate whitespace-nowrap', adaptiveStyles.titleClass)}
-            style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}
-          >
-            {getDisplayTitle()}, {startTimeDisplay}
+          <div className="flex items-center gap-1 min-w-0 flex-1">
+            <div
+              className={cn('text-white truncate whitespace-nowrap flex-1 min-w-0', adaptiveStyles.titleClass)}
+              style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}
+            >
+              {getDisplayTitle()}, {startTimeDisplay}
+            </div>
+            {renderTagDots(2)}
           </div>
         </div>
       );
@@ -361,6 +425,7 @@ function EventCard({
           >
             {getDisplayTitle()}
           </div>
+          {renderTagDots(3)}
         </div>
         {adaptiveStyles.showTime && (
           <div
@@ -458,6 +523,47 @@ function EventCard({
     </div>
   );
 
+  // Helper to check if a tag is currently applied to this block
+  const isTagApplied = (tagId: string) => {
+    return block.tags?.some(t => t.id === tagId) || block.tagIds?.includes(tagId) || false;
+  };
+
+  // Context menu content for quick-tagging
+  const contextMenuContent = (availableTags && availableTags.length > 0 && onToggleTag) ? (
+    <ContextMenuContent className="w-56">
+      <ContextMenuLabel className="flex items-center gap-2">
+        <Tag className="h-3.5 w-3.5" />
+        Quick Tag
+      </ContextMenuLabel>
+      <ContextMenuSeparator />
+      {availableTags.map((tag) => (
+        <ContextMenuCheckboxItem
+          key={tag.id}
+          checked={isTagApplied(tag.id)}
+          onCheckedChange={(checked) => {
+            onToggleTag(block.id, tag.id, checked);
+          }}
+          className="gap-2"
+        >
+          <span
+            className="h-2.5 w-2.5 rounded-full flex-shrink-0"
+            style={{ backgroundColor: tag.color || '#888' }}
+          />
+          {tag.name}
+        </ContextMenuCheckboxItem>
+      ))}
+      {onManageTags && (
+        <>
+          <ContextMenuSeparator />
+          <ContextMenuItem onClick={onManageTags} className="gap-2">
+            <Settings className="h-3.5 w-3.5" />
+            Manage Tags...
+          </ContextMenuItem>
+        </>
+      )}
+    </ContextMenuContent>
+  ) : null;
+
   // For mobile touch devices with small events, use Popover for tap-to-expand
   if (isTouchDevice && (sizeBucket === 'xs' || sizeBucket === 'sm')) {
     return (
@@ -489,12 +595,22 @@ function EventCard({
     );
   }
 
-  // For desktop, use Tooltip for hover details
+  // For desktop, use Tooltip for hover details and ContextMenu for right-click tagging
+  // Wrap with ContextMenu if tag management is available
+  const wrappedCardElement = contextMenuContent ? (
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        {cardElement}
+      </ContextMenuTrigger>
+      {contextMenuContent}
+    </ContextMenu>
+  ) : cardElement;
+
   return (
     <TooltipProvider delayDuration={300}>
       <Tooltip>
         <TooltipTrigger asChild>
-          {cardElement}
+          {wrappedCardElement}
         </TooltipTrigger>
         <TooltipContent side="right" className="max-w-xs p-3">
           <EventDetailsContent
@@ -585,6 +701,9 @@ export function WeeklyCalendarView({
   colorMode: externalColorMode,
   onColorModeChange,
   onWeekChange,
+  availableTags,
+  onToggleTag,
+  onManageTags,
 }: WeeklyCalendarViewProps) {
   const [settings] = useLocalStorage<UserSettings>('user-settings', DEFAULT_SETTINGS);
   const [internalColorMode, setInternalColorMode] = useState<'value' | 'energy'>('value');
@@ -1518,6 +1637,9 @@ export function WeeklyCalendarView({
                                   isResizing={isBeingResized}
                                   colorMode={colorMode}
                                   onIgnore={onIgnoreBlock}
+                                  availableTags={availableTags}
+                                  onToggleTag={onToggleTag}
+                                  onManageTags={onManageTags}
                                 />
                               </div>
                             );

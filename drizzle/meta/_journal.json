@@ -22,6 +22,13 @@
       "when": 1769663535135,
       "tag": "0002_spicy_vapor",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1769878189775,
+      "tag": "0003_outstanding_tempest",
+      "breakpoints": true
     }
   ]
 }

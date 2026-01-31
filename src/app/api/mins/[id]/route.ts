@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import { awardXp } from '@/lib/services/gamification';
+import { updateUserDailyStreak } from '@/lib/services/streaks';
 
 // GET /api/mins/[id] - Get single MIN
 export async function GET(
@@ -133,14 +134,16 @@ export async function PUT(
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Award XP if completing (and wasn't already completed)
+    // Award XP and update streak if completing (and wasn't already completed)
     let gamificationResult = null;
     if (isCompleting && !wasAlreadyCompleted) {
       try {
         gamificationResult = await awardXp(userId, 'KPI_COMPLETED');
+        // Update daily streak
+        await updateUserDailyStreak(userId);
       } catch (xpError) {
-        console.error('Failed to award XP:', xpError);
-        // Don't fail the request for XP errors
+        console.error('Failed to award XP or update streak:', xpError);
+        // Don't fail the request for XP/streak errors
       }
     }
 

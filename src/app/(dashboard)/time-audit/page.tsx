@@ -23,7 +23,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { WeeklyCalendarView, IgnoreableBlock } from '@/components/features/time-audit/weekly-calendar-view';
+import { WeeklyCalendarView, IgnoreableBlock, TagInfo } from '@/components/features/time-audit/weekly-calendar-view';
+import { TagManager } from '@/components/features/time-audit/tag-manager';
 import { BulkCategorizationView } from '@/components/features/time-audit/bulk-categorization-view';
 import { useGoogleCalendar } from '@/lib/hooks/use-google-calendar';
 import { useEventPatterns } from '@/lib/hooks/use-event-patterns';
@@ -36,6 +37,7 @@ import { EnergyPieChart } from '@/components/features/time-audit/energy-pie-char
 import { TimeSummaryStats } from '@/components/features/time-audit/time-summary-stats';
 import { TimeBlockForm, TimeBlock } from '@/components/features/time-audit/time-block-form';
 import { InsightsView } from '@/components/features/time-audit/insights-view';
+import { ChartsView } from '@/components/features/time-audit/charts-view';
 import { useLocalStorage } from '@/lib/hooks/use-local-storage';
 import { useTags } from '@/lib/hooks/use-tags';
 import { useEditPatterns } from '@/lib/hooks/use-edit-patterns';
@@ -72,6 +74,9 @@ interface CalendarTimeBlock {
   recurrenceRule?: string;
   isRecurrenceInstance?: boolean;
   parentBlockId?: string;
+  // Tags
+  tagIds?: string[];
+  tags?: { id: string; name: string; color: string }[];
 }
 
 
@@ -166,6 +171,8 @@ export default function TimeAuditPage() {
       recurrenceRule: b.recurrenceRule,
       recurrenceEndDate: b.recurrenceEndDate,
       parentBlockId: b.parentBlockId,
+      // Include tagIds
+      tagIds: b.tagIds,
     })), ...uniqueLocalBlocks];
 
     // Expand recurring events for a wide range to support navigation
@@ -200,14 +207,17 @@ export default function TimeAuditPage() {
 
   const { getUncategorizedEventIds, getCategorization, saveCategorization, categorizations, refreshFromStorage, clearCategorizations, ignoreEvent, removeCategorization, isIgnored, unignoreEvent, ignoredEvents } = useEventPatterns();
 
-  const { tags } = useTags();
+  const { tags, fetchTags, createTag, updateTag, deleteTag } = useTags();
+
+  // Tag manager dialog state
+  const [showTagManager, setShowTagManager] = useState(false);
 
   // Edit pattern detection
   const { trackEdit, getPatternSuggestion, dismissPattern } = useEditPatterns();
 
   const [showCategorizationDialog, setShowCategorizationDialog] = useState(false);
   const [categorizationDismissed, setCategorizationDismissed] = useState(false); // Track if user manually closed
-  const [mainTab, setMainTab] = useState<'calendar' | 'insights' | 'manage'>('calendar');
+  const [mainTab, setMainTab] = useState<'calendar' | 'insights' | 'manage' | 'charts'>('calendar');
   const [isDeletingEvent, setIsDeletingEvent] = useState(false);
 
   // AI cleanup suggestions state
@@ -395,6 +405,17 @@ export default function TimeAuditPage() {
   const calendarTimeBlocks = useMemo(() => {
     const grouped: Record<string, CalendarTimeBlock[]> = {};
 
+    // Create a tag lookup map for fast access
+    const tagLookup = new Map(tags.map(t => [t.id, { id: t.id, name: t.name, color: t.color }]));
+
+    // Helper to map tagIds to full tag objects
+    const mapTagIds = (tagIds?: string[]) => {
+      if (!tagIds || tagIds.length === 0) return undefined;
+      return tagIds
+        .map(id => tagLookup.get(id))
+        .filter((t): t is { id: string; name: string; color: string } => t !== undefined);
+    };
+
     // Track which Google event IDs are already imported as time blocks
     const importedGoogleEventIds = new Set(
       timeBlocks
@@ -422,6 +443,9 @@ export default function TimeAuditPage() {
         recurrenceRule: block.recurrenceRule,
         isRecurrenceInstance: 'isRecurrenceInstance' in block ? (block.isRecurrenceInstance as boolean) : undefined,
         parentBlockId: 'parentBlockId' in block ? (block.parentBlockId as string) : undefined,
+        // Include tags
+        tagIds: block.tagIds,
+        tags: mapTagIds(block.tagIds),
       });
     });
 
@@ -474,7 +498,7 @@ export default function TimeAuditPage() {
     });
 
     return grouped;
-  }, [timeBlocks, googleEvents, getCategorization, categorizations, isIgnored]);
+  }, [timeBlocks, googleEvents, getCategorization, categorizations, isIgnored, tags]);
 
   // Get all data sources for stats: time blocks + categorized Google events
   // FILTERED by currently viewed date range
@@ -1465,6 +1489,46 @@ export default function TimeAuditPage() {
     }
   }, [timeBlocks, googleEvents, dbTimeBlocks, isGoogleConnected, getCategorization, createTimeBlock, updateTimeBlock, setLocalTimeBlocks, fetchTimeBlocks, handleSyncGoogle]);
 
+  // Handle toggling a tag on a time block (from right-click context menu)
+  const handleToggleTag = useCallback(async (blockId: string, tagId: string, isAdding: boolean) => {
+    try {
+      // Find the block to get current tagIds
+      const block = dbTimeBlocks.find(b => b.id === blockId);
+      if (!block) {
+        console.error('Block not found for tag toggle:', blockId);
+        return;
+      }
+
+      const currentTagIds = block.tagIds || [];
+      let newTagIds: string[];
+
+      if (isAdding) {
+        // Add tag if not already present
+        if (!currentTagIds.includes(tagId)) {
+          newTagIds = [...currentTagIds, tagId];
+        } else {
+          return; // Already has this tag
+        }
+      } else {
+        // Remove tag
+        newTagIds = currentTagIds.filter(id => id !== tagId);
+      }
+
+      // Update the time block with new tagIds
+      await updateTimeBlock(blockId, { tagIds: newTagIds });
+
+      // Refetch to update the UI
+      await fetchTimeBlocks();
+    } catch (error) {
+      console.error('Error toggling tag:', error);
+    }
+  }, [dbTimeBlocks, updateTimeBlock, fetchTimeBlocks]);
+
+  // Handle opening the tag manager dialog
+  const handleManageTags = useCallback(() => {
+    setShowTagManager(true);
+  }, []);
+
   // Check if we have data (for showing different states) - includes all data sources
   const hasData = allTimeData.length > 0;
   const totalHours = stats.totalMinutes > 0 ? stats.totalMinutes : 0;
@@ -1595,6 +1659,16 @@ export default function TimeAuditPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Tag Manager Dialog */}
+      <TagManager
+        open={showTagManager}
+        onOpenChange={setShowTagManager}
+        tags={tags}
+        onCreateTag={createTag}
+        onUpdateTag={updateTag}
+        onDeleteTag={deleteTag}
+      />
+
       {/* Summary Stats */}
       <TimeSummaryStats
         totalMinutes={stats.totalMinutes}
@@ -1613,7 +1687,7 @@ export default function TimeAuditPage() {
       )}
 
       {/* Main Content - Top Level Tabs */}
-      <Tabs value={mainTab} onValueChange={(v) => setMainTab(v as 'calendar' | 'insights' | 'manage')} className="space-y-4">
+      <Tabs value={mainTab} onValueChange={(v) => setMainTab(v as 'calendar' | 'insights' | 'manage' | 'charts')} className="space-y-4">
         <TabsList className="w-fit">
           <TabsTrigger value="calendar" className="gap-2">
             <Calendar className="h-4 w-4" />
@@ -1626,6 +1700,10 @@ export default function TimeAuditPage() {
           <TabsTrigger value="manage" className="gap-2">
             <Settings2 className="h-4 w-4" />
             Manage Events
+          </TabsTrigger>
+          <TabsTrigger value="charts" className="gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Charts
           </TabsTrigger>
         </TabsList>
 
@@ -1661,6 +1739,9 @@ export default function TimeAuditPage() {
                   onBlockMove={handleBlockMove}
                   onIgnoreBlock={handleSkipBlock}
                   onColorModeChange={setCalendarColorMode}
+                  availableTags={tags.map(t => ({ id: t.id, name: t.name, color: t.color }))}
+                  onToggleTag={handleToggleTag}
+                  onManageTags={handleManageTags}
                   onWeekChange={handleDateRangeChange}
                 />
                 {/* Sidebar toggle button - fixed position */}
@@ -2250,6 +2331,14 @@ export default function TimeAuditPage() {
               </CardContent>
             )}
           </Card>
+        </TabsContent>
+
+        <TabsContent value="charts" className="mt-4">
+          <ChartsView
+            dateRange={viewedDateRange}
+            availableTags={tags.map(t => ({ id: t.id, name: t.name, color: t.color }))}
+            onManageTags={handleManageTags}
+          />
         </TabsContent>
       </Tabs>
 

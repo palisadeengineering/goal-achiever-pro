@@ -44,6 +44,7 @@ import Link from 'next/link';
 import { useGoogleCalendar } from '@/lib/hooks/use-google-calendar';
 import { Daily300Checkin } from '@/components/features/reviews/daily-300-checkin';
 import { DailyKpiDashboard } from '@/components/features/kpi/daily-kpi-dashboard';
+import { GamificationWidget } from '@/components/features/gamification/gamification-widget';
 import type { TeamMember } from '@/types/team';
 import { ShareButton } from '@/components/features/sharing';
 
@@ -956,6 +957,9 @@ export default function TodayPage() {
 
         {/* Sidebar */}
         <div className="space-y-4">
+          {/* Gamification Progress */}
+          <GamificationWidget />
+
           {/* Daily KPI Dashboard - Gamified tracking */}
           <DailyKpiDashboard />
 
