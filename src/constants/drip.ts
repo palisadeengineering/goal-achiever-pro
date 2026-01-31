@@ -117,3 +117,35 @@ export const VALUE_ICONS: Record<ValueQuadrant, string> = {
   production: 'Zap',
   na: 'MinusCircle',
 };
+
+// Safe accessor for VALUE_QUADRANTS - handles invalid/corrupted keys from localStorage
+export function getValueQuadrantConfig(quadrant: string | undefined | null) {
+  if (!quadrant || !(quadrant in VALUE_QUADRANTS)) {
+    return VALUE_QUADRANTS.na;
+  }
+  return VALUE_QUADRANTS[quadrant as ValueQuadrant];
+}
+
+// Safe accessor for ENERGY_RATINGS - handles invalid/corrupted keys from localStorage
+export function getEnergyRatingConfig(rating: string | undefined | null) {
+  if (!rating || !(rating in ENERGY_RATINGS)) {
+    return ENERGY_RATINGS.yellow;
+  }
+  return ENERGY_RATINGS[rating as EnergyRating];
+}
+
+// Validate and sanitize a valueQuadrant string - returns valid key or default
+export function validateValueQuadrant(quadrant: string | undefined | null): ValueQuadrant {
+  if (!quadrant || !(quadrant in VALUE_QUADRANTS)) {
+    return 'na';
+  }
+  return quadrant as ValueQuadrant;
+}
+
+// Validate and sanitize an energyRating string - returns valid key or default
+export function validateEnergyRating(rating: string | undefined | null): EnergyRating {
+  if (!rating || !(rating in ENERGY_RATINGS)) {
+    return 'yellow';
+  }
+  return rating as EnergyRating;
+}

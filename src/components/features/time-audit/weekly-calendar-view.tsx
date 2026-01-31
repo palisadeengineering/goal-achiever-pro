@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, ChevronRight, Plus, Loader2, Palette, Repeat, EyeOff } from 'lucide-react';
 import { cn, formatHour } from '@/lib/utils';
-import { VALUE_QUADRANTS } from '@/constants/drip';
+import { VALUE_QUADRANTS, getValueQuadrantConfig, getEnergyRatingConfig } from '@/constants/drip';
 import { useLocalStorage } from '@/lib/hooks/use-local-storage';
 import { useEventSize, getAdaptiveEventStyles, SIZE_BUCKET_CLASSES } from '@/lib/hooks/use-event-size';
 import {
@@ -144,6 +144,14 @@ const ENERGY_COLORS: Record<EnergyRating, string> = {
   red: '#ef4444',
 };
 
+// Safe accessor for energy colors - handles invalid keys
+function getEnergyColor(rating: string | undefined | null): string {
+  if (!rating || !(rating in ENERGY_COLORS)) {
+    return ENERGY_COLORS.yellow; // Default to neutral
+  }
+  return ENERGY_COLORS[rating as EnergyRating];
+}
+
 // Format duration for display
 function formatDuration(startTime: string, endTime: string): string {
   const [sh, sm] = startTime.split(':').map(Number);
@@ -207,8 +215,8 @@ function EventDetailsContent({
         <Badge
           className="text-[10px] capitalize text-white font-medium px-2 py-0.5"
           style={{
-            backgroundColor: VALUE_QUADRANTS[block.valueQuadrant].color,
-            borderColor: VALUE_QUADRANTS[block.valueQuadrant].color,
+            backgroundColor: getValueQuadrantConfig(block.valueQuadrant).color,
+            borderColor: getValueQuadrantConfig(block.valueQuadrant).color,
           }}
         >
           {block.valueQuadrant === 'na' ? 'N/A' : block.valueQuadrant}
@@ -216,8 +224,8 @@ function EventDetailsContent({
         <Badge
           className="text-[10px] text-white font-medium px-2 py-0.5"
           style={{
-            backgroundColor: ENERGY_COLORS[block.energyRating],
-            borderColor: ENERGY_COLORS[block.energyRating],
+            backgroundColor: getEnergyColor(block.energyRating),
+            borderColor: getEnergyColor(block.energyRating),
           }}
         >
           {block.energyRating === 'green' ? 'Energizing' : block.energyRating === 'yellow' ? 'Neutral' : 'Draining'}
@@ -921,9 +929,9 @@ export function WeeklyCalendarView({
 
   const getBlockColor = useCallback((quadrant: ValueQuadrant, energyRating?: EnergyRating) => {
     if (colorMode === 'energy' && energyRating) {
-      return ENERGY_COLORS[energyRating];
+      return getEnergyColor(energyRating);
     }
-    return VALUE_QUADRANTS[quadrant].color;
+    return getValueQuadrantConfig(quadrant).color;
   }, [colorMode]);
 
   // Drag selection handlers
@@ -1341,7 +1349,7 @@ export function WeeklyCalendarView({
                     className="w-full text-left p-3 rounded-xl bg-card border shadow-sm transition-all hover:shadow-lg active:scale-[0.98]"
                     style={{
                       borderLeftWidth: '4px',
-                      borderLeftColor: colorMode === 'energy' ? ENERGY_COLORS[block.energyRating] : VALUE_QUADRANTS[block.valueQuadrant].color,
+                      borderLeftColor: colorMode === 'energy' ? getEnergyColor(block.energyRating) : getValueQuadrantConfig(block.valueQuadrant).color,
                     }}
                   >
                     <div className="flex items-start justify-between gap-2">

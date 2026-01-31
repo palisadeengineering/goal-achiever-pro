@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useEventPatterns } from '@/lib/hooks/use-event-patterns';
-import { VALUE_QUADRANTS, ENERGY_RATINGS } from '@/constants/drip';
+import { VALUE_QUADRANTS, ENERGY_RATINGS, getValueQuadrantConfig, getEnergyRatingConfig } from '@/constants/drip';
 import type { ValueQuadrant, EnergyRating } from '@/types/database';
 import type { GoogleCalendarEvent } from '@/lib/hooks/use-google-calendar';
 import { Calendar, Clock, Sparkles, SkipForward, EyeOff } from 'lucide-react';
@@ -132,20 +132,20 @@ export function GoogleEventCategorizer({
               <Badge
                 variant="outline"
                 style={{
-                  borderColor: VALUE_QUADRANTS[suggestion.valueQuadrant].color,
-                  backgroundColor: `${VALUE_QUADRANTS[suggestion.valueQuadrant].color}15`,
+                  borderColor: getValueQuadrantConfig(suggestion.valueQuadrant).color,
+                  backgroundColor: `${getValueQuadrantConfig(suggestion.valueQuadrant).color}15`,
                 }}
               >
-                {VALUE_QUADRANTS[suggestion.valueQuadrant].name}
+                {getValueQuadrantConfig(suggestion.valueQuadrant).name}
               </Badge>
               <Badge
                 variant="outline"
                 style={{
-                  borderColor: ENERGY_RATINGS[suggestion.energyRating].color,
-                  backgroundColor: `${ENERGY_RATINGS[suggestion.energyRating].color}15`,
+                  borderColor: getEnergyRatingConfig(suggestion.energyRating).color,
+                  backgroundColor: `${getEnergyRatingConfig(suggestion.energyRating).color}15`,
                 }}
               >
-                {ENERGY_RATINGS[suggestion.energyRating].name}
+                {getEnergyRatingConfig(suggestion.energyRating).name}
               </Badge>
             </div>
           </div>
