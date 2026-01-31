@@ -816,6 +816,8 @@ export default function TimeAuditPage() {
           energyRating: blockData.energyRating,
           source: 'calendar_sync',
           externalEventId: editingBlock.externalEventId,
+          // Tag assignments
+          tagIds: blockData.tagIds,
           // Recurring event fields
           isRecurring: blockData.isRecurring,
           recurrenceRule: blockData.recurrenceRule,
@@ -866,6 +868,8 @@ export default function TimeAuditPage() {
           activityName: blockData.activityName,
           valueQuadrant: blockData.valueQuadrant,
           energyRating: blockData.energyRating,
+          // Tag assignments
+          tagIds: blockData.tagIds,
           // Recurring event fields
           isRecurring: blockData.isRecurring,
           recurrenceRule: blockData.recurrenceRule,
@@ -947,6 +951,8 @@ export default function TimeAuditPage() {
         energyRating: blockData.energyRating,
         source: externalEventId ? 'calendar_sync' : 'manual',
         externalEventId,
+        // Tag assignments
+        tagIds: blockData.tagIds,
         // Recurring event fields
         isRecurring: blockData.isRecurring,
         recurrenceRule: blockData.recurrenceRule,
