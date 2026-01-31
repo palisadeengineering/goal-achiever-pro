@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-27)
 ## Current Position
 
 Phase: 10 of 13 (10-streaks-daily-goals)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-01-29 - Completed 10-01-PLAN.md (MINS CRUD API)
+Last activity: 2026-01-31 - Completed 10-02-PLAN.md (Streak Service & Gamification Dashboard)
 
-Progress: ████░░░░░░ 40% (Phase 10 in progress, 2 plans remaining)
+Progress: █████░░░░░ 47% (Phase 10 in progress, 1 plan remaining)
 
 ## v2.0 Milestone Overview
 
@@ -26,7 +26,7 @@ Progress: ████░░░░░░ 40% (Phase 10 in progress, 2 plans rema
 |-------|------|------|--------|
 | **8.1** | **Critical Bug Fixes** | Time Audit crash, subscription pricing, terminology | **Complete** |
 | **9** | **Gamification Foundation** | DB schema, achievements, badges, XP/points | **Complete** |
-| **10** | **Streaks & Daily Goals** | MINS API, streak service, daily actions sync (3 plans) | **In Progress** (1/3) |
+| **10** | **Streaks & Daily Goals** | MINS API, streak service, daily actions sync (3 plans) | **In Progress** (2/3) |
 | 11 | Visual Celebrations | Confetti, animations, level-up celebrations | Not started |
 | 12 | Value Matrix Charts | Time distribution, production trends dashboard | Not started |
 | 13 | Leverage Analytics | Trend charts, ROI indicators, project-time linking | Not started |
@@ -62,6 +62,9 @@ Decisions from v1.0 milestone preserved for reference:
 - [09-01]: XP rewards stored on achievement records for easy tuning
 - [09-02]: XP awarded only when KPI isCompleted=true (prevents gaming)
 - [09-02]: Service returns unlocked achievements for celebration UI
+- [10-02]: Streak calculated from 400-day lookback for full year coverage
+- [10-02]: Activity aggregated from KPI logs, MINS, daily actions, and non-negotiables
+- [10-02]: Current streak only counts if activity was today or yesterday
 
 ### Pending Todos
 
@@ -70,8 +73,8 @@ Decisions from v1.0 milestone preserved for reference:
 - [x] ~~Execute Plan 09-02 (Gamification Service)~~ ✅ 2026-01-29
 - [x] ~~Plan Phase 10 (Streaks & Daily Goals)~~ ✅ 2026-01-29
 - [x] ~~Execute Plan 10-01 (MINS CRUD API)~~ ✅ 2026-01-29
-- [ ] **Execute Plan 10-02 (Streak Service & Gamification Dashboard)** ← NEXT
-- [ ] Execute Plan 10-03 (Daily Actions ↔ MINS Sync)
+- [x] ~~Execute Plan 10-02 (Streak Service & Gamification Dashboard)~~ ✅ 2026-01-31
+- [ ] **Execute Plan 10-03 (Daily Actions ↔ MINS Sync)** ← NEXT
 - [ ] Research confetti/animation libraries before Phase 11
 
 ### Blockers/Concerns
@@ -90,13 +93,14 @@ None currently.
 
 ## Session Continuity
 
-Last session: 2026-01-29
-Stopped at: Completed 10-01-PLAN.md (MINS CRUD API)
-Resume action: Run /gsd:execute-plan .planning/phases/10-streaks-daily-goals/10-02-PLAN.md
+Last session: 2026-01-31
+Stopped at: Completed 10-02-PLAN.md (Streak Service & Gamification Dashboard)
+Resume action: Run /gsd:execute-plan .planning/phases/10-streaks-daily-goals/10-03-PLAN.md
 
 **Context for next session:**
-- Plan 10-01 complete (8 commits) - MINS page now functional with database integration
-- Created: 4 new files (API routes + React Query hooks)
-- Modified: 3 files (MINS page, MinForm, hooks barrel)
-- MINS page now fetches real data and awards XP on completion
-- Next: Plan 10-02 (streak service and gamification dashboard)
+- Plan 10-02 complete - Streak service and gamification widget integrated
+- Created: 3 new files (streaks service, success-rate API, gamification widget)
+- Modified: 5 files (services index, hooks, MINS API, KPI log API, Today page)
+- Daily streak now calculates from all completion sources (KPIs, MINS, daily actions, non-negotiables)
+- Gamification widget shows XP, level, and streak on Today dashboard
+- Next: Plan 10-03 (Daily Actions ↔ MINS bidirectional sync)
