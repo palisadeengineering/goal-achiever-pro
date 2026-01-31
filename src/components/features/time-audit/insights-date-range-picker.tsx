@@ -48,11 +48,6 @@ export function InsightsDateRangePicker({
   // For navigation within the popover
   const [viewMonth, setViewMonth] = useState(dateRange.start);
 
-  // Calculate the current period based on type for highlighting
-  const currentPeriodStart = useMemo(() => {
-    return dateRange.start;
-  }, [dateRange.start]);
-
   // Handle period type change - update the date range immediately
   const handlePeriodTypeChange = (newType: PeriodType) => {
     setPeriodType(newType);
