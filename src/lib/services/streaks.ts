@@ -43,7 +43,7 @@ export function calculateDailyStreak(activityDates: string[]): { current: number
   // Current streak only counts if activity was today or yesterday
   if (daysSinceLastActivity <= 1) {
     currentStreak = 1;
-    let expectedDate = new Date(lastDate);
+    const expectedDate = new Date(lastDate);
 
     for (let i = 1; i < sortedDates.length; i++) {
       expectedDate.setDate(expectedDate.getDate() - 1);
