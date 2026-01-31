@@ -44,7 +44,7 @@ export function ValuePieChart({ data, showLegend = true, size = 'md' }: ValuePie
   }
 
   return (
-    <ResponsiveContainer width="100%" height={heights[size]}>
+    <ResponsiveContainer width="100%" height={heights[size]} minWidth={0}>
       <PieChart>
         <Pie
           data={chartData}

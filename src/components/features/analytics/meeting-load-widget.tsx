@@ -123,7 +123,7 @@ export function MeetingLoadWidget({ metrics }: MeetingLoadWidgetProps) {
           <div className="flex flex-col lg:flex-row gap-4">
             {/* Mini Pie Chart */}
             <div className="h-[120px] w-full lg:w-1/3">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <PieChart>
                   <Pie
                     data={chartData}

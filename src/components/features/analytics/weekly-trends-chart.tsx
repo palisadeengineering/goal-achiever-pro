@@ -39,7 +39,7 @@ export function WeeklyTrendsChart({ data, showPercentage = true }: WeeklyTrendsC
   }
 
   return (
-    <ResponsiveContainer width="100%" height={350}>
+    <ResponsiveContainer width="100%" height={350} minWidth={0}>
       <ComposedChart data={data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
         <XAxis
@@ -160,7 +160,7 @@ export function ProductionTrendChart({ data }: { data: WeeklyTrendData[] }) {
   }
 
   return (
-    <ResponsiveContainer width="100%" height={200}>
+    <ResponsiveContainer width="100%" height={200} minWidth={0}>
       <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
         <XAxis dataKey="week" tick={{ fontSize: 11 }} />
@@ -197,7 +197,7 @@ export function EnergyBalanceTrendChart({ data }: { data: WeeklyTrendData[] }) {
   }
 
   return (
-    <ResponsiveContainer width="100%" height={200}>
+    <ResponsiveContainer width="100%" height={200} minWidth={0}>
       <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
         <XAxis dataKey="week" tick={{ fontSize: 11 }} />

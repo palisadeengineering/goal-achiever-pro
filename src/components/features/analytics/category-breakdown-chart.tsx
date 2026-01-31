@@ -82,7 +82,7 @@ export function CategoryBreakdownChart({ data, totalMinutes }: CategoryBreakdown
         <div className="flex flex-col lg:flex-row lg:items-center gap-6">
           {/* Pie Chart */}
           <div className="h-[200px] w-full lg:w-1/2">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <PieChart>
                 <Pie
                   data={chartData}

@@ -44,7 +44,7 @@ export function HorizontalBarChart({ data, measure }: HorizontalBarChartProps) {
   }));
 
   return (
-    <ResponsiveContainer width="100%" height={data.length * 50 + 40}>
+    <ResponsiveContainer width="100%" height={data.length * 50 + 40} minWidth={0}>
       <BarChart
         layout="vertical"
         data={chartData}
@@ -92,7 +92,7 @@ export function DonutChart({ data, measure }: DonutChartProps) {
   }
 
   return (
-    <ResponsiveContainer width="100%" height={250}>
+    <ResponsiveContainer width="100%" height={250} minWidth={0}>
       <PieChart>
         <Pie
           data={chartData}
@@ -146,7 +146,7 @@ export function StackedBarChart({ data, keys, colors, measure }: StackedBarChart
   }
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
+    <ResponsiveContainer width="100%" height={300} minWidth={0}>
       <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="period" />
@@ -188,7 +188,7 @@ export function TrendLineChart({ data, keys, colors, measure }: LineChartProps) 
   }
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
+    <ResponsiveContainer width="100%" height={300} minWidth={0}>
       <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="period" />
@@ -265,7 +265,7 @@ export function EnergyFlowChart({ data }: EnergyFlowChartProps) {
   const gradientId = 'energyGradient';
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
+    <ResponsiveContainer width="100%" height={300} minWidth={0}>
       <AreaChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">

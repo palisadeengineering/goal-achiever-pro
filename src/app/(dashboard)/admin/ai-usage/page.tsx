@@ -282,7 +282,7 @@ export default function AdminAIUsagePage() {
           {isLoading ? (
             <Skeleton className="h-[300px] w-full" />
           ) : data?.byDay && data.byDay.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={300} minWidth={0}>
               <LineChart data={data.byDay} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis
@@ -346,7 +346,7 @@ export default function AdminAIUsagePage() {
             {isLoading ? (
               <Skeleton className="h-[300px] w-full" />
             ) : data?.byEndpoint && data.byEndpoint.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={300} minWidth={0}>
                 <BarChart data={data.byEndpoint.slice(0, 8)} layout="vertical" margin={{ left: 100 }}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis type="number" tick={{ fontSize: 11 }} />

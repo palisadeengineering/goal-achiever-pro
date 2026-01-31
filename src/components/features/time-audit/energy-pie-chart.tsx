@@ -40,7 +40,7 @@ export function EnergyPieChart({ data, showLegend = true, size = 'md' }: EnergyP
   }
 
   return (
-    <ResponsiveContainer width="100%" height={heights[size]}>
+    <ResponsiveContainer width="100%" height={heights[size]} minWidth={0}>
       <PieChart>
         <Pie
           data={chartData}

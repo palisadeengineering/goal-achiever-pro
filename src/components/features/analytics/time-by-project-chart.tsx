@@ -121,7 +121,7 @@ export function TimeByProjectChart({ data, maxProjects = 8 }: TimeByProjectChart
       <CardContent>
         {/* Bar Chart */}
         <div className="h-[200px] mb-4">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <BarChart
               data={chartData}
               layout="vertical"
