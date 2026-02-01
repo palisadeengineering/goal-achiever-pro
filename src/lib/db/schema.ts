@@ -30,6 +30,40 @@ export const achievementCategoryEnum = pgEnum('achievement_category', [
   'mastery',      // Advanced usage patterns
 ]);
 
+export const rewardTriggerTypeEnum = pgEnum('reward_trigger_type', [
+  'milestone',    // Triggered when milestone is completed
+  'key_result',   // Triggered when key result hits target
+  'xp_threshold', // Triggered when XP threshold is reached
+]);
+
+export const taskPriorityEnum = pgEnum('task_priority', [
+  'low',
+  'medium',
+  'high',
+  'urgent',
+]);
+
+export const taskRecurrenceEnum = pgEnum('task_recurrence', [
+  'none',
+  'daily',
+  'weekly',
+  'monthly',
+]);
+
+export const fourCsTypeEnum = pgEnum('four_cs_type', [
+  'code',         // Building systems/automation
+  'content',      // Creating content/media
+  'capital',      // Money/investments
+  'collaboration', // People/partnerships
+]);
+
+export const streakTypeEnum = pgEnum('streak_type', [
+  'daily_execution',  // Completed 1+ task per day
+  'check_in',         // Did 300% pulse check
+  'production',       // Logged 4+ hours Production time
+  'project',          // Worked on main project
+]);
+
 // =============================================
 // PROFILES (extends Supabase auth.users)
 // =============================================
@@ -1326,6 +1360,353 @@ export const calendarWebhookChannels = pgTable('calendar_webhook_channels', {
 }));
 
 // =============================================
+// PROJECTS (Unified Vision/Goal System - V2)
+// =============================================
+export const projects = pgTable('projects', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+
+  // Basic Info
+  title: text('title').notNull(),
+  description: text('description'),
+  color: text('color').default('#6366f1'),
+
+  // SMART Goal Components
+  specific: text('specific'),
+  measurable: text('measurable'),
+  attainable: text('attainable'),
+  realistic: text('realistic'),
+  timeBound: date('time_bound'),
+
+  // Timeline
+  startDate: date('start_date'),
+  targetDate: date('target_date'),
+
+  // 300% Rule Scores (latest values - history in daily_checkins)
+  clarityScore: integer('clarity_score').default(0),
+  beliefScore: integer('belief_score').default(0),
+  consistencyScore: integer('consistency_score').default(0),
+
+  // Revenue Math (for money goals - Hormozi style)
+  revenueMath: jsonb('revenue_math').default({}), // { currentRevenue, targetRevenue, avgDealValue, closeRate, dealsNeeded, proposalsNeeded, leadsNeeded }
+
+  // Focus & Priority
+  isFocused: boolean('is_focused').default(false), // Is this the user's primary focus project?
+  priority: integer('priority').default(1),
+
+  // Progress (calculated from key results)
+  progressPercentage: integer('progress_percentage').default(0),
+
+  // Vision Board
+  coverImageUrl: text('cover_image_url'),
+  affirmationText: text('affirmation_text'),
+
+  // Status
+  status: text('status').default('active'), // 'active', 'paused', 'completed', 'archived'
+  completedAt: timestamp('completed_at'),
+  archivedAt: timestamp('archived_at'),
+
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  userIdx: index('projects_user_idx').on(table.userId),
+  userStatusIdx: index('projects_user_status_idx').on(table.userId, table.status),
+  focusedIdx: index('projects_focused_idx').on(table.userId, table.isFocused),
+}));
+
+// =============================================
+// PROJECT KEY RESULTS (Measurable Outcomes for Projects - V2)
+// =============================================
+export const projectKeyResults = pgTable('project_key_results', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+
+  // Metric Definition
+  name: text('name').notNull(),
+  description: text('description'),
+
+  // Values
+  targetValue: decimal('target_value', { precision: 15, scale: 2 }).notNull(),
+  currentValue: decimal('current_value', { precision: 15, scale: 2 }).default('0'),
+  startingValue: decimal('starting_value', { precision: 15, scale: 2 }).default('0'),
+
+  // Unit & Display
+  unitType: text('unit_type').default('number'), // 'number', 'currency', 'percentage', 'boolean'
+  unitLabel: text('unit_label'), // e.g., 'projects', 'dollars', '%'
+
+  // Weight for project progress calculation
+  weight: decimal('weight', { precision: 3, scale: 2 }).default('1.00'), // 0.00 to 1.00
+
+  // Progress (calculated)
+  progressPercentage: integer('progress_percentage').default(0),
+
+  // Status
+  status: text('status').default('not_started'), // 'not_started', 'in_progress', 'at_risk', 'on_track', 'completed'
+  completedAt: timestamp('completed_at'),
+
+  // Ordering
+  sortOrder: integer('sort_order').default(0),
+
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  projectIdx: index('project_key_results_project_idx').on(table.projectId),
+  userIdx: index('project_key_results_user_idx').on(table.userId),
+  statusIdx: index('project_key_results_status_idx').on(table.projectId, table.status),
+}));
+
+// =============================================
+// PROJECT KEY RESULT LOGS (Progress History - V2)
+// =============================================
+export const projectKeyResultLogs = pgTable('project_key_result_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  keyResultId: uuid('key_result_id').notNull().references(() => projectKeyResults.id, { onDelete: 'cascade' }),
+
+  // Value change
+  previousValue: decimal('previous_value', { precision: 15, scale: 2 }),
+  newValue: decimal('new_value', { precision: 15, scale: 2 }).notNull(),
+
+  // Metadata
+  note: text('note'),
+  source: text('source').default('manual'), // 'manual', 'api', 'automation'
+
+  loggedAt: timestamp('logged_at').defaultNow(),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+  keyResultIdx: index('project_key_result_logs_kr_idx').on(table.keyResultId),
+  dateIdx: index('project_key_result_logs_date_idx').on(table.keyResultId, table.loggedAt),
+}));
+
+// =============================================
+// MILESTONES (Quarterly Checkpoints - V2)
+// =============================================
+export const milestonesV2 = pgTable('milestones_v2', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+
+  // Basic Info
+  title: text('title').notNull(),
+  description: text('description'),
+
+  // Timeline
+  quarter: integer('quarter'), // 1-4 (optional, for quarterly view)
+  year: integer('year'),
+  targetDate: date('target_date'),
+
+  // Linked Key Results (which KRs does completing this milestone impact?)
+  linkedKeyResultIds: jsonb('linked_key_result_ids').default([]), // Array of key_result UUIDs
+
+  // Progress
+  progressPercentage: integer('progress_percentage').default(0),
+  status: text('status').default('pending'), // 'pending', 'in_progress', 'completed'
+  completedAt: timestamp('completed_at'),
+
+  // Ordering
+  sortOrder: integer('sort_order').default(0),
+
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  projectIdx: index('milestones_v2_project_idx').on(table.projectId),
+  userIdx: index('milestones_v2_user_idx').on(table.userId),
+  quarterIdx: index('milestones_v2_quarter_idx').on(table.projectId, table.year, table.quarter),
+  statusIdx: index('milestones_v2_status_idx').on(table.projectId, table.status),
+}));
+
+// =============================================
+// TASKS (Unified Task System - V2)
+// =============================================
+export const tasks = pgTable('tasks', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  projectId: uuid('project_id').references(() => projects.id, { onDelete: 'set null' }),
+  milestoneId: uuid('milestone_id').references(() => milestonesV2.id, { onDelete: 'set null' }),
+  keyResultId: uuid('key_result_id').references(() => projectKeyResults.id, { onDelete: 'set null' }),
+
+  // Basic Info
+  title: text('title').notNull(),
+  description: text('description'),
+
+  // Time Estimation
+  estimatedMinutes: integer('estimated_minutes').default(30),
+  actualMinutes: integer('actual_minutes'),
+
+  // Scheduling
+  scheduledDate: date('scheduled_date'),
+  scheduledStartTime: time('scheduled_start_time'),
+  scheduledEndTime: time('scheduled_end_time'),
+  dueDate: date('due_date'),
+
+  // Priority
+  priority: taskPriorityEnum('priority').default('medium'),
+
+  // Categorization
+  valueQuadrant: text('value_quadrant'), // 'D', 'R', 'I', 'P' (Value Matrix)
+  fourCsTag: fourCsTypeEnum('four_cs_tag'), // Code, Content, Capital, Collaboration
+
+  // Recurrence
+  recurrence: taskRecurrenceEnum('recurrence').default('none'),
+  recurrenceRule: text('recurrence_rule'), // RFC 5545 RRULE
+  parentTaskId: uuid('parent_task_id'), // For recurring task instances
+
+  // Google Calendar Integration
+  googleCalendarEventId: text('google_calendar_event_id'),
+  calendarSyncStatus: text('calendar_sync_status').default('not_synced'), // 'not_synced', 'synced', 'pending', 'error'
+  calendarSyncedAt: timestamp('calendar_synced_at'),
+
+  // Status
+  status: text('status').default('pending'), // 'pending', 'in_progress', 'completed', 'cancelled'
+  completedAt: timestamp('completed_at'),
+
+  // XP awarded (for tracking)
+  xpAwarded: integer('xp_awarded').default(0),
+
+  // Ordering
+  sortOrder: integer('sort_order').default(0),
+
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  userIdx: index('tasks_user_idx').on(table.userId),
+  projectIdx: index('tasks_project_idx').on(table.projectId),
+  milestoneIdx: index('tasks_milestone_idx').on(table.milestoneId),
+  scheduledIdx: index('tasks_scheduled_idx').on(table.userId, table.scheduledDate),
+  statusIdx: index('tasks_status_idx').on(table.userId, table.status),
+  calendarEventIdx: index('tasks_calendar_event_idx').on(table.googleCalendarEventId),
+}));
+
+// =============================================
+// DAILY CHECK-INS (300% Score Tracking - V2)
+// =============================================
+export const dailyCheckins = pgTable('daily_checkins', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  projectId: uuid('project_id').references(() => projects.id, { onDelete: 'cascade' }),
+
+  // Date of check-in
+  checkInDate: date('check_in_date').notNull(),
+
+  // 300% Scores (1-10 each)
+  clarityScore: integer('clarity_score').notNull(),
+  beliefScore: integer('belief_score').notNull(),
+  consistencyScore: integer('consistency_score').notNull(),
+
+  // Calculated total (sum of 3 scores * 10 = max 300)
+  totalScore: integer('total_score').notNull(),
+
+  // Optional notes
+  note: text('note'),
+
+  // Prompts triggered based on low scores
+  promptsTriggered: jsonb('prompts_triggered').default([]), // ['low_clarity', 'low_belief', 'low_consistency']
+
+  // XP awarded for this check-in
+  xpAwarded: integer('xp_awarded').default(0),
+
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  userDateIdx: uniqueIndex('daily_checkins_user_date_idx').on(table.userId, table.checkInDate, table.projectId),
+  projectIdx: index('daily_checkins_project_idx').on(table.projectId),
+}));
+
+// =============================================
+// STREAKS (Enhanced Streak Tracking - V2)
+// =============================================
+export const streaksV2 = pgTable('streaks_v2', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  projectId: uuid('project_id').references(() => projects.id, { onDelete: 'cascade' }),
+
+  // Streak type
+  streakType: streakTypeEnum('streak_type').notNull(),
+
+  // Current streak
+  currentStreak: integer('current_streak').default(0),
+  longestStreak: integer('longest_streak').default(0),
+
+  // Dates
+  lastActivityDate: date('last_activity_date'),
+  streakStartDate: date('streak_start_date'),
+
+  // Recovery
+  recoveryUsedThisWeek: boolean('recovery_used_this_week').default(false),
+  lastRecoveryDate: date('last_recovery_date'),
+
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  userStreakTypeIdx: uniqueIndex('streaks_v2_user_type_idx').on(table.userId, table.streakType, table.projectId),
+  userIdx: index('streaks_v2_user_idx').on(table.userId),
+}));
+
+// =============================================
+// REWARDS (Custom User Rewards - V2)
+// =============================================
+export const rewards = pgTable('rewards', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+
+  // Reward definition
+  name: text('name').notNull(),
+  description: text('description'),
+  imageUrl: text('image_url'),
+  estimatedValue: decimal('estimated_value', { precision: 10, scale: 2 }), // Dollar value (optional)
+
+  // Trigger configuration
+  triggerType: rewardTriggerTypeEnum('trigger_type').notNull(),
+  triggerId: uuid('trigger_id'), // milestone_id or key_result_id (null for XP threshold)
+  triggerValue: decimal('trigger_value', { precision: 15, scale: 2 }), // XP threshold amount (for xp_threshold type)
+
+  // Progress tracking
+  progressPercentage: integer('progress_percentage').default(0),
+  currentProgress: decimal('current_progress', { precision: 15, scale: 2 }).default('0'), // Current XP or completion %
+
+  // Status
+  status: text('status').default('locked'), // 'locked', 'unlocked', 'claimed'
+  unlockedAt: timestamp('unlocked_at'),
+
+  // Ordering
+  sortOrder: integer('sort_order').default(0),
+
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  userIdx: index('rewards_user_idx').on(table.userId),
+  statusIdx: index('rewards_status_idx').on(table.userId, table.status),
+  triggerIdx: index('rewards_trigger_idx').on(table.triggerType, table.triggerId),
+}));
+
+// =============================================
+// REWARD CLAIMS (Claimed Rewards History - V2)
+// =============================================
+export const rewardClaims = pgTable('reward_claims', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  rewardId: uuid('reward_id').notNull().references(() => rewards.id, { onDelete: 'cascade' }),
+
+  // Claim details
+  claimedAt: timestamp('claimed_at').defaultNow(),
+
+  // Snapshot of reward at claim time
+  rewardName: text('reward_name').notNull(),
+  rewardDescription: text('reward_description'),
+  rewardValue: decimal('reward_value', { precision: 10, scale: 2 }),
+
+  // Optional note from user
+  note: text('note'),
+
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+  userIdx: index('reward_claims_user_idx').on(table.userId),
+  rewardIdx: index('reward_claims_reward_idx').on(table.rewardId),
+  dateIdx: index('reward_claims_date_idx').on(table.userId, table.claimedAt),
+}));
+
+// =============================================
 // KPI RELATIONS
 // =============================================
 export const visionKpisRelations = relations(visionKpis, ({ one, many }) => ({
@@ -1722,4 +2103,61 @@ export const userGamificationRelations = relations(userGamification, ({ one }) =
     fields: [userGamification.userId],
     references: [profiles.id],
   }),
+}));
+
+// =============================================
+// PROJECT SYSTEM V2 RELATIONS
+// =============================================
+export const projectsRelations = relations(projects, ({ one, many }) => ({
+  user: one(profiles, { fields: [projects.userId], references: [profiles.id] }),
+  keyResults: many(projectKeyResults),
+  milestones: many(milestonesV2),
+  tasks: many(tasks),
+  dailyCheckins: many(dailyCheckins),
+  streaks: many(streaksV2),
+}));
+
+export const projectKeyResultsRelations = relations(projectKeyResults, ({ one, many }) => ({
+  user: one(profiles, { fields: [projectKeyResults.userId], references: [profiles.id] }),
+  project: one(projects, { fields: [projectKeyResults.projectId], references: [projects.id] }),
+  logs: many(projectKeyResultLogs),
+  tasks: many(tasks),
+}));
+
+export const projectKeyResultLogsRelations = relations(projectKeyResultLogs, ({ one }) => ({
+  user: one(profiles, { fields: [projectKeyResultLogs.userId], references: [profiles.id] }),
+  keyResult: one(projectKeyResults, { fields: [projectKeyResultLogs.keyResultId], references: [projectKeyResults.id] }),
+}));
+
+export const milestonesV2Relations = relations(milestonesV2, ({ one, many }) => ({
+  user: one(profiles, { fields: [milestonesV2.userId], references: [profiles.id] }),
+  project: one(projects, { fields: [milestonesV2.projectId], references: [projects.id] }),
+  tasks: many(tasks),
+}));
+
+export const tasksRelations = relations(tasks, ({ one }) => ({
+  user: one(profiles, { fields: [tasks.userId], references: [profiles.id] }),
+  project: one(projects, { fields: [tasks.projectId], references: [projects.id] }),
+  milestone: one(milestonesV2, { fields: [tasks.milestoneId], references: [milestonesV2.id] }),
+  keyResult: one(projectKeyResults, { fields: [tasks.keyResultId], references: [projectKeyResults.id] }),
+}));
+
+export const dailyCheckinsRelations = relations(dailyCheckins, ({ one }) => ({
+  user: one(profiles, { fields: [dailyCheckins.userId], references: [profiles.id] }),
+  project: one(projects, { fields: [dailyCheckins.projectId], references: [projects.id] }),
+}));
+
+export const streaksV2Relations = relations(streaksV2, ({ one }) => ({
+  user: one(profiles, { fields: [streaksV2.userId], references: [profiles.id] }),
+  project: one(projects, { fields: [streaksV2.projectId], references: [projects.id] }),
+}));
+
+export const rewardsRelations = relations(rewards, ({ one, many }) => ({
+  user: one(profiles, { fields: [rewards.userId], references: [profiles.id] }),
+  claims: many(rewardClaims),
+}));
+
+export const rewardClaimsRelations = relations(rewardClaims, ({ one }) => ({
+  user: one(profiles, { fields: [rewardClaims.userId], references: [profiles.id] }),
+  reward: one(rewards, { fields: [rewardClaims.rewardId], references: [rewards.id] }),
 }));
