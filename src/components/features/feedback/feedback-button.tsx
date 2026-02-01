@@ -311,7 +311,7 @@ export function FeedbackButton() {
   };
 
   // Render button through portal to ensure it's at DOM root level
-  // Wrapped in a div with isolation to create a new stacking context above all dialogs
+  // Positioned in bottom-left to avoid overlapping with action buttons on the right
   // The data-feedback-button attribute tells dialogs not to close when clicking here
   const feedbackButton = mounted ? createPortal(
     <div
@@ -319,8 +319,8 @@ export function FeedbackButton() {
       style={{
         position: 'fixed',
         bottom: 24,
-        right: 24,
-        zIndex: 2147483647, // Maximum 32-bit signed integer - highest possible z-index
+        left: 24, // Moved to left side to avoid overlapping right-side action buttons
+        zIndex: 50, // Lower z-index since we're not competing with dialogs anymore
         isolation: 'isolate', // Create new stacking context
         pointerEvents: 'auto',
       }}
@@ -330,11 +330,12 @@ export function FeedbackButton() {
     >
       <Button
         onClick={handleFeedbackButtonClick}
-        className="h-12 px-4 rounded-full shadow-lg hover:shadow-xl transition-shadow"
+        variant="outline"
+        className="h-10 px-3 rounded-full shadow-md hover:shadow-lg transition-shadow bg-background"
         title="Send Feedback"
       >
-        <MessageSquare className="h-5 w-5 mr-2" />
-        <span className="hidden sm:inline">Feedback</span>
+        <MessageSquare className="h-4 w-4 mr-2" />
+        <span className="hidden sm:inline text-sm">Feedback</span>
       </Button>
     </div>,
     document.body

@@ -262,9 +262,44 @@ export default function VisionPlannerPage() {
     ]);
   };
 
+  // Helper to parse date from various formats into YYYY-MM-DD
+  const parseTargetDate = (dateStr: string | undefined): string | null => {
+    if (!dateStr) return null;
+
+    // Try to parse the date string
+    const parsed = new Date(dateStr);
+    if (!isNaN(parsed.getTime())) {
+      return parsed.toISOString().split('T')[0];
+    }
+
+    // Try common patterns like "December 31, 2026"
+    const monthNames = ['january', 'february', 'march', 'april', 'may', 'june',
+                        'july', 'august', 'september', 'october', 'november', 'december'];
+    const lower = dateStr.toLowerCase();
+    for (let i = 0; i < monthNames.length; i++) {
+      if (lower.includes(monthNames[i])) {
+        const yearMatch = dateStr.match(/\b(20\d{2})\b/);
+        const dayMatch = dateStr.match(/\b(\d{1,2})\b/);
+        if (yearMatch) {
+          const year = parseInt(yearMatch[1]);
+          const day = dayMatch ? parseInt(dayMatch[1]) : 1;
+          const date = new Date(year, i, day);
+          if (!isNaN(date.getTime())) {
+            return date.toISOString().split('T')[0];
+          }
+        }
+      }
+    }
+
+    return null;
+  };
+
   const handleCreateProject = async () => {
     setIsLoading(true);
     try {
+      // Parse the time bound into a proper date format
+      const targetDate = parseTargetDate(smartGoal.timeBound);
+
       // Create the project
       const projectResponse = await fetch('/api/projects-v2', {
         method: 'POST',
@@ -273,21 +308,23 @@ export default function VisionPlannerPage() {
           title: projectTitle,
           description: goalInput,
           color: projectColor,
-          goal_type: goalType,
-          smart_specific: smartGoal.specific || goalInput,
-          smart_measurable: smartGoal.measurable,
-          smart_achievable: smartGoal.achievable,
-          smart_relevant: smartGoal.relevant,
-          smart_time_bound: smartGoal.timeBound,
-          is_focused: true,
+          specific: smartGoal.specific || goalInput,
+          measurable: smartGoal.measurable,
+          attainable: smartGoal.achievable,
+          realistic: smartGoal.relevant,
+          timeBound: targetDate, // Use parsed date instead of raw text
+          targetDate: targetDate, // Also set target_date
+          isFocused: true,
+          revenueMath: goalType === 'revenue' ? revenueMath : null,
         }),
       });
 
       if (!projectResponse.ok) {
-        throw new Error('Failed to create project');
+        const errorData = await projectResponse.json();
+        throw new Error(errorData.error || 'Failed to create project');
       }
 
-      const project = await projectResponse.json();
+      const { project } = await projectResponse.json();
 
       // Create key results if we have suggestions
       if (suggestedKeyResults.length > 0) {
@@ -296,11 +333,11 @@ export default function VisionPlannerPage() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              project_id: project.id,
+              projectId: project.id,
               name: kr,
-              target_value: 100,
-              current_value: 0,
-              unit_type: 'percentage',
+              targetValue: 100,
+              startingValue: 0,
+              unitType: 'percentage',
             }),
           });
         }

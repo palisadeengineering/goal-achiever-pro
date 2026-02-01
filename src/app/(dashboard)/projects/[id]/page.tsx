@@ -157,6 +157,39 @@ async function submitCheckIn(data: {
   return response.json();
 }
 
+async function createMilestone(data: {
+  projectId: string;
+  title: string;
+  description?: string;
+  quarter?: number;
+  targetDate?: string;
+}): Promise<{ milestone: MilestoneV2 }> {
+  const response = await fetch('/api/milestones-v2', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error('Failed to create milestone');
+  return response.json();
+}
+
+async function createTask(data: {
+  projectId: string;
+  title: string;
+  description?: string;
+  priority?: string;
+  scheduledDate?: string;
+  estimatedMinutes?: number;
+}): Promise<{ task: Task }> {
+  const response = await fetch('/api/tasks-v2', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error('Failed to create task');
+  return response.json();
+}
+
 export default function ProjectHubPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
@@ -186,6 +219,23 @@ export default function ProjectHubPage({ params }: { params: Promise<{ id: strin
     targetValue: 100,
     unitType: 'number',
     unitLabel: '',
+  });
+
+  const [isAddMilestoneOpen, setIsAddMilestoneOpen] = useState(false);
+  const [newMilestone, setNewMilestone] = useState({
+    title: '',
+    description: '',
+    quarter: 1,
+    targetDate: '',
+  });
+
+  const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
+  const [newTask, setNewTask] = useState({
+    title: '',
+    description: '',
+    priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
+    scheduledDate: '',
+    estimatedMinutes: 30,
   });
 
   const { data, isLoading } = useQuery({
@@ -221,6 +271,24 @@ export default function ProjectHubPage({ params }: { params: Promise<{ id: strin
     mutationFn: submitCheckIn,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project-v2', id] });
+    },
+  });
+
+  const createMilestoneMutation = useMutation({
+    mutationFn: createMilestone,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['project-v2', id] });
+      setIsAddMilestoneOpen(false);
+      setNewMilestone({ title: '', description: '', quarter: 1, targetDate: '' });
+    },
+  });
+
+  const createTaskMutation = useMutation({
+    mutationFn: createTask,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['project-v2', id] });
+      setIsAddTaskOpen(false);
+      setNewTask({ title: '', description: '', priority: 'medium', scheduledDate: '', estimatedMinutes: 30 });
     },
   });
 
@@ -268,6 +336,29 @@ export default function ProjectHubPage({ params }: { params: Promise<{ id: strin
 
   const handleUpdateKRValue = (krId: string, currentValue: number) => {
     updateKRMutation.mutate({ krId, data: { currentValue } });
+  };
+
+  const handleCreateMilestone = () => {
+    if (!newMilestone.title.trim()) return;
+    createMilestoneMutation.mutate({
+      projectId: id,
+      title: newMilestone.title,
+      description: newMilestone.description || undefined,
+      quarter: newMilestone.quarter,
+      targetDate: newMilestone.targetDate || undefined,
+    });
+  };
+
+  const handleCreateTask = () => {
+    if (!newTask.title.trim()) return;
+    createTaskMutation.mutate({
+      projectId: id,
+      title: newTask.title,
+      description: newTask.description || undefined,
+      priority: newTask.priority,
+      scheduledDate: newTask.scheduledDate || undefined,
+      estimatedMinutes: newTask.estimatedMinutes,
+    });
   };
 
   if (isLoading) {
@@ -639,10 +730,69 @@ export default function ProjectHubPage({ params }: { params: Promise<{ id: strin
         <TabsContent value="milestones" className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Milestones</h3>
-            <Button size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Milestone
-            </Button>
+            <Dialog open={isAddMilestoneOpen} onOpenChange={setIsAddMilestoneOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Milestone
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add Milestone</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 mt-4">
+                  <div>
+                    <Label>Title</Label>
+                    <Input
+                      placeholder="e.g., Complete MVP"
+                      value={newMilestone.title}
+                      onChange={(e) => setNewMilestone({ ...newMilestone, title: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label>Description (optional)</Label>
+                    <Textarea
+                      placeholder="Describe what this milestone includes..."
+                      value={newMilestone.description}
+                      onChange={(e) => setNewMilestone({ ...newMilestone, description: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Quarter</Label>
+                      <select
+                        className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        value={newMilestone.quarter}
+                        onChange={(e) => setNewMilestone({ ...newMilestone, quarter: Number(e.target.value) })}
+                      >
+                        <option value={1}>Q1</option>
+                        <option value={2}>Q2</option>
+                        <option value={3}>Q3</option>
+                        <option value={4}>Q4</option>
+                      </select>
+                    </div>
+                    <div>
+                      <Label>Target Date (optional)</Label>
+                      <Input
+                        type="date"
+                        value={newMilestone.targetDate}
+                        onChange={(e) => setNewMilestone({ ...newMilestone, targetDate: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={() => setIsAddMilestoneOpen(false)}>Cancel</Button>
+                    <Button onClick={handleCreateMilestone} disabled={createMilestoneMutation.isPending}>
+                      {createMilestoneMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : null}
+                      Create
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
 
           {project.milestones.length === 0 ? (
@@ -692,10 +842,77 @@ export default function ProjectHubPage({ params }: { params: Promise<{ id: strin
         <TabsContent value="tasks" className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Tasks</h3>
-            <Button size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Task
-            </Button>
+            <Dialog open={isAddTaskOpen} onOpenChange={setIsAddTaskOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Task
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add Task</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 mt-4">
+                  <div>
+                    <Label>Title</Label>
+                    <Input
+                      placeholder="e.g., Create landing page wireframe"
+                      value={newTask.title}
+                      onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label>Description (optional)</Label>
+                    <Textarea
+                      placeholder="Additional details..."
+                      value={newTask.description}
+                      onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Priority</Label>
+                      <select
+                        className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        value={newTask.priority}
+                        onChange={(e) => setNewTask({ ...newTask, priority: e.target.value as 'low' | 'medium' | 'high' | 'urgent' })}
+                      >
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
+                      </select>
+                    </div>
+                    <div>
+                      <Label>Estimated Minutes</Label>
+                      <Input
+                        type="number"
+                        value={newTask.estimatedMinutes}
+                        onChange={(e) => setNewTask({ ...newTask, estimatedMinutes: Number(e.target.value) })}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Scheduled Date (optional)</Label>
+                    <Input
+                      type="date"
+                      value={newTask.scheduledDate}
+                      onChange={(e) => setNewTask({ ...newTask, scheduledDate: e.target.value })}
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={() => setIsAddTaskOpen(false)}>Cancel</Button>
+                    <Button onClick={handleCreateTask} disabled={createTaskMutation.isPending}>
+                      {createTaskMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : null}
+                      Create
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
 
           {project.tasks.length === 0 ? (
