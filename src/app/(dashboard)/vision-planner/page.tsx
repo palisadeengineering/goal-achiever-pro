@@ -357,13 +357,18 @@ export default function VisionPlannerPage() {
     setIsLoading(true);
     try {
       // Call AI to generate SMART components
+      // Build context string with goal type and revenue data if applicable
+      const contextParts = [`Goal type: ${goalType}`];
+      if (goalType === 'revenue' && revenueData) {
+        contextParts.push(`Revenue data: Current=${revenueData.currentRevenue}, Target=${revenueData.targetRevenue}, Avg Deal=${revenueData.avgDealValue}, Close Rate=${revenueData.closeRate}%`);
+      }
+
       const response = await fetch('/api/ai/generate-smart', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          goalDescription: goalInput,
-          goalType,
-          revenueData: goalType === 'revenue' ? revenueData : undefined,
+          vision: goalInput,
+          context: contextParts.join('. '),
         }),
       });
 
