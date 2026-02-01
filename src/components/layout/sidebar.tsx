@@ -59,8 +59,9 @@ const mainNavItems: NavItem[] = [
 ];
 
 const visionPlanningItems: NavItem[] = [
-  { title: 'Vision Planner', href: ROUTES.planner, icon: Sparkles, badge: 'New' },
-  { title: 'Vision', href: ROUTES.vision, icon: Eye },
+  { title: 'Vision Planner', href: ROUTES.visionPlanner, icon: Sparkles, badge: 'V2' },
+  { title: 'Projects', href: ROUTES.projects, icon: FolderKanban, badge: 'V2' },
+  { title: 'Vision (Legacy)', href: ROUTES.vision, icon: Eye },
   { title: 'Key Results', href: ROUTES.okrs, icon: TrendingUp },
   { title: 'Milestones', href: ROUTES.goals, icon: Trophy },
   { title: 'Daily & Weekly MINS', href: ROUTES.mins, icon: ListTodo },

@@ -45,6 +45,7 @@ import { useGoogleCalendar } from '@/lib/hooks/use-google-calendar';
 import { Daily300Checkin } from '@/components/features/reviews/daily-300-checkin';
 import { DailyKpiDashboard } from '@/components/features/kpi/daily-kpi-dashboard';
 import { GamificationWidget } from '@/components/features/gamification/gamification-widget';
+import { ProjectCheckinWidget, FocusProjectTasks, MomentumStatsWidget } from '@/components/features/today';
 import type { TeamMember } from '@/types/team';
 import { ShareButton } from '@/components/features/sharing';
 
@@ -957,13 +958,22 @@ export default function TodayPage() {
 
         {/* Sidebar */}
         <div className="space-y-4">
-          {/* Gamification Progress */}
+          {/* Project V2: Focus Tasks */}
+          <FocusProjectTasks />
+
+          {/* Project V2: Momentum Stats (Streaks & XP) */}
+          <MomentumStatsWidget />
+
+          {/* Project V2: 300% Check-in */}
+          <ProjectCheckinWidget />
+
+          {/* Legacy: Gamification Progress */}
           <GamificationWidget />
 
-          {/* Daily KPI Dashboard - Gamified tracking */}
+          {/* Legacy: Daily KPI Dashboard - Gamified tracking */}
           <DailyKpiDashboard />
 
-          {/* 300% Daily Check-in */}
+          {/* Legacy: 300% Daily Check-in */}
           <Daily300Checkin />
 
           {/* Upcoming Deadlines */}

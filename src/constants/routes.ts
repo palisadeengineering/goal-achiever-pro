@@ -33,10 +33,16 @@ export const ROUTES = {
 
   // Vision & Goals
   planner: '/planner',
+  visionPlanner: '/vision-planner',
   vision: '/vision',
   goals: '/goals',
   goalNew: '/goals/new',
   goalDetail: (id: string) => `/goals/${id}`,
+
+  // Projects V2
+  projects: '/projects',
+  projectNew: '/projects/new',
+  projectDetail: (id: string) => `/projects/${id}`,
 
   // MINS
   mins: '/mins',
@@ -111,7 +117,9 @@ export const PROTECTED_ROUTES = [
   '/progress',
   '/backtrack',
   '/planner',
+  '/vision-planner',
   '/vision',
+  '/projects',
   '/goals',
   '/mins',
   '/time-audit',
