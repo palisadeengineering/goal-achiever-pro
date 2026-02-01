@@ -315,7 +315,7 @@ export default function VisionPlannerPage() {
           timeBound: targetDate, // Use parsed date instead of raw text
           targetDate: targetDate, // Also set target_date
           isFocused: true,
-          revenueMath: goalType === 'revenue' ? revenueMath : null,
+          revenueMath: goalType === 'revenue' ? revenueData : null,
         }),
       });
 
