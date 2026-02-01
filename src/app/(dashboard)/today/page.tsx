@@ -610,24 +610,24 @@ export default function TodayPage() {
 
             <div className="flex flex-col gap-4 w-full max-w-sm">
               {/* Primary CTA */}
-              <Link href="/vision" className="w-full">
+              <Link href="/vision-planner" className="w-full">
                 <Button size="lg" className="w-full gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700">
                   <Sparkles className="h-5 w-5" />
-                  Create Vision & Generate Actions
+                  Create a Project with Vision Planner
                 </Button>
               </Link>
 
               <div className="flex items-center gap-3">
                 <div className="flex-1 border-t" />
-                <span className="text-xs text-muted-foreground">or if you have a vision</span>
+                <span className="text-xs text-muted-foreground">or if you have projects</span>
                 <div className="flex-1 border-t" />
               </div>
 
-              {/* Secondary - for users who already have visions */}
-              <Link href="/vision" className="w-full">
+              {/* Secondary - for users who already have projects */}
+              <Link href="/projects" className="w-full">
                 <Button variant="outline" className="w-full gap-2">
                   <Target className="h-4 w-4" />
-                  Go to Visions → Plan Tab → Generate Daily Actions
+                  View Your Projects
                 </Button>
               </Link>
             </div>
@@ -635,11 +635,11 @@ export default function TodayPage() {
             <div className="mt-6 p-4 bg-muted/50 rounded-lg max-w-md">
               <h4 className="font-medium text-sm mb-2">How it works:</h4>
               <ol className="text-sm text-muted-foreground space-y-1">
-                <li>1. Create or select a Vision</li>
-                <li>2. Go to the Plan tab</li>
-                <li>3. Click &quot;Generate Daily Actions&quot;</li>
-                <li>4. AI creates Impact Projects → Monthly → Weekly → Daily tasks</li>
-                <li>5. Come back here to track your daily progress!</li>
+                <li>1. Use Vision Planner to describe your goal</li>
+                <li>2. AI helps create a SMART project with Key Results</li>
+                <li>3. Add milestones and tasks to your project</li>
+                <li>4. Track your 300% daily check-in</li>
+                <li>5. Earn rewards for hitting your targets!</li>
               </ol>
             </div>
           </CardContent>
@@ -1067,22 +1067,22 @@ export default function TodayPage() {
               <CardTitle className="text-lg">Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Link href="/backtrack">
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <Target className="h-4 w-4" />
-                  View Backtrack Plans
-                </Button>
-              </Link>
-              <Link href="/vision">
+              <Link href="/vision-planner">
                 <Button variant="outline" className="w-full justify-start gap-2">
                   <Sparkles className="h-4 w-4" />
-                  Edit Vision
+                  Vision Planner
                 </Button>
               </Link>
-              <Link href="/goals">
+              <Link href="/projects">
+                <Button variant="outline" className="w-full justify-start gap-2">
+                  <Target className="h-4 w-4" />
+                  View Projects
+                </Button>
+              </Link>
+              <Link href="/rewards">
                 <Button variant="outline" className="w-full justify-start gap-2">
                   <CheckCircle2 className="h-4 w-4" />
-                  View Impact Projects
+                  View Rewards
                 </Button>
               </Link>
             </CardContent>

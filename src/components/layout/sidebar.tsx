@@ -81,6 +81,7 @@ const systemNavItems: NavItem[] = [
 ];
 
 const advancedNavItems: NavItem[] = [
+  { title: 'Rewards', href: ROUTES.rewards, icon: Trophy, badge: 'New' },
   { title: 'Leverage', href: ROUTES.leverage, icon: Zap, tier: 'pro' },
   { title: 'Network', href: ROUTES.network, icon: Users, tier: 'pro' },
   { title: 'Analytics', href: ROUTES.analytics, icon: BarChart3 },

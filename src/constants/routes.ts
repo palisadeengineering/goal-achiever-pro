@@ -84,6 +84,9 @@ export const ROUTES = {
   leverage: '/leverage',
   network: '/network',
 
+  // Rewards
+  rewards: '/rewards',
+
   // Metrics & Analytics
   metrics: '/metrics',
   scorecard: '/metrics/scorecard',
