@@ -378,13 +378,18 @@ export default function VisionPlannerPage() {
 
       const data = await response.json();
 
-      if (data.smart) {
+      // API returns fields directly (not nested under 'smart')
+      // Map API field names to UI field names:
+      // - attainable -> achievable
+      // - realistic -> relevant
+      // - suggestedDeadline -> timeBound
+      if (data.specific || data.measurable || data.attainable || data.realistic) {
         setSmartGoal({
-          specific: data.smart.specific || '',
-          measurable: data.smart.measurable || '',
-          achievable: data.smart.achievable || '',
-          relevant: data.smart.relevant || '',
-          timeBound: data.smart.timeBound || '',
+          specific: data.specific || '',
+          measurable: data.measurable || '',
+          achievable: data.attainable || '',
+          relevant: data.realistic || '',
+          timeBound: data.suggestedDeadline || '',
         });
       }
 
