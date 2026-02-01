@@ -455,7 +455,7 @@ export function DailyKpiDashboard({ className }: DailyKpiDashboardProps) {
         </CardHeader>
         <CardContent className="space-y-3">
           {dailyKpis.map((kpi) => {
-            const TimeIcon = kpi.best_time ? TIME_ICONS[kpi.best_time] : Clock;
+            const TimeIcon = (kpi.best_time && TIME_ICONS[kpi.best_time as keyof typeof TIME_ICONS]) || Clock;
             const timeColor = kpi.best_time ? TIME_COLORS[kpi.best_time] : '';
             const streak = kpi.streak?.current_streak || 0;
             const { level, nextMilestone, progress } = getStreakLevel(streak);
