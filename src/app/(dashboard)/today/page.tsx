@@ -141,6 +141,12 @@ export default function TodayPage() {
   const [focusedActionId, setFocusedActionId] = useState<string | null>(null);
   const actionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
+  // Fix hydration error: only format date on client side
+  const [formattedDate, setFormattedDate] = useState<string>('');
+  useEffect(() => {
+    setFormattedDate(format(new Date(), 'EEEE, MMMM d, yyyy'));
+  }, []);
+
   const { isConnected, connect } = useGoogleCalendar();
 
   // Flatten all actions for keyboard navigation
@@ -559,7 +565,7 @@ export default function TodayPage() {
       <div className="space-y-6">
         <PageHeader
           title="Today"
-          description={format(new Date(), 'EEEE, MMMM d, yyyy')}
+          description={formattedDate}
           icon={<CalendarCheck className="h-6 w-6" />}
         />
         <div className="flex items-center justify-center py-12">
@@ -574,7 +580,7 @@ export default function TodayPage() {
       <div className="space-y-6">
         <PageHeader
           title="Today"
-          description={format(new Date(), 'EEEE, MMMM d, yyyy')}
+          description={formattedDate}
           icon={<CalendarCheck className="h-6 w-6" />}
         />
         <Card>
@@ -596,7 +602,7 @@ export default function TodayPage() {
       <div className="space-y-6">
         <PageHeader
           title="Today"
-          description={format(new Date(), 'EEEE, MMMM d, yyyy')}
+          description={formattedDate}
           icon={<CalendarCheck className="h-6 w-6" />}
         />
         <Card>
@@ -652,7 +658,7 @@ export default function TodayPage() {
     <div className="space-y-6">
       <PageHeader
         title="Today"
-        description={format(new Date(), 'EEEE, MMMM d, yyyy')}
+        description={formattedDate}
         icon={<CalendarCheck className="h-6 w-6" />}
         actions={
           <div className="flex items-center gap-2">
