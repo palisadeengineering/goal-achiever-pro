@@ -288,8 +288,32 @@ export async function GET(request: NextRequest) {
       recurringEventId?: string;
       recurrence?: string[];
     }) => {
-      const start = event.start.dateTime ? new Date(event.start.dateTime) : new Date(event.start.date || '');
-      const end = event.end.dateTime ? new Date(event.end.dateTime) : new Date(event.end.date || '');
+      // For all-day events, use the date string directly to avoid timezone issues
+      const isAllDay = !event.start.dateTime && event.start.date;
+
+      let dateStr: string;
+      let startTimeStr: string;
+      let endTimeStr: string;
+
+      if (isAllDay) {
+        // All-day event: use the date strings directly
+        dateStr = event.start.date!;
+        startTimeStr = '00:00';
+        endTimeStr = '23:59';
+      } else {
+        // Timed event: parse the datetime and extract local date/time
+        const start = new Date(event.start.dateTime!);
+        const end = event.end.dateTime ? new Date(event.end.dateTime) : start;
+
+        // Use local date/time (NOT UTC) to match user's timezone
+        const year = start.getFullYear();
+        const month = String(start.getMonth() + 1).padStart(2, '0');
+        const day = String(start.getDate()).padStart(2, '0');
+        dateStr = `${year}-${month}-${day}`;
+
+        startTimeStr = start.toTimeString().slice(0, 5);
+        endTimeStr = end.toTimeString().slice(0, 5);
+      }
 
       // Check if this is a recurring event instance
       // When singleEvents=true, recurring events have a recurringEventId
@@ -297,19 +321,20 @@ export async function GET(request: NextRequest) {
 
       return {
         id: `gcal_${event.id}`,
-        date: start.toISOString().split('T')[0],
-        startTime: start.toTimeString().slice(0, 5),
-        endTime: end.toTimeString().slice(0, 5),
+        date: dateStr,
+        startTime: startTimeStr,
+        endTime: endTimeStr,
         activityName: event.summary || 'Untitled Event',
         description: event.description || '',
         source: 'google_calendar',
+        isAllDay,
         // Include full datetime info for display
         start: {
-          dateTime: event.start.dateTime || start.toISOString(),
+          dateTime: event.start.dateTime,
           date: event.start.date,
         },
         end: {
-          dateTime: event.end.dateTime || end.toISOString(),
+          dateTime: event.end.dateTime,
           date: event.end.date,
         },
         // Recurring event info
