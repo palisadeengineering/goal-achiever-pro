@@ -209,7 +209,9 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
       // Log details about what we're setting
       const eventDates = transformedEvents.map(e => {
         const startDt = e.start?.dateTime || e.startTime;
-        return startDt ? new Date(startDt).toISOString().slice(0, 10) : 'unknown';
+        if (!startDt) return 'unknown';
+        const date = new Date(startDt);
+        return isNaN(date.getTime()) ? 'invalid' : date.toISOString().slice(0, 10);
       });
       const uniqueDates = [...new Set(eventDates)].sort();
       console.log(`[useGoogleCalendar] Fetched ${transformedEvents.length} events for ${startDate.toISOString().slice(0, 10)} to ${endDate.toISOString().slice(0, 10)}`);
