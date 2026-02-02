@@ -31,6 +31,15 @@ export async function GET(request: NextRequest) {
           current_value,
           progress_percentage,
           status
+        ),
+        milestones_v2 (
+          id,
+          title,
+          description,
+          quarter,
+          target_date,
+          status,
+          completed_at
         )
       `)
       .eq('user_id', userId)

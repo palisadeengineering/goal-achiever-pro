@@ -368,13 +368,14 @@ function entityTypeToTab(entityType: EntityType): TabName | null {
 }
 
 /**
- * Generate a secure random token for invitations
+ * Generate a cryptographically secure random token for invitations
  */
 export function generateInviteToken(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let token = '';
-  for (let i = 0; i < 32; i++) {
-    token += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return token;
+  // Use Web Crypto API which works in both Node.js and Edge/Browser
+  // 24 bytes = 32 base64url characters with good entropy
+  const bytes = new Uint8Array(24);
+  crypto.getRandomValues(bytes);
+  // Convert to base64url
+  const base64 = btoa(String.fromCharCode(...bytes));
+  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }

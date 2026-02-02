@@ -71,8 +71,8 @@ interface Reward {
 interface Project {
   id: string;
   title: string;
-  milestones: Array<{ id: string; title: string }>;
-  keyResults: Array<{ id: string; name: string }>;
+  milestones_v2?: Array<{ id: string; title: string }>;
+  project_key_results?: Array<{ id: string; name: string }>;
 }
 
 async function fetchRewards(): Promise<{ rewards: Reward[] }> {
@@ -213,10 +213,10 @@ export default function RewardsPage() {
 
   // Get all milestones and KRs from projects for dropdowns
   const allMilestones = projects.flatMap((p) =>
-    (p.milestones || []).map((m) => ({ ...m, projectTitle: p.title }))
+    (p.milestones_v2 || []).map((m) => ({ ...m, projectTitle: p.title }))
   );
   const allKeyResults = projects.flatMap((p) =>
-    (p.keyResults || []).map((kr) => ({ ...kr, projectTitle: p.title }))
+    (p.project_key_results || []).map((kr) => ({ ...kr, projectTitle: p.title }))
   );
 
   const handleCreateReward = () => {
