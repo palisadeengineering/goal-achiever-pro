@@ -102,9 +102,20 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
     try {
       const response = await fetch('/api/calendar/google/status');
       const data = await response.json();
+
+      if (data.error) {
+        console.warn('[useGoogleCalendar] Connection check failed:', data.error);
+        setIsConnected(false);
+        return;
+      }
+
       setIsConnected(data.connected === true);
+
+      if (!data.connected && data.reason) {
+        console.log('[useGoogleCalendar] Not connected:', data.reason);
+      }
     } catch (err) {
-      console.error('Failed to check Google Calendar connection:', err);
+      console.error('[useGoogleCalendar] Failed to check Google Calendar connection:', err);
       setIsConnected(false);
     } finally {
       setIsCheckingConnection(false);

@@ -187,7 +187,7 @@ export async function GET(request: NextRequest) {
 
   debug.userId = userId;
 
-  // Check for Google Calendar integration FIRST before falling back to demo mode
+  // Check for Google Calendar integration
   // Authenticated users with real Google connections should ALWAYS get real data
   const { data: integration, error: integrationError } = await supabase
     .from('user_integrations')

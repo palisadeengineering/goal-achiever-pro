@@ -6,7 +6,8 @@ import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 export async function GET() {
   const auth = await getAuthenticatedUser();
   if (!auth.isAuthenticated) {
-    return NextResponse.json({ error: auth.error }, { status: auth.status });
+    // Return connected: false instead of error so UI can show proper state
+    return NextResponse.json({ connected: false, reason: 'not_authenticated' });
   }
   const userId = auth.userId;
   const supabase = await createClient();

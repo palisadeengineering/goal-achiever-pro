@@ -113,6 +113,7 @@ export default function TimeAuditPage() {
     events: googleEvents,
     isLoading: isLoadingGoogle,
     isConnected: isGoogleConnected,
+    isCheckingConnection,
     fetchEvents: fetchGoogleEvents,
     clearCache: clearGoogleCache,
     removeEvent: removeGoogleEvent,
@@ -1586,6 +1587,13 @@ export default function TimeAuditPage() {
         actions={
           <div className="flex items-center gap-2 flex-wrap">
             <ShareButton tabName="time_audit" />
+            {/* Google Calendar connection status */}
+            {!isGoogleConnected && !isCheckingConnection && (
+              <Link href="/settings" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+                <Calendar className="h-4 w-4" />
+                <span className="hidden sm:inline">Connect Google Calendar</span>
+              </Link>
+            )}
             {/* Desktop actions - hidden on mobile where we use floating buttons */}
             {isGoogleConnected && (
               <>
