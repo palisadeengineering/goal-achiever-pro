@@ -36,14 +36,6 @@ export async function getAuthenticatedUser(): Promise<AuthCheck> {
   const supabase = await createClient();
 
   if (!supabase) {
-    // In development only, allow demo mode if explicitly enabled
-    const isDemoMode = process.env.DEMO_MODE_ENABLED === 'true' && process.env.NODE_ENV !== 'production';
-    if (isDemoMode) {
-      const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-      console.warn('SECURITY: Using demo user - this should never happen in production');
-      return { userId: DEMO_USER_ID, isAuthenticated: true };
-    }
-
     return {
       userId: null,
       isAuthenticated: false,
@@ -60,14 +52,6 @@ export async function getAuthenticatedUser(): Promise<AuthCheck> {
       errorCode: error?.code,
       hasUser: !!user,
     });
-
-    // In development only, allow demo mode if explicitly enabled
-    const isDemoMode = process.env.DEMO_MODE_ENABLED === 'true' && process.env.NODE_ENV !== 'production';
-    if (isDemoMode) {
-      const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-      console.warn('SECURITY: Using demo user - this should never happen in production');
-      return { userId: DEMO_USER_ID, isAuthenticated: true };
-    }
 
     return {
       userId: null,
