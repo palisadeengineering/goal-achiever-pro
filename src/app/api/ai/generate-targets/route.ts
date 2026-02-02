@@ -195,7 +195,16 @@ Respond ONLY with valid JSON in this exact format:
     }
     cleanedResponse = cleanedResponse.trim();
 
-    const targetPlan = JSON.parse(cleanedResponse);
+    let targetPlan;
+    try {
+      targetPlan = JSON.parse(cleanedResponse);
+    } catch (parseError) {
+      console.error('AI response JSON parse error:', parseError);
+      return NextResponse.json(
+        { error: 'AI returned invalid response format. Please try again.' },
+        { status: 500 }
+      );
+    }
 
     // Add impact project context to response
     return NextResponse.json({

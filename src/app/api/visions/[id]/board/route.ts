@@ -1,13 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-
-// Demo user ID for development
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-
-async function getUserId(supabase: NonNullable<Awaited<ReturnType<typeof createClient>>>) {
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || DEMO_USER_ID;
-}
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 
 // GET /api/visions/[id]/board - Get all images for a vision board
 export async function GET(
@@ -15,16 +8,16 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
     const supabase = await createClient();
     if (!supabase) {
-      return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
+      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
     }
-    const userId = await getUserId(supabase);
     const { id: visionId } = await params;
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const { data: images, error } = await supabase
       .from('vision_board_images')
@@ -64,16 +57,16 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
     const supabase = await createClient();
     if (!supabase) {
-      return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
+      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
     }
-    const userId = await getUserId(supabase);
     const { id: visionId } = await params;
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
@@ -186,16 +179,16 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
     const supabase = await createClient();
     if (!supabase) {
-      return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
+      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
     }
-    const userId = await getUserId(supabase);
     const { id: visionId } = await params;
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const { imageId } = await request.json();
 
@@ -248,16 +241,16 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
     const supabase = await createClient();
     if (!supabase) {
-      return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
+      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
     }
-    const userId = await getUserId(supabase);
     const { id: visionId } = await params;
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const { imageId, caption, isCover, sortOrder } = await request.json();
 

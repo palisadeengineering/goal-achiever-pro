@@ -129,7 +129,16 @@ Respond ONLY with valid JSON in this exact format:
     }
     cleanedResponse = cleanedResponse.trim();
 
-    const smartGoals = JSON.parse(cleanedResponse);
+    let smartGoals;
+    try {
+      smartGoals = JSON.parse(cleanedResponse);
+    } catch (parseError) {
+      console.error('AI response JSON parse error:', parseError);
+      return NextResponse.json(
+        { error: 'AI returned invalid response format. Please try again.' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(smartGoals, {
       headers: rateLimitHeaders(rateLimitResult),

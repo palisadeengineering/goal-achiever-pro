@@ -1,14 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-
-// Demo user ID for development
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-
-async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  if (!supabase) return DEMO_USER_ID;
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || DEMO_USER_ID;
-}
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 
 // Default settings
 const DEFAULT_SETTINGS = {
@@ -27,12 +19,15 @@ const DEFAULT_SETTINGS = {
 // GET - Fetch user settings
 export async function GET() {
   try {
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
     const supabase = await createClient();
     if (!supabase) {
       return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
     }
-
-    const userId = await getUserId(supabase);
 
     // Try to get settings from user_settings table
     const { data: settings, error } = await supabase
@@ -74,12 +69,16 @@ export async function GET() {
 // PUT - Update user settings
 export async function PUT(request: NextRequest) {
   try {
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
     const supabase = await createClient();
     if (!supabase) {
       return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
     }
 
-    const userId = await getUserId(supabase);
     const body = await request.json();
 
     const {

@@ -113,7 +113,16 @@ Respond ONLY with valid JSON in this exact format:
     }
     cleanedResponse = cleanedResponse.trim();
 
-    const result = JSON.parse(cleanedResponse);
+    let result;
+    try {
+      result = JSON.parse(cleanedResponse);
+    } catch (parseError) {
+      console.error('AI response JSON parse error:', parseError);
+      return NextResponse.json(
+        { error: 'AI returned invalid response format. Please try again.' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(result, {
       headers: rateLimitResult ? rateLimitHeaders(rateLimitResult) : {},

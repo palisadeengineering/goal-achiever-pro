@@ -1,25 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import { format } from 'date-fns';
-
-// Demo user ID for development
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-
-async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  if (!supabase) return DEMO_USER_ID;
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || DEMO_USER_ID;
-}
 
 // GET - Fetch completions for a date or date range
 export async function GET(request: NextRequest) {
   try {
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
     const supabase = await createClient();
     if (!supabase) {
       return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
     }
 
-    const userId = await getUserId(supabase);
     const { searchParams } = new URL(request.url);
     const date = searchParams.get('date') || format(new Date(), 'yyyy-MM-dd');
     const routineId = searchParams.get('routineId');
@@ -70,12 +66,16 @@ export async function GET(request: NextRequest) {
 // POST - Create or update a completion (toggle step completion)
 export async function POST(request: NextRequest) {
   try {
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
     const supabase = await createClient();
     if (!supabase) {
       return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
     }
 
-    const userId = await getUserId(supabase);
     const body = await request.json();
 
     const {

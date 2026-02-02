@@ -1,15 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-
-async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  if (!supabase) return DEMO_USER_ID;
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || DEMO_USER_ID;
-}
 
 // Refresh access token if expired and update in database
 async function refreshTokenIfNeeded(
@@ -110,15 +104,15 @@ async function getTokensFromDatabase(
 // POST: Sync daily actions to Google Calendar
 export async function POST(request: NextRequest) {
   try {
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
     const supabase = await createClient();
     if (!supabase) {
-      return NextResponse.json(
-        { error: 'Database connection failed' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
     }
-
-    const userId = await getUserId(supabase);
     const tokens = await getTokensFromDatabase(supabase, userId);
 
     if (!tokens) {

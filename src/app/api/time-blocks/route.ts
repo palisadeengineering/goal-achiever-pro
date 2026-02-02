@@ -1,29 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-
-// Demo user ID for development
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-
-async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  if (!supabase) return DEMO_USER_ID;
-
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || DEMO_USER_ID;
-}
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 
 // GET: Fetch time blocks for a date range
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Database connection failed' },
-        { status: 500 }
-      );
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
-
-    const userId = await getUserId(supabase);
+    const userId = auth.userId;
+    const supabase = await createClient();
+    if (!supabase) {
+      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
+    }
 
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get('startDate');
@@ -116,16 +106,16 @@ export async function GET(request: NextRequest) {
 // POST: Create a new time block
 export async function POST(request: NextRequest) {
   try {
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
     const supabase = await createClient();
-
     if (!supabase) {
-      return NextResponse.json(
-        { error: 'Database connection failed' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
     }
 
-    const userId = await getUserId(supabase);
     const body = await request.json();
 
     const {
@@ -255,16 +245,16 @@ export async function POST(request: NextRequest) {
 // PUT: Update an existing time block
 export async function PUT(request: NextRequest) {
   try {
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
     const supabase = await createClient();
-
     if (!supabase) {
-      return NextResponse.json(
-        { error: 'Database connection failed' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
     }
 
-    const userId = await getUserId(supabase);
     const body = await request.json();
 
     const {
@@ -414,16 +404,15 @@ export async function PUT(request: NextRequest) {
 // DELETE: Delete a time block or all time blocks
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = await createClient();
-
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Database connection failed' },
-        { status: 500 }
-      );
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
-
-    const userId = await getUserId(supabase);
+    const userId = auth.userId;
+    const supabase = await createClient();
+    if (!supabase) {
+      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
+    }
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

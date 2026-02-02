@@ -280,7 +280,11 @@ function SidebarContent({
                   open={expandedOwners.has(shared.owner.id)}
                   onOpenChange={() => toggleOwner(shared.owner.id)}
                 >
-                  <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground">
+                  <CollapsibleTrigger
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+                    aria-label={`${expandedOwners.has(shared.owner.id) ? 'Collapse' : 'Expand'} shared content from ${shared.owner.fullName || shared.owner.email}`}
+                    aria-expanded={expandedOwners.has(shared.owner.id)}
+                  >
                     <Avatar className="h-5 w-5">
                       <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
                         {getInitials(shared.owner.fullName)}

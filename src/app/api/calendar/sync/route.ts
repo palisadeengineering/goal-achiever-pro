@@ -2,16 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { format, startOfQuarter, endOfQuarter, addDays, startOfMonth, startOfWeek } from 'date-fns';
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-
-async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  if (!supabase) return DEMO_USER_ID;
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || DEMO_USER_ID;
-}
 
 async function refreshTokenIfNeeded(tokens: {
   access_token: string;
@@ -87,6 +81,16 @@ interface SyncResult {
 // POST: Full sync for all goal levels
 export async function POST(request: NextRequest) {
   try {
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
+    const supabase = await createClient();
+    if (!supabase) {
+      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
+    }
+
     const tokens = await getTokensFromCookie();
     if (!tokens) {
       return NextResponse.json(
@@ -95,12 +99,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = await createClient();
-    if (!supabase) {
-      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
-    }
-
-    const userId = await getUserId(supabase);
     const body = await request.json();
     const {
       visionId,

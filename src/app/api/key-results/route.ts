@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import type { CreateKeyResultInput } from '@/types/team';
-
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-
-async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  if (!supabase) return DEMO_USER_ID;
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || DEMO_USER_ID;
-}
 
 // Transform snake_case to camelCase
 function transformKeyResult(kr: Record<string, unknown>) {
@@ -43,7 +35,12 @@ function transformKeyResult(kr: Record<string, unknown>) {
 // GET /api/key-results - List all key results
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
+
     const adminClient = createAdminClient();
 
     if (!adminClient) {
@@ -53,7 +50,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const userId = await getUserId(supabase);
     const { searchParams } = new URL(request.url);
     const visionId = searchParams.get('visionId');
     const quarter = searchParams.get('quarter');
@@ -102,7 +98,12 @@ export async function GET(request: NextRequest) {
 // POST /api/key-results - Create a new key result
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
+
     const adminClient = createAdminClient();
 
     if (!adminClient) {
@@ -112,7 +113,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userId = await getUserId(supabase);
     const body: CreateKeyResultInput = await request.json();
 
     if (!body.visionId || !body.title || !body.targetValue || !body.unit) {

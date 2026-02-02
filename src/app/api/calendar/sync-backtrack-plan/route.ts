@@ -1,17 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-const IS_DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
-
-async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  if (!supabase) return DEMO_USER_ID;
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || DEMO_USER_ID;
-}
 
 async function refreshTokenIfNeeded(tokens: {
   access_token: string;
@@ -157,26 +150,14 @@ interface DailyAction {
 // POST: Sync all daily actions for a backtrack plan to Google Calendar
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const userId = supabase ? await getUserId(supabase) : DEMO_USER_ID;
-
-    // In demo mode with demo user, return mock success
-    if (IS_DEMO_MODE && userId === DEMO_USER_ID) {
-      return NextResponse.json({
-        success: true,
-        synced: 0,
-        failed: 0,
-        total: 0,
-        demo: true,
-        message: 'Demo mode: Calendar sync simulated (no actual events created)',
-      });
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
-
+    const userId = auth.userId;
+    const supabase = await createClient();
     if (!supabase) {
-      return NextResponse.json(
-        { error: 'Database connection failed' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
     }
 
     // Try to get tokens from database first, then fall back to cookie
@@ -467,15 +448,15 @@ export async function POST(request: NextRequest) {
 // GET: Check sync status for a backtrack plan
 export async function GET(request: NextRequest) {
   try {
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
     const supabase = await createClient();
     if (!supabase) {
-      return NextResponse.json(
-        { error: 'Database connection failed' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
     }
-
-    const userId = await getUserId(supabase);
     const { searchParams } = new URL(request.url);
     const backtrackPlanId = searchParams.get('backtrackPlanId');
     const visionId = searchParams.get('visionId');

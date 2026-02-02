@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { verifyOAuthState } from '@/lib/auth/oauth-state';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
@@ -29,28 +30,22 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Get user ID from state parameter (passed during OAuth initiation)
-  let userId: string | null = null;
-  if (state) {
-    try {
-      const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
-      userId = stateData.userId;
-      // Verify state isn't too old (max 10 minutes)
-      if (Date.now() - stateData.timestamp > 10 * 60 * 1000) {
-        return NextResponse.redirect(
-          new URL(`/settings?error=state_expired`, request.url)
-        );
-      }
-    } catch (e) {
-      console.error('Failed to parse state:', e);
-    }
-  }
-
-  if (!userId) {
+  // Verify cryptographically signed state parameter
+  if (!state) {
     return NextResponse.redirect(
       new URL(`/settings?error=invalid_state`, request.url)
     );
   }
+
+  const stateData = verifyOAuthState(state);
+  if (!stateData) {
+    // verifyOAuthState logs the specific error (expired, invalid signature, etc.)
+    return NextResponse.redirect(
+      new URL(`/settings?error=invalid_state`, request.url)
+    );
+  }
+
+  const userId = stateData.userId;
 
   // Use service role client to store tokens (bypasses RLS)
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

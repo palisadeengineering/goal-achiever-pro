@@ -1,24 +1,21 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import { format, startOfWeek, endOfWeek, subDays } from 'date-fns';
-
-// Demo user ID for development
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-
-async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  if (!supabase) return DEMO_USER_ID;
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || DEMO_USER_ID;
-}
 
 export async function GET() {
   try {
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
     const supabase = await createClient();
+
     if (!supabase) {
       return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
     }
 
-    const userId = await getUserId(supabase);
     const today = new Date();
     const todayStr = format(today, 'yyyy-MM-dd');
     const weekStart = format(startOfWeek(today, { weekStartsOn: 1 }), 'yyyy-MM-dd');

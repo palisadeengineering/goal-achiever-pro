@@ -62,3 +62,26 @@ export {
   impactProjectsKeys,
   type ImpactProject,
 } from './use-impact-projects';
+
+// Today page data hooks
+export {
+  useTodayData,
+  todayDataKeys,
+  type TodayData,
+  type UseTodayDataOptions,
+  type UseTodayDataReturn,
+  type DailyAction,
+  type VisionGroup,
+  type Deadline,
+} from './use-today-data';
+
+// Keyboard navigation hooks
+export {
+  useKeyboardNavigation,
+  createShortcut,
+  commonShortcuts,
+  type UseKeyboardNavigationOptions,
+  type UseKeyboardNavigationReturn,
+  type KeyboardShortcut,
+  type NavigationKey,
+} from './use-keyboard-navigation';

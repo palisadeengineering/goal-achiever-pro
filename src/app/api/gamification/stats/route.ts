@@ -1,20 +1,14 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { getOrCreateUserGamification } from '@/lib/services/gamification';
-
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 
 export async function GET() {
   try {
-    const supabase = await createClient();
-    let userId = DEMO_USER_ID;
-
-    if (supabase) {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user?.id) {
-        userId = user.id;
-      }
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
+    const userId = auth.userId;
 
     const gamification = await getOrCreateUserGamification(userId);
 

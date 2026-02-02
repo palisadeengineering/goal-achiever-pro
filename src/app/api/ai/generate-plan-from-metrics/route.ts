@@ -319,11 +319,10 @@ Respond ONLY with valid JSON in this exact format:
     let saveResult: { saved: number; errors: string[] } = { saved: 0, errors: [] };
     if (visionId) {
       const supabase = await createClient();
-      if (supabase) {
-        saveResult = await savePlanToDatabase(supabase, userId, visionId, plan, currentYear, currentQuarter);
-      } else {
-        saveResult.errors.push('No supabase client available');
+      if (!supabase) {
+        return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
       }
+      saveResult = await savePlanToDatabase(supabase, userId, visionId, plan, currentYear, currentQuarter);
     } else {
       saveResult.errors.push('No visionId provided');
     }

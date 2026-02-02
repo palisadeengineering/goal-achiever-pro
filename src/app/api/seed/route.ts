@@ -3,7 +3,13 @@ import { createClient } from '@/lib/supabase/server';
 
 const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
 
+// POST - Seed demo data (development only)
 export async function POST() {
+  // Only allow in development environment
+  if (process.env.NODE_ENV !== 'development') {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
   try {
     const supabase = await createClient();
 

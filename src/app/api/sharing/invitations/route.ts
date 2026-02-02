@@ -1,12 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
-
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 
 // GET /api/sharing/invitations - List all pending invitations (owner only)
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
     const supabase = await createClient();
+
     if (!supabase) {
       return NextResponse.json({ error: 'Failed to initialize database' }, { status: 500 });
     }
@@ -16,9 +21,6 @@ export async function GET(request: NextRequest) {
     if (!adminClient) {
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
     }
-
-    const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id || DEMO_USER_ID;
 
     const { data: invitations, error } = await adminClient
       .from('share_invitations')

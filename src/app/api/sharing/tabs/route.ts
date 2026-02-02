@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import type { GrantTabPermissionRequest } from '@/types/sharing';
-
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
 
 // GET /api/sharing/tabs - List tab permissions for a team member
 export async function GET(request: NextRequest) {
   try {
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
     const supabase = await createClient();
+
     if (!supabase) {
       return NextResponse.json({ error: 'Failed to initialize database' }, { status: 500 });
     }
@@ -17,9 +22,6 @@ export async function GET(request: NextRequest) {
     if (!adminClient) {
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
     }
-
-    const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id || DEMO_USER_ID;
 
     const { searchParams } = new URL(request.url);
     const teamMemberId = searchParams.get('teamMemberId');
@@ -82,7 +84,13 @@ export async function GET(request: NextRequest) {
 // POST /api/sharing/tabs - Grant tab permission
 export async function POST(request: NextRequest) {
   try {
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
     const supabase = await createClient();
+
     if (!supabase) {
       return NextResponse.json({ error: 'Failed to initialize database' }, { status: 500 });
     }
@@ -92,9 +100,6 @@ export async function POST(request: NextRequest) {
     if (!adminClient) {
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
     }
-
-    const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id || DEMO_USER_ID;
 
     const body: GrantTabPermissionRequest = await request.json();
     const { teamMemberId, tabName, permissionLevel } = body;

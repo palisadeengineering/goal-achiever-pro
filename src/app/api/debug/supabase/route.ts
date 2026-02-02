@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 
-// GET - Debug Supabase connection (temporary)
+// GET - Debug Supabase connection (development only)
 export async function GET() {
+  // Only allow in development environment
+  if (process.env.NODE_ENV !== 'development') {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const hasServiceKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -39,7 +43,7 @@ export async function GET() {
     configured: true,
     supabaseUrl,
     hasServiceKey,
-    serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) + '...',
+    // Note: Service key prefix removed for security
     tableTest: {
       result: tablesResult,
       error: tablesError

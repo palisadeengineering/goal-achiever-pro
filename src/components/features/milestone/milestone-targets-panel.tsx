@@ -280,13 +280,17 @@ export function MilestoneTargetsPanel({
                       {loadingItems.has(monthly.id) ? (
                         <Loader2 className="h-5 w-5 animate-spin" />
                       ) : (
-                        <div onClick={(e) => { e.stopPropagation(); handleToggleStatus('monthly', monthly.id, monthly.status); }}>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); handleToggleStatus('monthly', monthly.id, monthly.status); }}
+                          aria-label={monthly.status === 'completed' ? `Mark "${monthly.title}" as incomplete` : `Mark "${monthly.title}" as complete`}
+                        >
                           {monthly.status === 'completed' ? (
                             <CheckCircle2 className="h-5 w-5 text-cyan-600 cursor-pointer" />
                           ) : (
                             <Circle className="h-5 w-5 text-muted-foreground cursor-pointer hover:text-primary" />
                           )}
-                        </div>
+                        </button>
                       )}
                       <div className="flex-1 text-left">
                         <div className="flex items-center gap-2">
@@ -307,6 +311,7 @@ export function MilestoneTargetsPanel({
                           size="sm"
                           onClick={() => handleSchedule('monthly', monthly)}
                           disabled={schedulingItems.has(monthly.id)}
+                          aria-label={`Schedule "${monthly.title}" to calendar`}
                         >
                           {schedulingItems.has(monthly.id) ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -342,13 +347,17 @@ export function MilestoneTargetsPanel({
                                   {loadingItems.has(weekly.id) ? (
                                     <Loader2 className="h-4 w-4 animate-spin" />
                                   ) : (
-                                    <div onClick={(e) => { e.stopPropagation(); handleToggleStatus('weekly', weekly.id, weekly.status); }}>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => { e.stopPropagation(); handleToggleStatus('weekly', weekly.id, weekly.status); }}
+                                      aria-label={weekly.status === 'completed' ? `Mark "${weekly.title}" as incomplete` : `Mark "${weekly.title}" as complete`}
+                                    >
                                       {weekly.status === 'completed' ? (
                                         <CheckCircle2 className="h-4 w-4 text-cyan-600 cursor-pointer" />
                                       ) : (
                                         <Circle className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-primary" />
                                       )}
-                                    </div>
+                                    </button>
                                   )}
                                   <Badge variant="outline" className="text-xs">W{weekly.weekNumber}</Badge>
                                   <span className={cn('flex-1 text-left', weekly.status === 'completed' && 'line-through text-muted-foreground')}>
@@ -376,6 +385,7 @@ export function MilestoneTargetsPanel({
                                       className="h-6 w-6 p-0"
                                       onClick={() => handleSchedule('weekly', weekly)}
                                       disabled={schedulingItems.has(weekly.id)}
+                                      aria-label={`Schedule "${weekly.title}" to calendar`}
                                     >
                                       {schedulingItems.has(weekly.id) ? (
                                         <Loader2 className="h-3 w-3 animate-spin" />
@@ -425,6 +435,7 @@ export function MilestoneTargetsPanel({
                                           className="h-5 w-5 p-0"
                                           onClick={() => handleSchedule('daily', daily)}
                                           disabled={schedulingItems.has(daily.id)}
+                                          aria-label={`Schedule "${daily.title}" to calendar`}
                                         >
                                           {schedulingItems.has(daily.id) ? (
                                             <Loader2 className="h-3 w-3 animate-spin" />

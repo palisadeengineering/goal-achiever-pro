@@ -94,6 +94,9 @@ export async function POST(request: NextRequest) {
 
     // Get supabase client for database operations
     const supabase = await createClient();
+    if (!supabase) {
+      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
+    }
 
     const body = await request.json();
     const {
@@ -467,13 +470,6 @@ CRITICAL RULES:
 
     // If saveToDatabase is true, save everything to the database
     if (saveToDatabase && visionId) {
-      if (!supabase) {
-        return NextResponse.json(
-          { error: 'Database connection failed' },
-          { status: 500 }
-        );
-      }
-
       // Create backtrack plan record
       const { data: backtrackPlan, error: planError } = await supabase
         .from('backtrack_plans')

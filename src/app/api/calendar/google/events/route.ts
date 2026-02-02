@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const IS_DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
-
-// Demo user ID for development
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
 
 // Generate demo events for the requested date range
 function generateDemoEvents(startDate: Date, endDate: Date) {
@@ -62,12 +59,6 @@ function generateDemoEvents(startDate: Date, endDate: Date) {
   }
 
   return events;
-}
-
-async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  if (!supabase) return DEMO_USER_ID;
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || DEMO_USER_ID;
 }
 
 // Refresh access token if expired and update in database
@@ -182,21 +173,19 @@ export async function GET(request: NextRequest) {
   // Debug info object
   const debug: Record<string, unknown> = {
     timestamp: new Date().toISOString(),
-    demoModeEnv: IS_DEMO_MODE,
   };
 
+  const auth = await getAuthenticatedUser();
+  if (!auth.isAuthenticated) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+  const userId = auth.userId;
   const supabase = await createClient();
-
   if (!supabase) {
-    return NextResponse.json(
-      { error: 'Database connection failed', debug },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
   }
 
-  const userId = await getUserId(supabase);
   debug.userId = userId;
-  debug.isDemoUser = userId === DEMO_USER_ID;
 
   // Check for Google Calendar integration FIRST before falling back to demo mode
   // Authenticated users with real Google connections should ALWAYS get real data
@@ -220,18 +209,6 @@ export async function GET(request: NextRequest) {
 
   if (!hasValidIntegration) {
     debug.reason = 'No valid integration';
-    // No integration - return demo events if demo mode is on, otherwise error
-    if (IS_DEMO_MODE) {
-      const searchParams = request.nextUrl.searchParams;
-      const timeMin = searchParams.get('timeMin') || new Date().toISOString();
-      const timeMax = searchParams.get('timeMax') || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-      debug.dateRange = { timeMin, timeMax };
-      debug.source = 'demo_events';
-
-      const demoEvents = generateDemoEvents(new Date(timeMin), new Date(timeMax));
-      return NextResponse.json({ events: demoEvents, demo: true, debug });
-    }
-
     return NextResponse.json(
       { error: 'Not connected to Google Calendar', debug },
       { status: 401 }
@@ -386,15 +363,11 @@ async function getTokensFromDatabase(userId: string): Promise<{
 
 // POST: Create a new calendar event
 export async function POST(request: NextRequest) {
-  const supabase = await createClient();
-  if (!supabase) {
-    return NextResponse.json(
-      { error: 'Database connection failed' },
-      { status: 500 }
-    );
+  const auth = await getAuthenticatedUser();
+  if (!auth.isAuthenticated) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
-
-  const userId = await getUserId(supabase);
+  const userId = auth.userId;
   const tokens = await getTokensFromDatabase(userId);
 
   if (!tokens) {
@@ -474,15 +447,11 @@ export async function POST(request: NextRequest) {
 
 // PATCH: Update an existing calendar event (including recurring event instances)
 export async function PATCH(request: NextRequest) {
-  const supabase = await createClient();
-  if (!supabase) {
-    return NextResponse.json(
-      { error: 'Database connection failed' },
-      { status: 500 }
-    );
+  const auth = await getAuthenticatedUser();
+  if (!auth.isAuthenticated) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
-
-  const userId = await getUserId(supabase);
+  const userId = auth.userId;
   const tokens = await getTokensFromDatabase(userId);
 
   if (!tokens) {
@@ -592,15 +561,11 @@ export async function PATCH(request: NextRequest) {
 
 // DELETE: Delete a calendar event
 export async function DELETE(request: NextRequest) {
-  const supabase = await createClient();
-  if (!supabase) {
-    return NextResponse.json(
-      { error: 'Database connection failed' },
-      { status: 500 }
-    );
+  const auth = await getAuthenticatedUser();
+  if (!auth.isAuthenticated) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
-
-  const userId = await getUserId(supabase);
+  const userId = auth.userId;
   const tokens = await getTokensFromDatabase(userId);
 
   if (!tokens) {

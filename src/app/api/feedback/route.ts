@@ -1,20 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-
-// Demo user ID for development
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-
-async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  if (!supabase) return DEMO_USER_ID;
-
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || DEMO_USER_ID;
-}
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
+
     const adminClient = createAdminClient();
 
     if (!adminClient) {
@@ -24,7 +20,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const userId = await getUserId(supabase);
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const feedbackType = searchParams.get('type');
@@ -104,7 +99,12 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
+
     const adminClient = createAdminClient();
 
     if (!adminClient) {
@@ -113,8 +113,6 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-
-    const userId = await getUserId(supabase);
 
     const body = await request.json();
     const {
@@ -231,7 +229,12 @@ export async function POST(request: NextRequest) {
 // Admin-only: Update feedback status
 export async function PUT(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
+
     const adminClient = createAdminClient();
 
     if (!adminClient) {
@@ -240,8 +243,6 @@ export async function PUT(request: NextRequest) {
         { status: 500 }
       );
     }
-
-    const userId = await getUserId(supabase);
 
     // Check if user is admin
     const { data: profile } = await adminClient

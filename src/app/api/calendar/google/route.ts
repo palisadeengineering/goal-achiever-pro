@@ -1,14 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-
-// Demo user ID for development
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-
-async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  if (!supabase) return DEMO_USER_ID;
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || DEMO_USER_ID;
-}
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import { createSecureOAuthState } from '@/lib/auth/oauth-state';
 
 // Google Calendar OAuth configuration
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -36,9 +29,12 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Get the user ID (supports demo users)
-  const supabase = await createClient();
-  const userId = await getUserId(supabase);
+  // Get the authenticated user
+  const auth = await getAuthenticatedUser();
+  if (!auth.isAuthenticated) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+  const userId = auth.userId;
 
   // Full calendar access for two-way sync (read/write events)
   // Note: Users who previously connected with readonly scopes will need to re-authenticate
@@ -47,8 +43,8 @@ export async function GET(request: NextRequest) {
     'https://www.googleapis.com/auth/calendar.events',
   ].join(' ');
 
-  // Create state with user ID for callback verification
-  const state = Buffer.from(JSON.stringify({ userId, timestamp: Date.now() })).toString('base64');
+  // Create cryptographically signed state for callback verification
+  const state = createSecureOAuthState(userId);
 
   const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
   authUrl.searchParams.set('client_id', GOOGLE_CLIENT_ID);
@@ -64,16 +60,15 @@ export async function GET(request: NextRequest) {
 
 // Disconnect Google Calendar
 export async function DELETE(request: NextRequest) {
-  const supabase = await createClient();
-
-  if (!supabase) {
-    return NextResponse.json(
-      { error: 'Database connection failed' },
-      { status: 500 }
-    );
+  const auth = await getAuthenticatedUser();
+  if (!auth.isAuthenticated) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
-
-  const userId = await getUserId(supabase);
+  const userId = auth.userId;
+  const supabase = await createClient();
+  if (!supabase) {
+    return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
+  }
 
   // Get the integration to revoke the token
   const { data: integration } = await supabase

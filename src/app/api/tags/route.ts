@@ -1,19 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-
-// Demo user ID for development
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-
-async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  if (!supabase) return DEMO_USER_ID;
-
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || DEMO_USER_ID;
-}
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 
 // GET: Fetch user's tags
 export async function GET() {
   try {
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
     const supabase = await createClient();
 
     if (!supabase) {
@@ -22,8 +18,6 @@ export async function GET() {
         { status: 500 }
       );
     }
-
-    const userId = await getUserId(supabase);
 
     const { data: tags, error } = await supabase
       .from('time_block_tags')
@@ -65,6 +59,11 @@ export async function GET() {
 // POST: Create a new tag
 export async function POST(request: NextRequest) {
   try {
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
     const supabase = await createClient();
 
     if (!supabase) {
@@ -74,7 +73,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userId = await getUserId(supabase);
     const body = await request.json();
 
     const { name, color, description } = body;
@@ -144,6 +142,11 @@ export async function POST(request: NextRequest) {
 // PUT: Update an existing tag
 export async function PUT(request: NextRequest) {
   try {
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
     const supabase = await createClient();
 
     if (!supabase) {
@@ -153,7 +156,6 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const userId = await getUserId(supabase);
     const body = await request.json();
 
     const { id, name, color, description } = body;
@@ -213,6 +215,11 @@ export async function PUT(request: NextRequest) {
 // DELETE: Soft delete a tag (set is_active = false)
 export async function DELETE(request: NextRequest) {
   try {
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
     const supabase = await createClient();
 
     if (!supabase) {
@@ -221,8 +228,6 @@ export async function DELETE(request: NextRequest) {
         { status: 500 }
       );
     }
-
-    const userId = await getUserId(supabase);
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

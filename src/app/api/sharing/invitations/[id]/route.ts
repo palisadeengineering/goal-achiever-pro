@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
-
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 
 // DELETE /api/sharing/invitations/[id] - Revoke a pending invitation
 export async function DELETE(
@@ -10,7 +9,13 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
     const supabase = await createClient();
+
     if (!supabase) {
       return NextResponse.json({ error: 'Failed to initialize database' }, { status: 500 });
     }
@@ -20,9 +25,6 @@ export async function DELETE(
     if (!adminClient) {
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
     }
-
-    const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id || DEMO_USER_ID;
 
     // Verify ownership and update status (use admin client to bypass RLS)
     const { data: invitation, error } = await adminClient

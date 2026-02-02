@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { GoalCard, GoalCardProps } from './goal-card';
 
 interface GoalsGridProps {
@@ -43,19 +44,21 @@ export function GoalsGrid({
   }
 
   // Sort goals: focused first, then by status (active > paused > completed), then by progress
-  const sortedGoals = [...goals].sort((a, b) => {
-    // Focused goal first
-    if (a.id === focusedGoalId) return -1;
-    if (b.id === focusedGoalId) return 1;
+  const sortedGoals = useMemo(() => {
+    return [...goals].sort((a, b) => {
+      // Focused goal first
+      if (a.id === focusedGoalId) return -1;
+      if (b.id === focusedGoalId) return 1;
 
-    // Status priority
-    const statusPriority = { active: 0, paused: 1, completed: 2, archived: 3 };
-    const statusDiff = statusPriority[a.status] - statusPriority[b.status];
-    if (statusDiff !== 0) return statusDiff;
+      // Status priority
+      const statusPriority = { active: 0, paused: 1, completed: 2, archived: 3 };
+      const statusDiff = statusPriority[a.status] - statusPriority[b.status];
+      if (statusDiff !== 0) return statusDiff;
 
-    // Progress (lower progress = needs attention)
-    return a.progressPercentage - b.progressPercentage;
-  });
+      // Progress (lower progress = needs attention)
+      return a.progressPercentage - b.progressPercentage;
+    });
+  }, [goals, focusedGoalId]);
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

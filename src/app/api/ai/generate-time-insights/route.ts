@@ -77,18 +77,19 @@ export async function POST(request: NextRequest) {
 
     // Fetch user's Impact Projects for goal alignment analysis
     const supabase = await createClient();
+    if (!supabase) {
+      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
+    }
     let impactProjects: { id: string; title: string; quarter: number }[] = [];
 
-    if (supabase) {
-      const { data: projects } = await supabase
-        .from('power_goals')
-        .select('id, title, quarter')
-        .eq('user_id', userId)
-        .eq('is_active', true)
-        .order('quarter', { ascending: true });
+    const { data: projects } = await supabase
+      .from('power_goals')
+      .select('id, title, quarter')
+      .eq('user_id', userId)
+      .eq('is_active', true)
+      .order('quarter', { ascending: true });
 
-      impactProjects = projects || [];
-    }
+    impactProjects = projects || [];
 
     const anthropic = new Anthropic({
       apiKey: process.env.ANTHROPIC_API_KEY,

@@ -1,41 +1,17 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-
-// Demo user ID for development
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-const IS_DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
-
-async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  if (!supabase) return DEMO_USER_ID;
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || DEMO_USER_ID;
-}
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 
 // GET: Check if Google Calendar is connected
 export async function GET() {
-  const supabase = await createClient();
-
-  if (!supabase) {
-    // In demo mode, always return connected
-    if (IS_DEMO_MODE) {
-      return NextResponse.json({
-        connected: true,
-        email: 'demo@example.com',
-        demo: true,
-      });
-    }
-    return NextResponse.json({ connected: false });
+  const auth = await getAuthenticatedUser();
+  if (!auth.isAuthenticated) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
-
-  const userId = await getUserId(supabase);
-
-  // In demo mode with demo user, always return connected
-  if (IS_DEMO_MODE && userId === DEMO_USER_ID) {
-    return NextResponse.json({
-      connected: true,
-      email: 'demo@example.com',
-      demo: true,
-    });
+  const userId = auth.userId;
+  const supabase = await createClient();
+  if (!supabase) {
+    return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
   }
 
   try {

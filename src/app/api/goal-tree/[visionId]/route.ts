@@ -9,17 +9,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import { buildKpiTree, countTreeNodes, getLatestCalculationTime } from '@/lib/progress/tree';
 import type { FlatKpiWithProgress } from '@/lib/progress/tree';
-
-// Demo user ID for development
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-
-async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  if (!supabase) return DEMO_USER_ID;
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || DEMO_USER_ID;
-}
 
 /**
  * Validate UUID format
@@ -61,15 +53,19 @@ export async function GET(
       );
     }
 
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
     const supabase = await createClient();
+
     if (!supabase) {
       return NextResponse.json(
         { error: 'Database connection failed' },
         { status: 500 }
       );
     }
-
-    const userId = await getUserId(supabase);
 
     // Verify user owns the vision
     const { data: vision, error: visionError } = await supabase

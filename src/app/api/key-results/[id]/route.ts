@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import type { UpdateKeyResultInput } from '@/types/team';
-
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-
-async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  if (!supabase) return DEMO_USER_ID;
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || DEMO_USER_ID;
-}
 
 // Transform snake_case to camelCase
 function transformKeyResult(kr: Record<string, unknown>) {
@@ -61,7 +53,12 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = await createClient();
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
+
     const adminClient = createAdminClient();
     const { id } = await params;
 
@@ -71,8 +68,6 @@ export async function GET(
         { status: 500 }
       );
     }
-
-    const userId = await getUserId(supabase);
 
     // Get the key result
     const { data: keyResult, error: krError } = await adminClient
@@ -116,7 +111,12 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = await createClient();
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
+
     const adminClient = createAdminClient();
     const { id } = await params;
 
@@ -127,7 +127,6 @@ export async function PUT(
       );
     }
 
-    const userId = await getUserId(supabase);
     const body: UpdateKeyResultInput & { updateNotes?: string } = await request.json();
 
     // Get current values for history
@@ -232,7 +231,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = await createClient();
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
+
     const adminClient = createAdminClient();
     const { id } = await params;
 
@@ -242,8 +246,6 @@ export async function DELETE(
         { status: 500 }
       );
     }
-
-    const userId = await getUserId(supabase);
 
     const { error } = await adminClient
       .from('key_results')

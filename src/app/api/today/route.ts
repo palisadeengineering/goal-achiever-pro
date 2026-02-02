@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-
-async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  if (!supabase) return DEMO_USER_ID;
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || DEMO_USER_ID;
-}
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 
 export async function GET(request: NextRequest) {
   try {
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
     const supabase = await createClient();
 
     if (!supabase) {
@@ -20,7 +18,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const userId = await getUserId(supabase);
     const today = new Date().toISOString().split('T')[0];
 
     // Get filter params
@@ -169,7 +166,7 @@ export async function GET(request: NextRequest) {
       .limit(5);
 
     // Format upcoming deadlines
-     
+
     const upcomingDeadlines = [
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...(upcomingWeekly || []).map((w: any) => ({
@@ -217,6 +214,11 @@ export async function GET(request: NextRequest) {
 // PUT: Bulk complete/uncomplete today's actions
 export async function PUT(request: NextRequest) {
   try {
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
     const supabase = await createClient();
 
     if (!supabase) {
@@ -226,7 +228,6 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const userId = await getUserId(supabase);
     const body = await request.json();
     const { action, actionIds } = body;
 
@@ -283,6 +284,11 @@ export async function PUT(request: NextRequest) {
 // POST: Bulk sync today's actions to calendar
 export async function POST(request: NextRequest) {
   try {
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
     const supabase = await createClient();
 
     if (!supabase) {
@@ -292,7 +298,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userId = await getUserId(supabase);
     const body = await request.json();
     const { actionIds } = body;
     const today = new Date().toISOString().split('T')[0];

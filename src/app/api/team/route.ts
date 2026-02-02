@@ -1,20 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import type { CreateTeamMemberInput } from '@/types/team';
-
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-
-async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  if (!supabase) return DEMO_USER_ID;
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || DEMO_USER_ID;
-}
 
 // GET /api/team - List all team members
 export async function GET() {
   try {
-    const supabase = await createClient();
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
+
     const adminClient = createAdminClient();
 
     if (!adminClient) {
@@ -23,8 +21,6 @@ export async function GET() {
         { status: 500 }
       );
     }
-
-    const userId = await getUserId(supabase);
 
     const { data: members, error } = await adminClient
       .from('team_members')
@@ -77,7 +73,12 @@ export async function GET() {
 // POST /api/team - Create a new team member
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
+
     const adminClient = createAdminClient();
 
     if (!adminClient) {
@@ -87,7 +88,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userId = await getUserId(supabase);
     const body: CreateTeamMemberInput = await request.json();
 
     if (!body.name) {

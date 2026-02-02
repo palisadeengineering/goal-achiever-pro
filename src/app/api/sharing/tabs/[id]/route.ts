@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import type { UpdatePermissionRequest } from '@/types/sharing';
-
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
 
 // PUT /api/sharing/tabs/[id] - Update tab permission level
 export async function PUT(
@@ -11,7 +10,13 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
     const supabase = await createClient();
+
     if (!supabase) {
       return NextResponse.json({ error: 'Failed to initialize database' }, { status: 500 });
     }
@@ -21,9 +26,6 @@ export async function PUT(
     if (!adminClient) {
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
     }
-
-    const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id || DEMO_USER_ID;
 
     const body: UpdatePermissionRequest = await request.json();
     const { permissionLevel } = body;
@@ -77,7 +79,13 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
     const supabase = await createClient();
+
     if (!supabase) {
       return NextResponse.json({ error: 'Failed to initialize database' }, { status: 500 });
     }
@@ -87,9 +95,6 @@ export async function DELETE(
     if (!adminClient) {
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
     }
-
-    const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id || DEMO_USER_ID;
 
     const { error } = await adminClient
       .from('tab_permissions')

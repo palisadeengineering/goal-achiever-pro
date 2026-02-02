@@ -172,7 +172,16 @@ Respond ONLY with valid JSON in this exact format:
     }
     cleanedResponse = cleanedResponse.trim();
 
-    const kpis = JSON.parse(cleanedResponse);
+    let kpis;
+    try {
+      kpis = JSON.parse(cleanedResponse);
+    } catch (parseError) {
+      console.error('AI response JSON parse error:', parseError);
+      return NextResponse.json(
+        { error: 'AI returned invalid response format. Please try again.' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(kpis, {
       headers: rateLimitResult ? rateLimitHeaders(rateLimitResult) : {},
