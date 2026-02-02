@@ -216,3 +216,39 @@ GOOGLE_CLIENT_SECRET=
 | `src/lib/supabase/client.ts` | Supabase browser client |
 | `src/lib/supabase/server.ts` | Supabase server client |
 | `src/constants/routes.ts` | Route definitions & tier requirements |
+
+## Claude Lessons Learned (DO NOT REPEAT)
+
+### UI/UX Mistakes
+
+1. **Don't move floating elements without visual verification**
+   - Moving the Feedback button from bottom-right to bottom-left caused it to visually overlap with the sidebar, making it look like a duplicate nav item
+   - Always consider the full layout context when repositioning fixed/floating elements
+   - Bottom-right is the standard position for floating action buttons (FABs)
+
+2. **Check visual impact of position changes**
+   - Fixed-position elements can overlap with other layout components
+   - The sidebar occupies the left side - don't place floating elements there
+   - Test UI changes visually, not just functionally
+
+### Code Quality Rules
+
+1. **Always run `npm run build` after making changes** to catch TypeScript errors early
+
+2. **When adding new exports to a library file**, check all files that import from it to ensure compatibility
+
+3. **Supabase client can return null** - always add null checks:
+   ```typescript
+   const supabase = await createClient();
+   if (!supabase) {
+     return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
+   }
+   ```
+
+### Security Patterns
+
+1. **Never use `NEXT_PUBLIC_` prefix for server-side feature flags** - use `DEMO_MODE_ENABLED` not `NEXT_PUBLIC_DEMO_MODE`
+
+2. **OAuth state parameters must be cryptographically signed** - use HMAC to prevent CSRF attacks
+
+3. **Rate limiting is essential for AI endpoints** - add both per-minute and daily limits

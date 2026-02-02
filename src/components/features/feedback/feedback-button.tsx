@@ -311,7 +311,7 @@ export function FeedbackButton() {
   };
 
   // Render button through portal to ensure it's at DOM root level
-  // Positioned in bottom-left to avoid overlapping with action buttons on the right
+  // Positioned in bottom-right corner (standard FAB position)
   // The data-feedback-button attribute tells dialogs not to close when clicking here
   const feedbackButton = mounted ? createPortal(
     <div
@@ -319,8 +319,8 @@ export function FeedbackButton() {
       style={{
         position: 'fixed',
         bottom: 24,
-        left: 24, // Moved to left side to avoid overlapping right-side action buttons
-        zIndex: 50, // Lower z-index since we're not competing with dialogs anymore
+        right: 24, // Bottom-right is standard FAB position, doesn't overlap sidebar
+        zIndex: 50,
         isolation: 'isolate', // Create new stacking context
         pointerEvents: 'auto',
       }}
