@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { syncFromGoogle } from '@/lib/calendar/sync-from-google';
 
 // POST: Handle Google Calendar webhook notifications
 export async function POST(request: NextRequest) {
@@ -105,6 +106,15 @@ async function processCalendarChange(
     }
 
     console.log(`Marked ${syncRecords.length} records for sync check`);
+
+    // Auto-sync from Google Calendar
+    console.log('[Webhook] Triggering auto-sync from Google Calendar for user:', userId);
+    const syncResult = await syncFromGoogle(userId);
+    console.log('[Webhook] Auto-sync complete:', {
+      synced: syncResult.synced,
+      deleted: syncResult.deleted,
+      errors: syncResult.errors.length,
+    });
   } catch (error) {
     console.error('Error processing calendar change:', error);
   }
