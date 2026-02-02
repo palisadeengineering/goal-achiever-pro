@@ -301,18 +301,19 @@ export async function GET(request: NextRequest) {
         startTimeStr = '00:00';
         endTimeStr = '23:59';
       } else {
-        // Timed event: parse the datetime and extract local date/time
-        const start = new Date(event.start.dateTime!);
-        const end = event.end.dateTime ? new Date(event.end.dateTime) : start;
+        // Timed event: parse datetime strings directly to preserve user's local time
+        // Google returns ISO format with timezone: "2026-01-30T16:00:00-08:00"
+        // Using new Date() would convert to server timezone (e.g., UTC on Vercel),
+        // causing events to appear on wrong dates/times. Extract directly instead.
+        const startDt = event.start.dateTime!;
+        const endDt = event.end.dateTime || startDt;
 
-        // Use local date/time (NOT UTC) to match user's timezone
-        const year = start.getFullYear();
-        const month = String(start.getMonth() + 1).padStart(2, '0');
-        const day = String(start.getDate()).padStart(2, '0');
-        dateStr = `${year}-${month}-${day}`;
+        // Extract date (YYYY-MM-DD) from position 0-10
+        dateStr = startDt.slice(0, 10);
 
-        startTimeStr = start.toTimeString().slice(0, 5);
-        endTimeStr = end.toTimeString().slice(0, 5);
+        // Extract time (HH:MM) from position 11-16
+        startTimeStr = startDt.slice(11, 16);
+        endTimeStr = endDt.slice(11, 16);
       }
 
       // Check if this is a recurring event instance
