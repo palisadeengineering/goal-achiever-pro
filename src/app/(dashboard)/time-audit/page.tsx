@@ -7,12 +7,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Calendar, CalendarDays, CalendarRange, Lock, RefreshCw, ChevronDown, Upload, ArrowUpRight, BarChart3, ListChecks, Trash2, ChevronRight, PanelRightClose, PanelRight, Settings2, EyeOff, Eye } from 'lucide-react';
+import { Plus, Calendar, CalendarDays, CalendarRange, Lock, RefreshCw, ChevronDown, Upload, ArrowUpRight, BarChart3, ListChecks, Trash2, ChevronRight, PanelRightClose, PanelRight, Settings2, EyeOff, Eye, Download } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import Link from 'next/link';
 import {
@@ -123,12 +124,14 @@ export default function TimeAuditPage() {
   const {
     timeBlocks: dbTimeBlocks,
     isLoading: isLoadingDb,
+    isSyncingFromGoogle,
     createTimeBlock,
     updateTimeBlock,
     deleteTimeBlock,
     clearAllTimeBlocks,
     importTimeBlocks,
     fetchTimeBlocks,
+    syncFromGoogle,
   } = useTimeBlocks(
     format(addMonths(weekStart, -3), 'yyyy-MM-dd'),
     format(addMonths(weekEnd, 6), 'yyyy-MM-dd'),
@@ -357,6 +360,42 @@ export default function TimeAuditPage() {
 
     fetchGoogleEvents(syncStart, syncEnd);
   }, [syncTimeframe, setSyncTimeframe, viewedDateRange.start, fetchGoogleEvents, calculateSyncEndDate, clearGoogleCache]);
+
+  // Sync changes FROM Google Calendar TO local database (reverse sync / two-way sync)
+  const [lastSyncFromGoogleResult, setLastSyncFromGoogleResult] = useState<{
+    synced: number;
+    deleted: number;
+    errors: string[];
+  } | null>(null);
+
+  const handleSyncFromGoogle = useCallback(async () => {
+    console.log('[Time Audit] Starting reverse sync from Google Calendar...');
+    setLastSyncFromGoogleResult(null);
+
+    const result = await syncFromGoogle();
+
+    if (result.success) {
+      setLastSyncFromGoogleResult({
+        synced: result.synced,
+        deleted: result.deleted,
+        errors: result.errors,
+      });
+
+      // Show result in console for debugging
+      console.log('[Time Audit] Reverse sync complete:', result);
+
+      if (result.synced > 0 || result.deleted > 0) {
+        console.log(`[Time Audit] Updated ${result.synced} blocks, unlinked ${result.deleted} blocks`);
+      }
+    } else {
+      console.error('[Time Audit] Reverse sync failed:', result.errors);
+    }
+
+    // Clear result after 5 seconds
+    setTimeout(() => setLastSyncFromGoogleResult(null), 5000);
+
+    return result;
+  }, [syncFromGoogle]);
 
   const getTimeframeLabel = (tf: string) => {
     switch (tf) {
@@ -1572,6 +1611,19 @@ export default function TimeAuditPage() {
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleSyncGoogle('1month')}>
                       Sync 1 Month
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={handleSyncFromGoogle}
+                      disabled={isSyncingFromGoogle}
+                    >
+                      <Download className={`h-4 w-4 mr-2 ${isSyncingFromGoogle ? 'animate-pulse' : ''}`} />
+                      {isSyncingFromGoogle ? 'Syncing...' : 'Pull from Google'}
+                      {lastSyncFromGoogleResult && lastSyncFromGoogleResult.synced > 0 && (
+                        <Badge variant="secondary" className="ml-2">
+                          {lastSyncFromGoogleResult.synced} updated
+                        </Badge>
+                      )}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

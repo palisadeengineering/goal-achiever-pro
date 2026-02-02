@@ -34,10 +34,26 @@ export interface TimeBlock {
   updatedAt?: string;
 }
 
+export interface SyncFromGoogleResult {
+  success: boolean;
+  synced: number;
+  deleted: number;
+  conflicts: number;
+  errors: string[];
+  details: {
+    blockId: string;
+    action: 'updated' | 'deleted' | 'skipped' | 'error';
+    reason?: string;
+    oldDate?: string;
+    newDate?: string;
+  }[];
+}
+
 interface UseTimeBlocksReturn {
   timeBlocks: TimeBlock[];
   isLoading: boolean;
   error: string | null;
+  isSyncingFromGoogle: boolean;
   fetchTimeBlocks: (startDate?: string, endDate?: string) => Promise<void>;
   createTimeBlock: (block: Omit<TimeBlock, 'id' | 'createdAt' | 'updatedAt'>) => Promise<TimeBlock | null>;
   updateTimeBlock: (id: string, updates: Partial<TimeBlock>) => Promise<TimeBlock | null>;
@@ -45,6 +61,7 @@ interface UseTimeBlocksReturn {
   clearAllTimeBlocks: () => Promise<boolean>;
   importTimeBlocks: (blocks: Array<Omit<TimeBlock, 'id' | 'createdAt' | 'updatedAt'>>) => Promise<{ imported: number; skipped: number }>;
   refetch: () => Promise<void>;
+  syncFromGoogle: () => Promise<SyncFromGoogleResult>;
 }
 
 export function useTimeBlocks(
@@ -54,6 +71,7 @@ export function useTimeBlocks(
 ): UseTimeBlocksReturn {
   const [timeBlocks, setTimeBlocks] = useState<TimeBlock[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSyncingFromGoogle, setIsSyncingFromGoogle] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState({
     startDate: initialStartDate,
@@ -383,10 +401,73 @@ export function useTimeBlocks(
     }
   }, []);
 
+  // Sync changes FROM Google Calendar TO local database (reverse sync / two-way sync)
+  const syncFromGoogle = useCallback(async (): Promise<SyncFromGoogleResult> => {
+    const defaultResult: SyncFromGoogleResult = {
+      success: false,
+      synced: 0,
+      deleted: 0,
+      conflicts: 0,
+      errors: [],
+      details: [],
+    };
+
+    if (!googleCalendarConfig?.isConnected) {
+      console.log('[Time Blocks] Skipping sync from Google - not connected');
+      return { ...defaultResult, errors: ['Not connected to Google Calendar'] };
+    }
+
+    setIsSyncingFromGoogle(true);
+    setError(null);
+
+    try {
+      console.log('[Time Blocks] Starting sync from Google Calendar...');
+
+      const response = await fetch('/api/calendar/google/sync-from-google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        const errorMessage = data.error || 'Failed to sync from Google Calendar';
+        console.error('[Time Blocks] Sync from Google failed:', errorMessage);
+        setError(errorMessage);
+        return { ...defaultResult, errors: [errorMessage] };
+      }
+
+      const data = await response.json();
+      console.log('[Time Blocks] Sync from Google complete:', data);
+
+      // Refetch time blocks to get the updated data
+      if (data.synced > 0 || data.deleted > 0) {
+        console.log('[Time Blocks] Refetching time blocks after sync...');
+        await fetchTimeBlocks(dateRange.startDate, dateRange.endDate);
+      }
+
+      return {
+        success: true,
+        synced: data.synced || 0,
+        deleted: data.deleted || 0,
+        conflicts: data.conflicts || 0,
+        errors: data.errors || [],
+        details: data.details || [],
+      };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to sync from Google Calendar';
+      setError(message);
+      console.error('[Time Blocks] Sync from Google error:', err);
+      return { ...defaultResult, errors: [message] };
+    } finally {
+      setIsSyncingFromGoogle(false);
+    }
+  }, [googleCalendarConfig, fetchTimeBlocks, dateRange.startDate, dateRange.endDate]);
+
   return {
     timeBlocks,
     isLoading,
     error,
+    isSyncingFromGoogle,
     fetchTimeBlocks,
     createTimeBlock,
     updateTimeBlock,
@@ -394,5 +475,6 @@ export function useTimeBlocks(
     clearAllTimeBlocks,
     importTimeBlocks,
     refetch,
+    syncFromGoogle,
   };
 }
