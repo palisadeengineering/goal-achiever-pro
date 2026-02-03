@@ -72,13 +72,21 @@
 
 ---
 
-## Issues Found
+## Issues Found & Resolved
 
-| # | Test | Issue | Severity |
-|---|------|-------|----------|
-| 1 | 6.4 | React hydration error #418 on Today page (SSR mismatch) | Low |
+| # | Test | Issue | Severity | Status |
+|---|------|-------|----------|--------|
+| 1 | 6.4 | React hydration error #418 on Today page (SSR mismatch) | Low | ✅ FIXED |
 
-**Note:** The hydration error is a minor SSR/client mismatch that does not affect functionality. All features work correctly.
+### Fix Details - Hydration Error #418
+
+**Root Cause:** `momentum-stats-widget.tsx` - The `isStreakBroken()` and `canRecover()` functions used `new Date()` during render, causing SSR/client mismatch when server and client times differed.
+
+**Fix Applied:** Added `mounted` state that returns safe defaults during SSR, then calculates correct values after client hydration.
+
+**Commit:** `9ee5c53 fix(today): resolve React hydration error in momentum widget`
+
+**Verified:** 2026-02-03 - Hard reload on Today page and Project detail page shows no console errors.
 
 ---
 
@@ -129,7 +137,7 @@
 - 6.1 /api/projects-v2: 200 OK
 - 6.2 /api/rewards-v2: 200 OK
 - 6.3 /api/profile: 200 OK
-- 6.4 Console errors: Minor React hydration warning (non-blocking)
+- 6.4 Console errors: ✅ None (hydration error fixed in commit 9ee5c53)
 
 ---
 
