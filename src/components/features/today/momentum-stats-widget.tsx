@@ -110,8 +110,11 @@ export function MomentumStatsWidget() {
   const [stats, setStats] = useState<GamificationStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRecovering, setIsRecovering] = useState<string | null>(null);
+  // Fix hydration error: only calculate time-sensitive values after mount
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     fetchData();
   }, []);
 
@@ -174,7 +177,9 @@ export function MomentumStatsWidget() {
   };
 
   // Check if a streak is broken (no activity in last 24 hours)
+  // Returns false during SSR to prevent hydration mismatch
   const isStreakBroken = (streak: Streak): boolean => {
+    if (!mounted) return false; // Safe default during SSR
     if (!streak.last_activity_date) return true;
     const lastActivity = new Date(streak.last_activity_date);
     const today = new Date();
@@ -183,7 +188,9 @@ export function MomentumStatsWidget() {
   };
 
   // Check if recovery is available (not used in last 7 days)
+  // Returns false during SSR to prevent hydration mismatch
   const canRecover = (streak: Streak): boolean => {
+    if (!mounted) return false; // Safe default during SSR
     if (!streak.recovery_used_at) return true;
     const lastRecovery = new Date(streak.recovery_used_at);
     const today = new Date();
