@@ -450,6 +450,8 @@ export const timeBlocks = pgTable('time_blocks', {
   valueQuadrant: text('drip_quadrant'),
   makesMoneyScore: integer('makes_money_score'),
   lightsUpScore: integer('lights_up_score'),
+  // Leverage tracking (4 C's)
+  leverageType: text('leverage_type'), // 'code' | 'content' | 'capital' | 'collaboration' | null
   // Source tracking
   source: text('source').default('manual'),
   externalEventId: text('external_event_id'),
@@ -530,6 +532,19 @@ export const timeBlockTagAssignments = pgTable('time_block_tag_assignments', {
   createdAt: timestamp('created_at').defaultNow(),
 }, (table) => ({
   blockTagIdx: uniqueIndex('time_block_tag_assignments_block_tag_idx').on(table.timeBlockId, table.tagId),
+}));
+
+// =============================================
+// TIME BLOCK LEVERAGE LINKS (Junction table for leverage items)
+// =============================================
+export const timeBlockLeverageLinks = pgTable('time_block_leverage_links', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  timeBlockId: uuid('time_block_id').notNull().references(() => timeBlocks.id, { onDelete: 'cascade' }),
+  leverageItemId: uuid('leverage_item_id').notNull().references(() => leverageItems.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+  blockLeverageIdx: uniqueIndex('time_block_leverage_links_block_leverage_idx').on(table.timeBlockId, table.leverageItemId),
+  leverageItemIdx: index('time_block_leverage_links_leverage_idx').on(table.leverageItemId),
 }));
 
 // =============================================
@@ -1039,6 +1054,7 @@ export const timeBlocksRelations = relations(timeBlocks, ({ one, many }) => ({
   detectedProject: one(detectedProjects, { fields: [timeBlocks.detectedProjectId], references: [detectedProjects.id] }),
   meetingDetails: one(timeBlockMeetingDetails),
   tagAssignments: many(timeBlockTagAssignments),
+  leverageLinks: many(timeBlockLeverageLinks),
 }));
 
 // =============================================
@@ -1052,6 +1068,14 @@ export const timeBlockTagsRelations = relations(timeBlockTags, ({ one, many }) =
 export const timeBlockTagAssignmentsRelations = relations(timeBlockTagAssignments, ({ one }) => ({
   timeBlock: one(timeBlocks, { fields: [timeBlockTagAssignments.timeBlockId], references: [timeBlocks.id] }),
   tag: one(timeBlockTags, { fields: [timeBlockTagAssignments.tagId], references: [timeBlockTags.id] }),
+}));
+
+// =============================================
+// TIME BLOCK LEVERAGE LINKS RELATIONS
+// =============================================
+export const timeBlockLeverageLinksRelations = relations(timeBlockLeverageLinks, ({ one }) => ({
+  timeBlock: one(timeBlocks, { fields: [timeBlockLeverageLinks.timeBlockId], references: [timeBlocks.id] }),
+  leverageItem: one(leverageItems, { fields: [timeBlockLeverageLinks.leverageItemId], references: [leverageItems.id] }),
 }));
 
 // =============================================
@@ -1077,6 +1101,12 @@ export const meetingCategoriesRelations = relations(meetingCategories, ({ one, m
 export const timeBlockMeetingDetailsRelations = relations(timeBlockMeetingDetails, ({ one }) => ({
   timeBlock: one(timeBlocks, { fields: [timeBlockMeetingDetails.timeBlockId], references: [timeBlocks.id] }),
   meetingCategory: one(meetingCategories, { fields: [timeBlockMeetingDetails.meetingCategoryId], references: [meetingCategories.id] }),
+}));
+
+export const leverageItemsRelations = relations(leverageItems, ({ one, many }) => ({
+  user: one(profiles, { fields: [leverageItems.userId], references: [profiles.id] }),
+  impactProject: one(impactProjects, { fields: [leverageItems.impactProjectId], references: [impactProjects.id] }),
+  timeBlockLinks: many(timeBlockLeverageLinks),
 }));
 
 export const routinesRelations = relations(routines, ({ one, many }) => ({

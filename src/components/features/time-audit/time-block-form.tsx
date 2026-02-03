@@ -41,6 +41,7 @@ export interface TimeBlock {
   description?: string;
   valueQuadrant: ValueQuadrant;
   energyRating: EnergyRating;
+  leverageType?: LeverageType;
   source?: string;
   externalEventId?: string;
   tagIds?: string[];
@@ -106,6 +107,13 @@ const ACTIVITY_TYPE_OPTIONS: { value: ActivityType; label: string; icon: React.C
   { value: 'other', label: 'Other', icon: HelpCircle, color: 'text-gray-400' },
 ];
 
+const LEVERAGE_TYPE_OPTIONS: { value: LeverageType; label: string; icon: React.ComponentType<{ className?: string }>; color: string; description: string }[] = [
+  { value: 'code', label: 'Code', icon: Code, color: 'text-blue-500', description: 'Automation & systems' },
+  { value: 'content', label: 'Content', icon: FileText, color: 'text-purple-500', description: 'Creating scalable assets' },
+  { value: 'capital', label: 'Capital', icon: DollarSign, color: 'text-green-500', description: 'Delegation & hiring' },
+  { value: 'collaboration', label: 'Collaboration', icon: Users, color: 'text-orange-500', description: 'Partnerships & networks' },
+];
+
 export function TimeBlockForm({
   open,
   onOpenChange,
@@ -146,6 +154,10 @@ export function TimeBlockForm({
   const [detectedProjects, setDetectedProjects] = useState<{ id: string; name: string }[]>([]);
   const [showCustomProjectInput, setShowCustomProjectInput] = useState(false);
   const [customProjectName, setCustomProjectName] = useState('');
+
+  // Leverage type states
+  const [leverageType, setLeverageType] = useState<LeverageType | undefined>(undefined);
+  const [suggestedLeverageType, setSuggestedLeverageType] = useState<LeverageType | null>(null);
 
   // AI classification states
   const [aiClassification, setAiClassification] = useState<{
@@ -207,6 +219,9 @@ export function TimeBlockForm({
         setDetectedProjectName(editBlock.detectedProjectName);
         setMeetingCategoryId(editBlock.meetingCategoryId);
         setMeetingCategoryName(editBlock.meetingCategoryName);
+        // Leverage type
+        setLeverageType(editBlock.leverageType);
+        setSuggestedLeverageType(null);
       } else {
         setDate(initialDate || today);
         setStartTime(initialTime || '09:00');
@@ -230,6 +245,9 @@ export function TimeBlockForm({
         // Reset custom project input
         setShowCustomProjectInput(false);
         setCustomProjectName('');
+        // Reset leverage type
+        setLeverageType(undefined);
+        setSuggestedLeverageType(null);
       }
       // Reset suggestion state
       setSuggestedTagIds([]);
@@ -240,6 +258,21 @@ export function TimeBlockForm({
       setShowClassificationSuggestion(false);
     }
   }, [open, editBlock, initialDate, initialTime, initialEndTime, today]);
+
+  // Infer leverage type when activity name changes
+  useEffect(() => {
+    if (!activityName || activityName.length < 3 || !open || leverageType) {
+      setSuggestedLeverageType(null);
+      return;
+    }
+
+    const inferred = inferLeverageType(activityName);
+    if (inferred) {
+      setSuggestedLeverageType(inferred);
+    } else {
+      setSuggestedLeverageType(null);
+    }
+  }, [activityName, open, leverageType]);
 
   // Check for pattern-based tag suggestions when activity name changes
   useEffect(() => {
@@ -427,6 +460,7 @@ export function TimeBlockForm({
       description: description || undefined,
       valueQuadrant,
       energyRating,
+      leverageType: leverageType || undefined,
       tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
       // Activity classification fields
       activityType: activityType || undefined,
@@ -820,6 +854,53 @@ export function TimeBlockForm({
                 </div>
               ))}
             </RadioGroup>
+          </div>
+
+          {/* Leverage Type (4 C's) */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Leverage Type (Optional)</Label>
+              {suggestedLeverageType && !leverageType && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setLeverageType(suggestedLeverageType)}
+                  className="h-6 text-xs gap-1"
+                >
+                  <Sparkles className="h-3 w-3" />
+                  Use suggested: {LEVERAGE_TYPE_OPTIONS.find(o => o.value === suggestedLeverageType)?.label}
+                </Button>
+              )}
+            </div>
+            <Select
+              value={leverageType || 'none'}
+              onValueChange={(v) => setLeverageType(v === 'none' ? undefined : v as LeverageType)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select if this is leverage work..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">
+                  <span className="text-muted-foreground">Not leverage work</span>
+                </SelectItem>
+                {LEVERAGE_TYPE_OPTIONS.map((option) => {
+                  const Icon = option.icon;
+                  return (
+                    <SelectItem key={option.value} value={option.value}>
+                      <div className="flex items-center gap-2">
+                        <Icon className={`h-4 w-4 ${option.color}`} />
+                        <span>{option.label}</span>
+                        <span className="text-xs text-muted-foreground">- {option.description}</span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Tag leverage work (Code, Content, Capital, Collaboration) to track ROI on the Leverage page.
+            </p>
           </div>
 
           {/* Tags */}

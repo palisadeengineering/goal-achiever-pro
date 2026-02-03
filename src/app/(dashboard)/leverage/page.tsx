@@ -25,6 +25,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
+import {
   Plus,
   Code,
   FileText,
@@ -35,8 +41,11 @@ import {
   Edit2,
   Lightbulb,
   Loader2,
+  BarChart3,
+  List,
 } from 'lucide-react';
 import { ShareButton } from '@/components/features/sharing';
+import { LeverageAnalyticsSection } from '@/components/features/leverage/leverage-analytics-section';
 
 type LeverageType = 'code' | 'content' | 'capital' | 'collaboration';
 type LeverageStatus = 'idea' | 'planning' | 'implementing' | 'active' | 'archived';
@@ -94,6 +103,7 @@ const STATUS_OPTIONS = [
 
 export default function LeveragePage() {
   const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState('items');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<LeverageItem | null>(null);
 
@@ -232,57 +242,72 @@ export default function LeveragePage() {
         actions={
           <div className="flex items-center gap-2">
             <ShareButton tabName="leverage" />
-            <Button onClick={() => openForm()}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Leverage
-            </Button>
+            {activeTab === 'items' && (
+              <Button onClick={() => openForm()}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Leverage
+              </Button>
+            )}
           </div>
         }
       />
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {Object.entries(LEVERAGE_TYPES).map(([key, config]) => {
-          const Icon = config.icon;
-          const count = groupedItems(key as LeverageType).length;
-          return (
-            <Card key={key}>
-              <CardContent className="pt-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="items" className="gap-2">
+            <List className="h-4 w-4" />
+            Items
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Analytics
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="items" className="space-y-6">
+          {/* Stats Overview */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Object.entries(LEVERAGE_TYPES).map(([key, config]) => {
+              const Icon = config.icon;
+              const count = groupedItems(key as LeverageType).length;
+              return (
+                <Card key={key}>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${config.color} text-white`}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <div className="text-2xl font-bold">{count}</div>
+                        <div className="text-sm text-muted-foreground">{config.name}</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* Time Saved Card */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${config.color} text-white`}>
-                    <Icon className="h-5 w-5" />
-                  </div>
+                  <Clock className="h-8 w-8 text-cyan-500" />
                   <div>
-                    <div className="text-2xl font-bold">{count}</div>
-                    <div className="text-sm text-muted-foreground">{config.name}</div>
+                    <div className="text-3xl font-bold">{totalEstimatedHours} hours/week</div>
+                    <div className="text-sm text-muted-foreground">Estimated time savings from active leverage</div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      {/* Time Saved Card */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Clock className="h-8 w-8 text-cyan-500" />
-              <div>
-                <div className="text-3xl font-bold">{totalEstimatedHours} hours/week</div>
-                <div className="text-sm text-muted-foreground">Estimated time savings from active leverage</div>
+                <Badge variant="secondary" className="text-lg px-4 py-2">
+                  {activeItems.length} active
+                </Badge>
               </div>
-            </div>
-            <Badge variant="secondary" className="text-lg px-4 py-2">
-              {activeItems.length} active
-            </Badge>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
 
-      {/* 4 C's Grid */}
-      <div className="grid md:grid-cols-2 gap-6">
+          {/* 4 C's Grid */}
+          <div className="grid md:grid-cols-2 gap-6">
         {Object.entries(LEVERAGE_TYPES).map(([key, config]) => {
           const Icon = config.icon;
           const typeItems = groupedItems(key as LeverageType);
@@ -379,9 +404,15 @@ export default function LeveragePage() {
                 )}
               </CardContent>
             </Card>
-          );
-        })}
-      </div>
+            );
+          })}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="analytics">
+          <LeverageAnalyticsSection />
+        </TabsContent>
+      </Tabs>
 
       {/* Add/Edit Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>

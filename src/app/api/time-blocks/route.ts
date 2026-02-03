@@ -79,6 +79,7 @@ export async function GET(request: NextRequest) {
       valueQuadrant: block.drip_quadrant || 'na',
       makesMoneyScore: block.makes_money_score,
       lightsUpScore: block.lights_up_score,
+      leverageType: block.leverage_type,
       source: block.source,
       externalEventId: block.external_event_id,
       // Recurring event fields
@@ -127,6 +128,7 @@ export async function POST(request: NextRequest) {
       notes,
       energyRating,
       valueQuadrant,
+      leverageType,
       source,
       externalEventId,
       minId,
@@ -165,6 +167,7 @@ export async function POST(request: NextRequest) {
         notes: notes || null,
         energy_rating: energyRating || 'yellow',
         drip_quadrant: valueQuadrant || 'production',
+        leverage_type: leverageType || null,
         source: source || 'manual',
         external_event_id: externalEventId || null,
         min_id: minId || null,
@@ -219,6 +222,7 @@ export async function POST(request: NextRequest) {
       notes: timeBlock.notes,
       energyRating: timeBlock.energy_rating,
       valueQuadrant: timeBlock.drip_quadrant || 'na',
+      leverageType: timeBlock.leverage_type,
       source: timeBlock.source,
       externalEventId: timeBlock.external_event_id,
       // Recurring event fields
@@ -267,6 +271,7 @@ export async function PUT(request: NextRequest) {
       notes,
       energyRating,
       valueQuadrant,
+      leverageType,
       tagIds,
       // Recurring event fields
       isRecurring,
@@ -305,6 +310,7 @@ export async function PUT(request: NextRequest) {
     if (notes !== undefined) updateData.notes = notes;
     if (energyRating !== undefined) updateData.energy_rating = energyRating;
     if (valueQuadrant !== undefined) updateData.drip_quadrant = valueQuadrant;
+    if (leverageType !== undefined) updateData.leverage_type = leverageType;
     // Recurring event fields
     if (isRecurring !== undefined) updateData.is_recurring = isRecurring;
     if (recurrenceRule !== undefined) updateData.recurrence_rule = recurrenceRule;
@@ -377,6 +383,7 @@ export async function PUT(request: NextRequest) {
       notes: timeBlock.notes,
       energyRating: timeBlock.energy_rating,
       valueQuadrant: timeBlock.drip_quadrant || 'na',
+      leverageType: timeBlock.leverage_type,
       source: timeBlock.source,
       externalEventId: timeBlock.external_event_id,
       // Recurring event fields

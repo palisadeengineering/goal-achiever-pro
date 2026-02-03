@@ -85,3 +85,16 @@ export {
   type KeyboardShortcut,
   type NavigationKey,
 } from './use-keyboard-navigation';
+
+// Leverage analytics hooks
+export {
+  useLeverageAnalytics,
+  getLeverageTypeInfo,
+  inferLeverageType,
+  type LeverageType,
+  type LeverageTimeData,
+  type WeeklyTrend,
+  type LeverageItemROI,
+  type LeverageAnalyticsSummary,
+  type LeverageAnalyticsData,
+} from './use-leverage-analytics';

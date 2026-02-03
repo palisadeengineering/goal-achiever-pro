@@ -23,6 +23,8 @@ export default async function DashboardLayout({
   };
   let isAdmin = false;
 
+  let subscriptionTier: 'free' | 'pro' | 'elite' | 'founding_member' = 'free';
+
   if (supabase) {
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -38,14 +40,15 @@ export default async function DashboardLayout({
         avatarUrl: user.user_metadata?.avatar_url,
       };
 
-      // Check if user is admin
+      // Get user profile with admin status and subscription tier
       const { data: profile } = await supabase
         .from('profiles')
-        .select('is_admin')
+        .select('is_admin, subscription_tier')
         .eq('id', user.id)
         .single();
 
       isAdmin = profile?.is_admin || false;
+      subscriptionTier = (profile?.subscription_tier as typeof subscriptionTier) || 'free';
     }
   }
 
@@ -54,10 +57,9 @@ export default async function DashboardLayout({
     isAdmin = true;
   }
 
-  // Check if user has beta access from database
-  let hasBetaAccess = false;
+  // Check if user has beta access from database (grants elite if no higher tier)
   const serviceClient = createServiceRoleClient();
-  if (serviceClient && userProfile.email) {
+  if (serviceClient && userProfile.email && subscriptionTier === 'free') {
     const { data: betaInvite } = await serviceClient
       .from('beta_invitations')
       .select('id')
@@ -65,10 +67,10 @@ export default async function DashboardLayout({
       .eq('status', 'accepted')
       .single();
 
-    hasBetaAccess = !!betaInvite;
+    if (betaInvite) {
+      subscriptionTier = 'elite';
+    }
   }
-
-  const subscriptionTier = hasBetaAccess ? 'elite' as const : 'free' as const;
 
   return (
     <div className="flex h-screen overflow-hidden">
