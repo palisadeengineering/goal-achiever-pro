@@ -109,6 +109,8 @@ interface WeeklyCalendarViewProps {
   colorMode?: 'value' | 'energy';
   onColorModeChange?: (mode: 'value' | 'energy') => void;
   onWeekChange?: (weekStart: Date, weekEnd: Date) => void;
+  // Initial week to display (for persistence across tab switches)
+  initialWeekStart?: Date;
   // Tag management props
   availableTags?: TagInfo[];
   onToggleTag?: (blockId: string, tagId: string, isAdding: boolean) => Promise<void>;
@@ -709,6 +711,7 @@ export function WeeklyCalendarView({
   colorMode: externalColorMode,
   onColorModeChange,
   onWeekChange,
+  initialWeekStart,
   availableTags,
   onToggleTag,
   onManageTags,
@@ -758,7 +761,11 @@ export function WeeklyCalendarView({
   // Week start state (must be declared before keyboard shortcuts useEffect)
   const weekStartsOn = settings.weekStartsOn === 'monday' ? 1 : 0;
   const [currentWeekStart, setCurrentWeekStart] = useState(() =>
-    startOfWeek(new Date(), { weekStartsOn })
+    // Use initialWeekStart if provided (for persistence across tab switches),
+    // otherwise default to current week
+    initialWeekStart
+      ? startOfWeek(initialWeekStart, { weekStartsOn })
+      : startOfWeek(new Date(), { weekStartsOn })
   );
 
   // Keyboard shortcuts

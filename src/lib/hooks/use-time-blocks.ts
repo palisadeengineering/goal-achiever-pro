@@ -59,6 +59,7 @@ interface UseTimeBlocksReturn {
   updateTimeBlock: (id: string, updates: Partial<TimeBlock>) => Promise<TimeBlock | null>;
   deleteTimeBlock: (id: string) => Promise<boolean>;
   clearAllTimeBlocks: () => Promise<boolean>;
+  clearGoogleSyncedBlocks: () => Promise<{ success: boolean; deletedCount: number }>;
   importTimeBlocks: (blocks: Array<Omit<TimeBlock, 'id' | 'createdAt' | 'updatedAt'>>) => Promise<{ imported: number; skipped: number }>;
   refetch: () => Promise<void>;
   syncFromGoogle: () => Promise<SyncFromGoogleResult>;
@@ -370,6 +371,38 @@ export function useTimeBlocks(
     }
   }, []);
 
+  // Clear only Google Calendar synced blocks (keeps manually created blocks)
+  const clearGoogleSyncedBlocks = useCallback(async (): Promise<{ success: boolean; deletedCount: number }> => {
+    try {
+      const response = await fetch('/api/time-blocks?clearSource=google_calendar', {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to clear Google synced time blocks');
+      }
+
+      const data = await response.json();
+
+      // Remove synced blocks from local state
+      setTimeBlocks(prev => prev.filter(b =>
+        b.source !== 'calendar_sync' &&
+        b.source !== 'google_calendar' &&
+        !b.externalEventId
+      ));
+
+      console.log(`[Time Blocks] Cleared ${data.deletedCount} Google synced blocks`);
+
+      return { success: true, deletedCount: data.deletedCount || 0 };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to clear Google synced time blocks';
+      setError(message);
+      console.error('Clear Google synced time blocks error:', err);
+      return { success: false, deletedCount: 0 };
+    }
+  }, []);
+
   const importTimeBlocks = useCallback(async (
     blocks: Array<Omit<TimeBlock, 'id' | 'createdAt' | 'updatedAt'>>
   ): Promise<{ imported: number; skipped: number }> => {
@@ -473,6 +506,7 @@ export function useTimeBlocks(
     updateTimeBlock,
     deleteTimeBlock,
     clearAllTimeBlocks,
+    clearGoogleSyncedBlocks,
     importTimeBlocks,
     refetch,
     syncFromGoogle,

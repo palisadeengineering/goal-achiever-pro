@@ -417,6 +417,38 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     const clearAll = searchParams.get('clearAll') === 'true';
+    const clearSource = searchParams.get('clearSource'); // e.g., 'calendar_sync' or 'google_calendar'
+
+    // Handle clear by source (e.g., clear all Google Calendar synced blocks)
+    if (clearSource) {
+      // Count blocks to be deleted first
+      const { count: beforeCount } = await supabase
+        .from('time_blocks')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .or(`source.eq.${clearSource},source.eq.calendar_sync,external_event_id.not.is.null`);
+
+      const { error } = await supabase
+        .from('time_blocks')
+        .delete()
+        .eq('user_id', userId)
+        .or(`source.eq.${clearSource},source.eq.calendar_sync,external_event_id.not.is.null`);
+
+      if (error) {
+        console.error('Error clearing time blocks by source:', error);
+        return NextResponse.json(
+          { error: 'Failed to clear time blocks by source' },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        cleared: true,
+        source: clearSource,
+        deletedCount: beforeCount || 0
+      });
+    }
 
     // Handle clear all time blocks
     if (clearAll) {

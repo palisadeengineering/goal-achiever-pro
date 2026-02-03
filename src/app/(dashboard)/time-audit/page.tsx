@@ -130,6 +130,7 @@ export default function TimeAuditPage() {
     updateTimeBlock,
     deleteTimeBlock,
     clearAllTimeBlocks,
+    clearGoogleSyncedBlocks,
     importTimeBlocks,
     fetchTimeBlocks,
     syncFromGoogle,
@@ -1240,6 +1241,41 @@ export default function TimeAuditPage() {
     lastFetchedRangeRef.current = null;
   }, [clearGoogleCache, clearCategorizations, setLocalTimeBlocks, clearAllTimeBlocks]);
 
+  // State for reset & re-sync operation
+  const [isResettingSync, setIsResettingSync] = useState(false);
+
+  // Handle Reset & Re-sync: clears only Google-synced blocks (keeps manual entries), then re-fetches
+  const handleResetAndResync = useCallback(async () => {
+    setIsResettingSync(true);
+    try {
+      // Step 1: Clear Google-synced blocks from database (keeps manual entries)
+      const result = await clearGoogleSyncedBlocks();
+      console.log(`[Reset & Re-sync] Cleared ${result.deletedCount} Google-synced blocks`);
+
+      // Step 2: Clear Google events cache from localStorage
+      clearGoogleCache();
+
+      // Step 3: Clear categorizations (event patterns)
+      clearCategorizations();
+
+      // Step 4: Reset lastFetchedRange so we can re-fetch
+      lastFetchedRangeRef.current = null;
+
+      // Step 5: Re-fetch from Google Calendar
+      const syncStart = startOfWeek(viewedDateRange.start, { weekStartsOn: 0 });
+      const syncEnd = calculateSyncEndDate(viewedDateRange.start, syncTimeframe);
+      console.log(`[Reset & Re-sync] Fetching fresh events: ${format(syncStart, 'yyyy-MM-dd')} to ${format(syncEnd, 'yyyy-MM-dd')}`);
+
+      await fetchGoogleEvents(syncStart, syncEnd);
+
+      console.log('[Reset & Re-sync] Complete!');
+    } catch (error) {
+      console.error('[Reset & Re-sync] Error:', error);
+    } finally {
+      setIsResettingSync(false);
+    }
+  }, [clearGoogleSyncedBlocks, clearGoogleCache, clearCategorizations, viewedDateRange.start, calculateSyncEndDate, syncTimeframe, fetchGoogleEvents]);
+
   // Handle deleting a time block (and optionally from Google Calendar)
   const handleDeleteBlock = useCallback(async (block: TimeBlock) => {
     // Prevent categorization popup from showing after delete
@@ -1633,6 +1669,15 @@ export default function TimeAuditPage() {
                         </Badge>
                       )}
                     </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={handleResetAndResync}
+                      disabled={isResettingSync || isLoadingGoogle}
+                      className="text-orange-600 dark:text-orange-400"
+                    >
+                      <RefreshCw className={`h-4 w-4 mr-2 ${isResettingSync ? 'animate-spin' : ''}`} />
+                      {isResettingSync ? 'Resetting...' : 'Reset & Re-sync'}
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
                 {/* Mobile: Compact sync button */}
@@ -1809,6 +1854,7 @@ export default function TimeAuditPage() {
                   onToggleTag={handleToggleTag}
                   onManageTags={handleManageTags}
                   onWeekChange={handleDateRangeChange}
+                  initialWeekStart={viewedDateRange.start}
                 />
                 {/* Sidebar toggle button - fixed position */}
                 <Button
