@@ -505,36 +505,30 @@ export default function TimeAuditPage() {
 
       const categorization = getCategorization(event.id);
 
-      // Extract date and times from Google event
-      const startDateTime = event.start?.dateTime || event.startTime;
-      const endDateTime = event.end?.dateTime || event.endTime;
+      // Use pre-extracted date/time fields from API to avoid timezone conversion issues
+      // The API extracts these directly from ISO strings using .slice() which preserves local time
+      const dateKey = event.date || '';
+      const startTimeStr = event.startTime || '';
+      const endTimeStr = event.endTime || startTimeStr;
 
-      if (startDateTime) {
-        try {
-          const startDate = new Date(startDateTime);
-          const endDate = endDateTime ? new Date(endDateTime) : startDate;
-          const dateKey = format(startDate, 'yyyy-MM-dd');
-
-          if (!grouped[dateKey]) {
-            grouped[dateKey] = [];
-          }
-
-          // Show event with categorization if available, otherwise use defaults
-          grouped[dateKey].push({
-            id: event.id,
-            startTime: format(startDate, 'HH:mm'),
-            endTime: format(endDate, 'HH:mm'),
-            activityName: event.summary,
-            // Use categorization if available, otherwise default to 'na' (neutral/uncategorized)
-            valueQuadrant: categorization?.valueQuadrant || 'na',
-            energyRating: categorization?.energyRating || 'yellow',
-            externalEventId: event.id,
-            source: 'google_calendar',
-            createdAt: new Date().toISOString(),
-          });
-        } catch {
-          // Skip events with invalid dates
+      if (dateKey && startTimeStr) {
+        if (!grouped[dateKey]) {
+          grouped[dateKey] = [];
         }
+
+        // Show event with categorization if available, otherwise use defaults
+        grouped[dateKey].push({
+          id: event.id,
+          startTime: startTimeStr,
+          endTime: endTimeStr,
+          activityName: event.summary,
+          // Use categorization if available, otherwise default to 'na' (neutral/uncategorized)
+          valueQuadrant: categorization?.valueQuadrant || 'na',
+          energyRating: categorization?.energyRating || 'yellow',
+          externalEventId: event.id,
+          source: 'google_calendar',
+          createdAt: new Date().toISOString(),
+        });
       }
     });
 
@@ -583,29 +577,24 @@ export default function TimeAuditPage() {
       }
 
       const categorization = getCategorization(event.id);
-      const startDateTime = event.start?.dateTime || event.startTime;
-      const endDateTime = event.end?.dateTime || event.endTime;
 
-      if (startDateTime && endDateTime) {
-        try {
-          const startDate = new Date(startDateTime);
-          const endDate = new Date(endDateTime);
-          const eventDateStr = format(startDate, 'yyyy-MM-dd');
+      // Use pre-extracted date/time fields from API to avoid timezone conversion issues
+      const eventDateStr = event.date || '';
+      const startTimeStr = event.startTime || '';
+      const endTimeStr = event.endTime || startTimeStr;
 
-          // Only include events within the viewed date range
-          if (eventDateStr >= viewStartStr && eventDateStr <= viewEndStr) {
-            allBlocks.push({
-              date: eventDateStr,
-              startTime: format(startDate, 'HH:mm'),
-              endTime: format(endDate, 'HH:mm'),
-              // Use categorization if available, otherwise use defaults
-              valueQuadrant: categorization?.valueQuadrant || 'na',
-              energyRating: categorization?.energyRating || 'yellow',
-              source: 'google_calendar',
-            });
-          }
-        } catch {
-          // Skip invalid dates
+      if (eventDateStr && startTimeStr) {
+        // Only include events within the viewed date range
+        if (eventDateStr >= viewStartStr && eventDateStr <= viewEndStr) {
+          allBlocks.push({
+            date: eventDateStr,
+            startTime: startTimeStr,
+            endTime: endTimeStr,
+            // Use categorization if available, otherwise use defaults
+            valueQuadrant: categorization?.valueQuadrant || 'na',
+            energyRating: categorization?.energyRating || 'yellow',
+            source: 'google_calendar',
+          });
         }
       }
     });
@@ -655,32 +644,27 @@ export default function TimeAuditPage() {
       }
 
       const categorization = getCategorization(event.id);
-      const startDateTime = event.start?.dateTime || event.startTime;
-      const endDateTime = event.end?.dateTime || event.endTime;
 
-      if (startDateTime && endDateTime) {
-        try {
-          const startDate = new Date(startDateTime);
-          const endDate = new Date(endDateTime);
-          const startTimeStr = format(startDate, 'HH:mm');
-          const endTimeStr = format(endDate, 'HH:mm');
-          // Use calculateDuration for consistency with time blocks
-          // This properly handles all-day events (00:00 to 00:00 = 0 duration)
-          const durationMinutes = calculateDuration(startTimeStr, endTimeStr);
+      // Use pre-extracted date/time fields from API to avoid timezone conversion issues
+      const eventDateStr = event.date || '';
+      const startTimeStr = event.startTime || '';
+      const endTimeStr = event.endTime || startTimeStr;
 
-          allBlocks.push({
-            id: event.id,
-            date: format(startDate, 'yyyy-MM-dd'),
-            startTime: startTimeStr,
-            endTime: endTimeStr,
-            activityName: event.summary || 'Untitled Event',
-            valueQuadrant: categorization?.valueQuadrant || 'na',
-            energyRating: categorization?.energyRating || 'yellow',
-            durationMinutes,
-          });
-        } catch {
-          // Skip invalid dates
-        }
+      if (eventDateStr && startTimeStr) {
+        // Use calculateDuration for consistency with time blocks
+        // This properly handles all-day events (00:00 to 00:00 = 0 duration)
+        const durationMinutes = calculateDuration(startTimeStr, endTimeStr);
+
+        allBlocks.push({
+          id: event.id,
+          date: eventDateStr,
+          startTime: startTimeStr,
+          endTime: endTimeStr,
+          activityName: event.summary || 'Untitled Event',
+          valueQuadrant: categorization?.valueQuadrant || 'na',
+          energyRating: categorization?.energyRating || 'yellow',
+          durationMinutes,
+        });
       }
     });
 
@@ -718,28 +702,24 @@ export default function TimeAuditPage() {
       }
 
       const categorization = getCategorization(event.id);
-      const startDateTime = event.start?.dateTime || event.startTime;
-      const endDateTime = event.end?.dateTime || event.endTime;
 
-      if (startDateTime && endDateTime) {
-        try {
-          const startDate = new Date(startDateTime);
-          const endDate = new Date(endDateTime);
+      // Use pre-extracted date/time fields from API to avoid timezone conversion issues
+      const eventDateStr = event.date || '';
+      const startTimeStr = event.startTime || '';
+      const endTimeStr = event.endTime || startTimeStr;
 
-          eventMap.set(event.id, {
-            id: event.id,
-            date: format(startDate, 'yyyy-MM-dd'),
-            startTime: format(startDate, 'HH:mm'),
-            endTime: format(endDate, 'HH:mm'),
-            activityName: event.summary || 'Untitled Event',
-            valueQuadrant: categorization?.valueQuadrant || 'na',
-            energyRating: categorization?.energyRating || 'yellow',
-            source: 'google_calendar',
-            externalEventId: event.id,
-          });
-        } catch {
-          // Skip invalid dates
-        }
+      if (eventDateStr && startTimeStr) {
+        eventMap.set(event.id, {
+          id: event.id,
+          date: eventDateStr,
+          startTime: startTimeStr,
+          endTime: endTimeStr,
+          activityName: event.summary || 'Untitled Event',
+          valueQuadrant: categorization?.valueQuadrant || 'na',
+          energyRating: categorization?.energyRating || 'yellow',
+          source: 'google_calendar',
+          externalEventId: event.id,
+        });
       }
     });
 
@@ -1161,15 +1141,18 @@ export default function TimeAuditPage() {
     const googleEvent = googleEvents.find(e => e.id === block.id);
     if (googleEvent) {
       const categorization = getCategorization(googleEvent.id);
-      const startDateTime = googleEvent.start?.dateTime || googleEvent.startTime;
-      const endDateTime = googleEvent.end?.dateTime || googleEvent.endTime;
+
+      // Use pre-extracted date/time fields from API to avoid timezone conversion issues
+      const eventDateStr = googleEvent.date || format(new Date(), 'yyyy-MM-dd');
+      const startTimeStr = googleEvent.startTime || '09:00';
+      const endTimeStr = googleEvent.endTime || '09:30';
 
       // Create a pseudo-block for editing Google Calendar events
       const pseudoBlock: TimeBlock = {
         id: googleEvent.id,
-        date: startDateTime ? format(new Date(startDateTime), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
-        startTime: startDateTime ? format(new Date(startDateTime), 'HH:mm') : '09:00',
-        endTime: endDateTime ? format(new Date(endDateTime), 'HH:mm') : '09:30',
+        date: eventDateStr,
+        startTime: startTimeStr,
+        endTime: endTimeStr,
         activityName: googleEvent.summary || 'Untitled Event',
         valueQuadrant: categorization?.valueQuadrant || 'production',
         energyRating: categorization?.energyRating || 'yellow',
@@ -1275,6 +1258,79 @@ export default function TimeAuditPage() {
       setIsResettingSync(false);
     }
   }, [clearGoogleSyncedBlocks, clearGoogleCache, clearCategorizations, viewedDateRange.start, calculateSyncEndDate, syncTimeframe, fetchGoogleEvents]);
+
+  // State for calendar sync verification
+  const [isVerifyingSyncOpen, setIsVerifyingSyncOpen] = useState(false);
+  const [verificationResults, setVerificationResults] = useState<Array<{
+    eventId: string;
+    eventName: string;
+    googleDate: string;
+    googleStartTime: string;
+    googleEndTime: string;
+    timeAuditDate: string;
+    timeAuditStartTime: string;
+    timeAuditEndTime: string;
+    isSynced: boolean;
+    issues: string[];
+  }>>([]);
+  const [isVerifying, setIsVerifying] = useState(false);
+
+  // Handle verifying calendar sync
+  const handleVerifySync = useCallback(async () => {
+    setIsVerifying(true);
+    setIsVerifyingSyncOpen(true);
+    const results: typeof verificationResults = [];
+
+    try {
+      // For each Google Calendar event, compare with what Time Audit shows
+      googleEvents.forEach((event) => {
+        // Get the pre-extracted values (what Time Audit should show)
+        const googleDate = event.date || '';
+        const googleStartTime = event.startTime || '';
+        const googleEndTime = event.endTime || '';
+
+        // Find matching block in calendarTimeBlocks
+        const matchingBlocks = Object.entries(calendarTimeBlocks).flatMap(([date, blocks]) =>
+          blocks.filter(b => b.id === event.id || b.externalEventId === event.id)
+            .map(b => ({ ...b, date }))
+        );
+
+        const matchingBlock = matchingBlocks[0];
+
+        const timeAuditDate = matchingBlock?.date || 'Not found';
+        const timeAuditStartTime = matchingBlock?.startTime || 'N/A';
+        const timeAuditEndTime = matchingBlock?.endTime || 'N/A';
+
+        const issues: string[] = [];
+        if (googleDate !== timeAuditDate) {
+          issues.push(`Date mismatch: Google=${googleDate}, TimeAudit=${timeAuditDate}`);
+        }
+        if (googleStartTime !== timeAuditStartTime) {
+          issues.push(`Start time mismatch: Google=${googleStartTime}, TimeAudit=${timeAuditStartTime}`);
+        }
+        if (googleEndTime !== timeAuditEndTime) {
+          issues.push(`End time mismatch: Google=${googleEndTime}, TimeAudit=${timeAuditEndTime}`);
+        }
+
+        results.push({
+          eventId: event.id,
+          eventName: event.summary || 'Untitled Event',
+          googleDate,
+          googleStartTime,
+          googleEndTime,
+          timeAuditDate,
+          timeAuditStartTime,
+          timeAuditEndTime,
+          isSynced: issues.length === 0,
+          issues,
+        });
+      });
+
+      setVerificationResults(results);
+    } finally {
+      setIsVerifying(false);
+    }
+  }, [googleEvents, calendarTimeBlocks]);
 
   // Handle deleting a time block (and optionally from Google Calendar)
   const handleDeleteBlock = useCallback(async (block: TimeBlock) => {
@@ -1678,6 +1734,13 @@ export default function TimeAuditPage() {
                       <RefreshCw className={`h-4 w-4 mr-2 ${isResettingSync ? 'animate-spin' : ''}`} />
                       {isResettingSync ? 'Resetting...' : 'Reset & Re-sync'}
                     </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={handleVerifySync}
+                      disabled={isVerifying || googleEvents.length === 0}
+                    >
+                      <ListChecks className={`h-4 w-4 mr-2 ${isVerifying ? 'animate-pulse' : ''}`} />
+                      {isVerifying ? 'Verifying...' : 'Verify Calendar Sync'}
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
                 {/* Mobile: Compact sync button */}
@@ -1779,6 +1842,99 @@ export default function TimeAuditPage() {
         onUpdateTag={updateTag}
         onDeleteTag={deleteTag}
       />
+
+      {/* Calendar Sync Verification Dialog */}
+      <Dialog open={isVerifyingSyncOpen} onOpenChange={setIsVerifyingSyncOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Calendar Sync Verification</DialogTitle>
+            <DialogDescription>
+              Comparing Google Calendar events with Time Audit display
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {/* Summary */}
+            <div className="flex gap-4 p-4 bg-muted rounded-lg">
+              <div className="text-center">
+                <div className="text-2xl font-bold">{verificationResults.length}</div>
+                <div className="text-sm text-muted-foreground">Total Events</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">
+                  {verificationResults.filter(r => r.isSynced).length}
+                </div>
+                <div className="text-sm text-muted-foreground">In Sync ✓</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-orange-600">
+                  {verificationResults.filter(r => !r.isSynced).length}
+                </div>
+                <div className="text-sm text-muted-foreground">Issues ⚠️</div>
+              </div>
+            </div>
+
+            {/* Results Table */}
+            {verificationResults.filter(r => !r.isSynced).length > 0 && (
+              <div>
+                <h4 className="font-semibold mb-2 text-orange-600">Events with Issues</h4>
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="p-2 text-left">Event</th>
+                        <th className="p-2 text-left">Google Calendar</th>
+                        <th className="p-2 text-left">Time Audit</th>
+                        <th className="p-2 text-left">Issues</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {verificationResults.filter(r => !r.isSynced).map((result) => (
+                        <tr key={result.eventId} className="border-t">
+                          <td className="p-2 font-medium">{result.eventName}</td>
+                          <td className="p-2">
+                            <div>{result.googleDate}</div>
+                            <div className="text-muted-foreground">
+                              {result.googleStartTime} - {result.googleEndTime}
+                            </div>
+                          </td>
+                          <td className="p-2">
+                            <div>{result.timeAuditDate}</div>
+                            <div className="text-muted-foreground">
+                              {result.timeAuditStartTime} - {result.timeAuditEndTime}
+                            </div>
+                          </td>
+                          <td className="p-2 text-orange-600">
+                            {result.issues.map((issue, i) => (
+                              <div key={i} className="text-xs">{issue}</div>
+                            ))}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {verificationResults.filter(r => r.isSynced).length > 0 && (
+              <div>
+                <h4 className="font-semibold mb-2 text-green-600">
+                  Events in Sync ({verificationResults.filter(r => r.isSynced).length})
+                </h4>
+                <div className="text-sm text-muted-foreground">
+                  {verificationResults.filter(r => r.isSynced).map(r => r.eventName).slice(0, 10).join(', ')}
+                  {verificationResults.filter(r => r.isSynced).length > 10 && '...'}
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsVerifyingSyncOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Summary Stats */}
       <TimeSummaryStats
@@ -2390,7 +2546,7 @@ export default function TimeAuditPage() {
                           <div key={event.id} className="mb-2 pb-2 border-b border-muted-foreground/20 last:border-0">
                             <p className="font-semibold">{i + 1}. {event.summary}</p>
                             <p className="text-muted-foreground">
-                              {event.start?.dateTime ? format(new Date(event.start.dateTime), 'yyyy-MM-dd HH:mm') : 'No date'}
+                              {event.date && event.startTime ? `${event.date} ${event.startTime}` : 'No date'}
                             </p>
                           </div>
                         ))

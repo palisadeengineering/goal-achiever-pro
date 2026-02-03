@@ -144,11 +144,38 @@ Error creating project: JSHandle@error
 ## Recommendations
 
 ### Critical (Must Fix)
-1. **SMART Goal AI Generation Bug** - Investigate why the AI-Generated mode does not populate the SMART Goal fields. Possible causes:
-   - API endpoint not being called
-   - Response not being parsed correctly
-   - State not being updated with AI response
-   - Race condition in the generation flow
+1. **SMART Goal AI Generation Bug** - ✅ **FIXED**
+
+   **Root Cause:** Race condition - `generateWithAI()` is an async function but was called without `await`. The code immediately advanced to the next step before AI generation completed.
+
+   **Location:** `src/app/(dashboard)/vision-planner/page.tsx` lines 700-712
+
+   **Original Code (Bug):**
+   ```javascript
+   onClick={() => {
+     if (creationMode === 'ai-generated') {
+       generateWithAI();  // Called WITHOUT await!
+     }
+     setStep(nextStep);  // Executed immediately - doesn't wait for AI
+   }}
+   ```
+
+   **Fixed Code:**
+   ```javascript
+   onClick={async () => {
+     const nextStep = goalType === 'revenue' ? 5 : 4;
+     if (creationMode === 'ai-generated') {
+       setStep(nextStep);  // Show loading state first
+       await generateWithAI();  // Wait for AI to complete
+     } else {
+       setStep(nextStep);
+     }
+   }}
+   ```
+
+   **Additional improvements:**
+   - Added `disabled={isLoading}` to prevent double-clicks
+   - Added loading spinner in button during generation
 
 ### Minor
 2. **Input Fields** - Consider using `select-all-then-type` behavior for form inputs to avoid append issues (already standard in most cases)
