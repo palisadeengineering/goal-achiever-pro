@@ -699,16 +699,30 @@ export default function VisionPlannerPage() {
                 Back
               </Button>
               <Button
-                onClick={() => {
+                onClick={async () => {
+                  const nextStep = goalType === 'revenue' ? 5 : 4;
                   if (creationMode === 'ai-generated') {
-                    generateWithAI();
+                    // Show the review step with loading state, then generate
+                    setStep(nextStep);
+                    await generateWithAI();
+                  } else {
+                    setStep(nextStep);
                   }
-                  setStep(goalType === 'revenue' ? 5 : 4);
                 }}
                 size="lg"
+                disabled={isLoading}
               >
-                {creationMode === 'ai-generated' ? 'Generate with AI' : 'Continue'}
-                <ChevronRight className="h-4 w-4 ml-2" />
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    {creationMode === 'ai-generated' ? 'Generate with AI' : 'Continue'}
+                    <ChevronRight className="h-4 w-4 ml-2" />
+                  </>
+                )}
               </Button>
             </div>
           </CardContent>
