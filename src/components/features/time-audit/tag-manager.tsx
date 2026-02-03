@@ -49,6 +49,14 @@ const PRESET_COLORS = [
   '#78716c', // stone
 ];
 
+// Quick setup presets for business context tagging
+const QUICK_SETUP_PRESETS = [
+  { name: 'Personal', color: '#22c55e', description: 'Personal activities and time' },
+  { name: 'Main Business', color: '#6366f1', description: 'Primary business activities' },
+  { name: 'Side Business', color: '#f59e0b', description: 'Secondary business or side projects' },
+  { name: 'Client Work', color: '#8b5cf6', description: 'Client-facing work and projects' },
+];
+
 export function TagManager({
   open,
   onOpenChange,
@@ -65,6 +73,7 @@ export function TagManager({
   const [color, setColor] = useState('#6366f1');
   const [description, setDescription] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isCreatingPresets, setIsCreatingPresets] = useState(false);
 
   const resetForm = () => {
     setName('');
@@ -127,6 +136,26 @@ export function TagManager({
     onOpenChange(false);
   };
 
+  // Create all quick setup presets that don't already exist
+  const handleQuickSetup = async () => {
+    setIsCreatingPresets(true);
+    try {
+      const existingNames = new Set(tags.map(t => t.name.toLowerCase()));
+      for (const preset of QUICK_SETUP_PRESETS) {
+        if (!existingNames.has(preset.name.toLowerCase())) {
+          await onCreateTag(preset.name, preset.color, preset.description);
+        }
+      }
+    } finally {
+      setIsCreatingPresets(false);
+    }
+  };
+
+  // Check which presets are missing
+  const missingPresets = QUICK_SETUP_PRESETS.filter(
+    preset => !tags.some(t => t.name.toLowerCase() === preset.name.toLowerCase())
+  );
+
   const showForm = isCreating || editingTag;
 
   return (
@@ -143,9 +172,47 @@ export function TagManager({
           {!showForm ? (
             // Tag List View
             <div className="space-y-4">
-              {tags.length === 0 ? (
+              {/* Quick Setup Section */}
+              {missingPresets.length > 0 && (
+                <div className="rounded-lg border border-dashed p-3 space-y-2">
+                  <div className="text-sm font-medium">Quick Setup</div>
+                  <p className="text-xs text-muted-foreground">
+                    Add common business context tags to categorize your time
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {missingPresets.map(preset => (
+                      <div
+                        key={preset.name}
+                        className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs"
+                        style={{ backgroundColor: preset.color + '20', color: preset.color }}
+                      >
+                        <span
+                          className="h-2 w-2 rounded-full"
+                          style={{ backgroundColor: preset.color }}
+                        />
+                        {preset.name}
+                      </div>
+                    ))}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full mt-2"
+                    onClick={handleQuickSetup}
+                    disabled={isCreatingPresets}
+                  >
+                    {isCreatingPresets ? 'Creating...' : `Add ${missingPresets.length} Business Tags`}
+                  </Button>
+                </div>
+              )}
+
+              {tags.length === 0 && missingPresets.length === 0 ? (
                 <div className="py-8 text-center text-sm text-muted-foreground">
                   No tags yet. Create your first tag to get started.
+                </div>
+              ) : tags.length === 0 ? (
+                <div className="py-4 text-center text-sm text-muted-foreground">
+                  Use Quick Setup above or create a custom tag below.
                 </div>
               ) : (
                 <div className="max-h-[300px] space-y-2 overflow-y-auto pr-2">

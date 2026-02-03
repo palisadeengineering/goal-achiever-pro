@@ -26,10 +26,11 @@ import { TagSelector } from './tag-selector';
 import { TagManager } from './tag-manager';
 import { useTags, type Tag } from '@/lib/hooks/use-tags';
 import { useTagPatterns } from '@/lib/hooks/use-tag-patterns';
-import { Sparkles, Check, X, Loader2, Trash2, Repeat, SkipForward, Brain, Briefcase, Users, Car, Zap, Coffee, FileText, HelpCircle } from 'lucide-react';
+import { Sparkles, Check, X, Loader2, Trash2, Repeat, SkipForward, Brain, Briefcase, Users, Car, Zap, Coffee, FileText, HelpCircle, Code, DollarSign } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import type { ValueQuadrant, EnergyRating } from '@/types/database';
 import type { ActivityType } from '@/lib/hooks/use-enhanced-analytics';
+import { inferLeverageType, type LeverageType } from '@/lib/hooks/use-leverage-analytics';
 
 export interface TimeBlock {
   id: string;
@@ -143,6 +144,8 @@ export function TimeBlockForm({
   const [meetingCategoryName, setMeetingCategoryName] = useState<string | undefined>(undefined);
   const [meetingCategories, setMeetingCategories] = useState<{ id: string; name: string; color: string }[]>([]);
   const [detectedProjects, setDetectedProjects] = useState<{ id: string; name: string }[]>([]);
+  const [showCustomProjectInput, setShowCustomProjectInput] = useState(false);
+  const [customProjectName, setCustomProjectName] = useState('');
 
   // AI classification states
   const [aiClassification, setAiClassification] = useState<{
@@ -224,6 +227,9 @@ export function TimeBlockForm({
         setDetectedProjectName(undefined);
         setMeetingCategoryId(undefined);
         setMeetingCategoryName(undefined);
+        // Reset custom project input
+        setShowCustomProjectInput(false);
+        setCustomProjectName('');
       }
       // Reset suggestion state
       setSuggestedTagIds([]);
@@ -628,11 +634,15 @@ export function TimeBlockForm({
                   if (v === 'new') {
                     setDetectedProjectId(undefined);
                     setDetectedProjectName(undefined);
+                    setShowCustomProjectInput(true);
+                    setCustomProjectName('');
                   } else {
                     const project = detectedProjects.find(p => p.id === v);
                     if (project) {
                       setDetectedProjectId(project.id);
                       setDetectedProjectName(project.name);
+                      setShowCustomProjectInput(false);
+                      setCustomProjectName('');
                     }
                   }
                 }}
@@ -642,7 +652,7 @@ export function TimeBlockForm({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="new">
-                    <span className="text-muted-foreground">+ New project from activity name</span>
+                    <span className="text-muted-foreground">+ New project</span>
                   </SelectItem>
                   {detectedProjects.map((project) => (
                     <SelectItem key={project.id} value={project.id}>
@@ -651,6 +661,25 @@ export function TimeBlockForm({
                   ))}
                 </SelectContent>
               </Select>
+
+              {/* Custom project name input */}
+              {showCustomProjectInput && (
+                <div className="space-y-2 animate-in fade-in slide-in-from-top-1">
+                  <Label htmlFor="customProjectName">New Project Name</Label>
+                  <Input
+                    id="customProjectName"
+                    placeholder="Enter project name (or leave empty for activity name)"
+                    value={customProjectName}
+                    onChange={(e) => {
+                      setCustomProjectName(e.target.value);
+                      setDetectedProjectName(e.target.value || undefined);
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Leave empty to use the activity name as the project name
+                  </p>
+                </div>
+              )}
             </div>
           )}
 

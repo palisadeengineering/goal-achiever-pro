@@ -576,6 +576,11 @@ export default function TimeAuditPage() {
         return;
       }
 
+      // Skip if event is ignored
+      if (isIgnored(event.id)) {
+        return;
+      }
+
       const categorization = getCategorization(event.id);
 
       // Use pre-extracted date/time fields from API to avoid timezone conversion issues
@@ -600,7 +605,7 @@ export default function TimeAuditPage() {
     });
 
     return allBlocks;
-  }, [timeBlocks, googleEvents, getCategorization, categorizations, viewedDateRange]);
+  }, [timeBlocks, googleEvents, getCategorization, categorizations, viewedDateRange, isIgnored]);
 
   // Combined data for InsightsView - includes ALL time blocks + Google Calendar events (unfiltered by date)
   // The InsightsView handles its own date filtering internally
@@ -643,6 +648,11 @@ export default function TimeAuditPage() {
         return;
       }
 
+      // Skip if event is ignored
+      if (isIgnored(event.id)) {
+        return;
+      }
+
       const categorization = getCategorization(event.id);
 
       // Use pre-extracted date/time fields from API to avoid timezone conversion issues
@@ -669,7 +679,7 @@ export default function TimeAuditPage() {
     });
 
     return allBlocks;
-  }, [timeBlocks, googleEvents, getCategorization, categorizations]);
+  }, [timeBlocks, googleEvents, getCategorization, categorizations, isIgnored]);
 
   // Combined events list for the Manage Events tab
   const manageEventsList = useMemo((): EventListItem[] => {

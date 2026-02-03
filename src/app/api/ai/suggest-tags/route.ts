@@ -69,9 +69,15 @@ ${description ? `- Description: "${description}"` : ''}
 Available tags: ${tagList}
 
 Analyze the activity and suggest the most relevant tags. Consider:
-1. The type of work (meetings, deep work, admin, creative, etc.)
-2. The project or client it might relate to
-3. The category (business, personal, health, etc.)
+1. BUSINESS CONTEXT (highest priority):
+   - Is this Personal time (gym, family, hobbies, self-care)?
+   - Is this Main Business work (core job duties, primary company)?
+   - Is this Side Business (freelance, side projects, secondary ventures)?
+   - Is this Client Work (billable work, client meetings, deliverables)?
+2. The type of work (meetings, deep work, admin, creative, etc.)
+3. The project or client it might relate to
+
+ALWAYS suggest a business context tag if one exists in the available tags (Personal, Main Business, Side Business, Client Work, or similar).
 
 If existing tags fit well, prefer those. Only suggest new tags if no existing tags are appropriate.
 
@@ -85,6 +91,7 @@ Respond with ONLY valid JSON in this exact format:
 
 Rules:
 - suggestedExistingTags must contain EXACT names from the available tags list
+- Always include a business context tag first if available
 - suggestedNewTags should only have 0-2 items, only when truly needed
 - confidence: 0.0-1.0 based on how well the tags match
 - Keep reasoning under 50 words`;
