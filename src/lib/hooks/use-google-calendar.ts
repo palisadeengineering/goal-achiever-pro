@@ -14,6 +14,8 @@ export interface GoogleCalendarEvent {
   colorId?: string;
   htmlLink?: string;
   source?: string;
+  // All-day event flag
+  isAllDay?: boolean;
   // Recurring event info
   recurringEventId?: string;
   isRecurringInstance?: boolean;

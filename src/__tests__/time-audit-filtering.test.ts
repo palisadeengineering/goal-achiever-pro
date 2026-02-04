@@ -388,3 +388,79 @@ describe('Time Audit Stats Calculation', () => {
     expect(productionMinutes).toBe(60);
   });
 });
+
+describe('All-Day Event Filtering', () => {
+  // Helper to check if an event is all-day
+  function isAllDayEvent(event: { isAllDay?: boolean; startTime?: string; endTime?: string }): boolean {
+    return event.isAllDay === true || (event.startTime === '00:00' && event.endTime === '23:59');
+  }
+
+  it('should identify all-day events by isAllDay flag', () => {
+    const allDayEvent = { isAllDay: true, startTime: '00:00', endTime: '23:59' };
+    const timedEvent = { isAllDay: false, startTime: '09:00', endTime: '10:00' };
+
+    expect(isAllDayEvent(allDayEvent)).toBe(true);
+    expect(isAllDayEvent(timedEvent)).toBe(false);
+  });
+
+  it('should identify all-day events by time pattern (00:00 to 23:59)', () => {
+    // For backwards compatibility with cached events without isAllDay flag
+    const allDayByTime = { startTime: '00:00', endTime: '23:59' };
+    const normalEvent = { startTime: '09:00', endTime: '17:00' };
+
+    expect(isAllDayEvent(allDayByTime)).toBe(true);
+    expect(isAllDayEvent(normalEvent)).toBe(false);
+  });
+
+  it('should not incorrectly identify events starting at midnight', () => {
+    const midnightEvent = { startTime: '00:00', endTime: '01:00' };
+    expect(isAllDayEvent(midnightEvent)).toBe(false);
+  });
+
+  it('should filter all-day events from time stats', () => {
+    interface Event {
+      id: string;
+      startTime: string;
+      endTime: string;
+      isAllDay?: boolean;
+    }
+
+    const events: Event[] = [
+      { id: '1', startTime: '09:00', endTime: '10:00' }, // 60 mins
+      { id: '2', startTime: '00:00', endTime: '23:59', isAllDay: true }, // All-day - should be excluded
+      { id: '3', startTime: '14:00', endTime: '15:30' }, // 90 mins
+      { id: '4', startTime: '00:00', endTime: '23:59' }, // All-day by pattern - should be excluded
+    ];
+
+    const filteredEvents = events.filter(e => !isAllDayEvent(e));
+
+    expect(filteredEvents).toHaveLength(2);
+    expect(filteredEvents.map(e => e.id)).toEqual(['1', '3']);
+
+    // Total duration should only count non-all-day events
+    const totalMinutes = filteredEvents.reduce((sum, e) => {
+      const [startH, startM] = e.startTime.split(':').map(Number);
+      const [endH, endM] = e.endTime.split(':').map(Number);
+      return sum + (endH * 60 + endM) - (startH * 60 + startM);
+    }, 0);
+
+    expect(totalMinutes).toBe(150); // 60 + 90
+  });
+
+  it('should demonstrate the bug: all-day events would add ~24 hours each', () => {
+    // This test shows what the bug was
+    const allDayEvent = { startTime: '00:00', endTime: '23:59' };
+
+    const [startH, startM] = allDayEvent.startTime.split(':').map(Number);
+    const [endH, endM] = allDayEvent.endTime.split(':').map(Number);
+    const duration = (endH * 60 + endM) - (startH * 60 + startM);
+
+    // Each all-day event was counting as 1439 minutes (~24 hours)
+    expect(duration).toBe(1439);
+
+    // 8 all-day events = 8 * 1439 = 11,512 minutes = ~192 hours
+    // This explains why Total Time showed 202h+ for a single week
+    expect(8 * duration).toBe(11512);
+    expect(8 * duration / 60).toBeCloseTo(191.87, 1);
+  });
+});

@@ -581,6 +581,13 @@ export default function TimeAuditPage() {
         return;
       }
 
+      // Skip all-day events from stats (they're reminders, not actual time spent)
+      // Check both the flag and the time pattern for backwards compatibility
+      const isAllDay = event.isAllDay || (event.startTime === '00:00' && event.endTime === '23:59');
+      if (isAllDay) {
+        return;
+      }
+
       const categorization = getCategorization(event.id);
 
       // Use pre-extracted date/time fields from API to avoid timezone conversion issues
@@ -653,6 +660,12 @@ export default function TimeAuditPage() {
         return;
       }
 
+      // Skip all-day events from insights (they're reminders, not actual time spent)
+      const isAllDay = event.isAllDay || (event.startTime === '00:00' && event.endTime === '23:59');
+      if (isAllDay) {
+        return;
+      }
+
       const categorization = getCategorization(event.id);
 
       // Use pre-extracted date/time fields from API to avoid timezone conversion issues
@@ -662,7 +675,6 @@ export default function TimeAuditPage() {
 
       if (eventDateStr && startTimeStr) {
         // Use calculateDuration for consistency with time blocks
-        // This properly handles all-day events (00:00 to 00:00 = 0 duration)
         const durationMinutes = calculateDuration(startTimeStr, endTimeStr);
 
         allBlocks.push({
