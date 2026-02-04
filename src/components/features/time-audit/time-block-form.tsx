@@ -696,8 +696,8 @@ export function TimeBlockForm({
                 </SelectContent>
               </Select>
 
-              {/* Custom project name input */}
-              {showCustomProjectInput && (
+              {/* Custom project name input - show when no existing project is selected */}
+              {!detectedProjectId && (
                 <div className="space-y-2 animate-in fade-in slide-in-from-top-1">
                   <Label htmlFor="customProjectName">New Project Name</Label>
                   <Input
