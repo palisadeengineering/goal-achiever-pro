@@ -535,8 +535,8 @@ export default function TimeAuditPage() {
     return grouped;
   }, [timeBlocks, googleEvents, getCategorization, categorizations, isIgnored, tags]);
 
-  // Get all data sources for stats: time blocks + categorized Google events
-  // FILTERED by currently viewed date range
+  // Get all data sources for stats: derived from calendarTimeBlocks (same data shown on calendar)
+  // FILTERED by currently viewed date range, excluding all-day events
   const allTimeData = useMemo(() => {
     const allBlocks: Array<{
       date: string;
@@ -550,69 +550,31 @@ export default function TimeAuditPage() {
     const viewStartStr = format(viewedDateRange.start, 'yyyy-MM-dd');
     const viewEndStr = format(viewedDateRange.end, 'yyyy-MM-dd');
 
-    // Add time blocks (from database and local) - filtered by viewed date range
-    timeBlocks.forEach((block) => {
-      // Only include blocks within the viewed date range
-      if (block.date >= viewStartStr && block.date <= viewEndStr) {
-        allBlocks.push({
-          date: block.date,
-          startTime: block.startTime,
-          endTime: block.endTime,
-          valueQuadrant: block.valueQuadrant,
-          energyRating: block.energyRating,
-          source: block.source || 'manual',
+    // Use calendarTimeBlocks as the source - this is exactly what's shown on the calendar
+    Object.entries(calendarTimeBlocks).forEach(([dateKey, blocks]) => {
+      // Only include dates within the viewed range
+      if (dateKey >= viewStartStr && dateKey <= viewEndStr) {
+        blocks.forEach((block) => {
+          // Skip all-day events from stats (they're reminders, not actual time spent)
+          const isAllDay = block.startTime === '00:00' && block.endTime === '23:59';
+          if (isAllDay) {
+            return;
+          }
+
+          allBlocks.push({
+            date: dateKey,
+            startTime: block.startTime,
+            endTime: block.endTime,
+            valueQuadrant: block.valueQuadrant,
+            energyRating: block.energyRating,
+            source: block.source || 'manual',
+          });
         });
       }
     });
 
-    // Add Google Calendar events that aren't already imported (including uncategorized)
-    const importedExternalIds = new Set(
-      timeBlocks.filter(b => b.externalEventId).map(b => b.externalEventId)
-    );
-
-    googleEvents.forEach((event) => {
-      // Skip if already imported as a time block
-      if (importedExternalIds.has(event.id)) {
-        return;
-      }
-
-      // Skip if event is ignored
-      if (isIgnored(event.id)) {
-        return;
-      }
-
-      // Skip all-day events from stats (they're reminders, not actual time spent)
-      // Check both the flag and the time pattern for backwards compatibility
-      const isAllDay = event.isAllDay || (event.startTime === '00:00' && event.endTime === '23:59');
-      if (isAllDay) {
-        return;
-      }
-
-      const categorization = getCategorization(event.id);
-
-      // Use pre-extracted date/time fields from API to avoid timezone conversion issues
-      const eventDateStr = event.date || '';
-      const startTimeStr = event.startTime || '';
-      const endTimeStr = event.endTime || startTimeStr;
-
-      if (eventDateStr && startTimeStr) {
-        // Only include events within the viewed date range
-        if (eventDateStr >= viewStartStr && eventDateStr <= viewEndStr) {
-          allBlocks.push({
-            date: eventDateStr,
-            startTime: startTimeStr,
-            endTime: endTimeStr,
-            // Use categorization if available, otherwise use defaults
-            valueQuadrant: categorization?.valueQuadrant || 'na',
-            energyRating: categorization?.energyRating || 'yellow',
-            source: 'google_calendar',
-          });
-        }
-      }
-    });
-
     return allBlocks;
-  }, [timeBlocks, googleEvents, getCategorization, categorizations, viewedDateRange, isIgnored]);
+  }, [calendarTimeBlocks, viewedDateRange]);
 
   // Combined data for InsightsView - includes ALL time blocks + Google Calendar events (unfiltered by date)
   // The InsightsView handles its own date filtering internally
