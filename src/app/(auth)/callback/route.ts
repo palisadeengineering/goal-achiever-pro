@@ -1,7 +1,24 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
-// Validate redirect path to prevent open redirect attacks
+// Validate redirect path using whitelist to prevent open redirect attacks
+const SAFE_REDIRECT_PREFIXES = [
+  '/dashboard',
+  '/vision',
+  '/goals',
+  '/mins',
+  '/time-audit',
+  '/drip',
+  '/routines',
+  '/pomodoro',
+  '/reviews',
+  '/leverage',
+  '/network',
+  '/analytics',
+  '/settings',
+  '/today',
+];
+
 function getSafeRedirect(redirectParam: string | null): string {
   const defaultRedirect = '/dashboard';
 
@@ -9,18 +26,12 @@ function getSafeRedirect(redirectParam: string | null): string {
     return defaultRedirect;
   }
 
-  // Must start with a single forward slash (not //)
-  // Must not contain protocol indicators
-  if (
-    !redirectParam.startsWith('/') ||
-    redirectParam.startsWith('//') ||
-    redirectParam.includes('://') ||
-    redirectParam.includes('\\')
-  ) {
-    return defaultRedirect;
+  // Whitelist approach: only allow known dashboard paths
+  if (SAFE_REDIRECT_PREFIXES.some(prefix => redirectParam === prefix || redirectParam.startsWith(prefix + '/'))) {
+    return redirectParam;
   }
 
-  return redirectParam;
+  return defaultRedirect;
 }
 
 export async function GET(request: Request) {

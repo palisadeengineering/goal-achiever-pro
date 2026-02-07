@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { sendEmail, generateWelcomeEmail } from '@/lib/email';
+import { applyMultipleRateLimits, rateLimitExceededResponse } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit signup attempts by IP
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const rateLimitResult = applyMultipleRateLimits(`signup-${ip}`, [
+      { name: 'signup', limit: 5, windowMs: 60000 },
+    ]);
+    if (!rateLimitResult.success) {
+      return rateLimitExceededResponse(rateLimitResult);
+    }
+
     const { email, password, fullName, redirectTo, product } = await request.json();
 
     if (!email || typeof email !== 'string') {
@@ -43,10 +53,11 @@ export async function POST(request: NextRequest) {
     if (existingUser) {
       // Check if they have confirmed their email
       if (existingUser.email_confirmed_at) {
-        return NextResponse.json(
-          { error: 'An account with this email already exists' },
-          { status: 409 }
-        );
+        // SECURITY: Return same response shape to prevent email enumeration
+        return NextResponse.json({
+          success: true,
+          needsConfirmation: true,
+        });
       }
 
       // User exists but hasn't confirmed - resend confirmation

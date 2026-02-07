@@ -1,22 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-
-const DEMO_USER_EMAIL = 'joel@pe-se.com';
-
-async function getUserId(supabase: NonNullable<Awaited<ReturnType<typeof createClient>>>) {
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (user) return user.id;
-
-  // Demo mode fallback
-  const { data: demoUser } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('email', DEMO_USER_EMAIL)
-    .single();
-
-  return demoUser?.id || null;
-}
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 
 interface StreakData {
   nonNegotiableId: string;
@@ -91,14 +75,15 @@ function calculateStreak(completionDates: string[], targetCount: number): { curr
 // GET /api/non-negotiables/streaks - Get streak data for all non-negotiables
 export async function GET(request: NextRequest) {
   try {
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
+
     const supabase = await createClient();
     if (!supabase) {
       return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
-    }
-    const userId = await getUserId(supabase);
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);

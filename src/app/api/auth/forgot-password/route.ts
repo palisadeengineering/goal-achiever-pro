@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { applyMultipleRateLimits, rateLimitExceededResponse } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit password reset requests by IP
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const rateLimitResult = applyMultipleRateLimits(`forgot-password-${ip}`, [
+      { name: 'forgot-password', limit: 3, windowMs: 60000 },
+    ]);
+    if (!rateLimitResult.success) {
+      return rateLimitExceededResponse(rateLimitResult);
+    }
+
     const { email } = await request.json();
 
     if (!email || typeof email !== 'string') {

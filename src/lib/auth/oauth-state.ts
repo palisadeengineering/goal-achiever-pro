@@ -3,8 +3,12 @@
 
 import { createHmac, randomBytes } from 'crypto';
 
-// Use a secret for signing - falls back to service role key if not explicitly set
-const STATE_SECRET = process.env.OAUTH_STATE_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
+// SECURITY: Require explicit OAUTH_STATE_SECRET — never fall back to service role key
+const STATE_SECRET = process.env.OAUTH_STATE_SECRET;
+
+if (!STATE_SECRET && process.env.NODE_ENV === 'production') {
+  console.error('CRITICAL: OAUTH_STATE_SECRET must be explicitly set in production');
+}
 
 interface OAuthStatePayload {
   userId: string;

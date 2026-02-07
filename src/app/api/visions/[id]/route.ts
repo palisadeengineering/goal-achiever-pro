@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import { updateVisionSchema } from '@/lib/validations/visions';
+import { parseWithErrors } from '@/lib/validations/common';
 
 export async function GET(
   request: NextRequest,
@@ -103,6 +105,14 @@ export async function PUT(
     }
 
     const body = await request.json();
+    const validation = parseWithErrors(updateVisionSchema, { id, ...body });
+
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error, validationErrors: validation.errors },
+        { status: 400 }
+      );
+    }
 
     const {
       title,
@@ -118,7 +128,7 @@ export async function PUT(
       consistencyScore,
       color,
       affirmationText,
-    } = body;
+    } = validation.data;
 
     // Update vision using admin client to bypass RLS
     const { data: vision, error } = await adminClient

@@ -24,17 +24,13 @@ import type { TabPermissionData, ItemPermissionData } from '@/types/sharing';
 
 interface InvitationDetails {
   id: string;
-  email: string;
   expiresAt: string;
   status: string;
   shareType: string;
   tabPermissions: TabPermissionData[];
   itemPermissions: ItemPermissionData[];
   owner: {
-    id: string;
     fullName: string | null;
-    email: string;
-    avatarUrl: string | null;
   };
 }
 
@@ -168,7 +164,7 @@ export default function AcceptInvitePage({
                   </Avatar>
                   <div>
                     <p className="font-medium">
-                      {invitation.owner.fullName || invitation.owner.email}
+                      {invitation.owner.fullName || 'A user'}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       wants to share content with you
@@ -222,7 +218,7 @@ export default function AcceptInvitePage({
                   {invitation.owner.fullName || 'A user'}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {invitation.owner.email}
+                  wants to share content with you
                 </p>
               </div>
             </div>

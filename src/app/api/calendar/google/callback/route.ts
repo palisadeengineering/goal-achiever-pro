@@ -84,6 +84,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Validate required token fields exist
+    if (!tokens.access_token) {
+      console.error('Token exchange returned no access_token');
+      return NextResponse.redirect(
+        new URL(`/settings?error=invalid_token_response`, request.url)
+      );
+    }
+
     // Get user info from Google to store email
     let googleEmail = null;
     try {

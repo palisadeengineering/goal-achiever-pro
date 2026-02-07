@@ -12,8 +12,8 @@ export default async function DashboardLayout({
 }) {
   const supabase = await createClient();
 
-  // Demo mode: skip auth in development or when DEMO_MODE is enabled
-  const isDemoMode = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+  // Demo mode: only enabled by server-side env var in non-production environments
+  const isDemoMode = process.env.DEMO_MODE_ENABLED === 'true' && process.env.NODE_ENV !== 'production';
 
   // If Supabase is not configured, use demo mode with mock user
   let userProfile = {

@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { sendEmail, generateMagicLinkEmail } from '@/lib/email';
+import { applyMultipleRateLimits, rateLimitExceededResponse } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit magic link requests by IP
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const rateLimitResult = applyMultipleRateLimits(`magic-link-${ip}`, [
+      { name: 'magic-link', limit: 5, windowMs: 60000 },
+    ]);
+    if (!rateLimitResult.success) {
+      return rateLimitExceededResponse(rateLimitResult);
+    }
+
     const { email } = await request.json();
 
     if (!email || typeof email !== 'string') {

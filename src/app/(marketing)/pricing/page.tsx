@@ -48,8 +48,6 @@ export default function PricingPage() {
         body: JSON.stringify({
           tier: tierId,
           interval: isYearly ? 'yearly' : 'monthly',
-          userId: user.id,
-          email: user.email,
         }),
       });
 

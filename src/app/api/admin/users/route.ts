@@ -136,7 +136,7 @@ export async function DELETE(request: Request) {
 
   if (!user) {
     return NextResponse.json(
-      { error: `User not found: ${email}` },
+      { error: 'User not found' },
       { status: 404 }
     );
   }

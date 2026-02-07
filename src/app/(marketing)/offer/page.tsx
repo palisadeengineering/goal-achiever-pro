@@ -57,10 +57,7 @@ export default function FoundingMemberOfferPage() {
       const response = await fetch('/api/stripe/create-founding-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user.id,
-          email: user.email,
-        }),
+        body: JSON.stringify({}),
       });
 
       const data = await response.json();

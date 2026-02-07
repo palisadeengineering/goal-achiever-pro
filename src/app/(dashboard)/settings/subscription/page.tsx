@@ -76,8 +76,6 @@ export default function SubscriptionPage() {
         body: JSON.stringify({
           tier: tierId,
           interval: 'monthly',
-          userId: user.id,
-          email: user.email,
         }),
       });
 
@@ -100,9 +98,7 @@ export default function SubscriptionPage() {
       const response = await fetch('/api/stripe/create-portal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customerId: subscription.stripeCustomerId,
-        }),
+        body: JSON.stringify({}),
       });
 
       const data = await response.json();

@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
+  const auth = await getAuthenticatedUser();
+  if (!auth.isAuthenticated) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+
   const secretKey = process.env.STRIPE_SECRET_KEY;
 
   if (!secretKey) {
@@ -11,12 +18,14 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const { userId, email } = body;
+    // Get user email from authenticated session, not from request body
+    const supabase = await createClient();
+    const email = supabase ? (await supabase.auth.getUser()).data.user?.email : null;
+    const userId = auth.userId;
 
-    if (!userId || !email) {
+    if (!email) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'User email not found' },
         { status: 400 }
       );
     }

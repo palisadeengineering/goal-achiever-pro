@@ -196,7 +196,7 @@ function SettingsContent() {
       const response = await fetch('/api/stripe/create-portal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customerId: subscription.stripeCustomerId }),
+        body: JSON.stringify({}),
       });
       const data = await response.json();
       if (data.url) {

@@ -1,22 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-
-const DEMO_USER_EMAIL = 'joel@pe-se.com';
-
-async function getUserId(supabase: NonNullable<Awaited<ReturnType<typeof createClient>>>) {
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (user) return user.id;
-
-  // Demo mode fallback
-  const { data: demoUser } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('email', DEMO_USER_EMAIL)
-    .single();
-
-  return demoUser?.id || null;
-}
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 
 // GET /api/non-negotiables/[id] - Get a single non-negotiable
 export async function GET(
@@ -24,15 +8,16 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
+    const { id } = await params;
+
     const supabase = await createClient();
     if (!supabase) {
       return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
-    }
-    const userId = await getUserId(supabase);
-    const { id } = await params;
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { data, error } = await supabase
@@ -59,15 +44,16 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
+    const { id } = await params;
+
     const supabase = await createClient();
     if (!supabase) {
       return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
-    }
-    const userId = await getUserId(supabase);
-    const { id } = await params;
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -111,15 +97,16 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await getAuthenticatedUser();
+    if (!auth.isAuthenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.userId;
+    const { id } = await params;
+
     const supabase = await createClient();
     if (!supabase) {
       return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
-    }
-    const userId = await getUserId(supabase);
-    const { id } = await params;
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Soft delete by setting is_active to false

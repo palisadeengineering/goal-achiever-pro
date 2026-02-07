@@ -78,7 +78,7 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
   // Restore events from cache on mount
   useEffect(() => {
     try {
-      const cached = localStorage.getItem(GOOGLE_EVENTS_CACHE_KEY);
+      const cached = sessionStorage.getItem(GOOGLE_EVENTS_CACHE_KEY);
       if (cached) {
         const { events: cachedEvents, cachedAt, dateRange } = JSON.parse(cached) as GoogleEventsCache;
         const cacheAge = Date.now() - new Date(cachedAt).getTime();
@@ -132,7 +132,7 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
   const clearCache = useCallback(() => {
     try {
       console.log('[useGoogleCalendar] Clearing cache and events');
-      localStorage.removeItem(GOOGLE_EVENTS_CACHE_KEY);
+      sessionStorage.removeItem(GOOGLE_EVENTS_CACHE_KEY);
       setEvents([]);
     } catch (err) {
       console.error('Failed to clear cache:', err);
@@ -146,11 +146,11 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
 
       // Update cache with filtered events
       try {
-        const cached = localStorage.getItem(GOOGLE_EVENTS_CACHE_KEY);
+        const cached = sessionStorage.getItem(GOOGLE_EVENTS_CACHE_KEY);
         if (cached) {
           const cacheData = JSON.parse(cached) as GoogleEventsCache;
           cacheData.events = filtered;
-          localStorage.setItem(GOOGLE_EVENTS_CACHE_KEY, JSON.stringify(cacheData));
+          sessionStorage.setItem(GOOGLE_EVENTS_CACHE_KEY, JSON.stringify(cacheData));
         }
       } catch (err) {
         console.error('Failed to update cache after event removal:', err);
@@ -232,7 +232,7 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
             end: endDate.toISOString(),
           },
         };
-        localStorage.setItem(GOOGLE_EVENTS_CACHE_KEY, JSON.stringify(cache));
+        sessionStorage.setItem(GOOGLE_EVENTS_CACHE_KEY, JSON.stringify(cache));
       } catch (err) {
         console.error('Failed to cache events:', err);
       }
@@ -270,7 +270,7 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
       setEvents([]);
       setError(null);
       // Clear cache on disconnect
-      localStorage.removeItem(GOOGLE_EVENTS_CACHE_KEY);
+      sessionStorage.removeItem(GOOGLE_EVENTS_CACHE_KEY);
     } catch (err) {
       console.error('Failed to disconnect Google Calendar:', err);
       setError('Failed to disconnect Google Calendar');

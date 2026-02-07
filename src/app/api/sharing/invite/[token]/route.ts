@@ -1,13 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import { applyMultipleRateLimits, rateLimitExceededResponse } from '@/lib/rate-limit';
 
-// GET /api/sharing/invite/[token] - Get invitation details (public)
+// GET /api/sharing/invite/[token] - Get invitation details (public, rate-limited)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ token: string }> }
 ) {
   try {
     const { token } = await params;
+
+    // Rate limit by IP to prevent token enumeration
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const rateLimitResult = applyMultipleRateLimits(`invite-lookup-${ip}`, [
+      { name: 'invite-lookup', limit: 10, windowMs: 60000 },
+    ]);
+    if (!rateLimitResult.success) {
+      return rateLimitExceededResponse(rateLimitResult);
+    }
 
     // Use service role client to access invitations (bypasses RLS)
     const supabase = createServiceRoleClient();
@@ -74,19 +84,16 @@ export async function GET(
       avatar_url: string | null;
     };
 
+    // Return only what's needed for the UI — no owner email/id/avatar to prevent data leakage
     return NextResponse.json({
       id: invitation.id,
-      email: invitation.email,
       expiresAt: invitation.expires_at,
       status: invitation.status,
       shareType: invitation.share_type,
       tabPermissions: invitation.tab_permissions_data,
       itemPermissions: invitation.item_permissions_data,
       owner: {
-        id: owner.id,
         fullName: owner.full_name,
-        email: owner.email,
-        avatarUrl: owner.avatar_url,
       },
     });
   } catch (error) {

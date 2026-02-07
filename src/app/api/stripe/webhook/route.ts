@@ -50,6 +50,9 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = getSupabaseAdmin();
 
+    // SECURITY: Whitelist valid tier values to prevent metadata manipulation
+    const VALID_TIERS = ['free', 'pro', 'elite', 'founding_member'];
+
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
@@ -76,6 +79,10 @@ export async function POST(request: NextRequest) {
         }
         // Handle regular subscription checkout
         else if (userId && tier) {
+          if (!VALID_TIERS.includes(tier)) {
+            console.error(`Invalid subscription tier from metadata: ${tier}`);
+            break;
+          }
           console.log(`Subscription created for user ${userId}: ${tier}`);
 
           const { error } = await supabase
@@ -109,8 +116,8 @@ export async function POST(request: NextRequest) {
             updated_at: new Date().toISOString(),
           };
 
-          // Update tier if it changed
-          if (tier) {
+          // Update tier if it changed (validate against whitelist)
+          if (tier && VALID_TIERS.includes(tier)) {
             updateData.subscription_tier = tier;
           }
 

@@ -64,12 +64,12 @@ export async function POST(
     }
 
     // SECURITY: Verify the accepting user's email matches the invitation
-    // This prevents unauthorized users from accepting invitations meant for others
-    if (invitation.email && user.email) {
+    // If the invitation has a target email, the accepting user MUST match it
+    if (invitation.email) {
       const invitedEmail = invitation.email.toLowerCase().trim();
-      const userEmail = user.email.toLowerCase().trim();
+      const userEmail = (user.email || '').toLowerCase().trim();
 
-      if (invitedEmail !== userEmail) {
+      if (!userEmail || invitedEmail !== userEmail) {
         return NextResponse.json(
           { error: 'This invitation was sent to a different email address. Please sign in with the correct account.' },
           { status: 403 }
