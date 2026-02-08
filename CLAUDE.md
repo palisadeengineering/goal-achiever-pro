@@ -231,6 +231,21 @@ GOOGLE_CLIENT_SECRET=
    - The sidebar occupies the left side - don't place floating elements there
    - Test UI changes visually, not just functionally
 
+### Data & State Management Mistakes
+
+1. **NEVER use localStorage as the primary store for user data that needs to work across devices**
+   - localStorage is per-browser, per-device — it does NOT sync anywhere
+   - Any user-facing data (categorizations, settings, preferences) MUST be saved to the database FIRST, with localStorage only as a cache/fallback
+   - When adding a new feature that stores user data, ALWAYS persist to the database from day one — do NOT plan to "add sync later"
+   - When building a feature with localStorage, immediately ask: "Does this need to work on another device?" If yes, add DB persistence in the SAME PR
+
+2. **When adding DB sync to existing localStorage-only features, always make it bidirectional from the start**
+   - Upload existing local data → DB (so other devices can see it)
+   - Download DB data → local (so this device can see data from other devices)
+   - Never ship one-directional sync — it silently loses data
+
+3. **After adding a new DB table, always verify it was actually created** by querying it — don't assume `drizzle-kit push` ran successfully, especially when there are unrelated schema conflicts that can block interactive prompts
+
 ### Code Quality Rules
 
 1. **Always run `npm run build` after making changes** to catch TypeScript errors early
