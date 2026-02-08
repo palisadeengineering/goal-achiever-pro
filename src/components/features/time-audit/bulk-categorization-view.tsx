@@ -1,19 +1,56 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { useEventPatterns, type IgnoredEvent } from '@/lib/hooks/use-event-patterns';
+import { useTags } from '@/lib/hooks/use-tags';
+import type { Tag } from '@/lib/hooks/use-tags';
+import { TagInput } from '@/components/shared/tag-input';
 import { GoogleEventCategorizer } from './google-event-categorizer';
 import { VALUE_QUADRANTS, ENERGY_RATINGS } from '@/constants/drip';
-import type { ValueQuadrant, EnergyRating } from '@/types/database';
+import type { ValueQuadrant, EnergyRating, LeverageType } from '@/types/database';
 import type { GoogleCalendarEvent } from '@/lib/hooks/use-google-calendar';
-import { CheckCircle2, ListTodo, Sparkles, EyeOff, Eye, Undo2, Trash2 } from 'lucide-react';
+import { CheckCircle2, ListTodo, Sparkles, EyeOff, Eye, Undo2, Trash2, Briefcase, Code, FileText, DollarSign, Users, ChevronDown, ChevronUp } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
+
+// Work Type options (customizable enum for the user)
+const WORK_TYPE_OPTIONS = [
+  { value: 'design_engineering', label: 'Design/Engineering' },
+  { value: 'calculations', label: 'Calculations' },
+  { value: 'drafting_revit', label: 'Drafting/Revit' },
+  { value: 'qaqc_review', label: 'QAQC/Review' },
+  { value: 'project_management', label: 'Project Management' },
+  { value: 'client_communication', label: 'Client Communication' },
+  { value: 'business_development', label: 'Business Development/Sales' },
+  { value: 'marketing_content', label: 'Marketing/Content' },
+  { value: 'admin_operations', label: 'Admin/Operations' },
+  { value: 'finance', label: 'Finance' },
+  { value: 'hiring_recruiting', label: 'Hiring/Recruiting' },
+  { value: 'training', label: 'Training/Team Development' },
+  { value: 'site_visit', label: 'Site Visit/Field Work' },
+  { value: 'personal', label: 'Personal' },
+];
+
+const LEVERAGE_TYPE_OPTIONS: { value: LeverageType | 'none'; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { value: 'none', label: 'Not leverage work', icon: Briefcase },
+  { value: 'code', label: 'Code', icon: Code },
+  { value: 'content', label: 'Content', icon: FileText },
+  { value: 'capital', label: 'Capital', icon: DollarSign },
+  { value: 'collaboration', label: 'Collaboration', icon: Users },
+];
 
 // Safe date parsing helper
 function safeParseDate(dateString: string | undefined | null): Date | null {
@@ -31,7 +68,7 @@ function safeParseDate(dateString: string | undefined | null): Date | null {
 interface BulkCategorizationViewProps {
   events: GoogleCalendarEvent[];
   onComplete?: () => void;
-  onCategorize?: () => void; // Called after each categorization to allow parent to refresh
+  onCategorize?: () => void;
 }
 
 interface GroupedEvents {
@@ -57,8 +94,19 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
     clearIgnoredEvents,
   } = useEventPatterns();
 
+  const { tags, createTag } = useTags();
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [activeTab, setActiveTab] = useState<'single' | 'bulk' | 'ignored'>('single');
+
+  // Detected projects for project selector
+  const [detectedProjects, setDetectedProjects] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => {
+    fetch('/api/detected-projects')
+      .then((res) => res.ok ? res.json() : { projects: [] })
+      .then((data) => setDetectedProjects(data.projects || []))
+      .catch(() => setDetectedProjects([]));
+  }, []);
 
   // Filter to only uncategorized events (excluding ignored)
   const uncategorizedEvents = useMemo(
@@ -66,11 +114,9 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
     [events, isCategorized, isIgnored]
   );
 
-  // Reset currentIndex when uncategorizedEvents changes (e.g., week navigation)
-  // This prevents the "stuck" bug where the index points to a non-existent event
+  // Reset currentIndex when uncategorizedEvents changes
   const prevUncategorizedLength = useRef(uncategorizedEvents.length);
   useEffect(() => {
-    // Reset to 0 if the list changed significantly or if current index is out of bounds
     if (
       prevUncategorizedLength.current !== uncategorizedEvents.length ||
       currentIndex >= uncategorizedEvents.length
@@ -80,38 +126,21 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
     prevUncategorizedLength.current = uncategorizedEvents.length;
   }, [uncategorizedEvents.length, currentIndex]);
 
-  // Get ignored events from the current sync
-  const ignoredEventsInSync = useMemo(
-    () => events.filter((event) => isIgnored(event.id)),
-    [events, isIgnored]
-  );
-
-  // Group ignored events by pattern for easier management
+  // Group ignored events by pattern
   const groupedIgnoredEvents = useMemo(() => {
     const groups: Map<string, { pattern: string; events: IgnoredEvent[] }> = new Map();
-
     ignoredEvents.forEach((ignoredEvent) => {
-      // Create a normalized key for grouping
       const normalizedName = ignoredEvent.eventName
-        .toLowerCase()
-        .trim()
-        .replace(/\d{1,2}[\/\-]\d{1,2}([\/\-]\d{2,4})?/g, '') // Remove dates
-        .replace(/\s+/g, ' ')
-        .trim();
-
+        .toLowerCase().trim()
+        .replace(/\d{1,2}[\/\-]\d{1,2}([\/\-]\d{2,4})?/g, '')
+        .replace(/\s+/g, ' ').trim();
       const existing = groups.get(normalizedName);
-
       if (existing) {
         existing.events.push(ignoredEvent);
       } else {
-        groups.set(normalizedName, {
-          pattern: normalizedName,
-          events: [ignoredEvent],
-        });
+        groups.set(normalizedName, { pattern: normalizedName, events: [ignoredEvent] });
       }
     });
-
-    // Convert to array and sort by count (largest groups first)
     return Array.from(groups.values()).sort((a, b) => b.events.length - a.events.length);
   }, [ignoredEvents]);
 
@@ -125,31 +154,19 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
   // Group similar events for bulk categorization
   const groupedEvents = useMemo(() => {
     const groups: Map<string, GroupedEvents> = new Map();
-
     uncategorizedEvents.forEach((event) => {
-      // Create a normalized key for grouping
       const normalizedName = event.summary
-        .toLowerCase()
-        .trim()
-        .replace(/\d{1,2}[\/\-]\d{1,2}([\/\-]\d{2,4})?/g, '') // Remove dates
-        .replace(/\s+/g, ' ')
-        .trim();
-
+        .toLowerCase().trim()
+        .replace(/\d{1,2}[\/\-]\d{1,2}([\/\-]\d{2,4})?/g, '')
+        .replace(/\s+/g, ' ').trim();
       const existing = groups.get(normalizedName);
       const suggestion = getSuggestion(event.summary);
-
       if (existing) {
         existing.events.push(event);
       } else {
-        groups.set(normalizedName, {
-          pattern: normalizedName,
-          events: [event],
-          suggestion: suggestion,
-        });
+        groups.set(normalizedName, { pattern: normalizedName, events: [event], suggestion });
       }
     });
-
-    // Convert to array and sort by count (largest groups first)
     return Array.from(groups.values()).sort((a, b) => b.events.length - a.events.length);
   }, [uncategorizedEvents, getSuggestion]);
 
@@ -162,18 +179,12 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
     [uncategorizedEvents, getSuggestion]
   );
 
-  const handleCategorize = (
-    eventId: string,
-    valueQuadrant: ValueQuadrant,
-    energyRating: EnergyRating
-  ) => {
+  const handleCategorize = (eventId: string, valueQuadrant: ValueQuadrant, energyRating: EnergyRating) => {
     const event = uncategorizedEvents.find((e) => e.id === eventId);
     if (event) {
       saveCategorization(eventId, event.summary, valueQuadrant, energyRating);
-      // Notify parent to refresh its state
       onCategorize?.();
     }
-    // Move to next event
     if (currentIndex < uncategorizedEvents.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else if (onComplete) {
@@ -191,9 +202,7 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
 
   const handleIgnore = (eventId: string, eventName: string) => {
     ignoreEvent(eventId, eventName);
-    // Notify parent to refresh its state
     onCategorize?.();
-    // Move to next event or complete
     if (currentIndex >= uncategorizedEvents.length - 1) {
       if (onComplete) onComplete();
     }
@@ -201,7 +210,6 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
 
   const handleUnignore = (eventId: string) => {
     unignoreEvent(eventId);
-    // Notify parent to refresh its state
     onCategorize?.();
   };
 
@@ -212,7 +220,6 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
         saveCategorization(event.id, event.summary, suggestion.valueQuadrant, suggestion.energyRating);
       }
     });
-    // Notify parent to refresh its state
     onCategorize?.();
   };
 
@@ -226,7 +233,6 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
       valueQuadrant,
       energyRating
     );
-    // Notify parent to refresh its state
     onCategorize?.();
   };
 
@@ -234,9 +240,24 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
     group.events.forEach((event) => {
       ignoreEvent(event.id, event.summary);
     });
-    // Notify parent to refresh its state
     onCategorize?.();
   };
+
+  // Tag search function (shared across all group cards)
+  const searchTags = useCallback(async (query: string): Promise<Tag[]> => {
+    try {
+      const res = await fetch(`/api/tags?query=${encodeURIComponent(query)}&limit=15`);
+      if (!res.ok) return tags.filter(t => t.name.toLowerCase().includes(query.toLowerCase()));
+      const data = await res.json();
+      return data.tags || [];
+    } catch {
+      return tags.filter(t => t.name.toLowerCase().includes(query.toLowerCase()));
+    }
+  }, [tags]);
+
+  const handleCreateTag = useCallback(async (name: string): Promise<Tag | null> => {
+    return await createTag(name);
+  }, [createTag]);
 
   // Show "All categorized" only when there are no uncategorized AND no ignored events
   if (uncategorizedEvents.length === 0 && ignoredEvents.length === 0) {
@@ -271,7 +292,7 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
                 categorization
               </>
             ) : (
-              <>All events categorized • {ignoredEvents.length} ignored</>
+              <>All events categorized &bull; {ignoredEvents.length} ignored</>
             )}
           </p>
         </div>
@@ -363,6 +384,10 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
                     group={group}
                     onApply={handleApplyToGroup}
                     onIgnore={handleIgnoreGroup}
+                    tags={tags}
+                    onCreateTag={handleCreateTag}
+                    onSearchTags={searchTags}
+                    detectedProjects={detectedProjects}
                   />
                 ))}
               </div>
@@ -384,11 +409,10 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
             </Card>
           ) : (
             <>
-              {/* Header with Clear All button */}
               <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">
                   {ignoredEvents.length} event{ignoredEvents.length !== 1 ? 's' : ''} ignored
-                  {groupedIgnoredEvents.length > 1 && ` • ${groupedIgnoredEvents.length} groups`}
+                  {groupedIgnoredEvents.length > 1 && ` \u2022 ${groupedIgnoredEvents.length} groups`}
                 </p>
                 <Button
                   variant="outline"
@@ -426,14 +450,20 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
   );
 }
 
-// Group Card Component
+// ========================================================
+// Enhanced Group Card Component - Bulk Categorization Cockpit
+// ========================================================
 interface GroupCardProps {
   group: GroupedEvents;
   onApply: (group: GroupedEvents, valueQuadrant: ValueQuadrant, energyRating: EnergyRating) => void;
   onIgnore: (group: GroupedEvents) => void;
+  tags: Tag[];
+  onCreateTag: (name: string) => Promise<Tag | null>;
+  onSearchTags: (query: string) => Promise<Tag[]>;
+  detectedProjects: { id: string; name: string }[];
 }
 
-function GroupCard({ group, onApply, onIgnore }: GroupCardProps) {
+function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearchTags, detectedProjects }: GroupCardProps) {
   const [selectedValue, setSelectedValue] = useState<ValueQuadrant | null>(
     group.suggestion?.valueQuadrant || null
   );
@@ -441,10 +471,66 @@ function GroupCard({ group, onApply, onIgnore }: GroupCardProps) {
     group.suggestion?.energyRating || null
   );
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
-  const handleApply = () => {
-    if (selectedValue && selectedEnergy) {
+  // New fields for enhanced categorization
+  const [selectedProject, setSelectedProject] = useState<string>('');
+  const [selectedWorkType, setSelectedWorkType] = useState<string>('');
+  const [selectedLeverage, setSelectedLeverage] = useState<string>('');
+  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
+  const [isApplying, setIsApplying] = useState(false);
+
+  const handleApply = async () => {
+    if (!selectedValue || !selectedEnergy) return;
+
+    setIsApplying(true);
+    try {
+      // First apply the basic categorization (value quadrant + energy)
       onApply(group, selectedValue, selectedEnergy);
+
+      // Then apply enhanced fields via bulk update API if any are set
+      const hasEnhancedFields = selectedProject || selectedWorkType ||
+        selectedLeverage || selectedTags.length > 0;
+
+      if (hasEnhancedFields) {
+        // We need the block IDs - these are the external event IDs that map to time blocks
+        // The bulk update will be handled by the parent via the API
+        const updates: Record<string, unknown> = {};
+
+        if (selectedLeverage && selectedLeverage !== 'none') {
+          updates.leverageType = selectedLeverage;
+        }
+        if (selectedWorkType) {
+          updates.activityType = selectedWorkType;
+        }
+        if (selectedProject) {
+          updates.detectedProjectId = selectedProject;
+        }
+        if (selectedTags.length > 0) {
+          updates.tagIds = selectedTags.map(t => t.id);
+          updates.tagMode = 'merge';
+        }
+
+        // Only call API if we have actual enhanced updates
+        if (Object.keys(updates).length > 0) {
+          // Get block IDs from external event IDs
+          const eventIds = group.events.map(e => e.id);
+          try {
+            await fetch('/api/time-blocks/bulk-update', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                blockIds: eventIds,
+                updates,
+              }),
+            });
+          } catch (err) {
+            console.error('Enhanced bulk update failed:', err);
+          }
+        }
+      }
+    } finally {
+      setIsApplying(false);
     }
   };
 
@@ -460,7 +546,7 @@ function GroupCard({ group, onApply, onIgnore }: GroupCardProps) {
               {group.events.length} event{group.events.length !== 1 ? 's' : ''}
               {group.suggestion && (
                 <span className="ml-2 text-primary">
-                  • {Math.round(group.suggestion.confidence * 100)}% confidence suggestion
+                  &bull; {Math.round(group.suggestion.confidence * 100)}% confidence suggestion
                 </span>
               )}
             </CardDescription>
@@ -482,40 +568,26 @@ function GroupCard({ group, onApply, onIgnore }: GroupCardProps) {
               {group.events.map((event) => {
                 const startTime = safeParseDate(event.start?.dateTime || event.startTime);
                 const endTime = safeParseDate(event.end?.dateTime || event.endTime);
-
-                // Calculate duration
                 let durationText = '';
                 if (startTime && endTime) {
                   const durationMinutes = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60));
                   const hours = Math.floor(durationMinutes / 60);
                   const mins = durationMinutes % 60;
-                  if (hours > 0 && mins > 0) {
-                    durationText = `${hours}h ${mins}m`;
-                  } else if (hours > 0) {
-                    durationText = `${hours}h`;
-                  } else if (mins > 0) {
-                    durationText = `${mins}m`;
-                  }
+                  if (hours > 0 && mins > 0) durationText = `${hours}h ${mins}m`;
+                  else if (hours > 0) durationText = `${hours}h`;
+                  else if (mins > 0) durationText = `${mins}m`;
                 }
-
                 return (
-                  <div
-                    key={event.id}
-                    className="text-sm py-1.5 border-b border-border/50 last:border-0"
-                  >
+                  <div key={event.id} className="text-sm py-1.5 border-b border-border/50 last:border-0">
                     <div className="flex items-center justify-between">
                       <span className="truncate font-medium">{event.summary}</span>
                     </div>
                     <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
-                      {startTime && (
-                        <span>{format(startTime, 'MMM d, yyyy')}</span>
-                      )}
+                      {startTime && <span>{format(startTime, 'MMM d, yyyy')}</span>}
                       {startTime && endTime && (
                         <span>{format(startTime, 'h:mm a')} - {format(endTime, 'h:mm a')}</span>
                       )}
-                      {durationText && (
-                        <span className="text-primary">({durationText})</span>
-                      )}
+                      {durationText && <span className="text-primary">({durationText})</span>}
                     </div>
                   </div>
                 );
@@ -524,7 +596,7 @@ function GroupCard({ group, onApply, onIgnore }: GroupCardProps) {
           </div>
         )}
 
-        {/* Quick category selection */}
+        {/* Value Quadrant quick chips */}
         <div className="flex flex-wrap gap-2">
           {(Object.entries(VALUE_QUADRANTS) as [ValueQuadrant, typeof VALUE_QUADRANTS[ValueQuadrant]][]).map(
             ([key, quadrant]) => (
@@ -542,16 +614,14 @@ function GroupCard({ group, onApply, onIgnore }: GroupCardProps) {
                 }}
                 onClick={() => setSelectedValue(key)}
               >
-                <span
-                  className="w-2 h-2 rounded-full mr-1"
-                  style={{ backgroundColor: quadrant.color }}
-                />
+                <span className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: quadrant.color }} />
                 {quadrant.name}
               </Badge>
             )
           )}
         </div>
 
+        {/* Energy Level quick chips */}
         <div className="flex flex-wrap gap-2">
           {(Object.entries(ENERGY_RATINGS) as [EnergyRating, typeof ENERGY_RATINGS[EnergyRating]][]).map(
             ([key, rating]) => (
@@ -569,16 +639,103 @@ function GroupCard({ group, onApply, onIgnore }: GroupCardProps) {
                 }}
                 onClick={() => setSelectedEnergy(key)}
               >
-                <span
-                  className="w-2 h-2 rounded-full mr-1"
-                  style={{ backgroundColor: rating.color }}
-                />
+                <span className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: rating.color }} />
                 {rating.name}
               </Badge>
             )
           )}
         </div>
 
+        {/* Advanced fields toggle */}
+        <button
+          type="button"
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          {showAdvanced ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+          {showAdvanced ? 'Hide' : 'Show'} project, work type, leverage & tags
+        </button>
+
+        {/* Enhanced categorization fields */}
+        {showAdvanced && (
+          <div className="space-y-3 pt-1 border-t border-border/50 animate-in fade-in slide-in-from-top-2">
+            {/* Project */}
+            <div className="space-y-1.5">
+              <Label className="text-xs">Project</Label>
+              <Select value={selectedProject} onValueChange={setSelectedProject}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="No project / Personal" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">
+                    <span className="text-muted-foreground">No project / Personal</span>
+                  </SelectItem>
+                  {detectedProjects.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Work Type */}
+            <div className="space-y-1.5">
+              <Label className="text-xs">Work Type</Label>
+              <Select value={selectedWorkType} onValueChange={setSelectedWorkType}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="Select work type..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {WORK_TYPE_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Leverage Type */}
+            <div className="space-y-1.5">
+              <Label className="text-xs">Leverage Type</Label>
+              <Select value={selectedLeverage} onValueChange={setSelectedLeverage}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="Not leverage work" />
+                </SelectTrigger>
+                <SelectContent>
+                  {LEVERAGE_TYPE_OPTIONS.map((option) => {
+                    const Icon = option.icon;
+                    return (
+                      <SelectItem key={option.value} value={option.value}>
+                        <div className="flex items-center gap-2">
+                          <Icon className="h-3.5 w-3.5" />
+                          <span>{option.label}</span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Tags (Tackle-like TagInput) */}
+            <div className="space-y-1.5">
+              <Label className="text-xs">Tags</Label>
+              <TagInput
+                value={selectedTags}
+                onChange={setSelectedTags}
+                onCreateTag={onCreateTag}
+                onSearch={onSearchTags}
+                availableTags={tags}
+                placeholder="Type to add tags..."
+                compact
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Actions */}
         <div className="flex justify-between items-center gap-2">
           <Button
             variant="ghost"
@@ -592,9 +749,9 @@ function GroupCard({ group, onApply, onIgnore }: GroupCardProps) {
           <Button
             size="sm"
             onClick={handleApply}
-            disabled={!selectedValue || !selectedEnergy}
+            disabled={!selectedValue || !selectedEnergy || isApplying}
           >
-            Apply to {group.events.length} event{group.events.length !== 1 ? 's' : ''}
+            {isApplying ? 'Applying...' : `Apply to ${group.events.length} event${group.events.length !== 1 ? 's' : ''}`}
           </Button>
         </div>
       </CardContent>
@@ -602,7 +759,9 @@ function GroupCard({ group, onApply, onIgnore }: GroupCardProps) {
   );
 }
 
+// ========================================================
 // Ignored Group Card Component
+// ========================================================
 interface IgnoredGroupCardProps {
   group: { pattern: string; events: IgnoredEvent[] };
   events: GoogleCalendarEvent[];
@@ -626,32 +785,22 @@ function IgnoredGroupCard({ group, events, onUnignore, onUnignoreGroup }: Ignore
             </CardDescription>
           </div>
           <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsExpanded(!isExpanded)}
-            >
+            <Button variant="ghost" size="sm" onClick={() => setIsExpanded(!isExpanded)}>
               {isExpanded ? 'Hide' : 'Show'}
             </Button>
           </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        {/* Expanded event list */}
         {isExpanded && (
           <div className="p-2 rounded bg-muted/50 mb-3">
             <div className="space-y-1 max-h-48 overflow-y-auto">
               {group.events.map((ignoredEvent) => {
-                // Try to find the full event details from the events prop
                 const fullEvent = events.find(e => e.id === ignoredEvent.eventId);
                 const startTime = fullEvent ? safeParseDate(fullEvent.start?.dateTime || fullEvent.startTime) : null;
                 const endTime = fullEvent ? safeParseDate(fullEvent.end?.dateTime || fullEvent.endTime) : null;
-
                 return (
-                  <div
-                    key={ignoredEvent.eventId}
-                    className="text-sm py-1.5 border-b border-border/50 last:border-0"
-                  >
+                  <div key={ignoredEvent.eventId} className="text-sm py-1.5 border-b border-border/50 last:border-0">
                     <div className="flex items-center justify-between">
                       <span className="truncate font-medium">{ignoredEvent.eventName}</span>
                       <Button
@@ -682,14 +831,8 @@ function IgnoredGroupCard({ group, events, onUnignore, onUnignoreGroup }: Ignore
             </div>
           </div>
         )}
-
-        {/* Actions */}
         <div className="flex justify-end">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => onUnignoreGroup(group.events)}
-          >
+          <Button size="sm" variant="outline" onClick={() => onUnignoreGroup(group.events)}>
             <Undo2 className="h-4 w-4 mr-2" />
             Unignore {group.events.length} event{group.events.length !== 1 ? 's' : ''}
           </Button>

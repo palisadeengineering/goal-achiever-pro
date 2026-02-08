@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 
 // POST: Bulk update multiple time blocks with the same changes
+// Supports: valueQuadrant, energyRating, leverageType, activityType, detectedProjectId, tagIds (merge mode)
 export async function POST(request: NextRequest) {
   try {
     const auth = await getAuthenticatedUser();
@@ -33,27 +34,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { valueQuadrant, energyRating } = updates;
+    const { valueQuadrant, energyRating, leverageType, activityType, detectedProjectId, tagIds, tagMode } = updates;
 
     // Ensure at least one field is being updated
-    if (valueQuadrant === undefined && energyRating === undefined) {
+    const hasFieldUpdate = valueQuadrant !== undefined || energyRating !== undefined ||
+      leverageType !== undefined || activityType !== undefined || detectedProjectId !== undefined;
+    const hasTagUpdate = tagIds !== undefined && Array.isArray(tagIds);
+
+    if (!hasFieldUpdate && !hasTagUpdate) {
       return NextResponse.json(
-        { error: 'At least one update field (valueQuadrant or energyRating) is required' },
+        { error: 'At least one update field is required' },
         { status: 400 }
       );
-    }
-
-    // Build update data
-    const updateData: Record<string, unknown> = {
-      updated_at: new Date().toISOString(),
-    };
-
-    if (valueQuadrant !== undefined) {
-      updateData.drip_quadrant = valueQuadrant;
-    }
-
-    if (energyRating !== undefined) {
-      updateData.energy_rating = energyRating;
     }
 
     // Verify all blocks belong to the user before updating
@@ -81,21 +73,101 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Perform bulk update
-    const { data: updatedBlocks, error: updateError } = await supabase
-      .from('time_blocks')
-      .update(updateData)
-      .eq('user_id', userId)
-      .in('id', validIds)
-      .select();
+    // Build update data for time_blocks table columns
+    if (hasFieldUpdate) {
+      const updateData: Record<string, unknown> = {
+        updated_at: new Date().toISOString(),
+      };
 
-    if (updateError) {
-      console.error('Error bulk updating time blocks:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to update time blocks' },
-        { status: 500 }
-      );
+      if (valueQuadrant !== undefined) {
+        updateData.drip_quadrant = valueQuadrant;
+      }
+      if (energyRating !== undefined) {
+        updateData.energy_rating = energyRating;
+      }
+      if (leverageType !== undefined) {
+        updateData.leverage_type = leverageType === 'none' ? null : leverageType;
+      }
+      if (activityType !== undefined) {
+        updateData.activity_type = activityType;
+      }
+      if (detectedProjectId !== undefined) {
+        updateData.detected_project_id = detectedProjectId || null;
+      }
+
+      const { error: updateError } = await supabase
+        .from('time_blocks')
+        .update(updateData)
+        .eq('user_id', userId)
+        .in('id', validIds);
+
+      if (updateError) {
+        console.error('Error bulk updating time blocks:', updateError);
+        return NextResponse.json(
+          { error: 'Failed to update time blocks' },
+          { status: 500 }
+        );
+      }
     }
+
+    // Handle tag assignments (merge mode by default, replace if tagMode === 'replace')
+    if (hasTagUpdate) {
+      const useReplace = tagMode === 'replace';
+
+      if (useReplace) {
+        // Delete existing tag assignments for all blocks
+        const { error: deleteError } = await supabase
+          .from('time_block_tag_assignments')
+          .delete()
+          .in('time_block_id', validIds);
+
+        if (deleteError) {
+          console.error('Error clearing tag assignments:', deleteError);
+        }
+      }
+
+      if (tagIds.length > 0) {
+        // Verify tags belong to user
+        const { data: validTags } = await supabase
+          .from('time_block_tags')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('is_active', true)
+          .in('id', tagIds);
+
+        const validTagIds = (validTags || []).map(t => t.id);
+
+        if (validTagIds.length > 0) {
+          // Build assignment rows for all block+tag combinations
+          const assignments = validIds.flatMap(blockId =>
+            validTagIds.map(tagId => ({
+              time_block_id: blockId,
+              tag_id: tagId,
+            }))
+          );
+
+          // Upsert to handle merge mode (ignore conflicts on duplicate)
+          const { error: insertError } = await supabase
+            .from('time_block_tag_assignments')
+            .upsert(assignments, {
+              onConflict: 'time_block_id,tag_id',
+              ignoreDuplicates: true,
+            });
+
+          if (insertError) {
+            console.error('Error assigning tags:', insertError);
+            // Don't fail the whole operation for tag assignment errors
+          }
+        }
+      }
+    }
+
+    // Fetch updated blocks for response
+    const { data: updatedBlocks } = await supabase
+      .from('time_blocks')
+      .select('*')
+      .eq('user_id', userId)
+      .in('id', validIds);
 
     // Transform to camelCase
     const transformed = (updatedBlocks || []).map(block => ({
@@ -110,6 +182,9 @@ export async function POST(request: NextRequest) {
       notes: block.notes,
       energyRating: block.energy_rating,
       valueQuadrant: block.drip_quadrant || 'na',
+      leverageType: block.leverage_type,
+      activityType: block.activity_type,
+      detectedProjectId: block.detected_project_id,
       source: block.source,
       externalEventId: block.external_event_id,
       createdAt: block.created_at,

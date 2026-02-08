@@ -22,9 +22,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { TagSelector } from './tag-selector';
+import { TagInput } from '@/components/shared/tag-input';
 import { TagManager } from './tag-manager';
-import { useTags, type Tag } from '@/lib/hooks/use-tags';
+import { useTags } from '@/lib/hooks/use-tags';
+import type { Tag } from '@/lib/hooks/use-tags';
 import { useTagPatterns } from '@/lib/hooks/use-tag-patterns';
 import { Sparkles, Check, X, Loader2, Trash2, Repeat, SkipForward, Brain, Briefcase, Users, Car, Zap, Coffee, FileText, HelpCircle, Code, DollarSign } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
@@ -907,72 +908,63 @@ export function TimeBlockForm({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>Tags</Label>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleAISuggest}
-                disabled={isLoadingAISuggestion || !activityName || activityName.length < 3}
-                className="h-7 text-xs"
-              >
-                {isLoadingAISuggestion ? (
-                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                ) : (
-                  <Sparkles className="h-3 w-3 mr-1" />
-                )}
-                AI Suggest
-              </Button>
-            </div>
-            <TagSelector
-              tags={tags}
-              selectedTagIds={selectedTagIds}
-              onChange={setSelectedTagIds}
-              onManageTags={() => setShowTagManager(true)}
-            />
-
-            {/* Tag Suggestions */}
-            {showSuggestion && suggestedTagIds.length > 0 && (
-              <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-md text-sm animate-in fade-in slide-in-from-top-1">
-                <span className="text-xs text-muted-foreground shrink-0">
-                  {suggestionSource === 'ai' ? 'AI suggests:' : 'Suggested:'}
-                </span>
-                <div className="flex flex-wrap gap-1 flex-1">
-                  {suggestedTagIds.map(id => {
-                    const tag = tags.find(t => t.id === id);
-                    return tag ? (
-                      <Badge
-                        key={id}
-                        variant="secondary"
-                        className="text-xs"
-                        style={{ backgroundColor: tag.color + '20', borderColor: tag.color }}
-                      >
-                        {tag.name}
-                      </Badge>
-                    ) : null;
-                  })}
-                </div>
-                <div className="flex gap-1 shrink-0">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={acceptSuggestions}
-                    className="h-6 w-6 p-0 hover:bg-cyan-500/20"
-                  >
-                    <Check className="h-3 w-3 text-cyan-600" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={dismissSuggestions}
-                    className="h-6 w-6 p-0 hover:bg-red-500/20"
-                  >
-                    <X className="h-3 w-3 text-red-600" />
-                  </Button>
-                </div>
+              <div className="flex gap-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleAISuggest}
+                  disabled={isLoadingAISuggestion || !activityName || activityName.length < 3}
+                  className="h-7 text-xs"
+                >
+                  {isLoadingAISuggestion ? (
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-3 w-3 mr-1" />
+                  )}
+                  AI Suggest
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowTagManager(true)}
+                  className="h-7 text-xs text-muted-foreground"
+                >
+                  Manage
+                </Button>
               </div>
-            )}
+            </div>
+            <TagInput
+              value={tags.filter(t => selectedTagIds.includes(t.id))}
+              onChange={(selectedTags) => setSelectedTagIds(selectedTags.map(t => t.id))}
+              onCreateTag={async (name) => {
+                const tag = await createTag(name);
+                return tag;
+              }}
+              onSearch={async (query) => {
+                try {
+                  const res = await fetch(`/api/tags?query=${encodeURIComponent(query)}&limit=15`);
+                  if (!res.ok) return tags.filter(t => t.name.toLowerCase().includes(query.toLowerCase()));
+                  const data = await res.json();
+                  return data.tags || [];
+                } catch {
+                  return tags.filter(t => t.name.toLowerCase().includes(query.toLowerCase()));
+                }
+              }}
+              availableTags={tags}
+              suggestedTags={showSuggestion ? suggestedTagIds.map(id => {
+                const tag = tags.find(t => t.id === id);
+                return tag ? { tag, confidence: suggestionSource === 'ai' ? 0.75 : 0.6 } : null;
+              }).filter((s): s is { tag: Tag; confidence: number } => s !== null) : undefined}
+              onAcceptSuggestion={() => {
+                acceptSuggestions();
+              }}
+              onDismissSuggestion={() => {
+                dismissSuggestions();
+              }}
+              placeholder="Type to add tags..."
+            />
           </div>
 
           <DialogFooter className="flex-col sm:flex-row gap-2">

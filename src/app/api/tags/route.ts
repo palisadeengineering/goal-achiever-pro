@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 
-// GET: Fetch user's tags
-export async function GET() {
+// GET: Fetch user's tags (supports ?query= for autocomplete search, ?limit= for max results)
+export async function GET(request: NextRequest) {
   try {
     const auth = await getAuthenticatedUser();
     if (!auth.isAuthenticated) {
@@ -19,12 +19,23 @@ export async function GET() {
       );
     }
 
-    const { data: tags, error } = await supabase
+    const { searchParams } = new URL(request.url);
+    const query = searchParams.get('query')?.trim();
+    const limit = Math.min(parseInt(searchParams.get('limit') || '100', 10), 100);
+
+    let dbQuery = supabase
       .from('time_block_tags')
       .select('*')
       .eq('user_id', userId)
       .eq('is_active', true)
-      .order('name', { ascending: true });
+      .order('name', { ascending: true })
+      .limit(limit);
+
+    if (query) {
+      dbQuery = dbQuery.ilike('name', `%${query}%`);
+    }
+
+    const { data: tags, error } = await dbQuery;
 
     if (error) {
       console.error('Error fetching tags:', error);
@@ -35,7 +46,8 @@ export async function GET() {
     }
 
     // Transform to camelCase
-    const transformed = (tags || []).map(tag => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const transformed = (tags || []).map((tag: any) => ({
       id: tag.id,
       userId: tag.user_id,
       name: tag.name,
@@ -84,19 +96,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if tag with same name already exists
+    // Idempotent: return existing tag if name matches (case-insensitive)
     const { data: existing } = await supabase
       .from('time_block_tags')
-      .select('id')
+      .select('*')
       .eq('user_id', userId)
-      .eq('name', name.trim())
+      .ilike('name', name.trim())
+      .eq('is_active', true)
       .single();
 
     if (existing) {
-      return NextResponse.json(
-        { error: 'A tag with this name already exists' },
-        { status: 400 }
-      );
+      const existingTransformed = {
+        id: existing.id,
+        userId: existing.user_id,
+        name: existing.name,
+        color: existing.color,
+        description: existing.description,
+        isActive: existing.is_active,
+        createdAt: existing.created_at,
+        updatedAt: existing.updated_at,
+      };
+      return NextResponse.json({ tag: existingTransformed, existing: true });
     }
 
     const { data: tag, error } = await supabase
