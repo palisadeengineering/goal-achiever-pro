@@ -100,9 +100,9 @@ export function useEventPatterns() {
   const hasSyncedRef = useRef(false);
 
   /**
-   * On mount, fetch categorizations from the database and merge into localStorage.
-   * This enables cross-device sync: categorizations saved on one device
-   * appear on another device after a page load.
+   * On mount, perform bidirectional sync between localStorage and database:
+   * 1. Upload local-only categorizations to the DB (so other devices can see them)
+   * 2. Download DB-only categorizations to localStorage (so this device can see them)
    */
   useEffect(() => {
     if (hasSyncedRef.current) return;
@@ -117,56 +117,118 @@ export function useEventPatterns() {
         });
         if (!res.ok) return;
 
-        const { categorizations: dbCategorizations } = await res.json();
-        if (!dbCategorizations || dbCategorizations.length === 0) return;
+        const { categorizations: dbCategorizations = [] } = await res.json();
+        const dbMap = new Map<string, boolean>();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        for (const row of dbCategorizations as any[]) {
+          if (row.externalEventId) dbMap.set(row.externalEventId, true);
+        }
 
-        // Use functional updater to merge DB data into current state
-        // This avoids race conditions with concurrent state updates
-        setCategorizations((prev) => {
-          const localCatMap = new Map(prev.map((c) => [c.eventId, c]));
-          let changed = false;
+        // Upload local categorizations that aren't in the DB yet
+        const localCats: EventCategorization[] = (() => {
+          try {
+            const raw = window.localStorage.getItem(CATEGORIZATION_STORAGE_KEY);
+            return raw ? JSON.parse(raw) : [];
+          } catch { return []; }
+        })();
 
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          for (const dbRow of dbCategorizations as any[]) {
-            const eventId = dbRow.externalEventId;
-            if (!eventId || dbRow.isIgnored) continue;
+        const localIgnored: IgnoredEvent[] = (() => {
+          try {
+            const raw = window.localStorage.getItem(IGNORED_EVENTS_STORAGE_KEY);
+            return raw ? JSON.parse(raw) : [];
+          } catch { return []; }
+        })();
 
-            if (dbRow.valueQuadrant && dbRow.energyRating && !localCatMap.has(eventId)) {
-              localCatMap.set(eventId, {
-                eventId,
-                eventName: dbRow.eventName || '',
-                valueQuadrant: dbRow.valueQuadrant as ValueQuadrant,
-                energyRating: dbRow.energyRating as EnergyRating,
-                categorizedAt: dbRow.categorizedAt || new Date().toISOString(),
-              });
-              changed = true;
-            }
+        const toUpload: Array<{
+          externalEventId: string;
+          eventName: string;
+          valueQuadrant?: ValueQuadrant;
+          energyRating?: EnergyRating;
+          isIgnored?: boolean;
+        }> = [];
+
+        for (const cat of localCats) {
+          if (cat.eventId && cat.valueQuadrant && cat.energyRating && !dbMap.has(cat.eventId)) {
+            toUpload.push({
+              externalEventId: cat.eventId,
+              eventName: cat.eventName || '',
+              valueQuadrant: cat.valueQuadrant,
+              energyRating: cat.energyRating,
+              isIgnored: false,
+            });
           }
+        }
 
-          return changed ? Array.from(localCatMap.values()) : prev;
-        });
-
-        setIgnoredEvents((prev) => {
-          const localIgnoredMap = new Map(prev.map((e) => [e.eventId, e]));
-          let changed = false;
-
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          for (const dbRow of dbCategorizations as any[]) {
-            const eventId = dbRow.externalEventId;
-            if (!eventId || !dbRow.isIgnored) continue;
-
-            if (!localIgnoredMap.has(eventId)) {
-              localIgnoredMap.set(eventId, {
-                eventId,
-                eventName: dbRow.eventName || '',
-                ignoredAt: dbRow.categorizedAt || new Date().toISOString(),
-              });
-              changed = true;
-            }
+        for (const ign of localIgnored) {
+          if (ign.eventId && !dbMap.has(ign.eventId)) {
+            toUpload.push({
+              externalEventId: ign.eventId,
+              eventName: ign.eventName || '',
+              isIgnored: true,
+            });
           }
+        }
 
-          return changed ? Array.from(localIgnoredMap.values()) : prev;
-        });
+        // Batch upload local-only items (API supports up to 500 per request)
+        if (toUpload.length > 0) {
+          for (let i = 0; i < toUpload.length; i += 500) {
+            const batch = toUpload.slice(i, i + 500);
+            fetch('/api/event-categorizations', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(batch),
+            }).catch((err) => console.warn('Failed to upload local categorizations to DB:', err));
+          }
+        }
+
+        // Download DB-only categorizations into localStorage
+        if (dbCategorizations.length > 0) {
+          setCategorizations((prev) => {
+            const localCatMap = new Map(prev.map((c) => [c.eventId, c]));
+            let changed = false;
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            for (const dbRow of dbCategorizations as any[]) {
+              const eventId = dbRow.externalEventId;
+              if (!eventId || dbRow.isIgnored) continue;
+
+              if (dbRow.valueQuadrant && dbRow.energyRating && !localCatMap.has(eventId)) {
+                localCatMap.set(eventId, {
+                  eventId,
+                  eventName: dbRow.eventName || '',
+                  valueQuadrant: dbRow.valueQuadrant as ValueQuadrant,
+                  energyRating: dbRow.energyRating as EnergyRating,
+                  categorizedAt: dbRow.categorizedAt || new Date().toISOString(),
+                });
+                changed = true;
+              }
+            }
+
+            return changed ? Array.from(localCatMap.values()) : prev;
+          });
+
+          setIgnoredEvents((prev) => {
+            const localIgnoredMap = new Map(prev.map((e) => [e.eventId, e]));
+            let changed = false;
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            for (const dbRow of dbCategorizations as any[]) {
+              const eventId = dbRow.externalEventId;
+              if (!eventId || !dbRow.isIgnored) continue;
+
+              if (!localIgnoredMap.has(eventId)) {
+                localIgnoredMap.set(eventId, {
+                  eventId,
+                  eventName: dbRow.eventName || '',
+                  ignoredAt: dbRow.categorizedAt || new Date().toISOString(),
+                });
+                changed = true;
+              }
+            }
+
+            return changed ? Array.from(localIgnoredMap.values()) : prev;
+          });
+        }
       } catch (err) {
         if (err instanceof DOMException && err.name === 'AbortError') return;
         console.warn('Failed to sync categorizations from database:', err);
