@@ -489,21 +489,21 @@ function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearchTags, 
       onApply(group, selectedValue, selectedEnergy);
 
       // Then apply enhanced fields via bulk update API if any are set
-      const hasEnhancedFields = selectedProject || selectedWorkType ||
-        selectedLeverage || selectedTags.length > 0;
+      const hasProject = selectedProject && selectedProject !== 'none';
+      const hasLeverage = selectedLeverage && selectedLeverage !== 'none';
+      const hasEnhancedFields = hasProject || selectedWorkType ||
+        hasLeverage || selectedTags.length > 0;
 
       if (hasEnhancedFields) {
-        // We need the block IDs - these are the external event IDs that map to time blocks
-        // The bulk update will be handled by the parent via the API
         const updates: Record<string, unknown> = {};
 
-        if (selectedLeverage && selectedLeverage !== 'none') {
+        if (hasLeverage) {
           updates.leverageType = selectedLeverage;
         }
         if (selectedWorkType) {
           updates.activityType = selectedWorkType;
         }
-        if (selectedProject) {
+        if (hasProject) {
           updates.detectedProjectId = selectedProject;
         }
         if (selectedTags.length > 0) {
@@ -513,7 +513,7 @@ function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearchTags, 
 
         // Only call API if we have actual enhanced updates
         if (Object.keys(updates).length > 0) {
-          // Get block IDs from external event IDs
+          // These are Google Calendar external event IDs, use idType: 'external'
           const eventIds = group.events.map(e => e.id);
           try {
             await fetch('/api/time-blocks/bulk-update', {
@@ -521,6 +521,7 @@ function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearchTags, 
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 blockIds: eventIds,
+                idType: 'external',
                 updates,
               }),
             });

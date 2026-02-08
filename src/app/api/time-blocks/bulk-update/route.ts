@@ -18,11 +18,19 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
-    const { blockIds, updates } = body;
+    const { blockIds, updates, idType } = body;
 
     if (!blockIds || !Array.isArray(blockIds) || blockIds.length === 0) {
       return NextResponse.json(
         { error: 'blockIds array is required and must not be empty' },
+        { status: 400 }
+      );
+    }
+
+    // Cap blockIds to prevent oversized queries
+    if (blockIds.length > 500) {
+      return NextResponse.json(
+        { error: 'blockIds array must not exceed 500 items' },
         { status: 400 }
       );
     }
@@ -36,6 +44,25 @@ export async function POST(request: NextRequest) {
 
     const { valueQuadrant, energyRating, leverageType, activityType, detectedProjectId, tagIds, tagMode } = updates;
 
+    // Validate enum values
+    const validValueQuadrants = ['production', 'investment', 'replacement', 'delegation', 'na'];
+    const validEnergyRatings = ['green', 'yellow', 'red'];
+    const validActivityTypes = ['project', 'meeting', 'commute', 'deep_work', 'admin', 'break', 'other'];
+    const validLeverageTypes = ['code', 'content', 'capital', 'collaboration', 'none'];
+
+    if (valueQuadrant !== undefined && !validValueQuadrants.includes(valueQuadrant)) {
+      return NextResponse.json({ error: `Invalid valueQuadrant: ${valueQuadrant}` }, { status: 400 });
+    }
+    if (energyRating !== undefined && !validEnergyRatings.includes(energyRating)) {
+      return NextResponse.json({ error: `Invalid energyRating: ${energyRating}` }, { status: 400 });
+    }
+    if (activityType !== undefined && !validActivityTypes.includes(activityType)) {
+      return NextResponse.json({ error: `Invalid activityType: ${activityType}` }, { status: 400 });
+    }
+    if (leverageType !== undefined && !validLeverageTypes.includes(leverageType)) {
+      return NextResponse.json({ error: `Invalid leverageType: ${leverageType}` }, { status: 400 });
+    }
+
     // Ensure at least one field is being updated
     const hasFieldUpdate = valueQuadrant !== undefined || energyRating !== undefined ||
       leverageType !== undefined || activityType !== undefined || detectedProjectId !== undefined;
@@ -48,12 +75,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Support lookup by external_event_id (for Google Calendar events) or by primary key id
+    const useExternalId = idType === 'external';
+    const lookupColumn = useExternalId ? 'external_event_id' : 'id';
+
     // Verify all blocks belong to the user before updating
     const { data: existingBlocks, error: verifyError } = await supabase
       .from('time_blocks')
       .select('id')
       .eq('user_id', userId)
-      .in('id', blockIds);
+      .in(lookupColumn, blockIds);
 
     if (verifyError) {
       console.error('Error verifying time blocks:', verifyError);
@@ -63,7 +94,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Filter to only IDs that exist and belong to the user
+    // Filter to only IDs (always use primary key id for updates)
     const validIds = (existingBlocks || []).map(b => b.id);
 
     if (validIds.length === 0) {
@@ -92,7 +123,21 @@ export async function POST(request: NextRequest) {
         updateData.activity_type = activityType;
       }
       if (detectedProjectId !== undefined) {
-        updateData.detected_project_id = detectedProjectId || null;
+        if (detectedProjectId === null || detectedProjectId === '') {
+          updateData.detected_project_id = null;
+        } else {
+          // Verify project belongs to user
+          const { data: projectCheck } = await supabase
+            .from('detected_projects')
+            .select('id')
+            .eq('id', detectedProjectId)
+            .eq('user_id', userId)
+            .single();
+          if (projectCheck) {
+            updateData.detected_project_id = detectedProjectId;
+          }
+          // Silently skip if project not found/not owned
+        }
       }
 
       const { error: updateError } = await supabase
@@ -111,6 +156,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Handle tag assignments (merge mode by default, replace if tagMode === 'replace')
+    const tagWarnings: string[] = [];
     if (hasTagUpdate) {
       const useReplace = tagMode === 'replace';
 
@@ -123,6 +169,7 @@ export async function POST(request: NextRequest) {
 
         if (deleteError) {
           console.error('Error clearing tag assignments:', deleteError);
+          tagWarnings.push('Failed to clear existing tag assignments; tags were merged instead of replaced');
         }
       }
 
@@ -156,7 +203,7 @@ export async function POST(request: NextRequest) {
 
           if (insertError) {
             console.error('Error assigning tags:', insertError);
-            // Don't fail the whole operation for tag assignment errors
+            tagWarnings.push('Failed to assign some tags');
           }
         }
       }
@@ -196,6 +243,7 @@ export async function POST(request: NextRequest) {
       updated: transformed.length,
       skipped: blockIds.length - validIds.length,
       timeBlocks: transformed,
+      ...(tagWarnings.length > 0 && { warnings: tagWarnings }),
     });
   } catch (error) {
     console.error('Bulk update time blocks error:', error);

@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 
+// Escape LIKE/ILIKE wildcard characters for safe pattern matching
+function escapeLikePattern(str: string): string {
+  return str.replace(/%/g, '\\%').replace(/_/g, '\\_');
+}
+
 // GET: Fetch user's tags (supports ?query= for autocomplete search, ?limit= for max results)
 export async function GET(request: NextRequest) {
   try {
@@ -21,7 +26,8 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('query')?.trim();
-    const limit = Math.min(parseInt(searchParams.get('limit') || '100', 10), 100);
+    const parsedLimit = parseInt(searchParams.get('limit') || '100', 10);
+    const limit = Math.max(1, Math.min(Number.isNaN(parsedLimit) ? 100 : parsedLimit, 100));
 
     let dbQuery = supabase
       .from('time_block_tags')
@@ -32,7 +38,8 @@ export async function GET(request: NextRequest) {
       .limit(limit);
 
     if (query) {
-      dbQuery = dbQuery.ilike('name', `%${query}%`);
+      const escaped = escapeLikePattern(query);
+      dbQuery = dbQuery.ilike('name', `%${escaped}%`);
     }
 
     const { data: tags, error } = await dbQuery;
@@ -96,12 +103,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Idempotent: return existing tag if name matches (case-insensitive)
+    // Idempotent: return existing tag if name matches (case-insensitive, exact match)
+    const escapedName = escapeLikePattern(name.trim());
     const { data: existing } = await supabase
       .from('time_block_tags')
       .select('*')
       .eq('user_id', userId)
-      .ilike('name', name.trim())
+      .ilike('name', escapedName)
       .eq('is_active', true)
       .single();
 
@@ -183,6 +191,13 @@ export async function PUT(request: NextRequest) {
     if (!id) {
       return NextResponse.json(
         { error: 'Tag ID is required' },
+        { status: 400 }
+      );
+    }
+
+    if (name !== undefined && !name.trim()) {
+      return NextResponse.json(
+        { error: 'Tag name cannot be empty' },
         { status: 400 }
       );
     }

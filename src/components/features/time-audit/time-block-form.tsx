@@ -177,6 +177,7 @@ export function TimeBlockForm({
   const [showSuggestion, setShowSuggestion] = useState(false);
   const [isLoadingAISuggestion, setIsLoadingAISuggestion] = useState(false);
   const [suggestionSource, setSuggestionSource] = useState<'pattern' | 'ai' | null>(null);
+  const [suggestionConfidence, setSuggestionConfidence] = useState<number>(0.5);
 
   const { tags, createTag, updateTag, deleteTag } = useTags();
   const { getSuggestion, shouldAutoApply, learnPattern } = useTagPatterns();
@@ -302,6 +303,7 @@ export function TimeBlockForm({
         setSuggestedTagIds(validTagIds);
         setShowSuggestion(true);
         setSuggestionSource('pattern');
+        setSuggestionConfidence(suggestion.confidence);
       }
     }
   }, [activityName, tags, getSuggestion, shouldAutoApply, selectedTagIds.length, open]);
@@ -423,6 +425,7 @@ export function TimeBlockForm({
           setSuggestedTagIds(result.suggestedTagIds);
           setShowSuggestion(true);
           setSuggestionSource('ai');
+          setSuggestionConfidence(result.confidence ?? 0.75);
         }
       }
     } catch (error) {
@@ -432,17 +435,23 @@ export function TimeBlockForm({
     }
   }, [activityName, description, tags, isLoadingAISuggestion]);
 
-  // Accept suggested tags
-  const acceptSuggestions = useCallback(() => {
-    setSelectedTagIds(prev => [...new Set([...prev, ...suggestedTagIds])]);
-    setShowSuggestion(false);
-    setSuggestedTagIds([]);
-  }, [suggestedTagIds]);
+  // Accept a single suggested tag
+  const acceptSuggestion = useCallback((tag: Tag) => {
+    setSelectedTagIds(prev => [...new Set([...prev, tag.id])]);
+    setSuggestedTagIds(prev => {
+      const remaining = prev.filter(id => id !== tag.id);
+      if (remaining.length === 0) setShowSuggestion(false);
+      return remaining;
+    });
+  }, []);
 
-  // Dismiss suggestions
-  const dismissSuggestions = useCallback(() => {
-    setShowSuggestion(false);
-    setSuggestedTagIds([]);
+  // Dismiss a single suggestion
+  const dismissSuggestion = useCallback((tag: Tag) => {
+    setSuggestedTagIds(prev => {
+      const remaining = prev.filter(id => id !== tag.id);
+      if (remaining.length === 0) setShowSuggestion(false);
+      return remaining;
+    });
   }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -955,13 +964,13 @@ export function TimeBlockForm({
               availableTags={tags}
               suggestedTags={showSuggestion ? suggestedTagIds.map(id => {
                 const tag = tags.find(t => t.id === id);
-                return tag ? { tag, confidence: suggestionSource === 'ai' ? 0.75 : 0.6 } : null;
+                return tag ? { tag, confidence: suggestionConfidence } : null;
               }).filter((s): s is { tag: Tag; confidence: number } => s !== null) : undefined}
-              onAcceptSuggestion={() => {
-                acceptSuggestions();
+              onAcceptSuggestion={(tag) => {
+                acceptSuggestion(tag);
               }}
-              onDismissSuggestion={() => {
-                dismissSuggestions();
+              onDismissSuggestion={(tag) => {
+                dismissSuggestion(tag);
               }}
               placeholder="Type to add tags..."
             />

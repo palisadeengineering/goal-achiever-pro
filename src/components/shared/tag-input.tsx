@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect, type KeyboardEvent } from 'react';
+import { useState, useRef, useCallback, useEffect, useId, type KeyboardEvent } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Tag } from '@/lib/hooks/use-tags';
@@ -57,6 +57,9 @@ export function TagInput({
   const containerRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const instanceId = useId();
+  const listboxId = `tag-listbox-${instanceId}`;
+  const optionId = (index: number) => `tag-option-${instanceId}-${index}`;
 
   const selectedIds = new Set(value.map(t => t.id));
 
@@ -157,22 +160,40 @@ export function TagInput({
   };
 
   // Handle paste: "tag1, tag2, tag3" -> 3 chips
+  // Accumulates all tags then calls onChange once to avoid stale closure issues
   const handlePaste = (e: React.ClipboardEvent) => {
     const text = e.clipboardData.getData('text');
     if (text.includes(',')) {
       e.preventDefault();
       const names = text.split(',').map(s => s.trim()).filter(Boolean);
-      // Process tags sequentially
       (async () => {
+        const accumulated: Tag[] = [...value];
+        const accumulatedIds = new Set(value.map(t => t.id));
+        const accumulatedNames = new Set(value.map(t => t.name.toLowerCase()));
+
         for (const name of names) {
-          const duplicate = value.find(t => t.name.toLowerCase() === name.toLowerCase());
-          if (duplicate) continue;
+          if (accumulatedNames.has(name.toLowerCase())) continue;
+          if (maxTags && accumulated.length >= maxTags) break;
+
           const existing = findExactMatch(name);
-          if (existing) {
-            addTag(existing);
-          } else if (allowCreate) {
-            await createAndAddTag(name);
+          if (existing && !accumulatedIds.has(existing.id)) {
+            accumulated.push(existing);
+            accumulatedIds.add(existing.id);
+            accumulatedNames.add(existing.name.toLowerCase());
+          } else if (allowCreate && !existing) {
+            const tag = await onCreateTag(name);
+            if (tag && !accumulatedIds.has(tag.id)) {
+              accumulated.push(tag);
+              accumulatedIds.add(tag.id);
+              accumulatedNames.add(tag.name.toLowerCase());
+            }
           }
+        }
+
+        if (accumulated.length > value.length) {
+          onChange(accumulated);
+          setInputValue('');
+          inputRef.current?.focus();
         }
       })();
     }
@@ -211,11 +232,7 @@ export function TagInput({
       case 'Tab':
         if (isOpen && suggestions.length > 0 && inputValue.trim()) {
           e.preventDefault();
-          // Accept first suggestion
-          const firstIdx = showCreate ? 1 : 0;
-          if (suggestions[firstIdx !== undefined ? (showCreate ? 0 : 0) : 0]) {
-            addTag(suggestions[0]);
-          }
+          addTag(suggestions[0]);
         }
         break;
 
@@ -242,6 +259,9 @@ export function TagInput({
 
       case 'ArrowUp':
         e.preventDefault();
+        if (!isOpen) {
+          setIsOpen(true);
+        }
         setHighlightedIndex(prev =>
           prev > 0 ? prev - 1 : totalItems - 1
         );
@@ -374,9 +394,9 @@ export function TagInput({
           )}
           role="combobox"
           aria-expanded={isOpen}
-          aria-controls="tag-listbox"
+          aria-controls={listboxId}
           aria-activedescendant={
-            highlightedIndex >= 0 ? `tag-option-${highlightedIndex}` : undefined
+            highlightedIndex >= 0 ? optionId(highlightedIndex) : undefined
           }
           autoComplete="off"
         />
@@ -385,7 +405,7 @@ export function TagInput({
       {/* Dropdown */}
       {isOpen && (suggestions.length > 0 || showCreate) && (
         <ul
-          id="tag-listbox"
+          id={listboxId}
           ref={listRef}
           role="listbox"
           className={cn(
@@ -397,7 +417,7 @@ export function TagInput({
           {/* Create option */}
           {showCreate && (
             <li
-              id="tag-option-0"
+              id={optionId(0)}
               role="option"
               aria-selected={highlightedIndex === 0}
               className={cn(
@@ -421,7 +441,7 @@ export function TagInput({
             return (
               <li
                 key={tag.id}
-                id={`tag-option-${itemIndex}`}
+                id={optionId(itemIndex)}
                 role="option"
                 aria-selected={highlightedIndex === itemIndex}
                 className={cn(
