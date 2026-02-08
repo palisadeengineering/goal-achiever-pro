@@ -23,6 +23,7 @@ import { GoogleEventCategorizer } from './google-event-categorizer';
 import { VALUE_QUADRANTS, ENERGY_RATINGS } from '@/constants/drip';
 import type { ValueQuadrant, EnergyRating, LeverageType } from '@/types/database';
 import type { GoogleCalendarEvent } from '@/lib/hooks/use-google-calendar';
+import { Input } from '@/components/ui/input';
 import { CheckCircle2, ListTodo, Sparkles, EyeOff, Eye, Undo2, Trash2, Briefcase, Code, FileText, DollarSign, Users, ChevronDown, ChevronUp } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
 
@@ -475,6 +476,7 @@ function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearchTags, 
 
   // New fields for enhanced categorization
   const [selectedProject, setSelectedProject] = useState<string>('');
+  const [customProjectName, setCustomProjectName] = useState<string>('');
   const [selectedWorkType, setSelectedWorkType] = useState<string>('');
   const [selectedLeverage, setSelectedLeverage] = useState<string>('');
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
@@ -489,7 +491,9 @@ function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearchTags, 
       onApply(group, selectedValue, selectedEnergy);
 
       // Then apply enhanced fields via bulk update API if any are set
-      const hasProject = selectedProject && selectedProject !== 'none';
+      const isExistingProject = selectedProject && selectedProject !== 'none' && selectedProject !== 'new';
+      const isNewProject = selectedProject === 'new' && customProjectName.trim();
+      const hasProject = isExistingProject || isNewProject;
       const hasLeverage = selectedLeverage && selectedLeverage !== 'none';
       const hasEnhancedFields = hasProject || selectedWorkType ||
         hasLeverage || selectedTags.length > 0;
@@ -503,7 +507,27 @@ function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearchTags, 
         if (selectedWorkType) {
           updates.activityType = selectedWorkType;
         }
-        if (hasProject) {
+
+        // Create new project if needed, or use existing
+        if (isNewProject) {
+          try {
+            const createRes = await fetch('/api/detected-projects', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name: customProjectName.trim() }),
+            });
+            if (createRes.ok) {
+              const { project } = await createRes.json();
+              updates.detectedProjectId = project.id;
+            } else if (createRes.status === 409) {
+              // Project already exists, use the existing ID
+              const { existingId } = await createRes.json();
+              if (existingId) updates.detectedProjectId = existingId;
+            }
+          } catch (err) {
+            console.error('Failed to create project:', err);
+          }
+        } else if (isExistingProject) {
           updates.detectedProjectId = selectedProject;
         }
         if (selectedTags.length > 0) {
@@ -663,13 +687,22 @@ function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearchTags, 
             {/* Project */}
             <div className="space-y-1.5">
               <Label className="text-xs">Project</Label>
-              <Select value={selectedProject} onValueChange={setSelectedProject}>
+              <Select
+                value={selectedProject}
+                onValueChange={(v) => {
+                  setSelectedProject(v);
+                  if (v !== 'new') setCustomProjectName('');
+                }}
+              >
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue placeholder="No project / Personal" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">
                     <span className="text-muted-foreground">No project / Personal</span>
+                  </SelectItem>
+                  <SelectItem value="new">
+                    <span className="text-muted-foreground">+ New project</span>
                   </SelectItem>
                   {detectedProjects.map((project) => (
                     <SelectItem key={project.id} value={project.id}>
@@ -678,6 +711,15 @@ function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearchTags, 
                   ))}
                 </SelectContent>
               </Select>
+              {selectedProject === 'new' && (
+                <Input
+                  className="h-8 text-xs mt-1.5"
+                  placeholder="Type project name..."
+                  value={customProjectName}
+                  onChange={(e) => setCustomProjectName(e.target.value)}
+                  autoFocus
+                />
+              )}
             </div>
 
             {/* Work Type */}
