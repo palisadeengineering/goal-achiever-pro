@@ -3,7 +3,8 @@
 import { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Pencil } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface ProjectBreakdown {
   projectId: string;
@@ -18,6 +19,7 @@ interface ProjectBreakdown {
 interface TimeByProjectChartProps {
   data: ProjectBreakdown[];
   maxProjects?: number;
+  onProjectClick?: (projectId: string) => void;
 }
 
 // Generate a color based on the project name (consistent hashing)
@@ -77,13 +79,14 @@ function TrendIndicator({ trend }: { trend: number }) {
   );
 }
 
-export function TimeByProjectChart({ data, maxProjects = 8 }: TimeByProjectChartProps) {
+export function TimeByProjectChart({ data, maxProjects = 8, onProjectClick }: TimeByProjectChartProps) {
   const chartData = useMemo(() => {
     return data.slice(0, maxProjects).map((item) => ({
       name: item.projectName.length > 20
         ? item.projectName.substring(0, 20) + '...'
         : item.projectName,
       fullName: item.projectName,
+      projectId: item.projectId,
       hours: Math.round((item.totalMinutes / 60) * 10) / 10,
       minutes: item.totalMinutes,
       events: item.eventCount,
@@ -158,7 +161,10 @@ export function TimeByProjectChart({ data, maxProjects = 8 }: TimeByProjectChart
           {chartData.map((item) => (
             <div
               key={item.fullName}
-              className="flex items-center justify-between py-1.5 border-b last:border-0"
+              className={`flex items-center justify-between py-1.5 border-b last:border-0 ${
+                onProjectClick ? 'group cursor-pointer hover:bg-accent/50 rounded-md px-1 -mx-1 transition-colors' : ''
+              }`}
+              onClick={onProjectClick ? () => onProjectClick(item.projectId) : undefined}
             >
               <div className="flex items-center gap-2 min-w-0 flex-1">
                 <div
@@ -186,6 +192,19 @@ export function TimeByProjectChart({ data, maxProjects = 8 }: TimeByProjectChart
                 <div className="w-12">
                   <TrendIndicator trend={item.trend} />
                 </div>
+                {onProjectClick && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onProjectClick(item.projectId);
+                    }}
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                )}
               </div>
             </div>
           ))}

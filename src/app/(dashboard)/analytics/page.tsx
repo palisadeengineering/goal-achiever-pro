@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { subWeeks, subMonths, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, format } from 'date-fns';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { subWeeks, startOfWeek, endOfWeek, format } from 'date-fns';
 import { PageHeader } from '@/components/layout/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -13,6 +15,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useAnalyticsData } from '@/lib/hooks/use-analytics-data';
 import { useEnhancedAnalytics, type TimeGranularity } from '@/lib/hooks/use-enhanced-analytics';
 import { WeeklyTrendsChart } from '@/components/features/analytics/weekly-trends-chart';
@@ -24,25 +34,46 @@ import { TimeByProjectChart } from '@/components/features/analytics/time-by-proj
 import { MeetingLoadWidget } from '@/components/features/analytics/meeting-load-widget';
 import { PeriodComparisonView } from '@/components/features/analytics/period-comparison-view';
 import {
-  TrendingUp,
-  TrendingDown,
   Clock,
-  Zap,
   Target,
-  Calendar,
   BarChart3,
   Users,
   FolderKanban,
+  Loader2,
+  ExternalLink,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ShareButton } from '@/components/features/sharing';
+import Link from 'next/link';
 
 type DateRangeOption = '1week' | '2weeks' | '1month' | '3months';
 type ViewTab = 'overview' | 'projects' | 'meetings';
 
+interface PowerGoal {
+  id: string;
+  title: string;
+  quarter: number;
+}
+
+const COLOR_OPTIONS = [
+  '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e',
+  '#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e',
+  '#10b981', '#14b8a6', '#06b6d4', '#0ea5e9', '#3b82f6',
+];
+
 export default function AnalyticsPage() {
   const [dateRangeOption, setDateRangeOption] = useState<DateRangeOption>('1month');
   const [viewTab, setViewTab] = useState<ViewTab>('overview');
+
+  // Project edit dialog state
+  const [editProjectId, setEditProjectId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editColor, setEditColor] = useState('');
+  const [editPowerGoalId, setEditPowerGoalId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingProject, setIsLoadingProject] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [powerGoals, setPowerGoals] = useState<PowerGoal[]>([]);
 
   const dateRange = useMemo(() => {
     const end = endOfWeek(new Date(), { weekStartsOn: 1 });
@@ -91,11 +122,71 @@ export default function AnalyticsPage() {
   const analytics = useAnalyticsData(dateRange);
   const enhancedAnalytics = useEnhancedAnalytics(dateRange, granularity);
 
-  const formatHour = (hour: number): string => {
-    if (hour === 0) return '12:00 AM';
-    if (hour === 12) return '12:00 PM';
-    if (hour < 12) return `${hour}:00 AM`;
-    return `${hour - 12}:00 PM`;
+  // Fetch power goals when edit dialog opens
+  useEffect(() => {
+    if (editProjectId) {
+      fetch('/api/power-goals')
+        .then((res) => res.ok ? res.json() : null)
+        .then((data) => {
+          if (data?.powerGoals) setPowerGoals(data.powerGoals);
+        })
+        .catch(() => {});
+    }
+  }, [editProjectId]);
+
+  // Handle project click - fetch project details and open edit dialog
+  const handleProjectClick = useCallback(async (projectId: string) => {
+    setEditProjectId(projectId);
+    setIsLoadingProject(true);
+    setLoadError(null);
+
+    try {
+      const res = await fetch('/api/detected-projects');
+      if (!res.ok) {
+        setLoadError('Failed to load project details');
+        return;
+      }
+      const data = await res.json();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const project = (data.projects || []).find((p: any) => p.id === projectId);
+      if (project) {
+        setEditName(project.name);
+        setEditColor(project.color || '#6b7280');
+        setEditPowerGoalId(project.powerGoalId || null);
+      } else {
+        setLoadError('Project not found');
+      }
+    } catch {
+      setLoadError('Failed to load project details');
+    } finally {
+      setIsLoadingProject(false);
+    }
+  }, []);
+
+  // Save project edits
+  const saveProjectEdits = async () => {
+    if (!editProjectId || !editName.trim()) return;
+
+    setIsSaving(true);
+    try {
+      const response = await fetch(`/api/detected-projects/${editProjectId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editName,
+          color: editColor,
+          powerGoalId: editPowerGoalId,
+        }),
+      });
+
+      if (response.ok) {
+        setEditProjectId(null);
+      }
+    } catch (error) {
+      console.error('Failed to save project:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -352,7 +443,20 @@ export default function AnalyticsPage() {
 
         {/* Projects Tab */}
         <TabsContent value="projects" className="space-y-6 mt-6">
-          <TimeByProjectChart data={enhancedAnalytics.projectBreakdown} />
+          <TimeByProjectChart
+            data={enhancedAnalytics.projectBreakdown}
+            onProjectClick={handleProjectClick}
+          />
+
+          <div className="flex justify-end">
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/time-audit/projects">
+                <FolderKanban className="h-4 w-4 mr-2" />
+                Manage All Projects
+                <ExternalLink className="h-3 w-3 ml-1" />
+              </Link>
+            </Button>
+          </div>
 
           {/* Period comparison for projects */}
           <PeriodComparisonView
@@ -372,6 +476,103 @@ export default function AnalyticsPage() {
           />
         </TabsContent>
       </Tabs>
+
+      {/* Project Edit Dialog */}
+      <Dialog open={!!editProjectId} onOpenChange={(open) => !open && setEditProjectId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Project</DialogTitle>
+            <DialogDescription>
+              Update project details and link to a Power Goal
+            </DialogDescription>
+          </DialogHeader>
+
+          {isLoadingProject ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : loadError ? (
+            <div className="flex flex-col items-center justify-center py-8 gap-2">
+              <p className="text-sm text-destructive">{loadError}</p>
+              <Button variant="outline" size="sm" onClick={() => editProjectId && handleProjectClick(editProjectId)}>
+                Retry
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-project-name">Name</Label>
+                <Input
+                  id="edit-project-name"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Project name"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Color</Label>
+                <div className="flex flex-wrap gap-2">
+                  {COLOR_OPTIONS.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      className={`h-8 w-8 rounded-lg transition-all ${
+                        editColor === color
+                          ? 'ring-2 ring-offset-2 ring-primary scale-110'
+                          : 'hover:scale-105'
+                      }`}
+                      style={{ backgroundColor: color }}
+                      onClick={() => setEditColor(color)}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Link to Power Goal</Label>
+                <Select
+                  value={editPowerGoalId || 'none'}
+                  onValueChange={(v) => setEditPowerGoalId(v === 'none' ? null : v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a Power Goal..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">
+                      <span className="text-muted-foreground">No link</span>
+                    </SelectItem>
+                    {powerGoals.map((goal) => (
+                      <SelectItem key={goal.id} value={goal.id}>
+                        Q{goal.quarter}: {goal.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditProjectId(null)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={saveProjectEdits}
+              disabled={isSaving || isLoadingProject || !editName.trim()}
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save Changes'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

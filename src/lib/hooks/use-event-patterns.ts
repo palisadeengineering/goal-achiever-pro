@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useLocalStorage } from './use-local-storage';
 import type { ValueQuadrant, EnergyRating } from '@/types/database';
 
@@ -38,6 +38,53 @@ const PATTERN_STORAGE_KEY = 'google-calendar-patterns';
 const CATEGORIZATION_STORAGE_KEY = 'event-categorizations';
 const IGNORED_EVENTS_STORAGE_KEY = 'ignored-events';
 
+/**
+ * Fire-and-forget POST to persist categorization to database.
+ * Errors are logged but don't block the UI.
+ */
+function persistCategorizationToDb(
+  externalEventId: string,
+  eventName: string,
+  valueQuadrant: ValueQuadrant,
+  energyRating: EnergyRating
+) {
+  fetch('/api/event-categorizations', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      externalEventId,
+      eventName,
+      valueQuadrant,
+      energyRating,
+      isIgnored: false,
+    }),
+  }).catch((err) => console.warn('Failed to persist categorization to DB:', err));
+}
+
+/**
+ * Fire-and-forget POST to persist ignored event to database.
+ */
+function persistIgnoreToDb(externalEventId: string, eventName: string) {
+  fetch('/api/event-categorizations', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      externalEventId,
+      eventName,
+      isIgnored: true,
+    }),
+  }).catch((err) => console.warn('Failed to persist ignore to DB:', err));
+}
+
+/**
+ * Fire-and-forget DELETE to remove categorization from database.
+ */
+function removeCategorizationFromDb(externalEventId: string) {
+  fetch(`/api/event-categorizations?externalEventId=${encodeURIComponent(externalEventId)}`, {
+    method: 'DELETE',
+  }).catch((err) => console.warn('Failed to remove categorization from DB:', err));
+}
+
 export function useEventPatterns() {
   const [patterns, setPatterns] = useLocalStorage<EventPattern[]>(PATTERN_STORAGE_KEY, []);
   const [categorizations, setCategorizations] = useLocalStorage<EventCategorization[]>(
@@ -48,6 +95,86 @@ export function useEventPatterns() {
     IGNORED_EVENTS_STORAGE_KEY,
     []
   );
+
+  // Track whether we've synced from the database this session
+  const hasSyncedRef = useRef(false);
+
+  /**
+   * On mount, fetch categorizations from the database and merge into localStorage.
+   * This enables cross-device sync: categorizations saved on one device
+   * appear on another device after a page load.
+   */
+  useEffect(() => {
+    if (hasSyncedRef.current) return;
+    hasSyncedRef.current = true;
+
+    const controller = new AbortController();
+
+    (async () => {
+      try {
+        const res = await fetch('/api/event-categorizations', {
+          signal: controller.signal,
+        });
+        if (!res.ok) return;
+
+        const { categorizations: dbCategorizations } = await res.json();
+        if (!dbCategorizations || dbCategorizations.length === 0) return;
+
+        // Use functional updater to merge DB data into current state
+        // This avoids race conditions with concurrent state updates
+        setCategorizations((prev) => {
+          const localCatMap = new Map(prev.map((c) => [c.eventId, c]));
+          let changed = false;
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          for (const dbRow of dbCategorizations as any[]) {
+            const eventId = dbRow.externalEventId;
+            if (!eventId || dbRow.isIgnored) continue;
+
+            if (dbRow.valueQuadrant && dbRow.energyRating && !localCatMap.has(eventId)) {
+              localCatMap.set(eventId, {
+                eventId,
+                eventName: dbRow.eventName || '',
+                valueQuadrant: dbRow.valueQuadrant as ValueQuadrant,
+                energyRating: dbRow.energyRating as EnergyRating,
+                categorizedAt: dbRow.categorizedAt || new Date().toISOString(),
+              });
+              changed = true;
+            }
+          }
+
+          return changed ? Array.from(localCatMap.values()) : prev;
+        });
+
+        setIgnoredEvents((prev) => {
+          const localIgnoredMap = new Map(prev.map((e) => [e.eventId, e]));
+          let changed = false;
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          for (const dbRow of dbCategorizations as any[]) {
+            const eventId = dbRow.externalEventId;
+            if (!eventId || !dbRow.isIgnored) continue;
+
+            if (!localIgnoredMap.has(eventId)) {
+              localIgnoredMap.set(eventId, {
+                eventId,
+                eventName: dbRow.eventName || '',
+                ignoredAt: dbRow.categorizedAt || new Date().toISOString(),
+              });
+              changed = true;
+            }
+          }
+
+          return changed ? Array.from(localIgnoredMap.values()) : prev;
+        });
+      } catch (err) {
+        if (err instanceof DOMException && err.name === 'AbortError') return;
+        console.warn('Failed to sync categorizations from database:', err);
+      }
+    })();
+
+    return () => controller.abort();
+  }, [setCategorizations, setIgnoredEvents]);
 
   /**
    * Refresh categorizations from localStorage (for cross-component sync)
@@ -190,7 +317,7 @@ export function useEventPatterns() {
   );
 
   /**
-   * Save an event categorization
+   * Save an event categorization (localStorage + database)
    */
   const saveCategorization = useCallback(
     (
@@ -202,11 +329,9 @@ export function useEventPatterns() {
       // Learn the pattern
       learnPattern(eventName, valueQuadrant, energyRating);
 
-      // Save the categorization
+      // Save to localStorage (immediate)
       setCategorizations((prev) => {
-        // Remove existing categorization for this event if present
         const filtered = prev.filter((c) => c.eventId !== eventId);
-
         return [
           ...filtered,
           {
@@ -218,8 +343,14 @@ export function useEventPatterns() {
           },
         ];
       });
+
+      // Also remove from ignored if it was previously ignored
+      setIgnoredEvents((prev) => prev.filter((e) => e.eventId !== eventId));
+
+      // Persist to database (fire-and-forget)
+      persistCategorizationToDb(eventId, eventName, valueQuadrant, energyRating);
     },
-    [learnPattern, setCategorizations]
+    [learnPattern, setCategorizations, setIgnoredEvents]
   );
 
   /**
@@ -243,11 +374,12 @@ export function useEventPatterns() {
   );
 
   /**
-   * Remove a categorization
+   * Remove a categorization (localStorage + database)
    */
   const removeCategorization = useCallback(
     (eventId: string) => {
       setCategorizations((prev) => prev.filter((c) => c.eventId !== eventId));
+      removeCategorizationFromDb(eventId);
     },
     [setCategorizations]
   );
@@ -273,6 +405,7 @@ export function useEventPatterns() {
       valueQuadrant: ValueQuadrant,
       energyRating: EnergyRating
     ) => {
+      // saveCategorization handles both localStorage and DB persistence per event
       events.forEach((event) => {
         saveCategorization(event.id, event.summary, valueQuadrant, energyRating);
       });
@@ -295,12 +428,11 @@ export function useEventPatterns() {
   }, [setCategorizations]);
 
   /**
-   * Ignore an event (skip categorization)
+   * Ignore an event (localStorage + database)
    */
   const ignoreEvent = useCallback(
     (eventId: string, eventName: string) => {
       setIgnoredEvents((prev) => {
-        // Remove if already exists
         const filtered = prev.filter((e) => e.eventId !== eventId);
         return [
           ...filtered,
@@ -311,16 +443,23 @@ export function useEventPatterns() {
           },
         ];
       });
+
+      // Also remove from categorizations if present
+      setCategorizations((prev) => prev.filter((c) => c.eventId !== eventId));
+
+      // Persist to database
+      persistIgnoreToDb(eventId, eventName);
     },
-    [setIgnoredEvents]
+    [setIgnoredEvents, setCategorizations]
   );
 
   /**
-   * Unignore an event
+   * Unignore an event (localStorage + database)
    */
   const unignoreEvent = useCallback(
     (eventId: string) => {
       setIgnoredEvents((prev) => prev.filter((e) => e.eventId !== eventId));
+      removeCategorizationFromDb(eventId);
     },
     [setIgnoredEvents]
   );

@@ -507,6 +507,24 @@ export const activityCategories = pgTable('activity_categories', {
 });
 
 // =============================================
+// EVENT CATEGORIZATIONS (Cross-device sync for calendar event categorizations)
+// =============================================
+export const eventCategorizations = pgTable('event_categorizations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  externalEventId: text('external_event_id').notNull(),
+  eventName: text('event_name').notNull(),
+  valueQuadrant: text('value_quadrant'), // 'production', 'investment', 'replacement', 'delegation', 'na'
+  energyRating: text('energy_rating'), // 'green', 'yellow', 'red'
+  isIgnored: boolean('is_ignored').default(false),
+  categorizedAt: timestamp('categorized_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  userIdx: index('event_categorizations_user_idx').on(table.userId),
+  userEventIdx: uniqueIndex('event_categorizations_user_event_idx').on(table.userId, table.externalEventId),
+}));
+
+// =============================================
 // TIME BLOCK TAGS (Custom user tags for projects/categories)
 // =============================================
 export const timeBlockTags = pgTable('time_block_tags', {
