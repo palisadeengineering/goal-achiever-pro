@@ -16,6 +16,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import {
   Dialog,
   DialogContent,
@@ -97,6 +98,28 @@ function calculateDuration(startTime: string, endTime: string): number {
 }
 
 export default function TimeAuditPage() {
+  // Handle ?reset=1 query param: clear all categorizations and reload
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get('reset') === '1') {
+      // Clear localStorage keys
+      localStorage.removeItem('event-categorizations');
+      localStorage.removeItem('ignored-events');
+      localStorage.removeItem('google-calendar-patterns');
+
+      // Delete all event categorizations from DB
+      fetch('/api/event-categorizations', { method: 'DELETE' }).catch(() => {
+        // Ignore errors - we still want to clear local state and reload
+      });
+
+      // Remove ?reset=1 from the URL so it doesn't re-trigger
+      window.history.replaceState({}, '', window.location.pathname);
+
+      // Reload the page to pick up the cleared state
+      window.location.reload();
+    }
+  }, [searchParams]);
+
   // In real app, check user subscription tier from database
   const userTier: SubscriptionTier = 'elite'; // Temporarily set to elite for testing
   const hasProAccess = checkProAccess(userTier);

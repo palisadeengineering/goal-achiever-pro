@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// DELETE: Remove a categorization by external event ID
+// DELETE: Remove a categorization by external event ID, or all categorizations if no ID provided
 export async function DELETE(request: NextRequest) {
   try {
     const auth = await getAuthenticatedUser();
@@ -134,22 +134,34 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const externalEventId = searchParams.get('externalEventId');
 
-    if (!externalEventId) {
-      return NextResponse.json({ error: 'externalEventId is required' }, { status: 400 });
+    if (externalEventId) {
+      // Delete a single categorization by external event ID
+      const { error } = await supabase
+        .from('event_categorizations')
+        .delete()
+        .eq('user_id', userId)
+        .eq('external_event_id', externalEventId);
+
+      if (error) {
+        console.error('Error deleting event categorization:', error);
+        return NextResponse.json({ error: 'Failed to delete categorization' }, { status: 500 });
+      }
+
+      return NextResponse.json({ success: true });
+    } else {
+      // Delete ALL categorizations for the authenticated user
+      const { count, error } = await supabase
+        .from('event_categorizations')
+        .delete({ count: 'exact' })
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('Error deleting all event categorizations:', error);
+        return NextResponse.json({ error: 'Failed to delete categorizations' }, { status: 500 });
+      }
+
+      return NextResponse.json({ success: true, deleted: count ?? 0 });
     }
-
-    const { error } = await supabase
-      .from('event_categorizations')
-      .delete()
-      .eq('user_id', userId)
-      .eq('external_event_id', externalEventId);
-
-    if (error) {
-      console.error('Error deleting event categorization:', error);
-      return NextResponse.json({ error: 'Failed to delete categorization' }, { status: 500 });
-    }
-
-    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Delete event categorization error:', error);
     return NextResponse.json({ error: 'Failed to delete categorization' }, { status: 500 });
