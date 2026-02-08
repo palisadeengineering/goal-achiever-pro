@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       valueQuadrant?: string;
       energyRating?: string;
       isIgnored?: boolean;
-    }> = Array.isArray(body.categorizations) ? body.categorizations : [body];
+    }> = Array.isArray(body) ? body : Array.isArray(body.categorizations) ? body.categorizations : [body];
 
     if (items.length === 0) {
       return NextResponse.json({ error: 'No categorizations provided' }, { status: 400 });

@@ -176,7 +176,7 @@ export function useEventPatterns() {
             fetch('/api/event-categorizations', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(batch),
+              body: JSON.stringify({ categorizations: batch }),
             }).catch((err) => console.warn('Failed to upload local categorizations to DB:', err));
           }
         }
@@ -228,6 +228,39 @@ export function useEventPatterns() {
 
             return changed ? Array.from(localIgnoredMap.values()) : prev;
           });
+
+          // Rebuild patterns from DB categorizations for suggestion engine
+          setPatterns((prev) => {
+            const patternMap = new Map(prev.map((p) => [p.pattern, p]));
+            let changed = false;
+
+            for (const dbRow of dbCategorizations as any[]) {
+              if (!dbRow.externalEventId || dbRow.isIgnored) continue;
+              if (!dbRow.valueQuadrant || !dbRow.energyRating) continue;
+
+              const eventName = (dbRow.eventName || '').toLowerCase().trim()
+                .replace(/^(meeting|call|sync|review|standup|1:1|1-on-1)[\s:-]*/i, '')
+                .replace(/\d{1,2}[\/\-]\d{1,2}([\/\-]\d{2,4})?/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+              if (!eventName) continue;
+
+              if (!patternMap.has(eventName)) {
+                patternMap.set(eventName, {
+                  pattern: eventName,
+                  valueQuadrant: dbRow.valueQuadrant,
+                  energyRating: dbRow.energyRating,
+                  confidence: 0.5,
+                  usageCount: 1,
+                  lastUsed: dbRow.categorizedAt || new Date().toISOString(),
+                });
+                changed = true;
+              }
+            }
+
+            return changed ? Array.from(patternMap.values()) : prev;
+          });
         }
       } catch (err) {
         if (err instanceof DOMException && err.name === 'AbortError') return;
@@ -236,7 +269,7 @@ export function useEventPatterns() {
     })();
 
     return () => controller.abort();
-  }, [setCategorizations, setIgnoredEvents]);
+  }, [setCategorizations, setIgnoredEvents, setPatterns]);
 
   /**
    * Refresh categorizations from localStorage (for cross-component sync)
