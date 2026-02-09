@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('time_blocks')
-      .select('*')
+      .select('*, detected_projects(id, name)')
       .eq('user_id', userId)
       .order('block_date', { ascending: true })
       .order('start_time', { ascending: true });
@@ -89,6 +89,9 @@ export async function GET(request: NextRequest) {
       parentBlockId: block.parent_block_id,
       isRecurrenceException: block.is_recurrence_exception,
       originalDate: block.original_date,
+      activityType: block.activity_type,
+      detectedProjectId: block.detected_project_id,
+      detectedProjectName: (block as Record<string, unknown>).detected_projects ? ((block as Record<string, unknown>).detected_projects as { name: string })?.name : null,
       tagIds: tagsByBlock[block.id] || [],
       createdAt: block.created_at,
       updatedAt: block.updated_at,

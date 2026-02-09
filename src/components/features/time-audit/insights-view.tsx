@@ -54,6 +54,7 @@ interface InsightsViewProps {
   tags: Tag[];
   dateRange: { start: Date; end: Date };
   onDateRangeChange?: (start: Date, end: Date) => void;
+  refreshKey?: number;
 }
 
 // AI Insights types
@@ -89,7 +90,7 @@ const ENERGY_COLORS: Record<string, string> = {
   red: '#ef4444',
 };
 
-export function InsightsView({ timeBlocks, tags, dateRange, onDateRangeChange }: InsightsViewProps) {
+export function InsightsView({ timeBlocks, tags, dateRange, onDateRangeChange, refreshKey = 0 }: InsightsViewProps) {
   const [groupBy, setGroupBy] = useState<GroupByOption>('value');
   const [granularity, setGranularity] = useState<GranularityOption>('day');
   const [measure, setMeasure] = useState<MeasureOption>('hours');
@@ -186,7 +187,8 @@ export function InsightsView({ timeBlocks, tags, dateRange, onDateRangeChange }:
   // Enhanced analytics data (fetches from API for activity classification)
   const enhancedAnalytics = useEnhancedAnalytics(
     { start: startDate, end: endDate },
-    granularity === 'day' ? 'day' : granularity === 'week' ? 'week' : 'month'
+    granularity === 'day' ? 'day' : granularity === 'week' ? 'week' : 'month',
+    refreshKey
   );
 
   // Get colors and keys for time series charts

@@ -235,6 +235,13 @@ export default function TimeAuditPage() {
 
   const { getUncategorizedEventIds, getCategorization, saveCategorization, categorizations, refreshFromStorage, clearCategorizations, ignoreEvent, removeCategorization, isIgnored, unignoreEvent, ignoredEvents } = useEventPatterns();
 
+  // Refresh key to trigger InsightsView refetch when categorizations change
+  const [insightsRefreshKey, setInsightsRefreshKey] = useState(0);
+  const handleCategorizationChange = useCallback(() => {
+    refreshFromStorage();
+    setInsightsRefreshKey(prev => prev + 1);
+  }, [refreshFromStorage]);
+
   const { tags, fetchTags, createTag, updateTag, deleteTag } = useTags();
 
   // Tag manager dialog state
@@ -1841,7 +1848,7 @@ export default function TimeAuditPage() {
           <BulkCategorizationView
             events={googleEvents}
             onComplete={() => setShowCategorizationDialog(false)}
-            onCategorize={refreshFromStorage}
+            onCategorize={handleCategorizationChange}
           />
         </DialogContent>
       </Dialog>
@@ -2395,6 +2402,7 @@ export default function TimeAuditPage() {
             tags={tags}
             dateRange={viewedDateRange}
             onDateRangeChange={handleDateRangeChange}
+            refreshKey={insightsRefreshKey}
           />
         </TabsContent>
 

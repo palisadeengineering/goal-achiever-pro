@@ -200,7 +200,8 @@ export type TimeGranularity = 'day' | 'week' | 'month' | 'quarter';
 
 export function useEnhancedAnalytics(
   dateRange: { start: Date; end: Date },
-  granularity: TimeGranularity = 'week'
+  granularity: TimeGranularity = 'week',
+  refreshKey: number = 0
 ): EnhancedAnalyticsData {
   const [timeBlocks, setTimeBlocks] = useState<TimeBlock[]>([]);
   const [comparisonBlocks, setComparisonBlocks] = useState<TimeBlock[]>([]);
@@ -257,7 +258,7 @@ export function useEnhancedAnalytics(
 
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [startTime, endTime, compStartTime, compEndTime]);
+  }, [startTime, endTime, compStartTime, compEndTime, refreshKey]);
 
   // Calculate total minutes
   const totalMinutes = useMemo(() => {
