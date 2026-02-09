@@ -1,14 +1,44 @@
 {
   "permissions": {
     "allow": [
+      "Read",
       "Edit",
       "Write",
-      "Bash",
+      "Glob",
+      "Grep",
+      "Bash(npm run dev)",
+      "Bash(npm run build)",
+      "Bash(npm run lint)",
+      "Bash(npm run test*)",
+      "Bash(npx drizzle-kit *)",
+      "Bash(npx shadcn@latest add *)",
+      "Bash(npm install *)",
+      "Bash(git *)",
+      "Bash(ls *)",
+      "Bash(mkdir *)",
+      "Bash(cd *)",
       "WebFetch",
       "WebSearch",
       "mcp__supabase__*",
       "mcp__chrome-devtools__*",
-      "Skill(ralph-loop:ralph-loop)"
+      "Skill(ralph-loop:ralph-loop)",
+      "Skill(superpowers:brainstorming)",
+      "Skill(superpowers:systematic-debugging)",
+      "Skill(superpowers:verification-before-completion)",
+      "Skill(superpowers:writing-plans)",
+      "Skill(superpowers:subagent-driven-development)",
+      "Skill(superpowers:requesting-code-review)",
+      "Skill(superpowers:receiving-code-review)",
+      "Skill(superpowers:test-driven-development)",
+      "Skill(superpowers:finishing-a-development-branch)",
+      "Skill(gsd:*)",
+      "Skill(frontend-design:frontend-design)"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(git push --force*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean -f*)"
     ],
     "defaultMode": "acceptEdits"
   },
