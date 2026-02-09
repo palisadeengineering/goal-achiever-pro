@@ -366,8 +366,15 @@ export default function TimeAuditPage() {
       setSyncTimeframe(timeframe);
     }
 
-    // Clear cache before fetching to ensure fresh data
-    clearGoogleCache();
+    // Only clear the sessionStorage cache, NOT the in-memory events.
+    // fetchGoogleEvents will atomically replace events when new data arrives,
+    // so clearing events here would cause a visual flash where all Google events
+    // temporarily disappear from the calendar.
+    try {
+      sessionStorage.removeItem('google-calendar-events');
+    } catch {
+      // Ignore sessionStorage errors
+    }
 
     // Calculate sync range based on the currently viewed week and selected timeframe
     // Use weekStartsOn: 0 (Sunday) to match WeeklyCalendarView's default
@@ -384,7 +391,7 @@ export default function TimeAuditPage() {
     };
 
     fetchGoogleEvents(syncStart, syncEnd);
-  }, [syncTimeframe, setSyncTimeframe, viewedDateRange.start, fetchGoogleEvents, calculateSyncEndDate, clearGoogleCache]);
+  }, [syncTimeframe, setSyncTimeframe, viewedDateRange.start, fetchGoogleEvents, calculateSyncEndDate]);
 
   // Sync changes FROM Google Calendar TO local database (reverse sync / two-way sync)
   const [lastSyncFromGoogleResult, setLastSyncFromGoogleResult] = useState<{
@@ -885,8 +892,7 @@ export default function TimeAuditPage() {
           }
         }
 
-        // Refresh time blocks from database
-        await fetchTimeBlocks();
+        // No need to refetch - createTimeBlock already added the block to local state
       } else {
         // Update existing block in database
         await updateTimeBlock(editingBlock.id, {
