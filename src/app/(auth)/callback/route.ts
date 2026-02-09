@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { ensureProfile } from '@/lib/auth/ensure-profile';
 import { NextResponse } from 'next/server';
 
 // Validate redirect path using whitelist to prevent open redirect attacks
@@ -50,22 +51,11 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      // Check if user needs onboarding
+      // Ensure profile row exists for this user
       const { data: { user } } = await supabase.auth.getUser();
 
       if (user) {
-        // Check if profile exists and onboarding is complete
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('onboarding_completed')
-          .eq('id', user.id)
-          .single();
-
-        // If no profile or onboarding not completed, redirect to dashboard
-        // (onboarding can be handled within the dashboard)
-        if (!profile || !profile.onboarding_completed) {
-          return NextResponse.redirect(`${origin}/dashboard`);
-        }
+        await ensureProfile(user.id, user.email, user.user_metadata?.full_name);
       }
 
       return NextResponse.redirect(`${origin}${redirect}`);

@@ -2,6 +2,7 @@
 // For production, consider using Redis or Upstash
 
 import { NextResponse } from 'next/server';
+import type { SubscriptionTier } from '@/types/database';
 
 type RateLimitRecord = {
   count: number;
@@ -209,3 +210,27 @@ export const RateLimits = {
     heavy: { name: 'api-heavy', limit: 10, windowMs: 60000 } as RateLimitConfig,
   },
 } as const;
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Tier-based daily AI limits. Distinct names so upgrading mid-day gives fresh quota. */
+export const TierDailyLimits: Record<SubscriptionTier, RateLimitConfig> = {
+  free: { name: 'ai-daily-free', limit: 10, windowMs: DAY_MS },
+  pro: { name: 'ai-daily-pro', limit: 100, windowMs: DAY_MS },
+  elite: { name: 'ai-daily-elite', limit: 500, windowMs: DAY_MS },
+  founding_member: { name: 'ai-daily-founding', limit: 500, windowMs: DAY_MS },
+};
+
+/**
+ * Get rate limit configs for an AI endpoint based on subscription tier.
+ * Returns the per-minute weight limit + the tier-appropriate daily limit.
+ */
+export function getAIRateLimits(
+  tier: SubscriptionTier,
+  weight: 'light' | 'standard' | 'heavy'
+): RateLimitConfig[] {
+  return [
+    RateLimits.ai[weight],
+    TierDailyLimits[tier],
+  ];
+}

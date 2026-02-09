@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { logAIUsage } from '@/lib/utils/ai-usage';
-import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import { getAuthenticatedUserWithTier } from '@/lib/auth/api-auth';
 import {
   applyMultipleRateLimits,
   rateLimitExceededResponse,
   rateLimitHeaders,
-  RateLimits,
+  getAIRateLimits,
 } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
@@ -16,17 +16,14 @@ export async function POST(request: NextRequest) {
 
   try {
     // Authenticate user
-    const auth = await getAuthenticatedUser();
+    const auth = await getAuthenticatedUserWithTier();
     if (!auth.isAuthenticated) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
     userId = auth.userId;
 
     // Apply rate limiting (light operation - simple suggestion)
-    rateLimitResult = applyMultipleRateLimits(userId, [
-      RateLimits.ai.light,
-      RateLimits.ai.daily,
-    ]);
+    rateLimitResult = applyMultipleRateLimits(userId, getAIRateLimits(auth.tier, 'light'));
 
     if (!rateLimitResult.success) {
       return rateLimitExceededResponse(rateLimitResult);

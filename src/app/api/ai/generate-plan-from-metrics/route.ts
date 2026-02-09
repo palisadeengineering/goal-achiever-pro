@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
-import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import { getAuthenticatedUserWithTier } from '@/lib/auth/api-auth';
 import { logAIUsage } from '@/lib/utils/ai-usage';
 import {
   applyMultipleRateLimits,
   rateLimitExceededResponse,
   rateLimitHeaders,
-  RateLimits,
+  getAIRateLimits,
 } from '@/lib/rate-limit';
 
 interface MetricAnswer {
@@ -83,17 +83,14 @@ export async function POST(request: NextRequest) {
 
   try {
     // Authenticate user
-    const auth = await getAuthenticatedUser();
+    const auth = await getAuthenticatedUserWithTier();
     if (!auth.isAuthenticated) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
     userId = auth.userId;
 
     // Apply rate limiting (heavy operation)
-    rateLimitResult = applyMultipleRateLimits(userId, [
-      RateLimits.ai.heavy,
-      RateLimits.ai.daily,
-    ]);
+    rateLimitResult = applyMultipleRateLimits(userId, getAIRateLimits(auth.tier, 'heavy'));
 
     if (!rateLimitResult.success) {
       return rateLimitExceededResponse(rateLimitResult);
