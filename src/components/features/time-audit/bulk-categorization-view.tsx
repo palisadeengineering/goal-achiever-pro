@@ -183,7 +183,11 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
   const handleCategorize = (eventId: string, valueQuadrant: ValueQuadrant, energyRating: EnergyRating) => {
     const event = uncategorizedEvents.find((e) => e.id === eventId);
     if (event) {
-      saveCategorization(eventId, event.summary, valueQuadrant, energyRating);
+      const date = event.date || (event.start?.dateTime ? event.start.dateTime.split('T')[0] : undefined);
+      const startTime = event.startTime || (event.start?.dateTime ? new Date(event.start.dateTime).toTimeString().slice(0, 5) : undefined);
+      const endTime = event.endTime || (event.end?.dateTime ? new Date(event.end.dateTime).toTimeString().slice(0, 5) : undefined);
+      const eventMeta = date && startTime && endTime ? { date, startTime, endTime } : undefined;
+      saveCategorization(eventId, event.summary, valueQuadrant, energyRating, eventMeta);
       onCategorize?.();
     }
     if (currentIndex < uncategorizedEvents.length - 1) {
@@ -218,7 +222,11 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
     eventsWithSuggestions.forEach((event) => {
       const suggestion = getSuggestion(event.summary);
       if (suggestion) {
-        saveCategorization(event.id, event.summary, suggestion.valueQuadrant, suggestion.energyRating);
+        const date = event.date || (event.start?.dateTime ? event.start.dateTime.split('T')[0] : undefined);
+        const startTime = event.startTime || (event.start?.dateTime ? new Date(event.start.dateTime).toTimeString().slice(0, 5) : undefined);
+        const endTime = event.endTime || (event.end?.dateTime ? new Date(event.end.dateTime).toTimeString().slice(0, 5) : undefined);
+        const eventMeta = date && startTime && endTime ? { date, startTime, endTime } : undefined;
+        saveCategorization(event.id, event.summary, suggestion.valueQuadrant, suggestion.energyRating, eventMeta);
       }
     });
     onCategorize?.();
@@ -230,7 +238,16 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
     energyRating: EnergyRating
   ) => {
     applySuggestionToSimilar(
-      group.events.map((e) => ({ id: e.id, summary: e.summary })),
+      group.events.map((e) => {
+        const date = e.date || (e.start?.dateTime ? e.start.dateTime.split('T')[0] : undefined);
+        const startTime = e.startTime || (e.start?.dateTime ? new Date(e.start.dateTime).toTimeString().slice(0, 5) : undefined);
+        const endTime = e.endTime || (e.end?.dateTime ? new Date(e.end.dateTime).toTimeString().slice(0, 5) : undefined);
+        return {
+          id: e.id,
+          summary: e.summary,
+          eventMeta: date && startTime && endTime ? { date, startTime, endTime } : undefined,
+        };
+      }),
       valueQuadrant,
       energyRating
     );
@@ -547,6 +564,13 @@ function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearchTags, 
                 blockIds: eventIds,
                 idType: 'external',
                 updates,
+                events: group.events.map(e => ({
+                  externalEventId: e.id,
+                  activityName: e.summary,
+                  date: e.date || (e.start?.dateTime ? e.start.dateTime.split('T')[0] : null),
+                  startTime: e.startTime || (e.start?.dateTime ? new Date(e.start.dateTime).toTimeString().slice(0, 5) : null),
+                  endTime: e.endTime || (e.end?.dateTime ? new Date(e.end.dateTime).toTimeString().slice(0, 5) : null),
+                })),
               }),
             });
           } catch (err) {

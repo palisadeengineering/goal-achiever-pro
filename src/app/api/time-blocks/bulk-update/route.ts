@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
-    const { blockIds, updates, idType } = body;
+    const { blockIds, updates, idType, events: eventsMeta } = body;
 
     if (!blockIds || !Array.isArray(blockIds) || blockIds.length === 0) {
       return NextResponse.json(
@@ -96,6 +96,69 @@ export async function POST(request: NextRequest) {
 
     // Filter to only IDs (always use primary key id for updates)
     const validIds = (existingBlocks || []).map(b => b.id);
+
+    // When using external IDs and some/all blocks are missing, auto-create from event metadata
+    if (useExternalId && validIds.length < blockIds.length && Array.isArray(eventsMeta) && eventsMeta.length > 0) {
+      // The initial query already looked up by external_event_id, so we know which IDs exist
+      // Build a set of external IDs that already have time_blocks
+      const { data: existingWithExternal } = await supabase
+        .from('time_blocks')
+        .select('external_event_id')
+        .eq('user_id', userId)
+        .in('external_event_id', blockIds);
+      const existingExternalIds = new Set<string>();
+      for (const row of existingWithExternal || []) {
+        if (row.external_event_id) existingExternalIds.add(row.external_event_id);
+      }
+
+      const eventsMetaMap = new Map<string, { activityName?: string; date?: string; startTime?: string; endTime?: string }>();
+      for (const em of eventsMeta) {
+        if (em.externalEventId) eventsMetaMap.set(em.externalEventId, em);
+      }
+
+      const toInsert: Array<Record<string, unknown>> = [];
+      for (const externalId of blockIds) {
+        if (existingExternalIds.has(externalId)) continue;
+        const meta = eventsMetaMap.get(externalId);
+        if (!meta || !meta.date || !meta.startTime || !meta.endTime) continue;
+
+        // Calculate duration in minutes
+        const [startH, startM] = meta.startTime.split(':').map(Number);
+        const [endH, endM] = meta.endTime.split(':').map(Number);
+        const durationMinutes = (endH * 60 + endM) - (startH * 60 + startM);
+        if (durationMinutes <= 0) continue;
+
+        toInsert.push({
+          user_id: userId,
+          block_date: meta.date,
+          start_time: meta.startTime,
+          end_time: meta.endTime,
+          duration_minutes: durationMinutes,
+          activity_name: meta.activityName || 'Google Calendar Event',
+          source: 'google_calendar',
+          external_event_id: externalId,
+          drip_quadrant: valueQuadrant || null,
+          energy_rating: energyRating || null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+      }
+
+      if (toInsert.length > 0) {
+        const { data: insertedBlocks, error: insertError } = await supabase
+          .from('time_blocks')
+          .insert(toInsert)
+          .select('id');
+
+        if (insertError) {
+          console.error('Error auto-creating time blocks from events:', insertError);
+        } else if (insertedBlocks) {
+          for (const block of insertedBlocks) {
+            validIds.push(block.id);
+          }
+        }
+      }
+    }
 
     if (validIds.length === 0) {
       return NextResponse.json(

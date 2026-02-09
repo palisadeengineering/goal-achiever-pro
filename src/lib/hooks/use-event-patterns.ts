@@ -42,11 +42,18 @@ const IGNORED_EVENTS_STORAGE_KEY = 'ignored-events';
  * Fire-and-forget POST to persist categorization to database.
  * Errors are logged but don't block the UI.
  */
+export interface EventMeta {
+  date: string;
+  startTime: string;
+  endTime: string;
+}
+
 function persistCategorizationToDb(
   externalEventId: string,
   eventName: string,
   valueQuadrant: ValueQuadrant,
-  energyRating: EnergyRating
+  energyRating: EnergyRating,
+  eventMeta?: EventMeta
 ) {
   fetch('/api/event-categorizations', {
     method: 'POST',
@@ -59,6 +66,26 @@ function persistCategorizationToDb(
       isIgnored: false,
     }),
   }).catch((err) => console.warn('Failed to persist categorization to DB:', err));
+
+  // Also create a time_block so the event shows up in Insights charts
+  if (eventMeta) {
+    fetch('/api/time-blocks/bulk-update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        blockIds: [externalEventId],
+        idType: 'external',
+        updates: { valueQuadrant, energyRating },
+        events: [{
+          externalEventId,
+          activityName: eventName,
+          date: eventMeta.date,
+          startTime: eventMeta.startTime,
+          endTime: eventMeta.endTime,
+        }],
+      }),
+    }).catch((err) => console.warn('Failed to create time block for event:', err));
+  }
 }
 
 /**
@@ -419,7 +446,8 @@ export function useEventPatterns() {
       eventId: string,
       eventName: string,
       valueQuadrant: ValueQuadrant,
-      energyRating: EnergyRating
+      energyRating: EnergyRating,
+      eventMeta?: EventMeta
     ) => {
       // Learn the pattern
       learnPattern(eventName, valueQuadrant, energyRating);
@@ -442,8 +470,8 @@ export function useEventPatterns() {
       // Also remove from ignored if it was previously ignored
       setIgnoredEvents((prev) => prev.filter((e) => e.eventId !== eventId));
 
-      // Persist to database (fire-and-forget)
-      persistCategorizationToDb(eventId, eventName, valueQuadrant, energyRating);
+      // Persist to database (fire-and-forget) — also creates time_block when eventMeta is provided
+      persistCategorizationToDb(eventId, eventName, valueQuadrant, energyRating, eventMeta);
     },
     [learnPattern, setCategorizations, setIgnoredEvents]
   );
@@ -496,13 +524,13 @@ export function useEventPatterns() {
    */
   const applySuggestionToSimilar = useCallback(
     (
-      events: Array<{ id: string; summary: string }>,
+      events: Array<{ id: string; summary: string; eventMeta?: EventMeta }>,
       valueQuadrant: ValueQuadrant,
       energyRating: EnergyRating
     ) => {
       // saveCategorization handles both localStorage and DB persistence per event
       events.forEach((event) => {
-        saveCategorization(event.id, event.summary, valueQuadrant, energyRating);
+        saveCategorization(event.id, event.summary, valueQuadrant, energyRating, event.eventMeta);
       });
     },
     [saveCategorization]
