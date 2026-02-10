@@ -6,13 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { useEventPatterns, type IgnoredEvent } from '@/lib/hooks/use-event-patterns';
@@ -24,7 +17,7 @@ import { VALUE_QUADRANTS, ENERGY_RATINGS } from '@/constants/drip';
 import type { ValueQuadrant, EnergyRating, LeverageType } from '@/types/database';
 import type { GoogleCalendarEvent } from '@/lib/hooks/use-google-calendar';
 import { Input } from '@/components/ui/input';
-import { CheckCircle2, ListTodo, Sparkles, EyeOff, Eye, Undo2, Trash2, Briefcase, Code, FileText, DollarSign, Users, ChevronDown, ChevronUp } from 'lucide-react';
+import { CheckCircle2, ListTodo, Sparkles, EyeOff, Eye, Undo2, Trash2, Briefcase, Code, FileText, DollarSign, Users, Plus } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
 
 // Work Type options (customizable enum for the user)
@@ -72,7 +65,7 @@ interface BulkCategorizationViewProps {
   onCategorize?: () => void;
 }
 
-interface GroupedEvents {
+export interface GroupedEvents {
   pattern: string;
   events: GoogleCalendarEvent[];
   suggestion: {
@@ -464,7 +457,7 @@ interface GroupCardProps {
   detectedProjects: { id: string; name: string }[];
 }
 
-function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearchTags, detectedProjects }: GroupCardProps) {
+export function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearchTags, detectedProjects }: GroupCardProps) {
   const [selectedValue, setSelectedValue] = useState<ValueQuadrant | null>(
     group.suggestion?.valueQuadrant || null
   );
@@ -472,10 +465,10 @@ function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearchTags, 
     group.suggestion?.energyRating || null
   );
   const [isExpanded, setIsExpanded] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
 
-  // New fields for enhanced categorization
+  // Enhanced categorization fields - always visible
   const [selectedProject, setSelectedProject] = useState<string>('');
+  const [showNewProjectInput, setShowNewProjectInput] = useState(false);
   const [customProjectName, setCustomProjectName] = useState<string>('');
   const [selectedWorkType, setSelectedWorkType] = useState<string>('');
   const [selectedLeverage, setSelectedLeverage] = useState<string>('');
@@ -491,8 +484,8 @@ function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearchTags, 
       onApply(group, selectedValue, selectedEnergy);
 
       // Then apply enhanced fields via bulk update API if any are set
-      const isExistingProject = selectedProject && selectedProject !== 'none' && selectedProject !== 'new';
-      const isNewProject = selectedProject === 'new' && customProjectName.trim();
+      const isExistingProject = selectedProject && selectedProject !== 'none';
+      const isNewProject = showNewProjectInput && customProjectName.trim();
       const hasProject = isExistingProject || isNewProject;
       const hasLeverage = selectedLeverage && selectedLeverage !== 'none';
       const hasEnhancedFields = hasProject || selectedWorkType ||
@@ -520,7 +513,6 @@ function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearchTags, 
               const { project } = await createRes.json();
               updates.detectedProjectId = project.id;
             } else if (createRes.status === 409) {
-              // Project already exists, use the existing ID
               const { existingId } = await createRes.json();
               if (existingId) updates.detectedProjectId = existingId;
             }
@@ -537,7 +529,6 @@ function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearchTags, 
 
         // Only call API if we have actual enhanced updates
         if (Object.keys(updates).length > 0) {
-          // These are Google Calendar external event IDs, use idType: 'external'
           const eventIds = group.events.map(e => e.id);
           try {
             await fetch('/api/time-blocks/bulk-update', {
@@ -621,165 +612,173 @@ function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearchTags, 
           </div>
         )}
 
-        {/* Value Quadrant quick chips */}
-        <div className="flex flex-wrap gap-2">
-          {(Object.entries(VALUE_QUADRANTS) as [ValueQuadrant, typeof VALUE_QUADRANTS[ValueQuadrant]][]).map(
-            ([key, quadrant]) => (
-              <Badge
-                key={key}
-                variant="outline"
-                className={cn(
-                  'cursor-pointer transition-colors',
-                  selectedValue === key && 'ring-2 ring-offset-1'
-                )}
-                style={{
-                  borderColor: selectedValue === key ? quadrant.color : undefined,
-                  backgroundColor: selectedValue === key ? `${quadrant.color}15` : undefined,
-                  ['--tw-ring-color' as string]: quadrant.color,
-                }}
-                onClick={() => setSelectedValue(key)}
-              >
-                <span className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: quadrant.color }} />
-                {quadrant.name}
-              </Badge>
-            )
-          )}
-        </div>
-
-        {/* Energy Level quick chips */}
-        <div className="flex flex-wrap gap-2">
-          {(Object.entries(ENERGY_RATINGS) as [EnergyRating, typeof ENERGY_RATINGS[EnergyRating]][]).map(
-            ([key, rating]) => (
-              <Badge
-                key={key}
-                variant="outline"
-                className={cn(
-                  'cursor-pointer transition-colors',
-                  selectedEnergy === key && 'ring-2 ring-offset-1'
-                )}
-                style={{
-                  borderColor: selectedEnergy === key ? rating.color : undefined,
-                  backgroundColor: selectedEnergy === key ? `${rating.color}15` : undefined,
-                  ['--tw-ring-color' as string]: rating.color,
-                }}
-                onClick={() => setSelectedEnergy(key)}
-              >
-                <span className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: rating.color }} />
-                {rating.name}
-              </Badge>
-            )
-          )}
-        </div>
-
-        {/* Advanced fields toggle */}
-        <button
-          type="button"
-          onClick={() => setShowAdvanced(!showAdvanced)}
-          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          {showAdvanced ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-          {showAdvanced ? 'Hide' : 'Show'} project, work type, leverage & tags
-        </button>
-
-        {/* Enhanced categorization fields */}
-        {showAdvanced && (
-          <div className="space-y-3 pt-1 border-t border-border/50 animate-in fade-in slide-in-from-top-2">
-            {/* Project */}
-            <div className="space-y-1.5">
-              <Label className="text-xs">Project</Label>
-              <Select
-                value={selectedProject}
-                onValueChange={(v) => {
-                  setSelectedProject(v);
-                  if (v !== 'new') setCustomProjectName('');
-                }}
-              >
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue placeholder="No project / Personal" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">
-                    <span className="text-muted-foreground">No project / Personal</span>
-                  </SelectItem>
-                  <SelectItem value="new">
-                    <span className="text-muted-foreground">+ New project</span>
-                  </SelectItem>
-                  {detectedProjects.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {selectedProject === 'new' && (
-                <Input
-                  className="h-8 text-xs mt-1.5"
-                  placeholder="Type project name..."
-                  value={customProjectName}
-                  onChange={(e) => setCustomProjectName(e.target.value)}
-                  autoFocus
-                />
-              )}
-            </div>
-
-            {/* Work Type */}
-            <div className="space-y-1.5">
-              <Label className="text-xs">Work Type</Label>
-              <Select value={selectedWorkType} onValueChange={setSelectedWorkType}>
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue placeholder="Select work type..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {WORK_TYPE_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Leverage Type */}
-            <div className="space-y-1.5">
-              <Label className="text-xs">Leverage Type</Label>
-              <Select value={selectedLeverage} onValueChange={setSelectedLeverage}>
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue placeholder="Not leverage work" />
-                </SelectTrigger>
-                <SelectContent>
-                  {LEVERAGE_TYPE_OPTIONS.map((option) => {
-                    const Icon = option.icon;
-                    return (
-                      <SelectItem key={option.value} value={option.value}>
-                        <div className="flex items-center gap-2">
-                          <Icon className="h-3.5 w-3.5" />
-                          <span>{option.label}</span>
-                        </div>
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Tags (Tackle-like TagInput) */}
-            <div className="space-y-1.5">
-              <Label className="text-xs">Tags</Label>
-              <TagInput
-                value={selectedTags}
-                onChange={setSelectedTags}
-                onCreateTag={onCreateTag}
-                onSearch={onSearchTags}
-                availableTags={tags}
-                placeholder="Type to add tags..."
-                compact
-              />
-            </div>
+        {/* Value Quadrant chips */}
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Value Quadrant</Label>
+          <div className="flex flex-wrap gap-1.5">
+            {(Object.entries(VALUE_QUADRANTS) as [ValueQuadrant, typeof VALUE_QUADRANTS[ValueQuadrant]][]).map(
+              ([key, quadrant]) => (
+                <Badge
+                  key={key}
+                  variant="outline"
+                  className={cn(
+                    'cursor-pointer transition-colors',
+                    selectedValue === key && 'ring-2 ring-offset-1'
+                  )}
+                  style={{
+                    borderColor: selectedValue === key ? quadrant.color : undefined,
+                    backgroundColor: selectedValue === key ? `${quadrant.color}15` : undefined,
+                    ['--tw-ring-color' as string]: quadrant.color,
+                  }}
+                  onClick={() => setSelectedValue(key)}
+                >
+                  <span className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: quadrant.color }} />
+                  {quadrant.name}
+                </Badge>
+              )
+            )}
           </div>
-        )}
+        </div>
+
+        {/* Energy Level chips */}
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Energy</Label>
+          <div className="flex flex-wrap gap-1.5">
+            {(Object.entries(ENERGY_RATINGS) as [EnergyRating, typeof ENERGY_RATINGS[EnergyRating]][]).map(
+              ([key, rating]) => (
+                <Badge
+                  key={key}
+                  variant="outline"
+                  className={cn(
+                    'cursor-pointer transition-colors',
+                    selectedEnergy === key && 'ring-2 ring-offset-1'
+                  )}
+                  style={{
+                    borderColor: selectedEnergy === key ? rating.color : undefined,
+                    backgroundColor: selectedEnergy === key ? `${rating.color}15` : undefined,
+                    ['--tw-ring-color' as string]: rating.color,
+                  }}
+                  onClick={() => setSelectedEnergy(key)}
+                >
+                  <span className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: rating.color }} />
+                  {rating.name}
+                </Badge>
+              )
+            )}
+          </div>
+        </div>
+
+        {/* Project chips */}
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Project</Label>
+          <div className="flex flex-wrap gap-1.5">
+            <Badge
+              variant="outline"
+              className={cn(
+                'cursor-pointer transition-colors',
+                (!selectedProject || selectedProject === 'none') && !showNewProjectInput && 'ring-2 ring-offset-1 ring-muted-foreground/30'
+              )}
+              onClick={() => { setSelectedProject('none'); setShowNewProjectInput(false); setCustomProjectName(''); }}
+            >
+              Personal
+            </Badge>
+            {detectedProjects.map((project) => (
+              <Badge
+                key={project.id}
+                variant="outline"
+                className={cn(
+                  'cursor-pointer transition-colors',
+                  selectedProject === project.id && 'ring-2 ring-offset-1 ring-primary'
+                )}
+                onClick={() => { setSelectedProject(project.id); setShowNewProjectInput(false); setCustomProjectName(''); }}
+              >
+                {project.name}
+              </Badge>
+            ))}
+            <Badge
+              variant="outline"
+              className={cn(
+                'cursor-pointer transition-colors',
+                showNewProjectInput && 'ring-2 ring-offset-1 ring-primary'
+              )}
+              onClick={() => { setShowNewProjectInput(true); setSelectedProject(''); }}
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              New
+            </Badge>
+          </div>
+          {showNewProjectInput && (
+            <Input
+              className="h-8 text-xs mt-1.5 max-w-xs"
+              placeholder="Type project name..."
+              value={customProjectName}
+              onChange={(e) => setCustomProjectName(e.target.value)}
+              autoFocus
+            />
+          )}
+        </div>
+
+        {/* Work Type chips */}
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Work Type</Label>
+          <div className="flex flex-wrap gap-1.5">
+            {WORK_TYPE_OPTIONS.map((option) => (
+              <Badge
+                key={option.value}
+                variant="outline"
+                className={cn(
+                  'cursor-pointer transition-colors text-xs',
+                  selectedWorkType === option.value && 'ring-2 ring-offset-1 ring-primary bg-primary/10'
+                )}
+                onClick={() => setSelectedWorkType(selectedWorkType === option.value ? '' : option.value)}
+              >
+                {option.label}
+              </Badge>
+            ))}
+          </div>
+        </div>
+
+        {/* Leverage Type chips */}
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Leverage Type</Label>
+          <div className="flex flex-wrap gap-1.5">
+            {LEVERAGE_TYPE_OPTIONS.map((option) => {
+              const Icon = option.icon;
+              const isSelected = selectedLeverage === option.value;
+              return (
+                <Badge
+                  key={option.value}
+                  variant="outline"
+                  className={cn(
+                    'cursor-pointer transition-colors',
+                    isSelected && 'ring-2 ring-offset-1 ring-primary bg-primary/10'
+                  )}
+                  onClick={() => setSelectedLeverage(isSelected ? '' : option.value)}
+                >
+                  <Icon className="h-3 w-3 mr-1" />
+                  {option.label}
+                </Badge>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Tags */}
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Tags</Label>
+          <TagInput
+            value={selectedTags}
+            onChange={setSelectedTags}
+            onCreateTag={onCreateTag}
+            onSearch={onSearchTags}
+            availableTags={tags}
+            placeholder="Type to add tags..."
+            compact
+          />
+        </div>
 
         {/* Actions */}
-        <div className="flex justify-between items-center gap-2">
+        <div className="flex justify-between items-center gap-2 pt-2 border-t border-border/50">
           <Button
             variant="ghost"
             size="sm"
