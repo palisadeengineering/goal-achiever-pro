@@ -177,8 +177,68 @@ describe('GroupCard - Redesigned with all-visible chips', () => {
     expect(screen.getByText('Value Quadrant')).toBeInTheDocument();
     expect(screen.getByText('Energy')).toBeInTheDocument();
     expect(screen.getByText('Project')).toBeInTheDocument();
+    expect(screen.getByText('Task Type')).toBeInTheDocument();
     expect(screen.getByText('Work Type')).toBeInTheDocument();
     expect(screen.getByText('Leverage Type')).toBeInTheDocument();
     expect(screen.getByText('Tags')).toBeInTheDocument();
+  });
+});
+
+describe('GroupCard - Task Type (Activity Type) chips', () => {
+  it('renders all 7 Activity Type chips', () => {
+    render(<GroupCard {...defaultProps} />);
+
+    expect(screen.getByText('Project Work')).toBeInTheDocument();
+    expect(screen.getByText('Meeting')).toBeInTheDocument();
+    expect(screen.getByText('Deep Work')).toBeInTheDocument();
+    expect(screen.getByText('Commute')).toBeInTheDocument();
+    expect(screen.getByText('Admin')).toBeInTheDocument();
+    expect(screen.getByText('Break')).toBeInTheDocument();
+    expect(screen.getByText('Other')).toBeInTheDocument();
+  });
+
+  it('toggles task type chip selection on click', async () => {
+    render(<GroupCard {...defaultProps} />);
+
+    const chip = screen.getByText('Deep Work');
+    const getBadge = () => chip.closest('.cursor-pointer');
+
+    // Click to select
+    await act(async () => {
+      fireEvent.click(chip);
+    });
+    expect(getBadge()?.className).toContain('ring-2');
+
+    // Click again to deselect
+    await act(async () => {
+      fireEvent.click(chip);
+    });
+    expect(getBadge()?.className).not.toContain('ring-2');
+  });
+
+  it('only allows one task type to be selected at a time', async () => {
+    render(<GroupCard {...defaultProps} />);
+
+    const meetingChip = screen.getByText('Meeting');
+    const deepWorkChip = screen.getByText('Deep Work');
+
+    // Select Meeting
+    await act(async () => {
+      fireEvent.click(meetingChip);
+    });
+    expect(meetingChip.closest('.cursor-pointer')?.className).toContain('ring-2');
+
+    // Select Deep Work — Meeting should deselect
+    await act(async () => {
+      fireEvent.click(deepWorkChip);
+    });
+    expect(deepWorkChip.closest('.cursor-pointer')?.className).toContain('ring-2');
+    expect(meetingChip.closest('.cursor-pointer')?.className).not.toContain('ring-2');
+  });
+
+  it('renders the "Task Type" label', () => {
+    render(<GroupCard {...defaultProps} />);
+
+    expect(screen.getByText('Task Type')).toBeInTheDocument();
   });
 });
