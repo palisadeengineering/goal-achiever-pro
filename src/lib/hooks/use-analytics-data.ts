@@ -112,54 +112,69 @@ function calculateDuration(startTime: string, endTime: string): number {
 }
 
 export function useAnalyticsData(dateRange: { start: Date; end: Date }): AnalyticsData {
-  const [timeBlocks, setTimeBlocks] = useState<TimeBlock[]>([]);
+  // rangeBlocks: blocks for the exact selected date range (breakdowns, pies, heatmap)
+  // trendBlocks: blocks for the wider 8-week range (weekly trends only)
+  const [rangeBlocks, setRangeBlocks] = useState<TimeBlock[]>([]);
+  const [trendBlocks, setTrendBlocks] = useState<TimeBlock[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Memoize date timestamps to avoid re-fetching on every render
-  const startTime = dateRange.start.getTime();
-  const endTime = dateRange.end.getTime();
+  // Stable date strings for effect dependencies
+  const startDateStr = format(dateRange.start, 'yyyy-MM-dd');
+  const endDateStr = format(dateRange.end, 'yyyy-MM-dd');
 
-  // Fetch time blocks from API
+  // Fetch time blocks from API — two separate fetches to avoid client-side date filtering
   useEffect(() => {
+    let cancelled = false;
+
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const startDate = format(dateRange.start, 'yyyy-MM-dd');
-        const endDate = format(dateRange.end, 'yyyy-MM-dd');
+        // Wider range for weekly trends (8 weeks back from end)
+        const trendsStartStr = format(subWeeks(dateRange.end, 8), 'yyyy-MM-dd');
 
-        // Fetch a broader range for weekly trends (8 weeks back from end)
-        const trendsStart = format(subWeeks(dateRange.end, 8), 'yyyy-MM-dd');
-        const fetchStart = trendsStart < startDate ? trendsStart : startDate;
+        const [rangeRes, trendsRes] = await Promise.all([
+          // Exact range for breakdowns — API filters server-side, no client filtering needed
+          fetch(`/api/time-blocks?startDate=${startDateStr}&endDate=${endDateStr}`),
+          // Wider range for weekly trends
+          trendsStartStr < startDateStr
+            ? fetch(`/api/time-blocks?startDate=${trendsStartStr}&endDate=${endDateStr}`)
+            : null,
+        ]);
 
-        const res = await fetch(`/api/time-blocks?startDate=${fetchStart}&endDate=${endDate}`);
-        if (res.ok) {
-          const data = await res.json();
-          setTimeBlocks(data.timeBlocks || []);
+        if (cancelled) return;
+
+        if (rangeRes.ok) {
+          const data = await rangeRes.json();
+          const blocks = data.timeBlocks || [];
+          setRangeBlocks(blocks);
+
+          // If no separate trends fetch needed, reuse the same data
+          if (!trendsRes) {
+            setTrendBlocks(blocks);
+          }
+        }
+
+        if (trendsRes?.ok) {
+          const data = await trendsRes.json();
+          setTrendBlocks(data.timeBlocks || []);
         }
       } catch (error) {
         console.error('Failed to fetch time blocks for analytics:', error);
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
 
     fetchData();
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [startTime, endTime]);
+  }, [startDateStr, endDateStr]);
 
-  // Filter blocks within the selected date range
-  const filteredBlocks = useMemo(() => {
-    return timeBlocks.filter((block) => {
-      const blockDate = parseISO(block.date);
-      return isWithinInterval(blockDate, { start: dateRange.start, end: dateRange.end });
-    });
-  }, [timeBlocks, dateRange]);
-
-  // Value Breakdown
+  // Value Breakdown — uses rangeBlocks directly (already filtered by API)
   const valueBreakdown = useMemo((): ValueBreakdown => {
     const breakdown: ValueBreakdown = { delegation: 0, replacement: 0, investment: 0, production: 0, na: 0 };
 
-    filteredBlocks.forEach((block) => {
+    rangeBlocks.forEach((block) => {
       const duration = calculateDuration(block.startTime, block.endTime);
       const quadrant = block.valueQuadrant || 'na';
       if (quadrant in breakdown) {
@@ -168,13 +183,13 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
     });
 
     return breakdown;
-  }, [filteredBlocks]);
+  }, [rangeBlocks]);
 
-  // Energy Breakdown
+  // Energy Breakdown — uses rangeBlocks directly
   const energyBreakdown = useMemo((): EnergyBreakdown => {
     const breakdown: EnergyBreakdown = { green: 0, yellow: 0, red: 0 };
 
-    filteredBlocks.forEach((block) => {
+    rangeBlocks.forEach((block) => {
       const duration = calculateDuration(block.startTime, block.endTime);
       const rating = block.energyRating || 'yellow';
       if (rating in breakdown) {
@@ -183,13 +198,13 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
     });
 
     return breakdown;
-  }, [filteredBlocks]);
+  }, [rangeBlocks]);
 
-  // Leverage Type Breakdown (4 C's)
+  // Leverage Type Breakdown (4 C's) — uses rangeBlocks directly
   const leverageBreakdown = useMemo((): LeverageBreakdown => {
     const breakdown: LeverageBreakdown = { code: 0, content: 0, capital: 0, collaboration: 0, none: 0 };
 
-    filteredBlocks.forEach((block) => {
+    rangeBlocks.forEach((block) => {
       const duration = calculateDuration(block.startTime, block.endTime);
       const leverage = block.leverageType || 'none';
       if (leverage in breakdown) {
@@ -200,7 +215,7 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
     });
 
     return breakdown;
-  }, [filteredBlocks]);
+  }, [rangeBlocks]);
 
   // Total hours and percentages
   const totalMinutes = useMemo(() => {
@@ -219,7 +234,7 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
     return Math.round(((energyBreakdown.green - energyBreakdown.red) / totalMinutes) * 100);
   }, [energyBreakdown, totalMinutes]);
 
-  // Weekly Trends (last 8 weeks)
+  // Weekly Trends (last 8 weeks) — uses trendBlocks (wider range)
   const weeklyTrends = useMemo((): WeeklyTrendData[] => {
     const weeks = eachWeekOfInterval(
       {
@@ -232,7 +247,7 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
     return weeks.map((weekStart) => {
       const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
 
-      const weekBlocks = timeBlocks.filter((block) => {
+      const weekBlocks = trendBlocks.filter((block) => {
         const blockDate = parseISO(block.date);
         return isWithinInterval(blockDate, { start: weekStart, end: weekEnd });
       });
@@ -265,9 +280,9 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
         energyBalance: weekTotal > 0 ? Math.round(((greenMins - redMins) / weekTotal) * 100) : 0,
       };
     });
-  }, [timeBlocks, dateRange]);
+  }, [trendBlocks, dateRange]);
 
-  // Heatmap Data (hour x day grid)
+  // Heatmap Data (hour x day grid) — uses rangeBlocks directly
   const heatmapData = useMemo((): HeatmapCell[] => {
     const grid: Map<string, {
       totalMins: number;
@@ -287,7 +302,7 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
     }
 
     // Fill grid with data
-    filteredBlocks.forEach((block) => {
+    rangeBlocks.forEach((block) => {
       const blockDate = parseISO(block.date);
       const dayOfWeek = getDay(blockDate);
       const startHour = parseInt(block.startTime.split(':')[0]);
@@ -345,15 +360,15 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
     });
 
     return result;
-  }, [filteredBlocks]);
+  }, [rangeBlocks]);
 
-  // Daily Breakdown
+  // Daily Breakdown — uses rangeBlocks directly
   const dailyBreakdown = useMemo((): DailyBreakdown[] => {
     const days = eachDayOfInterval({ start: dateRange.start, end: dateRange.end });
 
     return days.map((day) => {
       const dateStr = format(day, 'yyyy-MM-dd');
-      const dayBlocks = filteredBlocks.filter((b) => b.date === dateStr);
+      const dayBlocks = rangeBlocks.filter((b) => b.date === dateStr);
 
       const value: ValueBreakdown = { delegation: 0, replacement: 0, investment: 0, production: 0, na: 0 };
       const energy: EnergyBreakdown = { green: 0, yellow: 0, red: 0 };
@@ -377,7 +392,7 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
         totalMinutes: Object.values(value).reduce((a, b) => a + b, 0),
       };
     });
-  }, [filteredBlocks, dateRange]);
+  }, [rangeBlocks, dateRange]);
 
   // Most productive day
   const mostProductiveDay = useMemo(() => {
