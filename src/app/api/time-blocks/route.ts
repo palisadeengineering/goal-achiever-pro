@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('time_blocks')
-      .select('*, detected_projects(id, name)')
+      .select('*, detected_projects(id, name), time_block_meeting_details(meeting_category_id, attendee_count, is_external, meeting_categories(id, name))')
       .eq('user_id', userId)
       .order('block_date', { ascending: true })
       .order('start_time', { ascending: true });
@@ -63,39 +63,54 @@ export async function GET(request: NextRequest) {
     }, {} as Record<string, string[]>);
 
     // Transform to camelCase for frontend
-    const transformed = (timeBlocks || []).map(block => ({
-      id: block.id,
-      userId: block.user_id,
-      minId: block.min_id,
-      date: block.block_date,
-      startTime: block.start_time,
-      endTime: block.end_time,
-      durationMinutes: block.duration_minutes,
-      activityName: block.activity_name,
-      activityCategory: block.activity_category,
-      notes: block.notes,
-      energyRating: block.energy_rating,
-      energyScore: block.energy_score,
-      valueQuadrant: block.drip_quadrant || 'na',
-      makesMoneyScore: block.makes_money_score,
-      lightsUpScore: block.lights_up_score,
-      leverageType: block.leverage_type,
-      source: block.source,
-      externalEventId: block.external_event_id,
-      // Recurring event fields
-      isRecurring: block.is_recurring,
-      recurrenceRule: block.recurrence_rule,
-      recurrenceEndDate: block.recurrence_end_date,
-      parentBlockId: block.parent_block_id,
-      isRecurrenceException: block.is_recurrence_exception,
-      originalDate: block.original_date,
-      activityType: block.activity_type,
-      detectedProjectId: block.detected_project_id,
-      detectedProjectName: (block as Record<string, unknown>).detected_projects ? ((block as Record<string, unknown>).detected_projects as { name: string })?.name : null,
-      tagIds: tagsByBlock[block.id] || [],
-      createdAt: block.created_at,
-      updatedAt: block.updated_at,
-    }));
+    const transformed = (timeBlocks || []).map(block => {
+      // Extract meeting details if present
+      const meetingDetails = (block as Record<string, unknown>).time_block_meeting_details as {
+        meeting_category_id: string | null;
+        attendee_count: number | null;
+        is_external: boolean | null;
+        meeting_categories: { id: string; name: string } | null;
+      } | null;
+
+      return {
+        id: block.id,
+        userId: block.user_id,
+        minId: block.min_id,
+        date: block.block_date,
+        startTime: block.start_time,
+        endTime: block.end_time,
+        durationMinutes: block.duration_minutes,
+        activityName: block.activity_name,
+        activityCategory: block.activity_category,
+        notes: block.notes,
+        energyRating: block.energy_rating,
+        energyScore: block.energy_score,
+        valueQuadrant: block.drip_quadrant || 'na',
+        makesMoneyScore: block.makes_money_score,
+        lightsUpScore: block.lights_up_score,
+        leverageType: block.leverage_type,
+        source: block.source,
+        externalEventId: block.external_event_id,
+        // Recurring event fields
+        isRecurring: block.is_recurring,
+        recurrenceRule: block.recurrence_rule,
+        recurrenceEndDate: block.recurrence_end_date,
+        parentBlockId: block.parent_block_id,
+        isRecurrenceException: block.is_recurrence_exception,
+        originalDate: block.original_date,
+        activityType: block.activity_type,
+        detectedProjectId: block.detected_project_id,
+        detectedProjectName: (block as Record<string, unknown>).detected_projects ? ((block as Record<string, unknown>).detected_projects as { name: string })?.name : null,
+        // Meeting category data
+        meetingCategoryId: meetingDetails?.meeting_categories?.id || null,
+        meetingCategoryName: meetingDetails?.meeting_categories?.name || null,
+        meetingAttendeeCount: meetingDetails?.attendee_count || null,
+        meetingIsExternal: meetingDetails?.is_external || null,
+        tagIds: tagsByBlock[block.id] || [],
+        createdAt: block.created_at,
+        updatedAt: block.updated_at,
+      };
+    });
 
     return NextResponse.json({ timeBlocks: transformed });
   } catch (error) {

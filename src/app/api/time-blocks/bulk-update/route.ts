@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { valueQuadrant, energyRating, leverageType, activityType, detectedProjectId, tagIds, tagMode } = updates;
+    const { valueQuadrant, energyRating, leverageType, activityType, activityCategory, detectedProjectId, tagIds, tagMode } = updates;
 
     // Validate enum values
     const validValueQuadrants = ['production', 'investment', 'replacement', 'delegation', 'na'];
@@ -65,7 +65,8 @@ export async function POST(request: NextRequest) {
 
     // Ensure at least one field is being updated
     const hasFieldUpdate = valueQuadrant !== undefined || energyRating !== undefined ||
-      leverageType !== undefined || activityType !== undefined || detectedProjectId !== undefined;
+      leverageType !== undefined || activityType !== undefined || activityCategory !== undefined ||
+      detectedProjectId !== undefined;
     const hasTagUpdate = tagIds !== undefined && Array.isArray(tagIds);
 
     if (!hasFieldUpdate && !hasTagUpdate) {
@@ -121,6 +122,9 @@ export async function POST(request: NextRequest) {
       }
       if (activityType !== undefined) {
         updateData.activity_type = activityType;
+      }
+      if (activityCategory !== undefined) {
+        updateData.activity_category = activityCategory || null;
       }
       if (detectedProjectId !== undefined) {
         if (detectedProjectId === null || detectedProjectId === '') {

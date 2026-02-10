@@ -11,6 +11,8 @@ import type { ValueQuadrant, EnergyRating } from '@/types/database';
 // Activity types
 export type ActivityType = 'project' | 'meeting' | 'commute' | 'deep_work' | 'admin' | 'break' | 'other';
 
+export type LeverageType = 'code' | 'content' | 'capital' | 'collaboration';
+
 interface TimeBlock {
   id: string;
   date: string;
@@ -20,6 +22,7 @@ interface TimeBlock {
   valueQuadrant: ValueQuadrant;
   energyRating: EnergyRating;
   activityType?: ActivityType;
+  leverageType?: LeverageType | null;
   detectedProjectId?: string;
   detectedProjectName?: string;
   meetingCategoryId?: string;
@@ -61,6 +64,12 @@ interface ActivityTypeBreakdown {
   trend: number;
 }
 
+export interface LeverageBreakdown {
+  type: LeverageType;
+  minutes: number;
+  percentage: number;
+}
+
 interface PeriodSummary {
   totalMinutes: number;
   productionMinutes: number;
@@ -93,6 +102,9 @@ export interface EnhancedAnalyticsData {
 
   // Activity type breakdown
   activityTypeBreakdown: ActivityTypeBreakdown[];
+
+  // Leverage type breakdown (4 C's)
+  leverageBreakdown: LeverageBreakdown[];
 
   // Period comparison
   periodComparison: PeriodComparison;
@@ -519,11 +531,39 @@ export function useEnhancedAnalytics(
     return projectBreakdown.reduce((sum, p) => sum + p.totalMinutes, 0);
   }, [projectBreakdown]);
 
+  // Leverage type breakdown (4 C's)
+  const leverageBreakdown = useMemo((): LeverageBreakdown[] => {
+    const leverageMinutes: Record<LeverageType, number> = {
+      code: 0,
+      content: 0,
+      capital: 0,
+      collaboration: 0,
+    };
+
+    timeBlocks.forEach((block) => {
+      if (block.leverageType && block.leverageType in leverageMinutes) {
+        leverageMinutes[block.leverageType as LeverageType] += calculateDuration(block.startTime, block.endTime);
+      }
+    });
+
+    const leverageTotal = Object.values(leverageMinutes).reduce((a, b) => a + b, 0);
+
+    return (Object.keys(leverageMinutes) as LeverageType[])
+      .map((type) => ({
+        type,
+        minutes: leverageMinutes[type],
+        percentage: leverageTotal > 0 ? Math.round((leverageMinutes[type] / leverageTotal) * 100) : 0,
+      }))
+      .filter((item) => item.minutes > 0)
+      .sort((a, b) => b.minutes - a.minutes);
+  }, [timeBlocks]);
+
   return {
     projectBreakdown,
     totalProjectMinutes,
     meetingMetrics,
     activityTypeBreakdown,
+    leverageBreakdown,
     periodComparison,
     totalMinutes,
     totalHours: totalMinutes / 60,

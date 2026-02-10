@@ -20,7 +20,18 @@ import { Input } from '@/components/ui/input';
 import { CheckCircle2, ListTodo, Sparkles, EyeOff, Eye, Undo2, Trash2, Briefcase, Code, FileText, DollarSign, Users, Plus } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
 
-// Work Type options (customizable enum for the user)
+// Activity Type options (broad task classification)
+const ACTIVITY_TYPE_OPTIONS = [
+  { value: 'project', label: 'Project Work' },
+  { value: 'meeting', label: 'Meeting' },
+  { value: 'deep_work', label: 'Deep Work' },
+  { value: 'commute', label: 'Commute' },
+  { value: 'admin', label: 'Admin' },
+  { value: 'break', label: 'Break' },
+  { value: 'other', label: 'Other' },
+];
+
+// Work Type options (specific work category)
 const WORK_TYPE_OPTIONS = [
   { value: 'design_engineering', label: 'Design/Engineering' },
   { value: 'calculations', label: 'Calculations' },
@@ -470,6 +481,7 @@ export function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearc
   const [selectedProject, setSelectedProject] = useState<string>('');
   const [showNewProjectInput, setShowNewProjectInput] = useState(false);
   const [customProjectName, setCustomProjectName] = useState<string>('');
+  const [selectedActivityType, setSelectedActivityType] = useState<string>('');
   const [selectedWorkType, setSelectedWorkType] = useState<string>('');
   const [selectedLeverage, setSelectedLeverage] = useState<string>('');
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
@@ -488,7 +500,7 @@ export function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearc
       const isNewProject = showNewProjectInput && customProjectName.trim();
       const hasProject = isExistingProject || isNewProject;
       const hasLeverage = selectedLeverage && selectedLeverage !== 'none';
-      const hasEnhancedFields = hasProject || selectedWorkType ||
+      const hasEnhancedFields = hasProject || selectedWorkType || selectedActivityType ||
         hasLeverage || selectedTags.length > 0;
 
       if (hasEnhancedFields) {
@@ -497,8 +509,11 @@ export function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearc
         if (hasLeverage) {
           updates.leverageType = selectedLeverage;
         }
+        if (selectedActivityType) {
+          updates.activityType = selectedActivityType;
+        }
         if (selectedWorkType) {
-          updates.activityType = selectedWorkType;
+          updates.activityCategory = selectedWorkType;
         }
 
         // Create new project if needed, or use existing
@@ -716,6 +731,26 @@ export function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearc
               autoFocus
             />
           )}
+        </div>
+
+        {/* Activity Type (Task Type) chips */}
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Task Type</Label>
+          <div className="flex flex-wrap gap-1.5">
+            {ACTIVITY_TYPE_OPTIONS.map((option) => (
+              <Badge
+                key={option.value}
+                variant="outline"
+                className={cn(
+                  'cursor-pointer transition-colors text-xs',
+                  selectedActivityType === option.value && 'ring-2 ring-offset-1 ring-primary bg-primary/10'
+                )}
+                onClick={() => setSelectedActivityType(selectedActivityType === option.value ? '' : option.value)}
+              >
+                {option.label}
+              </Badge>
+            ))}
+          </div>
         </div>
 
         {/* Work Type chips */}
