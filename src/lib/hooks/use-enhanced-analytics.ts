@@ -213,11 +213,15 @@ export type TimeGranularity = 'day' | 'week' | 'month' | 'quarter';
 export function useEnhancedAnalytics(
   dateRange: { start: Date; end: Date },
   granularity: TimeGranularity = 'week',
-  refreshKey: number = 0
+  refreshKey: number = 0,
+  preloadedBlocks?: TimeBlock[]
 ): EnhancedAnalyticsData {
-  const [timeBlocks, setTimeBlocks] = useState<TimeBlock[]>([]);
+  const [fetchedBlocks, setFetchedBlocks] = useState<TimeBlock[]>([]);
   const [comparisonBlocks, setComparisonBlocks] = useState<TimeBlock[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Use pre-loaded blocks if provided (from InsightsView), otherwise use fetched blocks
+  const timeBlocks = preloadedBlocks || fetchedBlocks;
 
   // Memoize date timestamps to avoid infinite loops
   const startTime = dateRange.start.getTime();
@@ -235,8 +239,30 @@ export function useEnhancedAnalytics(
   const compStartTime = comparisonRange.start.getTime();
   const compEndTime = comparisonRange.end.getTime();
 
-  // Fetch time blocks from API
+  // Fetch time blocks from API (skipped when preloadedBlocks provided)
   useEffect(() => {
+    if (preloadedBlocks) {
+      // Only fetch comparison blocks for period-over-period comparison
+      const fetchComparison = async () => {
+        setIsLoading(true);
+        try {
+          const prevStartDate = format(comparisonRange.start, 'yyyy-MM-dd');
+          const prevEndDate = format(comparisonRange.end, 'yyyy-MM-dd');
+          const prevRes = await fetch(`/api/time-blocks?startDate=${prevStartDate}&endDate=${prevEndDate}`);
+          if (prevRes.ok) {
+            const data = await prevRes.json();
+            setComparisonBlocks(data.timeBlocks || []);
+          }
+        } catch (error) {
+          console.error('Failed to fetch comparison time blocks:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchComparison();
+      return;
+    }
+
     const fetchData = async () => {
       setIsLoading(true);
       try {
@@ -254,7 +280,7 @@ export function useEnhancedAnalytics(
 
         if (currentRes.ok) {
           const data = await currentRes.json();
-          setTimeBlocks(data.timeBlocks || []);
+          setFetchedBlocks(data.timeBlocks || []);
         }
 
         if (prevRes.ok) {
@@ -270,7 +296,7 @@ export function useEnhancedAnalytics(
 
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [startTime, endTime, compStartTime, compEndTime, refreshKey]);
+  }, [startTime, endTime, compStartTime, compEndTime, refreshKey, !!preloadedBlocks]);
 
   // Calculate total minutes
   const totalMinutes = useMemo(() => {

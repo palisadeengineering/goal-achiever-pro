@@ -624,12 +624,20 @@ export default function TimeAuditPage() {
       activityName: string;
       valueQuadrant: ValueQuadrant;
       energyRating: EnergyRating;
+      activityType?: string | null;
+      activityCategory?: string | null;
+      leverageType?: string | null;
+      detectedProjectId?: string | null;
+      detectedProjectName?: string | null;
+      meetingCategoryId?: string | null;
+      meetingCategoryName?: string | null;
       tagIds?: string[];
       durationMinutes: number;
     }> = [];
 
-    // Add time blocks from database and local storage
+    // Add time blocks from database and local storage (include all enhanced fields)
     timeBlocks.forEach((block) => {
+      const b = block as unknown as Record<string, unknown>;
       allBlocks.push({
         id: block.id,
         date: block.date,
@@ -638,6 +646,13 @@ export default function TimeAuditPage() {
         activityName: block.activityName,
         valueQuadrant: block.valueQuadrant,
         energyRating: block.energyRating,
+        activityType: (b.activityType as string) || null,
+        activityCategory: (b.activityCategory as string) || null,
+        leverageType: (b.leverageType as string) || null,
+        detectedProjectId: (b.detectedProjectId as string) || null,
+        detectedProjectName: (b.detectedProjectName as string) || null,
+        meetingCategoryId: (b.meetingCategoryId as string) || null,
+        meetingCategoryName: (b.meetingCategoryName as string) || null,
         tagIds: 'tagIds' in block ? (block.tagIds as string[]) : undefined,
         durationMinutes: calculateDuration(block.startTime, block.endTime),
       });
@@ -684,6 +699,11 @@ export default function TimeAuditPage() {
           activityName: event.summary || 'Untitled Event',
           valueQuadrant: categorization?.valueQuadrant || 'na',
           energyRating: categorization?.energyRating || 'yellow',
+          activityType: categorization?.activityType || null,
+          activityCategory: categorization?.activityCategory || null,
+          leverageType: categorization?.leverageType || null,
+          detectedProjectId: categorization?.detectedProjectId || null,
+          detectedProjectName: categorization?.detectedProjectName || null,
           durationMinutes,
         });
       }

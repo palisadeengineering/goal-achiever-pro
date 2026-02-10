@@ -184,11 +184,33 @@ export function InsightsView({ timeBlocks, tags, dateRange, onDateRangeChange, r
     },
   });
 
-  // Enhanced analytics data (fetches from API for activity classification)
+  // Convert TimeBlockData to the shape useEnhancedAnalytics expects
+  const preloadedBlocks = useMemo(() => {
+    return timeBlocks.map(b => ({
+      id: b.id,
+      date: b.date,
+      startTime: b.startTime,
+      endTime: b.endTime,
+      activityName: b.activityName,
+      valueQuadrant: b.valueQuadrant,
+      energyRating: b.energyRating,
+      activityType: (b.activityType as 'project' | 'meeting' | 'commute' | 'deep_work' | 'admin' | 'break' | 'other' | undefined) ?? undefined,
+      leverageType: (b.leverageType as 'code' | 'content' | 'capital' | 'collaboration' | null | undefined) ?? undefined,
+      detectedProjectId: b.detectedProjectId ?? undefined,
+      detectedProjectName: b.detectedProjectName ?? undefined,
+      meetingCategoryId: b.meetingCategoryId ?? undefined,
+      meetingCategoryName: b.meetingCategoryName ?? undefined,
+      createdAt: new Date().toISOString(),
+    }));
+  }, [timeBlocks]);
+
+  // Enhanced analytics data - uses preloaded blocks (combined DB + Google Calendar events)
+  // instead of fetching independently from API (which would miss Google Calendar events)
   const enhancedAnalytics = useEnhancedAnalytics(
     { start: startDate, end: endDate },
     granularity === 'day' ? 'day' : granularity === 'week' ? 'week' : 'month',
-    refreshKey
+    refreshKey,
+    preloadedBlocks
   );
 
   // Get colors and keys for time series charts

@@ -18,6 +18,11 @@ export interface EventCategorization {
   eventName: string;
   valueQuadrant: ValueQuadrant;
   energyRating: EnergyRating;
+  activityType?: string | null;
+  activityCategory?: string | null;
+  leverageType?: string | null;
+  detectedProjectId?: string | null;
+  detectedProjectName?: string | null;
   categorizedAt: string;
 }
 
@@ -39,6 +44,17 @@ const CATEGORIZATION_STORAGE_KEY = 'event-categorizations';
 const IGNORED_EVENTS_STORAGE_KEY = 'ignored-events';
 
 /**
+ * Enhanced fields that can be stored alongside basic categorization.
+ */
+export interface EnhancedCategorizationFields {
+  activityType?: string | null;
+  activityCategory?: string | null;
+  leverageType?: string | null;
+  detectedProjectId?: string | null;
+  detectedProjectName?: string | null;
+}
+
+/**
  * Fire-and-forget POST to persist categorization to database.
  * Errors are logged but don't block the UI.
  */
@@ -46,7 +62,8 @@ function persistCategorizationToDb(
   externalEventId: string,
   eventName: string,
   valueQuadrant: ValueQuadrant,
-  energyRating: EnergyRating
+  energyRating: EnergyRating,
+  enhanced?: EnhancedCategorizationFields
 ) {
   fetch('/api/event-categorizations', {
     method: 'POST',
@@ -57,6 +74,11 @@ function persistCategorizationToDb(
       valueQuadrant,
       energyRating,
       isIgnored: false,
+      ...(enhanced?.activityType && { activityType: enhanced.activityType }),
+      ...(enhanced?.activityCategory && { activityCategory: enhanced.activityCategory }),
+      ...(enhanced?.leverageType && { leverageType: enhanced.leverageType }),
+      ...(enhanced?.detectedProjectId && { detectedProjectId: enhanced.detectedProjectId }),
+      ...(enhanced?.detectedProjectName && { detectedProjectName: enhanced.detectedProjectName }),
     }),
   }).catch((err) => console.warn('Failed to persist categorization to DB:', err));
 }
@@ -419,12 +441,13 @@ export function useEventPatterns() {
       eventId: string,
       eventName: string,
       valueQuadrant: ValueQuadrant,
-      energyRating: EnergyRating
+      energyRating: EnergyRating,
+      enhanced?: EnhancedCategorizationFields
     ) => {
       // Learn the pattern
       learnPattern(eventName, valueQuadrant, energyRating);
 
-      // Save to localStorage (immediate)
+      // Save to localStorage (immediate) - include enhanced fields
       setCategorizations((prev) => {
         const filtered = prev.filter((c) => c.eventId !== eventId);
         return [
@@ -434,6 +457,11 @@ export function useEventPatterns() {
             eventName,
             valueQuadrant,
             energyRating,
+            activityType: enhanced?.activityType || null,
+            activityCategory: enhanced?.activityCategory || null,
+            leverageType: enhanced?.leverageType || null,
+            detectedProjectId: enhanced?.detectedProjectId || null,
+            detectedProjectName: enhanced?.detectedProjectName || null,
             categorizedAt: new Date().toISOString(),
           },
         ];
@@ -442,8 +470,8 @@ export function useEventPatterns() {
       // Also remove from ignored if it was previously ignored
       setIgnoredEvents((prev) => prev.filter((e) => e.eventId !== eventId));
 
-      // Persist to database (fire-and-forget)
-      persistCategorizationToDb(eventId, eventName, valueQuadrant, energyRating);
+      // Persist to database (fire-and-forget) - include enhanced fields
+      persistCategorizationToDb(eventId, eventName, valueQuadrant, energyRating, enhanced);
     },
     [learnPattern, setCategorizations, setIgnoredEvents]
   );
@@ -498,11 +526,12 @@ export function useEventPatterns() {
     (
       events: Array<{ id: string; summary: string }>,
       valueQuadrant: ValueQuadrant,
-      energyRating: EnergyRating
+      energyRating: EnergyRating,
+      enhanced?: EnhancedCategorizationFields
     ) => {
       // saveCategorization handles both localStorage and DB persistence per event
       events.forEach((event) => {
-        saveCategorization(event.id, event.summary, valueQuadrant, energyRating);
+        saveCategorization(event.id, event.summary, valueQuadrant, energyRating, enhanced);
       });
     },
     [saveCategorization]
