@@ -1,9 +1,7 @@
 'use client';
 
-import { useMemo } from 'react';
-import { useLocalStorage } from './use-local-storage';
+import { useMemo, useState, useEffect } from 'react';
 import {
-  startOfWeek,
   endOfWeek,
   eachDayOfInterval,
   eachWeekOfInterval,
@@ -11,7 +9,6 @@ import {
   getDay,
   parseISO,
   isWithinInterval,
-  differenceInMinutes,
   subWeeks,
 } from 'date-fns';
 import type { ValueQuadrant, EnergyRating } from '@/types/database';
@@ -24,6 +21,12 @@ interface TimeBlock {
   activityName: string;
   valueQuadrant: ValueQuadrant;
   energyRating: EnergyRating;
+  leverageType?: string | null;
+  activityType?: string | null;
+  activityCategory?: string | null;
+  detectedProjectId?: string | null;
+  detectedProjectName?: string | null;
+  tagIds?: string[];
   createdAt: string;
 }
 
@@ -69,9 +72,25 @@ interface DailyBreakdown {
   totalMinutes: number;
 }
 
+export interface LeverageBreakdown {
+  code: number;
+  content: number;
+  capital: number;
+  collaboration: number;
+  none: number;
+}
+
+export interface TagBreakdown {
+  tagId: string;
+  tagName: string;
+  minutes: number;
+  eventCount: number;
+}
+
 export interface AnalyticsData {
   valueBreakdown: ValueBreakdown;
   energyBreakdown: EnergyBreakdown;
+  leverageBreakdown: LeverageBreakdown;
   productionPercentage: number;
   energyBalance: number;
   totalHours: number;
@@ -80,19 +99,55 @@ export interface AnalyticsData {
   dailyBreakdown: DailyBreakdown[];
   mostProductiveDay: string;
   peakProductivityHour: number;
+  isLoading: boolean;
 }
 
 // Calculate duration in minutes between two time strings
 function calculateDuration(startTime: string, endTime: string): number {
-  const [startHour, startMin] = startTime.split(':').map(Number);
-  const [endHour, endMin] = endTime.split(':').map(Number);
-  return (endHour * 60 + endMin) - (startHour * 60 + startMin);
+  const parseTime = (t: string) => {
+    const parts = t.split(':').map(Number);
+    return parts[0] * 60 + parts[1];
+  };
+  return parseTime(endTime) - parseTime(startTime);
 }
 
 export function useAnalyticsData(dateRange: { start: Date; end: Date }): AnalyticsData {
-  const [timeBlocks] = useLocalStorage<TimeBlock[]>('time-blocks', []);
+  const [timeBlocks, setTimeBlocks] = useState<TimeBlock[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Filter blocks within date range
+  // Memoize date timestamps to avoid re-fetching on every render
+  const startTime = dateRange.start.getTime();
+  const endTime = dateRange.end.getTime();
+
+  // Fetch time blocks from API
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const startDate = format(dateRange.start, 'yyyy-MM-dd');
+        const endDate = format(dateRange.end, 'yyyy-MM-dd');
+
+        // Fetch a broader range for weekly trends (8 weeks back from end)
+        const trendsStart = format(subWeeks(dateRange.end, 8), 'yyyy-MM-dd');
+        const fetchStart = trendsStart < startDate ? trendsStart : startDate;
+
+        const res = await fetch(`/api/time-blocks?startDate=${fetchStart}&endDate=${endDate}`);
+        if (res.ok) {
+          const data = await res.json();
+          setTimeBlocks(data.timeBlocks || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch time blocks for analytics:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startTime, endTime]);
+
+  // Filter blocks within the selected date range
   const filteredBlocks = useMemo(() => {
     return timeBlocks.filter((block) => {
       const blockDate = parseISO(block.date);
@@ -106,7 +161,10 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
 
     filteredBlocks.forEach((block) => {
       const duration = calculateDuration(block.startTime, block.endTime);
-      breakdown[block.valueQuadrant] += duration;
+      const quadrant = block.valueQuadrant || 'na';
+      if (quadrant in breakdown) {
+        breakdown[quadrant as keyof ValueBreakdown] += duration;
+      }
     });
 
     return breakdown;
@@ -118,7 +176,27 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
 
     filteredBlocks.forEach((block) => {
       const duration = calculateDuration(block.startTime, block.endTime);
-      breakdown[block.energyRating] += duration;
+      const rating = block.energyRating || 'yellow';
+      if (rating in breakdown) {
+        breakdown[rating as keyof EnergyBreakdown] += duration;
+      }
+    });
+
+    return breakdown;
+  }, [filteredBlocks]);
+
+  // Leverage Type Breakdown (4 C's)
+  const leverageBreakdown = useMemo((): LeverageBreakdown => {
+    const breakdown: LeverageBreakdown = { code: 0, content: 0, capital: 0, collaboration: 0, none: 0 };
+
+    filteredBlocks.forEach((block) => {
+      const duration = calculateDuration(block.startTime, block.endTime);
+      const leverage = block.leverageType || 'none';
+      if (leverage in breakdown) {
+        breakdown[leverage as keyof LeverageBreakdown] += duration;
+      } else {
+        breakdown.none += duration;
+      }
     });
 
     return breakdown;
@@ -165,7 +243,10 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
 
       weekBlocks.forEach((block) => {
         const duration = calculateDuration(block.startTime, block.endTime);
-        value[block.valueQuadrant] += duration;
+        const quadrant = block.valueQuadrant || 'na';
+        if (quadrant in value) {
+          value[quadrant as keyof ValueBreakdown] += duration;
+        }
         if (block.energyRating === 'green') greenMins += duration;
         if (block.energyRating === 'red') redMins += duration;
       });
@@ -188,7 +269,6 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
 
   // Heatmap Data (hour x day grid)
   const heatmapData = useMemo((): HeatmapCell[] => {
-    // Create a grid of 7 days x 24 hours
     const grid: Map<string, {
       totalMins: number;
       energy: EnergyBreakdown;
@@ -217,8 +297,14 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
       const cell = grid.get(key);
       if (cell) {
         cell.totalMins += duration;
-        cell.energy[block.energyRating] += duration;
-        cell.value[block.valueQuadrant] += duration;
+        const rating = block.energyRating || 'yellow';
+        if (rating in cell.energy) {
+          cell.energy[rating as keyof EnergyBreakdown] += duration;
+        }
+        const quadrant = block.valueQuadrant || 'na';
+        if (quadrant in cell.value) {
+          cell.value[quadrant as keyof ValueBreakdown] += duration;
+        }
       }
     });
 
@@ -233,7 +319,6 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
     grid.forEach((cell, key) => {
       const [day, hour] = key.split('-').map(Number);
 
-      // Find dominant energy
       let dominantEnergy: EnergyRating | null = null;
       if (cell.totalMins > 0) {
         const maxEnergy = Math.max(cell.energy.green, cell.energy.yellow, cell.energy.red);
@@ -242,7 +327,6 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
         else dominantEnergy = 'yellow';
       }
 
-      // Find dominant Value
       let dominantValue: ValueQuadrant | null = null;
       if (cell.totalMins > 0) {
         const entries = Object.entries(cell.value) as [ValueQuadrant, number][];
@@ -276,8 +360,14 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
 
       dayBlocks.forEach((block) => {
         const duration = calculateDuration(block.startTime, block.endTime);
-        value[block.valueQuadrant] += duration;
-        energy[block.energyRating] += duration;
+        const quadrant = block.valueQuadrant || 'na';
+        if (quadrant in value) {
+          value[quadrant as keyof ValueBreakdown] += duration;
+        }
+        const rating = block.energyRating || 'yellow';
+        if (rating in energy) {
+          energy[rating as keyof EnergyBreakdown] += duration;
+        }
       });
 
       return {
@@ -319,6 +409,7 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
   return {
     valueBreakdown,
     energyBreakdown,
+    leverageBreakdown,
     productionPercentage,
     energyBalance,
     totalHours,
@@ -327,5 +418,6 @@ export function useAnalyticsData(dateRange: { start: Date; end: Date }): Analyti
     dailyBreakdown,
     mostProductiveDay,
     peakProductivityHour,
+    isLoading,
   };
 }
