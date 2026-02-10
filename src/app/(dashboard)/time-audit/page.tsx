@@ -1838,7 +1838,7 @@ export default function TimeAuditPage() {
           setCategorizationDismissed(true);
         }
       }}>
-        <DialogContent draggable className="max-w-2xl max-h-[85vh] overflow-y-auto sm:max-h-[85vh] h-[100dvh] sm:h-auto w-full sm:w-auto p-4 sm:p-6">
+        <DialogContent draggable className="max-w-5xl max-h-[85vh] overflow-y-auto sm:max-h-[85vh] h-[100dvh] sm:h-auto w-full sm:w-auto p-4 sm:p-6">
           <DialogHeader draggable>
             <DialogTitle className="text-lg">Categorize Events</DialogTitle>
             <DialogDescription className="text-sm">
