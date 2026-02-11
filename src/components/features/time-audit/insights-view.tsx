@@ -34,7 +34,8 @@ import {
   type GranularityOption,
   type MeasureOption,
 } from '@/lib/hooks/use-insights-data';
-import { useEnhancedAnalytics } from '@/lib/hooks/use-enhanced-analytics';
+import { inferActivityType, calculateDuration as calcDuration } from '@/lib/hooks/use-enhanced-analytics';
+import type { ActivityType, LeverageType } from '@/lib/hooks/use-enhanced-analytics';
 import type { Tag } from '@/lib/hooks/use-tags';
 import type { ValueQuadrant, EnergyRating } from '@/types/database';
 import {
@@ -184,34 +185,100 @@ export function InsightsView({ timeBlocks, tags, dateRange, onDateRangeChange, r
     },
   });
 
-  // Convert TimeBlockData to the shape useEnhancedAnalytics expects
-  const preloadedBlocks = useMemo(() => {
-    return timeBlocks.map(b => ({
-      id: b.id,
-      date: b.date,
-      startTime: b.startTime,
-      endTime: b.endTime,
-      activityName: b.activityName,
-      valueQuadrant: b.valueQuadrant,
-      energyRating: b.energyRating,
-      activityType: (b.activityType as 'project' | 'meeting' | 'commute' | 'deep_work' | 'admin' | 'break' | 'other' | undefined) ?? undefined,
-      leverageType: (b.leverageType as 'code' | 'content' | 'capital' | 'collaboration' | null | undefined) ?? undefined,
-      detectedProjectId: b.detectedProjectId ?? undefined,
-      detectedProjectName: b.detectedProjectName ?? undefined,
-      meetingCategoryId: b.meetingCategoryId ?? undefined,
-      meetingCategoryName: b.meetingCategoryName ?? undefined,
-      createdAt: new Date().toISOString(),
-    }));
-  }, [timeBlocks]);
+  // Compute enhanced analytics directly from timeBlocks (same data source as Value/Energy)
+  // This avoids the hook's async fetch/loading state which can cause empty chart issues
+  const filteredForEnhanced = useMemo(() => {
+    const rangeStartStr = formatDateStr(startDate);
+    const rangeEndStr = formatDateStr(endDate);
+    return timeBlocks.filter(b => {
+      if (!b.date || typeof b.date !== 'string') return false;
+      return b.date >= rangeStartStr && b.date <= rangeEndStr;
+    });
+  }, [timeBlocks, startDate, endDate]);
 
-  // Enhanced analytics data - uses preloaded blocks (combined DB + Google Calendar events)
-  // instead of fetching independently from API (which would miss Google Calendar events)
-  const enhancedAnalytics = useEnhancedAnalytics(
-    { start: startDate, end: endDate },
-    granularity === 'day' ? 'day' : granularity === 'week' ? 'week' : 'month',
-    refreshKey,
-    preloadedBlocks
-  );
+  const enhancedTotalMinutes = useMemo(() => {
+    return filteredForEnhanced.reduce((sum, b) => sum + (b.durationMinutes || calcDuration(b.startTime, b.endTime)), 0);
+  }, [filteredForEnhanced]);
+
+  const activityTypeBreakdown = useMemo(() => {
+    const typeMinutes: Record<ActivityType, number> = {
+      project: 0, meeting: 0, commute: 0, deep_work: 0, admin: 0, break: 0, other: 0,
+    };
+    filteredForEnhanced.forEach(b => {
+      const type = inferActivityType(b);
+      typeMinutes[type] += b.durationMinutes || calcDuration(b.startTime, b.endTime);
+    });
+    return (Object.keys(typeMinutes) as ActivityType[])
+      .map(type => ({
+        type,
+        minutes: typeMinutes[type],
+        percentage: enhancedTotalMinutes > 0 ? Math.round((typeMinutes[type] / enhancedTotalMinutes) * 100) : 0,
+        trend: 0,
+      }))
+      .filter(item => item.minutes > 0)
+      .sort((a, b) => b.minutes - a.minutes);
+  }, [filteredForEnhanced, enhancedTotalMinutes]);
+
+  const projectBreakdown = useMemo(() => {
+    const projectMap = new Map<string, { name: string; minutes: number; count: number }>();
+    filteredForEnhanced.forEach(b => {
+      const type = inferActivityType(b);
+      if (type === 'project' || b.detectedProjectId) {
+        const projectId = b.detectedProjectId || `inferred-${b.activityName}`;
+        const projectName = b.detectedProjectName || b.activityName;
+        const existing = projectMap.get(projectId) || { name: projectName, minutes: 0, count: 0 };
+        existing.minutes += b.durationMinutes || calcDuration(b.startTime, b.endTime);
+        existing.count += 1;
+        projectMap.set(projectId, existing);
+      }
+    });
+    return Array.from(projectMap.entries())
+      .map(([projectId, data]) => ({
+        projectId,
+        projectName: data.name,
+        totalMinutes: data.minutes,
+        eventCount: data.count,
+        trend: 0,
+      }))
+      .sort((a, b) => b.totalMinutes - a.totalMinutes);
+  }, [filteredForEnhanced]);
+
+  const meetingMetrics = useMemo(() => {
+    const categoryMap = new Map<string, { name: string; minutes: number; count: number }>();
+    let totalMeetingMinutes = 0;
+    const dailyMeetingMinutes = new Map<string, number>();
+    let meetingCount = 0;
+    filteredForEnhanced.forEach(b => {
+      const type = inferActivityType(b);
+      if (type === 'meeting') {
+        const duration = b.durationMinutes || calcDuration(b.startTime, b.endTime);
+        totalMeetingMinutes += duration;
+        meetingCount += 1;
+        const categoryId = b.meetingCategoryId || 'uncategorized';
+        const categoryName = b.meetingCategoryName || 'Uncategorized';
+        const existing = categoryMap.get(categoryId) || { name: categoryName, minutes: 0, count: 0 };
+        existing.minutes += duration;
+        existing.count += 1;
+        categoryMap.set(categoryId, existing);
+        dailyMeetingMinutes.set(b.date, (dailyMeetingMinutes.get(b.date) || 0) + duration);
+      }
+    });
+    let longestDay = { date: '', minutes: 0 };
+    dailyMeetingMinutes.forEach((minutes, date) => {
+      if (minutes > longestDay.minutes) longestDay = { date, minutes };
+    });
+    return {
+      totalMeetingMinutes,
+      meetingFreeMinutes: enhancedTotalMinutes - totalMeetingMinutes,
+      meetingPercentage: enhancedTotalMinutes > 0 ? Math.round((totalMeetingMinutes / enhancedTotalMinutes) * 100) : 0,
+      categoryBreakdown: Array.from(categoryMap.entries())
+        .map(([categoryId, data]) => ({ categoryId, categoryName: data.name, minutes: data.minutes, eventCount: data.count }))
+        .sort((a, b) => b.minutes - a.minutes),
+      longestMeetingDay: longestDay,
+      averageMeetingDuration: meetingCount > 0 ? Math.round(totalMeetingMinutes / meetingCount) : 0,
+      trend: 0,
+    };
+  }, [filteredForEnhanced, enhancedTotalMinutes]);
 
   // Get colors and keys for time series charts
   const { chartKeys, chartColors } = useMemo(() => {
@@ -875,22 +942,17 @@ export function InsightsView({ timeBlocks, tags, dateRange, onDateRangeChange, r
         </CardContent>
       </Card>
 
-      {/* Enhanced Analytics - Activity Classification */}
-      {!enhancedAnalytics.isLoading && (
-        <>
-          {/* Activity Type Breakdown */}
-          <CategoryBreakdownChart
-            data={enhancedAnalytics.activityTypeBreakdown}
-            totalMinutes={enhancedAnalytics.totalMinutes}
-          />
+      {/* Enhanced Analytics - Activity Classification (computed directly from timeBlocks) */}
+      <CategoryBreakdownChart
+        data={activityTypeBreakdown}
+        totalMinutes={enhancedTotalMinutes}
+      />
 
-          {/* Project & Meeting Analytics */}
-          <div className="grid gap-6 lg:grid-cols-2">
-            <TimeByProjectChart data={enhancedAnalytics.projectBreakdown} />
-            <MeetingLoadWidget metrics={enhancedAnalytics.meetingMetrics} />
-          </div>
-        </>
-      )}
+      {/* Project & Meeting Analytics */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <TimeByProjectChart data={projectBreakdown} />
+        <MeetingLoadWidget metrics={meetingMetrics} />
+      </div>
 
       {/* Detailed Breakdown Tables */}
       <div className="grid gap-6 lg:grid-cols-3">

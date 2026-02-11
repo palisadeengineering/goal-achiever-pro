@@ -118,7 +118,7 @@ export interface EnhancedAnalyticsData {
 }
 
 // Calculate duration in minutes between two time strings
-function calculateDuration(startTime: string, endTime: string): number {
+export function calculateDuration(startTime: string, endTime: string): number {
   // Handle time formats with or without seconds
   const parseTime = (t: string) => {
     const parts = t.split(':').map(Number);
@@ -128,9 +128,9 @@ function calculateDuration(startTime: string, endTime: string): number {
 }
 
 // Infer activity type from activity name if not set
-function inferActivityType(block: TimeBlock): ActivityType {
+export function inferActivityType(block: { activityName: string; activityType?: ActivityType | string | null; detectedProjectId?: string | null; detectedProjectName?: string | null }): ActivityType {
   if (block.activityType && block.activityType !== 'other') {
-    return block.activityType;
+    return block.activityType as ActivityType;
   }
 
   const name = block.activityName.toLowerCase();
