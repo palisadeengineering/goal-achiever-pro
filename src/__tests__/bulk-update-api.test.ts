@@ -216,10 +216,10 @@ describe('POST /api/time-blocks/bulk-update', () => {
     it('returns 401 when user is not authenticated', async () => {
       vi.mocked(getAuthenticatedUser).mockResolvedValue({
         isAuthenticated: false,
-        userId: undefined as unknown as string,
+        userId: null,
         error: 'Not authenticated',
         status: 401,
-      } as ReturnType<typeof getAuthenticatedUser> extends Promise<infer T> ? T : never);
+      } as unknown as ReturnType<typeof getAuthenticatedUser> extends Promise<infer T> ? T : never);
 
       const req = makeRequest({
         blockIds: ['block-1'],
@@ -289,7 +289,7 @@ describe('Bulk Update - Business Logic', () => {
     });
 
     it('should pass through valid leverage types', () => {
-      const leverageType = 'code';
+      const leverageType: string = 'code';
       const dbValue = leverageType === 'none' ? null : leverageType;
       expect(dbValue).toBe('code');
     });
@@ -323,7 +323,7 @@ describe('Bulk Update - Business Logic', () => {
     });
 
     it('should not clear for a valid project ID', () => {
-      const detectedProjectId = 'proj-123';
+      const detectedProjectId: string | null = 'proj-123';
       const isClearing = detectedProjectId === null || detectedProjectId === '';
       expect(isClearing).toBe(false);
     });

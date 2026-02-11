@@ -21,6 +21,14 @@ export interface TimeBlockData {
   energyRating: EnergyRating;
   tagIds?: string[];
   durationMinutes?: number;
+  // Enhanced categorization fields
+  activityType?: string | null;
+  activityCategory?: string | null;
+  leverageType?: string | null;
+  detectedProjectId?: string | null;
+  detectedProjectName?: string | null;
+  meetingCategoryId?: string | null;
+  meetingCategoryName?: string | null;
 }
 
 export type GroupByOption = 'value' | 'energy' | 'tag' | 'day' | 'week';

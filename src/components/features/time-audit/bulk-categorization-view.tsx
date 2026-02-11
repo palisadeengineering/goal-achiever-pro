@@ -15,6 +15,7 @@ import { TagInput } from '@/components/shared/tag-input';
 import { GoogleEventCategorizer } from './google-event-categorizer';
 import { VALUE_QUADRANTS, ENERGY_RATINGS } from '@/constants/drip';
 import type { ValueQuadrant, EnergyRating, LeverageType } from '@/types/database';
+import type { EnhancedCategorizationFields } from '@/lib/hooks/use-event-patterns';
 import type { GoogleCalendarEvent } from '@/lib/hooks/use-google-calendar';
 import { Input } from '@/components/ui/input';
 import { CheckCircle2, ListTodo, Sparkles, EyeOff, Eye, Undo2, Trash2, Briefcase, Code, FileText, DollarSign, Users, Plus } from 'lucide-react';
@@ -231,12 +232,14 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
   const handleApplyToGroup = (
     group: GroupedEvents,
     valueQuadrant: ValueQuadrant,
-    energyRating: EnergyRating
+    energyRating: EnergyRating,
+    enhanced?: EnhancedCategorizationFields
   ) => {
     applySuggestionToSimilar(
       group.events.map((e) => ({ id: e.id, summary: e.summary })),
       valueQuadrant,
-      energyRating
+      energyRating,
+      enhanced
     );
     onCategorize?.();
   };
@@ -460,7 +463,7 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
 // ========================================================
 interface GroupCardProps {
   group: GroupedEvents;
-  onApply: (group: GroupedEvents, valueQuadrant: ValueQuadrant, energyRating: EnergyRating) => void;
+  onApply: (group: GroupedEvents, valueQuadrant: ValueQuadrant, energyRating: EnergyRating, enhanced?: EnhancedCategorizationFields) => void;
   onIgnore: (group: GroupedEvents) => void;
   tags: Tag[];
   onCreateTag: (name: string) => Promise<Tag | null>;
@@ -492,15 +495,62 @@ export function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearc
 
     setIsApplying(true);
     try {
-      // First apply the basic categorization (value quadrant + energy)
-      onApply(group, selectedValue, selectedEnergy);
-
-      // Then apply enhanced fields via bulk update API if any are set
+      // Build enhanced fields for categorization persistence
       const isExistingProject = selectedProject && selectedProject !== 'none';
       const isNewProject = showNewProjectInput && customProjectName.trim();
-      const hasProject = isExistingProject || isNewProject;
       const hasLeverage = selectedLeverage && selectedLeverage !== 'none';
-      const hasEnhancedFields = hasProject || selectedWorkType || selectedActivityType ||
+
+      const enhanced: EnhancedCategorizationFields = {};
+      let resolvedProjectId: string | undefined;
+      let resolvedProjectName: string | undefined;
+
+      if (hasLeverage) {
+        enhanced.leverageType = selectedLeverage;
+      }
+      if (selectedActivityType) {
+        enhanced.activityType = selectedActivityType;
+      }
+      if (selectedWorkType) {
+        enhanced.activityCategory = selectedWorkType;
+      }
+
+      // Create new project if needed, or use existing
+      if (isNewProject) {
+        try {
+          const createRes = await fetch('/api/detected-projects', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: customProjectName.trim() }),
+          });
+          if (createRes.ok) {
+            const { project } = await createRes.json();
+            resolvedProjectId = project.id;
+            resolvedProjectName = project.name || customProjectName.trim();
+          } else if (createRes.status === 409) {
+            const { existingId } = await createRes.json();
+            if (existingId) {
+              resolvedProjectId = existingId;
+              resolvedProjectName = customProjectName.trim();
+            }
+          }
+        } catch (err) {
+          console.error('Failed to create project:', err);
+        }
+      } else if (isExistingProject) {
+        resolvedProjectId = selectedProject;
+        resolvedProjectName = detectedProjects.find(p => p.id === selectedProject)?.name || selectedProject;
+      }
+
+      if (resolvedProjectId) {
+        enhanced.detectedProjectId = resolvedProjectId;
+        enhanced.detectedProjectName = resolvedProjectName;
+      }
+
+      // Apply categorization with enhanced fields (saves to localStorage + event_categorizations DB)
+      onApply(group, selectedValue, selectedEnergy, Object.keys(enhanced).length > 0 ? enhanced : undefined);
+
+      // Also try to update time_blocks directly if they exist (for already-imported events)
+      const hasEnhancedFields = resolvedProjectId || selectedWorkType || selectedActivityType ||
         hasLeverage || selectedTags.length > 0;
 
       if (hasEnhancedFields) {
@@ -515,34 +565,16 @@ export function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearc
         if (selectedWorkType) {
           updates.activityCategory = selectedWorkType;
         }
-
-        // Create new project if needed, or use existing
-        if (isNewProject) {
-          try {
-            const createRes = await fetch('/api/detected-projects', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ name: customProjectName.trim() }),
-            });
-            if (createRes.ok) {
-              const { project } = await createRes.json();
-              updates.detectedProjectId = project.id;
-            } else if (createRes.status === 409) {
-              const { existingId } = await createRes.json();
-              if (existingId) updates.detectedProjectId = existingId;
-            }
-          } catch (err) {
-            console.error('Failed to create project:', err);
-          }
-        } else if (isExistingProject) {
-          updates.detectedProjectId = selectedProject;
+        if (resolvedProjectId) {
+          updates.detectedProjectId = resolvedProjectId;
         }
         if (selectedTags.length > 0) {
           updates.tagIds = selectedTags.map(t => t.id);
           updates.tagMode = 'merge';
         }
 
-        // Only call API if we have actual enhanced updates
+        // Try to update time_blocks (may find 0 if events not imported yet — that's fine,
+        // the enhanced fields are already saved in event_categorizations for later use)
         if (Object.keys(updates).length > 0) {
           const eventIds = group.events.map(e => e.id);
           try {

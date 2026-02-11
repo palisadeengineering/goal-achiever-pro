@@ -33,6 +33,11 @@ export async function GET() {
       eventName: row.event_name,
       valueQuadrant: row.value_quadrant,
       energyRating: row.energy_rating,
+      activityType: row.activity_type || null,
+      activityCategory: row.activity_category || null,
+      leverageType: row.leverage_type || null,
+      detectedProjectId: row.detected_project_id || null,
+      detectedProjectName: row.detected_project_name || null,
       isIgnored: row.is_ignored,
       categorizedAt: row.categorized_at,
     }));
@@ -65,6 +70,11 @@ export async function POST(request: NextRequest) {
       eventName: string;
       valueQuadrant?: string;
       energyRating?: string;
+      activityType?: string;
+      activityCategory?: string;
+      leverageType?: string;
+      detectedProjectId?: string;
+      detectedProjectName?: string;
       isIgnored?: boolean;
     }> = Array.isArray(body) ? body : Array.isArray(body.categorizations) ? body.categorizations : [body];
 
@@ -92,6 +102,11 @@ export async function POST(request: NextRequest) {
       event_name: item.eventName,
       value_quadrant: item.valueQuadrant || null,
       energy_rating: item.energyRating || null,
+      activity_type: item.activityType || null,
+      activity_category: item.activityCategory || null,
+      leverage_type: item.leverageType || null,
+      detected_project_id: item.detectedProjectId || null,
+      detected_project_name: item.detectedProjectName || null,
       is_ignored: item.isIgnored ?? false,
       updated_at: new Date().toISOString(),
     }));
