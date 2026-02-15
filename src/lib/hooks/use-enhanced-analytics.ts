@@ -11,6 +11,8 @@ import type { ValueQuadrant, EnergyRating } from '@/types/database';
 // Activity types
 export type ActivityType = 'project' | 'meeting' | 'commute' | 'deep_work' | 'admin' | 'break' | 'other';
 
+export type LeverageType = 'code' | 'content' | 'capital' | 'collaboration';
+
 interface TimeBlock {
   id: string;
   date: string;
@@ -20,6 +22,7 @@ interface TimeBlock {
   valueQuadrant: ValueQuadrant;
   energyRating: EnergyRating;
   activityType?: ActivityType;
+  leverageType?: LeverageType | null;
   detectedProjectId?: string;
   detectedProjectName?: string;
   meetingCategoryId?: string;
@@ -61,6 +64,12 @@ interface ActivityTypeBreakdown {
   trend: number;
 }
 
+export interface LeverageBreakdown {
+  type: LeverageType;
+  minutes: number;
+  percentage: number;
+}
+
 interface PeriodSummary {
   totalMinutes: number;
   productionMinutes: number;
@@ -94,6 +103,9 @@ export interface EnhancedAnalyticsData {
   // Activity type breakdown
   activityTypeBreakdown: ActivityTypeBreakdown[];
 
+  // Leverage type breakdown (4 C's)
+  leverageBreakdown: LeverageBreakdown[];
+
   // Period comparison
   periodComparison: PeriodComparison;
 
@@ -106,7 +118,7 @@ export interface EnhancedAnalyticsData {
 }
 
 // Calculate duration in minutes between two time strings
-function calculateDuration(startTime: string, endTime: string): number {
+export function calculateDuration(startTime: string, endTime: string): number {
   // Handle time formats with or without seconds
   const parseTime = (t: string) => {
     const parts = t.split(':').map(Number);
@@ -116,9 +128,9 @@ function calculateDuration(startTime: string, endTime: string): number {
 }
 
 // Infer activity type from activity name if not set
-function inferActivityType(block: TimeBlock): ActivityType {
+export function inferActivityType(block: { activityName: string; activityType?: ActivityType | string | null; detectedProjectId?: string | null; detectedProjectName?: string | null }): ActivityType {
   if (block.activityType && block.activityType !== 'other') {
-    return block.activityType;
+    return block.activityType as ActivityType;
   }
 
   const name = block.activityName.toLowerCase();
@@ -201,11 +213,15 @@ export type TimeGranularity = 'day' | 'week' | 'month' | 'quarter';
 export function useEnhancedAnalytics(
   dateRange: { start: Date; end: Date },
   granularity: TimeGranularity = 'week',
-  refreshKey: number = 0
+  refreshKey: number = 0,
+  preloadedBlocks?: TimeBlock[]
 ): EnhancedAnalyticsData {
-  const [timeBlocks, setTimeBlocks] = useState<TimeBlock[]>([]);
+  const [fetchedBlocks, setFetchedBlocks] = useState<TimeBlock[]>([]);
   const [comparisonBlocks, setComparisonBlocks] = useState<TimeBlock[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Use pre-loaded blocks if provided (from InsightsView), otherwise use fetched blocks
+  const timeBlocks = preloadedBlocks || fetchedBlocks;
 
   // Memoize date timestamps to avoid infinite loops
   const startTime = dateRange.start.getTime();
@@ -223,8 +239,30 @@ export function useEnhancedAnalytics(
   const compStartTime = comparisonRange.start.getTime();
   const compEndTime = comparisonRange.end.getTime();
 
-  // Fetch time blocks from API
+  // Fetch time blocks from API (skipped when preloadedBlocks provided)
   useEffect(() => {
+    if (preloadedBlocks) {
+      // Only fetch comparison blocks for period-over-period comparison
+      const fetchComparison = async () => {
+        setIsLoading(true);
+        try {
+          const prevStartDate = format(comparisonRange.start, 'yyyy-MM-dd');
+          const prevEndDate = format(comparisonRange.end, 'yyyy-MM-dd');
+          const prevRes = await fetch(`/api/time-blocks?startDate=${prevStartDate}&endDate=${prevEndDate}`);
+          if (prevRes.ok) {
+            const data = await prevRes.json();
+            setComparisonBlocks(data.timeBlocks || []);
+          }
+        } catch (error) {
+          console.error('Failed to fetch comparison time blocks:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchComparison();
+      return;
+    }
+
     const fetchData = async () => {
       setIsLoading(true);
       try {
@@ -242,7 +280,7 @@ export function useEnhancedAnalytics(
 
         if (currentRes.ok) {
           const data = await currentRes.json();
-          setTimeBlocks(data.timeBlocks || []);
+          setFetchedBlocks(data.timeBlocks || []);
         }
 
         if (prevRes.ok) {
@@ -258,7 +296,7 @@ export function useEnhancedAnalytics(
 
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [startTime, endTime, compStartTime, compEndTime, refreshKey]);
+  }, [startTime, endTime, compStartTime, compEndTime, refreshKey, !!preloadedBlocks]);
 
   // Calculate total minutes
   const totalMinutes = useMemo(() => {
@@ -519,11 +557,39 @@ export function useEnhancedAnalytics(
     return projectBreakdown.reduce((sum, p) => sum + p.totalMinutes, 0);
   }, [projectBreakdown]);
 
+  // Leverage type breakdown (4 C's)
+  const leverageBreakdown = useMemo((): LeverageBreakdown[] => {
+    const leverageMinutes: Record<LeverageType, number> = {
+      code: 0,
+      content: 0,
+      capital: 0,
+      collaboration: 0,
+    };
+
+    timeBlocks.forEach((block) => {
+      if (block.leverageType && block.leverageType in leverageMinutes) {
+        leverageMinutes[block.leverageType as LeverageType] += calculateDuration(block.startTime, block.endTime);
+      }
+    });
+
+    const leverageTotal = Object.values(leverageMinutes).reduce((a, b) => a + b, 0);
+
+    return (Object.keys(leverageMinutes) as LeverageType[])
+      .map((type) => ({
+        type,
+        minutes: leverageMinutes[type],
+        percentage: leverageTotal > 0 ? Math.round((leverageMinutes[type] / leverageTotal) * 100) : 0,
+      }))
+      .filter((item) => item.minutes > 0)
+      .sort((a, b) => b.minutes - a.minutes);
+  }, [timeBlocks]);
+
   return {
     projectBreakdown,
     totalProjectMinutes,
     meetingMetrics,
     activityTypeBreakdown,
+    leverageBreakdown,
     periodComparison,
     totalMinutes,
     totalHours: totalMinutes / 60,

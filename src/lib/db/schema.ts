@@ -516,6 +516,11 @@ export const eventCategorizations = pgTable('event_categorizations', {
   eventName: text('event_name').notNull(),
   valueQuadrant: text('value_quadrant'), // 'production', 'investment', 'replacement', 'delegation', 'na'
   energyRating: text('energy_rating'), // 'green', 'yellow', 'red'
+  activityType: text('activity_type'), // 'project', 'meeting', 'deep_work', etc.
+  activityCategory: text('activity_category'), // 'design_engineering', etc.
+  leverageType: text('leverage_type'), // 'code', 'content', 'capital', 'collaboration'
+  detectedProjectId: uuid('detected_project_id'),
+  detectedProjectName: text('detected_project_name'),
   isIgnored: boolean('is_ignored').default(false),
   categorizedAt: timestamp('categorized_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),

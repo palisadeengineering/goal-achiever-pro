@@ -33,6 +33,7 @@ import { CategoryBreakdownChart } from '@/components/features/analytics/category
 import { TimeByProjectChart } from '@/components/features/analytics/time-by-project-chart';
 import { MeetingLoadWidget } from '@/components/features/analytics/meeting-load-widget';
 import { PeriodComparisonView } from '@/components/features/analytics/period-comparison-view';
+import { LeverageBreakdownChart } from '@/components/features/analytics/leverage-breakdown-chart';
 import {
   Clock,
   Target,
@@ -426,6 +427,9 @@ export default function AnalyticsPage() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Leverage Distribution (4 C's) */}
+          <LeverageBreakdownChart data={enhancedAnalytics.leverageBreakdown} />
 
           {/* Productivity Heatmap */}
           <Card>
