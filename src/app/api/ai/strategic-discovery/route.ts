@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { logAIUsage } from '@/lib/utils/ai-usage';
+import { sanitizeErrorForClient } from '@/lib/utils/api-errors';
 import { getAuthenticatedUserWithTier } from '@/lib/auth/api-auth';
 import {
   applyMultipleRateLimits,
@@ -412,7 +413,7 @@ export async function POST(request: NextRequest) {
     } catch {
       console.error('JSON parse error. Response text:', responseText);
       return NextResponse.json(
-        { error: 'Failed to parse AI response', details: responseText.substring(0, 500) },
+        { error: 'Failed to parse AI response' },
         { status: 500 }
       );
     }
@@ -478,7 +479,7 @@ export async function POST(request: NextRequest) {
         completionTokens: 0,
         requestType: 'strategic-discovery',
         success: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorMessage: sanitizeErrorForClient(error, 'strategic discovery'),
         responseTimeMs,
       });
     }

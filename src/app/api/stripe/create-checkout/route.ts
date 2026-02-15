@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPriceId } from '@/lib/stripe/client';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import { createClient } from '@/lib/supabase/server';
+import { sanitizeErrorForClient } from '@/lib/utils/api-errors';
 
 export async function POST(request: NextRequest) {
   const auth = await getAuthenticatedUser();
@@ -90,15 +91,13 @@ export async function POST(request: NextRequest) {
     } else {
       console.error('Stripe checkout error:', data);
       return NextResponse.json(
-        { error: 'Failed to create checkout session', details: data.error?.message || 'Unknown error' },
+        { error: 'Failed to create checkout session' },
         { status: 500 }
       );
     }
   } catch (error) {
-    console.error('Error creating checkout session:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to create checkout session', details: errorMessage },
+      { error: sanitizeErrorForClient(error, 'create checkout session') },
       { status: 500 }
     );
   }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { logAIUsage } from '@/lib/utils/ai-usage';
+import { sanitizeErrorForClient } from '@/lib/utils/api-errors';
 import { getAuthenticatedUserWithTier } from '@/lib/auth/api-auth';
 import {
   applyMultipleRateLimits,
@@ -190,7 +191,7 @@ Only include categories that have at least 1 event. If no cleanup suggestions ar
         completionTokens: 0,
         requestType: 'suggest-event-cleanup',
         success: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorMessage: sanitizeErrorForClient(error, 'suggest event cleanup'),
         responseTimeMs,
       });
     }

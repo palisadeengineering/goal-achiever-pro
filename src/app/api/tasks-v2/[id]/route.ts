@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import { awardXpV2 } from '@/lib/services/gamification-v2';
 import { updateStreakV2 } from '@/lib/services/streaks-v2';
+import { sanitizeErrorForClient } from '@/lib/utils/api-errors';
 
 // GET /api/tasks-v2/[id] - Get single task
 export async function GET(
@@ -149,8 +150,7 @@ export async function PUT(
       .single();
 
     if (error) {
-      console.error('Error updating task:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(error, 'update task') }, { status: 500 });
     }
 
     // Handle gamification for task completion
@@ -241,8 +241,7 @@ export async function DELETE(
       .eq('user_id', userId);
 
     if (error) {
-      console.error('Error deleting task:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(error, 'delete task') }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });

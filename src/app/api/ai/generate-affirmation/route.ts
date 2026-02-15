@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { logAIUsage } from '@/lib/utils/ai-usage';
+import { sanitizeErrorForClient } from '@/lib/utils/api-errors';
 import { getAuthenticatedUserWithTier } from '@/lib/auth/api-auth';
 import {
   applyMultipleRateLimits,
@@ -120,7 +121,7 @@ Respond with ONLY the affirmation text, no quotes or additional commentary.`;
         completionTokens: 0,
         requestType: 'generate-affirmation',
         success: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorMessage: sanitizeErrorForClient(error, 'generate affirmation'),
         responseTimeMs,
       });
     }

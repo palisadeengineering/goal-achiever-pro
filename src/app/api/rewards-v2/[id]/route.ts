@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import { sanitizeErrorForClient } from '@/lib/utils/api-errors';
 
 // GET /api/rewards-v2/[id] - Get single reward with claims
 export async function GET(
@@ -108,8 +109,7 @@ export async function PUT(
       .single();
 
     if (error) {
-      console.error('Error updating reward:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(error, 'update reward') }, { status: 500 });
     }
 
     return NextResponse.json({ reward: data });
@@ -145,8 +145,7 @@ export async function DELETE(
       .eq('user_id', userId);
 
     if (error) {
-      console.error('Error deleting reward:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(error, 'delete reward') }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });

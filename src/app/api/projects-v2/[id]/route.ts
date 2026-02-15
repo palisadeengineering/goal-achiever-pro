@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import { sanitizeErrorForClient } from '@/lib/utils/api-errors';
 
 // GET /api/projects-v2/[id] - Get single project with all relations
 export async function GET(
@@ -177,8 +178,7 @@ export async function PUT(
       .single();
 
     if (error) {
-      console.error('Error updating project:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(error, 'update project') }, { status: 500 });
     }
 
     return NextResponse.json({ project: data });
@@ -218,8 +218,7 @@ export async function DELETE(
         .eq('user_id', userId);
 
       if (error) {
-        console.error('Error deleting project:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: sanitizeErrorForClient(error, 'delete project') }, { status: 500 });
       }
 
       return NextResponse.json({ success: true, deleted: true });
@@ -236,8 +235,7 @@ export async function DELETE(
         .eq('user_id', userId);
 
       if (error) {
-        console.error('Error archiving project:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: sanitizeErrorForClient(error, 'archive project') }, { status: 500 });
       }
 
       return NextResponse.json({ success: true, archived: true });

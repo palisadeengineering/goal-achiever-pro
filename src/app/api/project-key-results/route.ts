@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import { sanitizeErrorForClient } from '@/lib/utils/api-errors';
 
 // GET /api/project-key-results - List key results (optionally filtered by project)
 export async function GET(request: NextRequest) {
@@ -44,8 +45,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query;
 
     if (error) {
-      console.error('Error fetching key results:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(error, 'fetch key results') }, { status: 500 });
     }
 
     return NextResponse.json({ keyResults: data });
@@ -138,8 +138,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error creating key result:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(error, 'create key result') }, { status: 500 });
     }
 
     return NextResponse.json({ keyResult: data }, { status: 201 });

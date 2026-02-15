@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
 import { getAuthenticatedUserWithTier } from '@/lib/auth/api-auth';
 import { logAIUsage } from '@/lib/utils/ai-usage';
+import { sanitizeErrorForClient } from '@/lib/utils/api-errors';
 import {
   applyMultipleRateLimits,
   rateLimitExceededResponse,
@@ -346,7 +347,7 @@ Respond ONLY with valid JSON in this exact format:
         completionTokens: 0,
         requestType: 'generate-plan-from-metrics',
         success: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorMessage: sanitizeErrorForClient(error, 'generate plan from metrics'),
         responseTimeMs,
       });
     }

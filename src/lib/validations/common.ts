@@ -119,6 +119,16 @@ export const paginationSchema = z.object({
   limit: z.number().int().min(1).max(100).optional().default(20),
 });
 
+/**
+ * Validate a date query parameter is in YYYY-MM-DD format.
+ * Returns the date string if valid, null otherwise.
+ * Since routes already handle null dates (skip the filter), invalid dates safely become unfiltered queries.
+ */
+export function validateDateParam(value: string | null): string | null {
+  if (!value) return null;
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
+}
+
 // Helper to create a safe parse function that returns formatted errors
 export function parseWithErrors<T>(schema: z.ZodSchema<T>, data: unknown): {
   success: true;

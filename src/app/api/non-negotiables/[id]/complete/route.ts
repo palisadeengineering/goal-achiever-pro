@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import { validateDateParam } from '@/lib/validations/common';
+import { sanitizeErrorForClient } from '@/lib/utils/api-errors';
 
 // POST /api/non-negotiables/[id]/complete - Mark non-negotiable as complete for a date
 export async function POST(
@@ -69,7 +71,7 @@ export async function POST(
         .single();
 
       if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: sanitizeErrorForClient(error, 'update non-negotiable completion') }, { status: 500 });
       }
 
       return NextResponse.json(data);
@@ -89,7 +91,7 @@ export async function POST(
       .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(error, 'complete non-negotiable') }, { status: 500 });
     }
 
     return NextResponse.json(data, { status: 201 });
@@ -118,7 +120,7 @@ export async function DELETE(
     }
 
     const { searchParams } = new URL(request.url);
-    const date = searchParams.get('date') || new Date().toISOString().split('T')[0];
+    const date = validateDateParam(searchParams.get('date')) || new Date().toISOString().split('T')[0];
 
     const { error } = await supabase
       .from('non_negotiable_completions')
@@ -128,7 +130,7 @@ export async function DELETE(
       .eq('completion_date', date);
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(error, 'remove non-negotiable completion') }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });

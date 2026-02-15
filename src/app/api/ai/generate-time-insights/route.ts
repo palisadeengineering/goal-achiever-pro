@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { logAIUsage } from '@/lib/utils/ai-usage';
+import { sanitizeErrorForClient } from '@/lib/utils/api-errors';
 import { getAuthenticatedUserWithTier } from '@/lib/auth/api-auth';
 import { createClient } from '@/lib/supabase/server';
 import {
@@ -267,7 +268,7 @@ Respond ONLY with valid JSON in this exact format:
         completionTokens: 0,
         requestType: 'generate-time-insights',
         success: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorMessage: sanitizeErrorForClient(error, 'generate time insights'),
         responseTimeMs,
       });
     }

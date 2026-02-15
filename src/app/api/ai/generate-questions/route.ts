@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { logAIUsage } from '@/lib/utils/ai-usage';
+import { sanitizeErrorForClient } from '@/lib/utils/api-errors';
 import { getAuthenticatedUserWithTier } from '@/lib/auth/api-auth';
 import {
   applyMultipleRateLimits,
@@ -157,7 +158,7 @@ Make questions specific and helpful. For revenue, ask about customer count and p
         completionTokens: 0,
         requestType: 'generate-questions',
         success: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorMessage: sanitizeErrorForClient(error, 'generate questions'),
         responseTimeMs,
       });
     }

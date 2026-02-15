@@ -157,6 +157,16 @@ export async function POST(request: NextRequest) {
       try {
         // Convert base64 to buffer
         const base64Data = screenshot.split(',')[1];
+
+        // Reject screenshots larger than ~5MB (base64 inflates ~33%, so 7MB base64 ≈ 5MB decoded)
+        const MAX_BASE64_LENGTH = 7 * 1024 * 1024;
+        if (base64Data.length > MAX_BASE64_LENGTH) {
+          return NextResponse.json(
+            { error: 'Screenshot too large. Maximum size is 5MB.' },
+            { status: 413 }
+          );
+        }
+
         const buffer = Buffer.from(base64Data, 'base64');
         const fileName = `feedback/${userId}/${Date.now()}.png`;
 

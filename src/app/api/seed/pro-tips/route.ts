@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { sanitizeErrorForClient } from '@/lib/utils/api-errors';
 
 const PRO_TIPS = [
   // Productivity Wisdom
@@ -143,7 +144,7 @@ export async function POST() {
       .limit(1);
 
     if (checkError) {
-      return NextResponse.json({ error: checkError.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(checkError, 'check existing pro tips') }, { status: 500 });
     }
 
     if (existing && existing.length > 0) {
@@ -167,7 +168,7 @@ export async function POST() {
       .select();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(error, 'seed pro tips') }, { status: 500 });
     }
 
     return NextResponse.json({

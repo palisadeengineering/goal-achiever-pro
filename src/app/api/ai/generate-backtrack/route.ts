@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
 import { logAIUsage } from '@/lib/utils/ai-usage';
+import { sanitizeErrorForClient } from '@/lib/utils/api-errors';
 import { getAuthenticatedUserWithTier } from '@/lib/auth/api-auth';
 import {
   applyMultipleRateLimits,
@@ -451,15 +452,12 @@ CRITICAL RULES:
       console.error('Parse error:', parseError);
 
       // Add error to debug info
-      debugInfo.errors?.push(parseError instanceof Error ? parseError.message : 'Unknown parse error');
+      debugInfo.errors?.push(sanitizeErrorForClient(parseError, 'parse backtrack AI response'));
 
-      // Return more detailed error for debugging with full debug info
+      // Return sanitized error - do not expose raw parse details to client
       return NextResponse.json(
         {
-          error: 'Failed to parse AI response',
-          details: parseError instanceof Error ? parseError.message : 'Unknown parse error',
-          responsePreview: responseText.substring(0, 500),
-          debug: debugInfo,
+          error: sanitizeErrorForClient(parseError, 'parse backtrack AI response'),
         },
         { status: 500 }
       );
@@ -659,7 +657,7 @@ CRITICAL RULES:
         completionTokens: 0,
         requestType: 'generate-backtrack',
         success: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorMessage: sanitizeErrorForClient(error, 'generate backtrack plan'),
         responseTimeMs,
       });
     }

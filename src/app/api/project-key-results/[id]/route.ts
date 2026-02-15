@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import { sanitizeErrorForClient } from '@/lib/utils/api-errors';
 
 // GET /api/project-key-results/[id] - Get single key result with logs
 export async function GET(
@@ -150,8 +151,7 @@ export async function PUT(
       .single();
 
     if (error) {
-      console.error('Error updating key result:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(error, 'update key result') }, { status: 500 });
     }
 
     // Update parent project progress
@@ -198,8 +198,7 @@ export async function DELETE(
       .eq('user_id', userId);
 
     if (error) {
-      console.error('Error deleting key result:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(error, 'delete key result') }, { status: 500 });
     }
 
     // Update parent project progress

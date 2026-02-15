@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createClient as createServerClient } from '@/lib/supabase/server';
+import { sanitizeErrorForClient } from '@/lib/utils/api-errors';
 
 // Admin endpoint to manage users
 // Requires SUPABASE_SERVICE_ROLE_KEY and authenticated admin user
@@ -77,7 +78,7 @@ export async function GET() {
 
   if (error) {
     return NextResponse.json(
-      { error: error.message },
+      { error: sanitizeErrorForClient(error, 'list users') },
       { status: 500 }
     );
   }
@@ -127,7 +128,7 @@ export async function DELETE(request: Request) {
 
   if (listError) {
     return NextResponse.json(
-      { error: listError.message },
+      { error: sanitizeErrorForClient(listError, 'list users for deletion') },
       { status: 500 }
     );
   }
@@ -146,7 +147,7 @@ export async function DELETE(request: Request) {
 
   if (deleteError) {
     return NextResponse.json(
-      { error: deleteError.message },
+      { error: sanitizeErrorForClient(deleteError, 'delete user') },
       { status: 500 }
     );
   }

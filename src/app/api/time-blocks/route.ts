@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import { validateDateParam } from '@/lib/validations/common';
 
 // GET: Fetch time blocks for a date range
 export async function GET(request: NextRequest) {
@@ -16,8 +17,8 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const startDate = searchParams.get('startDate');
-    const endDate = searchParams.get('endDate');
+    const startDate = validateDateParam(searchParams.get('startDate'));
+    const endDate = validateDateParam(searchParams.get('endDate'));
 
     let query = supabase
       .from('time_blocks')

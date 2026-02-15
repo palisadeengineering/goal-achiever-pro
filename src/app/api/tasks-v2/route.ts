@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import { sanitizeErrorForClient } from '@/lib/utils/api-errors';
 
 // GET /api/tasks-v2 - List tasks with filters
 export async function GET(request: NextRequest) {
@@ -82,8 +83,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query;
 
     if (error) {
-      console.error('Error fetching tasks:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(error, 'fetch tasks') }, { status: 500 });
     }
 
     return NextResponse.json({ tasks: data });
@@ -187,8 +187,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error creating task:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(error, 'create task') }, { status: 500 });
     }
 
     return NextResponse.json({ task: data }, { status: 201 });

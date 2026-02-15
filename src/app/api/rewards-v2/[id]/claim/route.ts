@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import { sanitizeErrorForClient } from '@/lib/utils/api-errors';
 
 // POST /api/rewards-v2/[id]/claim - Claim an unlocked reward
 export async function POST(
@@ -60,8 +61,7 @@ export async function POST(
       .single();
 
     if (claimError) {
-      console.error('Error creating claim:', claimError);
-      return NextResponse.json({ error: claimError.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(claimError, 'create reward claim') }, { status: 500 });
     }
 
     // Update reward status to claimed
@@ -76,8 +76,7 @@ export async function POST(
       .single();
 
     if (updateError) {
-      console.error('Error updating reward status:', updateError);
-      return NextResponse.json({ error: updateError.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(updateError, 'update reward status') }, { status: 500 });
     }
 
     return NextResponse.json({
@@ -128,8 +127,7 @@ export async function GET(
       .order('claimed_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching claims:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(error, 'fetch reward claims') }, { status: 500 });
     }
 
     return NextResponse.json({ claims });

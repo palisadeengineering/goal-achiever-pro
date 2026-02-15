@@ -386,8 +386,8 @@ async function createCalendarEvent(
       const createdEvent = await response.json();
       return { success: true, eventId: createdEvent.id };
     } else {
-      const error = await response.json();
-      return { success: false, error: error.message || 'Failed to create event' };
+      await response.json(); // consume response body
+      return { success: false, error: 'Failed to create event' };
     }
   } catch (err) {
     return { success: false, error: 'Network error' };

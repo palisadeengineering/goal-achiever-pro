@@ -248,12 +248,12 @@ export async function POST(request: NextRequest) {
           });
           syncedCount++;
         } else {
-          const error = await response.json();
-          console.error('Failed to create event:', error);
+          const calError = await response.json();
+          console.error('Failed to create event:', calError);
           results.push({
             actionId: action.id,
             success: false,
-            error: error.message,
+            error: 'Failed to create calendar event',
           });
           failedCount++;
         }

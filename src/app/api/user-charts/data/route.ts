@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import { validateDateParam } from '@/lib/validations/common';
 
 // GET: Fetch chart data (aggregated time by tags)
 export async function GET(request: NextRequest) {
@@ -17,8 +18,8 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
 
-    const startDate = searchParams.get('startDate');
-    const endDate = searchParams.get('endDate');
+    const startDate = validateDateParam(searchParams.get('startDate'));
+    const endDate = validateDateParam(searchParams.get('endDate'));
     const tagIds = searchParams.get('tagIds'); // comma-separated
     const aggregation = searchParams.get('aggregation') || 'daily'; // daily, weekly, monthly
 

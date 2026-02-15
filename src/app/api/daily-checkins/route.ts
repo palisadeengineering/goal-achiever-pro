@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import { validateDateParam } from '@/lib/validations/common';
 import { awardXpV2 } from '@/lib/services/gamification-v2';
 import { updateStreakV2 } from '@/lib/services/streaks-v2';
+import { sanitizeErrorForClient } from '@/lib/utils/api-errors';
 
 // GET /api/daily-checkins - Get check-ins (today's or history)
 export async function GET(request: NextRequest) {
@@ -20,7 +22,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get('projectId');
-    const date = searchParams.get('date');
+    const date = validateDateParam(searchParams.get('date'));
     const today = searchParams.get('today');
 
     let query = supabase
@@ -52,8 +54,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query;
 
     if (error) {
-      console.error('Error fetching check-ins:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(error, 'fetch check-ins') }, { status: 500 });
     }
 
     // If requesting today and no results, return null instead of empty array
@@ -142,8 +143,7 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (error) {
-        console.error('Error updating check-in:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: sanitizeErrorForClient(error, 'update check-in') }, { status: 500 });
       }
 
       checkIn = data;
@@ -169,8 +169,7 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (error) {
-        console.error('Error creating check-in:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: sanitizeErrorForClient(error, 'create check-in') }, { status: 500 });
       }
 
       checkIn = data;

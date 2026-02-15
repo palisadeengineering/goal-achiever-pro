@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import { logAIUsage } from '@/lib/utils/ai-usage';
+import { sanitizeErrorForClient } from '@/lib/utils/api-errors';
 import {
   applyMultipleRateLimits,
   rateLimitExceededResponse,
@@ -447,11 +448,9 @@ Respond ONLY with valid JSON in this exact format:
 
       if (pgError || !savedPowerGoal) {
         console.error('Error creating power goal:', pgError);
-        // Return detailed error instead of silently continuing
+        // Return error instead of silently continuing
         return NextResponse.json({
-          error: 'Failed to save power goal',
-          details: pgError?.message || 'Unknown database error',
-          powerGoal: pg.title,
+          error: sanitizeErrorForClient(pgError, 'save power goal'),
         }, { status: 500 });
       }
       savedStats.powerGoals++;
@@ -520,9 +519,7 @@ Respond ONLY with valid JSON in this exact format:
         if (mtError || !savedMonthly) {
           console.error('Error creating monthly target:', mtError);
           return NextResponse.json({
-            error: 'Failed to save monthly target',
-            details: mtError?.message || 'Unknown database error',
-            monthlyTarget: mt.title,
+            error: sanitizeErrorForClient(mtError, 'save monthly target'),
           }, { status: 500 });
         }
         savedStats.monthlyTargets++;
@@ -594,11 +591,8 @@ Respond ONLY with valid JSON in this exact format:
             .single();
 
           if (wtError || !savedWeekly) {
-            console.error('Error creating weekly target:', wtError);
             return NextResponse.json({
-              error: 'Failed to save weekly target',
-              details: wtError?.message || 'Unknown database error',
-              weeklyTarget: wt.title,
+              error: sanitizeErrorForClient(wtError, 'save weekly target'),
             }, { status: 500 });
           }
           savedStats.weeklyTargets++;
@@ -694,7 +688,6 @@ Respond ONLY with valid JSON in this exact format:
     });
 
   } catch (error) {
-    console.error('Generate cascade error:', error);
     const responseTimeMs = Date.now() - startTime;
 
     if (userId) {
@@ -713,13 +706,13 @@ Respond ONLY with valid JSON in this exact format:
 
     if (error instanceof SyntaxError) {
       return NextResponse.json(
-        { error: 'Failed to parse AI response', details: error.message },
+        { error: sanitizeErrorForClient(error, 'parse cascade response') },
         { status: 500 }
       );
     }
 
     return NextResponse.json(
-      { error: 'Failed to generate cascade', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: sanitizeErrorForClient(error, 'generate cascade') },
       { status: 500 }
     );
   }

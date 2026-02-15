@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import { awardXpV2 } from '@/lib/services/gamification-v2';
 import { checkRewardTriggers } from '@/lib/services/rewards';
+import { sanitizeErrorForClient } from '@/lib/utils/api-errors';
 
 // GET /api/milestones-v2/[id] - Get single milestone with related tasks
 export async function GET(
@@ -128,8 +129,7 @@ export async function PUT(
       .single();
 
     if (error) {
-      console.error('Error updating milestone:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(error, 'update milestone') }, { status: 500 });
     }
 
     // Award XP and check rewards if milestone was just completed
@@ -201,8 +201,7 @@ export async function DELETE(
       .eq('user_id', userId);
 
     if (error) {
-      console.error('Error deleting milestone:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(error, 'delete milestone') }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });

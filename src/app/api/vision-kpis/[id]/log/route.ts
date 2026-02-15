@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import { validateDateParam } from '@/lib/validations/common';
 import { rollupProgressToAncestors, type AncestorProgressUpdate } from '@/lib/progress';
 import { awardXp } from '@/lib/services/gamification';
 import { updateUserDailyStreak } from '@/lib/services/streaks';
@@ -23,8 +24,8 @@ export async function GET(
     }
 
     const { searchParams } = new URL(request.url);
-    const startDate = searchParams.get('startDate');
-    const endDate = searchParams.get('endDate');
+    const startDate = validateDateParam(searchParams.get('startDate'));
+    const endDate = validateDateParam(searchParams.get('endDate'));
     const limit = searchParams.get('limit');
 
     let query = supabase
@@ -201,10 +202,10 @@ export async function DELETE(
     }
 
     const { searchParams } = new URL(request.url);
-    const date = searchParams.get('date');
+    const date = validateDateParam(searchParams.get('date'));
 
     if (!date) {
-      return NextResponse.json({ error: 'Date is required' }, { status: 400 });
+      return NextResponse.json({ error: 'Date is required (YYYY-MM-DD)' }, { status: 400 });
     }
 
     const { error } = await supabase

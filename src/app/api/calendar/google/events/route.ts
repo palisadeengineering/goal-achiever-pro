@@ -348,7 +348,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ events: timeBlocks, debug });
   } catch (error) {
     console.error('Error fetching calendar events:', error);
-    debug.catchError = error instanceof Error ? error.message : 'Unknown error';
+    debug.catchError = 'Internal error';
     return NextResponse.json(
       { error: 'Failed to fetch calendar events', debug },
       { status: 500 }
@@ -557,7 +557,7 @@ export async function PATCH(request: NextRequest) {
       }
 
       return NextResponse.json(
-        { error: error.error?.message || 'Failed to update calendar event' },
+        { error: 'Failed to update calendar event' },
         { status: response.status }
       );
     }

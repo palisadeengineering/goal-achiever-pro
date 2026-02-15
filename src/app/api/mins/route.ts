@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import { validateDateParam } from '@/lib/validations/common';
+import { sanitizeErrorForClient } from '@/lib/utils/api-errors';
 
 // GET /api/mins - List MINS with optional filters
 export async function GET(request: NextRequest) {
@@ -19,7 +21,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
 
-    const date = searchParams.get('date'); // specific date
+    const date = validateDateParam(searchParams.get('date')); // specific date
     const timeScope = searchParams.get('timeScope'); // 'daily' | 'weekly' | 'all'
     const status = searchParams.get('status'); // 'pending' | 'completed' | 'all'
     const impactProjectId = searchParams.get('impactProjectId');
@@ -62,8 +64,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query;
 
     if (error) {
-      console.error('Error fetching MINS:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(error, 'fetch mins') }, { status: 500 });
     }
 
     return NextResponse.json({ mins: data || [] });
@@ -148,8 +149,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error creating MIN:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(error, 'create min') }, { status: 500 });
     }
 
     return NextResponse.json({ min: data }, { status: 201 });

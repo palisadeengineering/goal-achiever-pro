@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import { awardXp } from '@/lib/services/gamification';
 import { updateUserDailyStreak } from '@/lib/services/streaks';
+import { sanitizeErrorForClient } from '@/lib/utils/api-errors';
 
 // GET /api/mins/[id] - Get single MIN
 export async function GET(
@@ -130,8 +131,7 @@ export async function PUT(
       .single();
 
     if (error) {
-      console.error('Error updating MIN:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(error, 'update min') }, { status: 500 });
     }
 
     // Award XP and update streak if completing (and wasn't already completed)
@@ -184,8 +184,7 @@ export async function DELETE(
       .eq('user_id', userId);
 
     if (error) {
-      console.error('Error deleting MIN:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(error, 'delete min') }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });

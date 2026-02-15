@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import { sanitizeErrorForClient } from '@/lib/utils/api-errors';
 
 // GET /api/visions/[id]/board - Get all images for a vision board
 export async function GET(
@@ -27,7 +28,7 @@ export async function GET(
       .order('sort_order', { ascending: true });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(error, 'fetch vision board images') }, { status: 500 });
     }
 
     // Get signed URLs for each image
@@ -110,9 +111,8 @@ export async function POST(
       });
 
     if (uploadError) {
-      console.error('Upload error:', uploadError);
       return NextResponse.json(
-        { error: `Failed to upload file: ${uploadError.message}` },
+        { error: sanitizeErrorForClient(uploadError, 'upload vision board image') },
         { status: 500 }
       );
     }
@@ -155,7 +155,7 @@ export async function POST(
       .single();
 
     if (insertError) {
-      return NextResponse.json({ error: insertError.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(insertError, 'save vision board image') }, { status: 500 });
     }
 
     // Get signed URL for the new image
@@ -225,7 +225,7 @@ export async function DELETE(
       .eq('id', imageId);
 
     if (deleteError) {
-      return NextResponse.json({ error: deleteError.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(deleteError, 'delete vision board image') }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });

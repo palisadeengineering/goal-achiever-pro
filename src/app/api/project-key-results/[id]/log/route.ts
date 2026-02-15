@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import { awardXpV2 } from '@/lib/services/gamification-v2';
+import { sanitizeErrorForClient } from '@/lib/utils/api-errors';
 
 // POST /api/project-key-results/[id]/log - Log progress for a key result
 export async function POST(
@@ -59,8 +60,7 @@ export async function POST(
       .single();
 
     if (logError) {
-      console.error('Error creating log:', logError);
-      return NextResponse.json({ error: logError.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(logError, 'create key result log') }, { status: 500 });
     }
 
     // Calculate new progress
@@ -106,8 +106,7 @@ export async function POST(
       .single();
 
     if (updateError) {
-      console.error('Error updating key result:', updateError);
-      return NextResponse.json({ error: updateError.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(updateError, 'update key result progress') }, { status: 500 });
     }
 
     // Update parent project progress
@@ -180,8 +179,7 @@ export async function GET(
       .limit(limit);
 
     if (error) {
-      console.error('Error fetching logs:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: sanitizeErrorForClient(error, 'fetch key result logs') }, { status: 500 });
     }
 
     return NextResponse.json({ logs });
