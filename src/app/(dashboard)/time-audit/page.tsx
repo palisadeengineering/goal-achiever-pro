@@ -156,6 +156,7 @@ export default function TimeAuditPage() {
     clearGoogleSyncedBlocks,
     importTimeBlocks,
     fetchTimeBlocks,
+    refetch: refetchTimeBlocks,
     syncFromGoogle,
   } = useTimeBlocks(
     format(addMonths(weekStart, -3), 'yyyy-MM-dd'),
@@ -1304,8 +1305,30 @@ export default function TimeAuditPage() {
     // Get event IDs from currently visible Google events
     const eventIds = googleEvents.map((e) => e.id).filter(Boolean);
     if (eventIds.length === 0) return;
+
+    // 1. Clear event categorizations (localStorage + DB)
     await clearCategorizationsForEvents(eventIds);
-  }, [googleEvents, clearCategorizationsForEvents]);
+
+    // 2. Reset imported time blocks' categorization to defaults
+    // Time blocks have their own value_quadrant/energy_rating that persist independently
+    // of event_categorizations, so we must reset those too
+    try {
+      await fetch('/api/time-blocks/bulk-update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          blockIds: eventIds,
+          idType: 'external',
+          updates: { valueQuadrant: 'na', energyRating: 'yellow' },
+        }),
+      });
+    } catch (err) {
+      console.error('Error resetting time blocks categorization:', err);
+    }
+
+    // 3. Refetch time blocks to update local state with the reset values
+    await refetchTimeBlocks();
+  }, [googleEvents, clearCategorizationsForEvents, refetchTimeBlocks]);
 
   // State for calendar sync verification
   const [isVerifyingSyncOpen, setIsVerifyingSyncOpen] = useState(false);
