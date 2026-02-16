@@ -72,6 +72,24 @@ The middleware matcher (`src/middleware.ts`) did not exclude `/api/` routes, so 
 
 ---
 
+## Verification Testing (Production — 2026-02-16)
+
+Tested on production (`goal-achiever-pro.vercel.app`) via Chrome DevTools after all fixes deployed.
+
+| Test | Result | Notes |
+|------|--------|-------|
+| Dashboard loads | **Pass** | All cards render, interactive elements functional |
+| Settings page loads | **Pass** | No more infinite spinner — all sections (subscription, calendar, appearance) render |
+| Time Audit page loads | **Pass** | Calendar events visible, week navigation works |
+| "Clear" button (Feb 1-7) | **Pass** | Cleared data, categorize counter went from 128 → 0, no errors |
+| "Reset & Re-sync" button (Feb 1-7) | **Pass** | DELETE requests succeeded (200), re-fetched 27 events from Google Calendar, categorization dialog opened |
+| Console errors | **None** | Zero errors or warnings |
+| Network requests | **All 200 OK** | All API calls (time-blocks, calendar/google/events, event-categorizations, tags, detected-projects) succeeded |
+
+**Time Audit "clear and reload" issue**: The user reported this button didn't work for the week of Feb 1st. Root cause was the same CSP hydration issue — React never mounted, so click handlers never attached. No code change needed in the time audit itself. The `'unsafe-inline'` CSP fix in commit `c600857` resolved it.
+
+---
+
 ## Decisions
 
 | Decision | Rationale |
