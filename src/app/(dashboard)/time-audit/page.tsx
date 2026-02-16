@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Calendar, CalendarDays, CalendarRange, Lock, RefreshCw, ChevronDown, Upload, ArrowUpRight, BarChart3, ListChecks, Trash2, ChevronRight, PanelRightClose, PanelRight, Settings2, EyeOff, Eye, Download } from 'lucide-react';
+import { Plus, Calendar, CalendarDays, CalendarRange, Lock, RefreshCw, ChevronDown, Upload, ArrowUpRight, BarChart3, ListChecks, Trash2, ChevronRight, PanelRightClose, PanelRight, Settings2, EyeOff, Eye, Download, Eraser } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -233,7 +233,7 @@ export default function TimeAuditPage() {
   const [isImporting, setIsImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ imported: number; skipped: number } | null>(null);
 
-  const { getUncategorizedEventIds, getCategorization, saveCategorization, categorizations, refreshFromStorage, clearCategorizations, ignoreEvent, removeCategorization, isIgnored, unignoreEvent, ignoredEvents } = useEventPatterns();
+  const { getUncategorizedEventIds, getCategorization, saveCategorization, categorizations, refreshFromStorage, clearCategorizations, clearCategorizationsForEvents, ignoreEvent, removeCategorization, isIgnored, unignoreEvent, ignoredEvents } = useEventPatterns();
 
   // Refresh key to trigger InsightsView refetch when categorizations change
   const [insightsRefreshKey, setInsightsRefreshKey] = useState(0);
@@ -1299,6 +1299,14 @@ export default function TimeAuditPage() {
     }
   }, [clearGoogleSyncedBlocks, clearGoogleCache, clearCategorizations, viewedDateRange.start, calculateSyncEndDate, syncTimeframe, fetchGoogleEvents]);
 
+  // Handle clearing categorizations for the current week only
+  const handleClearWeekCategorizations = useCallback(async () => {
+    // Get event IDs from currently visible Google events
+    const eventIds = googleEvents.map((e) => e.id).filter(Boolean);
+    if (eventIds.length === 0) return;
+    await clearCategorizationsForEvents(eventIds);
+  }, [googleEvents, clearCategorizationsForEvents]);
+
   // State for calendar sync verification
   const [isVerifyingSyncOpen, setIsVerifyingSyncOpen] = useState(false);
   const [verificationResults, setVerificationResults] = useState<Array<{
@@ -1773,6 +1781,13 @@ export default function TimeAuditPage() {
                     >
                       <RefreshCw className={`h-4 w-4 mr-2 ${isResettingSync ? 'animate-spin' : ''}`} />
                       {isResettingSync ? 'Resetting...' : 'Reset & Re-sync'}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={handleClearWeekCategorizations}
+                      disabled={googleEvents.length === 0}
+                    >
+                      <Eraser className="h-4 w-4 mr-2" />
+                      Clear Week Categorizations
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={handleVerifySync}

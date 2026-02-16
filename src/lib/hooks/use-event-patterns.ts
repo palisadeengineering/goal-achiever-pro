@@ -580,6 +580,35 @@ export function useEventPatterns() {
   }, [setCategorizations]);
 
   /**
+   * Clear categorizations for specific event IDs (week-scoped clearing)
+   * Removes from local state and deletes from database
+   */
+  const clearCategorizationsForEvents = useCallback(
+    async (eventIds: string[]) => {
+      if (eventIds.length === 0) return;
+
+      // Remove from local state
+      const idsToRemove = new Set(eventIds);
+      setCategorizations((prev) => prev.filter((c) => !idsToRemove.has(c.eventId)));
+      setIgnoredEvents((prev) => prev.filter((e) => !idsToRemove.has(e.eventId)));
+
+      // Delete from database in batches of 500 (URL length limit)
+      const batchSize = 500;
+      for (let i = 0; i < eventIds.length; i += batchSize) {
+        const batch = eventIds.slice(i, i + batchSize);
+        try {
+          await fetch(`/api/event-categorizations?eventIds=${encodeURIComponent(batch.join(','))}`, {
+            method: 'DELETE',
+          });
+        } catch (err) {
+          console.error('Error clearing categorizations for events:', err);
+        }
+      }
+    },
+    [setCategorizations, setIgnoredEvents]
+  );
+
+  /**
    * Ignore an event (localStorage + database)
    */
   const ignoreEvent = useCallback(
@@ -655,6 +684,7 @@ export function useEventPatterns() {
     applySuggestionToSimilar,
     clearPatterns,
     clearCategorizations,
+    clearCategorizationsForEvents,
     refreshFromStorage,
     ignoreEvent,
     unignoreEvent,

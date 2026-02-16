@@ -148,6 +148,7 @@ export async function DELETE(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const externalEventId = searchParams.get('externalEventId');
+    const eventIdsParam = searchParams.get('eventIds');
 
     if (externalEventId) {
       // Delete a single categorization by external event ID
@@ -163,6 +164,28 @@ export async function DELETE(request: NextRequest) {
       }
 
       return NextResponse.json({ success: true });
+    } else if (eventIdsParam) {
+      // Delete categorizations for a specific set of event IDs (comma-separated)
+      const eventIds = eventIdsParam.split(',').map(id => id.trim()).filter(Boolean);
+      if (eventIds.length === 0) {
+        return NextResponse.json({ error: 'No valid event IDs provided' }, { status: 400 });
+      }
+      if (eventIds.length > 500) {
+        return NextResponse.json({ error: 'Maximum 500 event IDs per request' }, { status: 400 });
+      }
+
+      const { count, error } = await supabase
+        .from('event_categorizations')
+        .delete({ count: 'exact' })
+        .eq('user_id', userId)
+        .in('external_event_id', eventIds);
+
+      if (error) {
+        console.error('Error deleting event categorizations by IDs:', error);
+        return NextResponse.json({ error: 'Failed to delete categorizations' }, { status: 500 });
+      }
+
+      return NextResponse.json({ success: true, deleted: count ?? 0 });
     } else {
       // Delete ALL categorizations for the authenticated user
       const { count, error } = await supabase
