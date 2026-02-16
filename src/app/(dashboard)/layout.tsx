@@ -40,36 +40,41 @@ export default async function DashboardLayout({
         avatarUrl: user.user_metadata?.avatar_url,
       };
 
-      // Get user profile with admin status and subscription tier
-      const { data: profile } = await supabase
+      // Run profile and beta queries in parallel instead of sequentially
+      const serviceClient = createServiceRoleClient();
+      const profilePromise = supabase
         .from('profiles')
         .select('is_admin, subscription_tier')
         .eq('id', user.id)
         .single();
 
+      const betaPromise = serviceClient && userProfile.email
+        ? serviceClient
+            .from('beta_invitations')
+            .select('id')
+            .ilike('email', userProfile.email)
+            .eq('status', 'accepted')
+            .single()
+        : Promise.resolve({ data: null });
+
+      const [{ data: profile }, { data: betaInvite }] = await Promise.all([
+        profilePromise,
+        betaPromise,
+      ]);
+
       isAdmin = profile?.is_admin || false;
       subscriptionTier = (profile?.subscription_tier as typeof subscriptionTier) || 'free';
+
+      // Beta access grants elite if user is on free tier
+      if (betaInvite && subscriptionTier === 'free') {
+        subscriptionTier = 'elite';
+      }
     }
   }
 
   // Demo mode users are admins for testing
   if (isDemoMode && !isAdmin) {
     isAdmin = true;
-  }
-
-  // Check if user has beta access from database (grants elite if no higher tier)
-  const serviceClient = createServiceRoleClient();
-  if (serviceClient && userProfile.email && subscriptionTier === 'free') {
-    const { data: betaInvite } = await serviceClient
-      .from('beta_invitations')
-      .select('id')
-      .ilike('email', userProfile.email)
-      .eq('status', 'accepted')
-      .single();
-
-    if (betaInvite) {
-      subscriptionTier = 'elite';
-    }
   }
 
   return (

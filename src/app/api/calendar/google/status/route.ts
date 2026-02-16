@@ -1,27 +1,19 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 
 // GET: Check if Google Calendar is connected
 export async function GET() {
-  console.log('[Calendar Status] Checking connection...');
-
-  const auth = await getAuthenticatedUser();
-  console.log('[Calendar Status] Auth:', {
-    ok: auth.isAuthenticated,
-    userId: auth.isAuthenticated ? auth.userId.slice(0, 8) + '...' : null,
-    error: !auth.isAuthenticated ? (auth as { error?: string }).error : null,
-  });
-
-  if (!auth.isAuthenticated) {
-    // Return connected: false instead of error so UI can show proper state
-    return NextResponse.json({ connected: false, reason: 'not_authenticated' });
-  }
-  const userId = auth.userId;
   const supabase = await createClient();
   if (!supabase) {
     return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
   }
+
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json({ connected: false, reason: 'not_authenticated' });
+  }
+  const userId = user.id;
 
   try {
     const { data: integration, error } = await supabase
@@ -30,13 +22,6 @@ export async function GET() {
       .eq('user_id', userId)
       .eq('provider', 'google_calendar')
       .single();
-
-    console.log('[Calendar Status] Integration:', {
-      found: !!integration,
-      error: error?.message || null,
-      active: integration?.is_active ?? false,
-      hasTokens: !!(integration?.access_token && integration?.refresh_token),
-    });
 
     if (error || !integration) {
       return NextResponse.json({ connected: false, reason: 'no_integration' });
