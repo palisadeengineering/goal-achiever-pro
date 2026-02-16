@@ -741,15 +741,15 @@ export function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearc
 
         {/* Project chips */}
         <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Project</Label>
+          <Label className="text-xs text-muted-foreground">Project <span className="text-muted-foreground/60">(optional)</span></Label>
           <div className="flex flex-wrap gap-1.5">
             <Badge
               variant="outline"
               className={cn(
                 'cursor-pointer transition-colors',
-                (!selectedProject || selectedProject === 'none') && !showNewProjectInput && 'ring-2 ring-offset-1 ring-muted-foreground/30'
+                selectedProject === 'none' && !showNewProjectInput && 'ring-2 ring-offset-1 ring-muted-foreground/30'
               )}
-              onClick={() => { setSelectedProject('none'); setShowNewProjectInput(false); setCustomProjectName(''); }}
+              onClick={() => { setSelectedProject(selectedProject === 'none' ? '' : 'none'); setShowNewProjectInput(false); setCustomProjectName(''); }}
             >
               Personal
             </Badge>
@@ -761,7 +761,7 @@ export function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearc
                   'cursor-pointer transition-colors',
                   selectedProject === project.id && 'ring-2 ring-offset-1 ring-primary'
                 )}
-                onClick={() => { setSelectedProject(project.id); setShowNewProjectInput(false); setCustomProjectName(''); }}
+                onClick={() => { setSelectedProject(selectedProject === project.id ? '' : project.id); setShowNewProjectInput(false); setCustomProjectName(''); }}
               >
                 {project.name}
               </Badge>
