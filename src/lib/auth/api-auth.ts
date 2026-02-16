@@ -88,13 +88,8 @@ export async function getOptionalUserId(): Promise<string | null> {
  * Returns the user ID and admin status.
  */
 export async function getAuthenticatedAdmin(): Promise<AuthCheck & { isAdmin?: boolean }> {
-  const auth = await getAuthenticatedUser();
-
-  if (!auth.isAuthenticated) {
-    return auth;
-  }
-
   const supabase = await createClient();
+
   if (!supabase) {
     return {
       userId: null,
@@ -104,10 +99,21 @@ export async function getAuthenticatedAdmin(): Promise<AuthCheck & { isAdmin?: b
     };
   }
 
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return {
+      userId: null,
+      isAuthenticated: false,
+      error: authError?.message || 'Authentication required',
+      status: 401,
+    };
+  }
+
   const { data: profile, error } = await supabase
     .from('profiles')
     .select('is_admin')
-    .eq('id', auth.userId)
+    .eq('id', user.id)
     .single();
 
   if (error || !profile?.is_admin) {
@@ -119,7 +125,7 @@ export async function getAuthenticatedAdmin(): Promise<AuthCheck & { isAdmin?: b
     };
   }
 
-  return { ...auth, isAdmin: true };
+  return { userId: user.id, isAuthenticated: true, isAdmin: true };
 }
 
 /**
@@ -136,25 +142,36 @@ export async function getAuthenticatedAdmin(): Promise<AuthCheck & { isAdmin?: b
  * ```
  */
 export async function getAuthenticatedUserWithTier(): Promise<AuthCheckWithTier> {
-  const auth = await getAuthenticatedUser();
-  if (!auth.isAuthenticated) {
-    return auth;
+  const supabase = await createClient();
+
+  if (!supabase) {
+    return {
+      userId: null,
+      isAuthenticated: false,
+      error: 'Database connection failed',
+      status: 500,
+    };
   }
 
-  const supabase = await createClient();
-  if (!supabase) {
-    // Auth succeeded but DB is gone — return free tier as fallback
-    return { userId: auth.userId, isAuthenticated: true, tier: 'free' };
+  const { data: { user }, error } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    return {
+      userId: null,
+      isAuthenticated: false,
+      error: error?.message || 'Authentication required',
+      status: 401,
+    };
   }
 
   const { data: profile } = await supabase
     .from('profiles')
     .select('subscription_tier')
-    .eq('id', auth.userId)
+    .eq('id', user.id)
     .single();
 
   return {
-    userId: auth.userId,
+    userId: user.id,
     isAuthenticated: true,
     tier: (profile?.subscription_tier as SubscriptionTier) || 'free',
   };
