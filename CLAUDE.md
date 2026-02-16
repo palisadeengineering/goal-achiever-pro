@@ -309,6 +309,18 @@ GOOGLE_CLIENT_SECRET=
 2. **When adding new exports to a library file**, check all files that import from it
 3. **Supabase client can return null** — always add null checks (see Coding Standards above)
 
+### Verification
+
+1. **NEVER claim a fix is done without visually verifying the end-to-end user outcome**
+   - API calls returning 200 OK is NOT verification — the data must appear correctly in the UI
+   - After fixing a bug, reproduce the exact user-reported scenario and confirm the UI shows the expected result
+   - Take a snapshot/screenshot of the FINAL state showing the fix worked, not just intermediate network calls
+   - If events should appear on a calendar, verify events are visible on the calendar — not just that the fetch returned data
+
+2. **If you cannot fully verify, say so explicitly**
+   - Never say "everything works" or "all tests pass" based on partial evidence
+   - State exactly what you verified and what you could not verify
+
 ### Security
 
 1. **Never use `NEXT_PUBLIC_` prefix for server-side feature flags**
