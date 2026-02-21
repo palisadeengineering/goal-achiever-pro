@@ -47,6 +47,8 @@ import { useEditPatterns } from '@/lib/hooks/use-edit-patterns';
 import { EditSuggestionBanner } from '@/components/features/time-audit/edit-suggestion-banner';
 import { EventList, EventListItem } from '@/components/features/time-audit/event-list';
 import { BulkDeleteDialog, CleanupSuggestions } from '@/components/features/time-audit/bulk-delete-dialog';
+import { cn } from '@/lib/utils';
+import { VALUE_QUADRANTS, ENERGY_RATINGS, getValueQuadrantConfig } from '@/constants/drip';
 import { ROUTES } from '@/constants/routes';
 import { expandRecurringEvents } from '@/lib/utils/recurrence';
 import type { ValueQuadrant, EnergyRating } from '@/types/database';
@@ -259,6 +261,12 @@ export default function TimeAuditPage() {
   const [categorizationDismissed, setCategorizationDismissed] = useState(false); // Track if user manually closed
   const [mainTab, setMainTab] = useState<'calendar' | 'insights' | 'manage' | 'charts'>('calendar');
   const [isDeletingEvent, setIsDeletingEvent] = useState(false);
+
+  // Multi-select bulk categorize state (Ctrl+Click on calendar)
+  const [selectedCalendarBlocks, setSelectedCalendarBlocks] = useState<CalendarTimeBlock[]>([]);
+  const [showBulkEditDialog, setShowBulkEditDialog] = useState(false);
+  const [bulkValueQuadrant, setBulkValueQuadrant] = useState<ValueQuadrant | null>(null);
+  const [bulkEnergyRating, setBulkEnergyRating] = useState<EnergyRating | null>(null);
 
   // AI cleanup suggestions state
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
@@ -1748,6 +1756,52 @@ export default function TimeAuditPage() {
     setShowTagManager(true);
   }, []);
 
+  // Multi-select handlers for Ctrl+Click on calendar events
+  const handleSelectionChange = useCallback((blocks: CalendarTimeBlock[]) => {
+    setSelectedCalendarBlocks(blocks);
+  }, []);
+
+  const handleBulkCategorize = useCallback((blocks: CalendarTimeBlock[]) => {
+    if (blocks.length === 0) return;
+    setSelectedCalendarBlocks(blocks);
+    setBulkValueQuadrant(null);
+    setBulkEnergyRating(null);
+    setShowBulkEditDialog(true);
+  }, []);
+
+  const handleApplyBulkCategorize = useCallback(async () => {
+    if (!bulkValueQuadrant && !bulkEnergyRating) return;
+
+    for (const block of selectedCalendarBlocks) {
+      const newQuadrant = bulkValueQuadrant || block.valueQuadrant;
+      const newEnergy = bulkEnergyRating || block.energyRating;
+
+      // Check if it's a Google Calendar event (source-based) vs a DB time block
+      const isGoogleEvent = block.source === 'google_calendar' && block.externalEventId;
+      const existsInDb = dbTimeBlocks.some(b => b.id === block.id || b.externalEventId === block.id);
+
+      if (isGoogleEvent && !existsInDb) {
+        // Save categorization for Google Calendar events not yet in DB
+        saveCategorization(
+          block.externalEventId!,
+          block.activityName,
+          newQuadrant,
+          newEnergy
+        );
+      } else {
+        // Update existing DB block
+        await updateTimeBlock(block.id, {
+          valueQuadrant: newQuadrant,
+          energyRating: newEnergy,
+        });
+      }
+    }
+
+    handleCategorizationChange();
+    setShowBulkEditDialog(false);
+    setSelectedCalendarBlocks([]);
+  }, [selectedCalendarBlocks, bulkValueQuadrant, bulkEnergyRating, dbTimeBlocks, saveCategorization, updateTimeBlock, handleCategorizationChange]);
+
   // Check if we have data (for showing different states) - includes all data sources
   const hasData = allTimeData.length > 0;
   const totalHours = stats.totalMinutes > 0 ? stats.totalMinutes : 0;
@@ -1931,6 +1985,103 @@ export default function TimeAuditPage() {
         onDeleteTag={deleteTag}
       />
 
+      {/* Bulk Edit Dialog (Ctrl+Click multi-select) */}
+      <Dialog open={showBulkEditDialog} onOpenChange={(open) => {
+        setShowBulkEditDialog(open);
+        if (!open) {
+          setSelectedCalendarBlocks([]);
+        }
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Categorize {selectedCalendarBlocks.length} Event{selectedCalendarBlocks.length !== 1 ? 's' : ''}</DialogTitle>
+            <DialogDescription>
+              Set the Value quadrant and Energy level for all selected events.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {/* Selected events preview */}
+            <div className="max-h-32 overflow-y-auto space-y-1 text-sm">
+              {selectedCalendarBlocks.map((block) => (
+                <div key={block.id} className="flex items-center gap-2 text-muted-foreground">
+                  <span
+                    className="h-2 w-2 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: getValueQuadrantConfig(block.valueQuadrant).color }}
+                  />
+                  <span className="truncate">{block.activityName}</span>
+                  <span className="text-xs ml-auto flex-shrink-0">{block.startTime}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Value Quadrant selection */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Value Quadrant</label>
+              <div className="grid grid-cols-2 gap-2">
+                {(Object.entries(VALUE_QUADRANTS) as [ValueQuadrant, (typeof VALUE_QUADRANTS)[ValueQuadrant]][]).map(([key, q]) => (
+                  <button
+                    key={key}
+                    onClick={() => setBulkValueQuadrant(bulkValueQuadrant === key ? null : key)}
+                    className={cn(
+                      'px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all text-left',
+                      bulkValueQuadrant === key
+                        ? 'border-current shadow-sm'
+                        : 'border-transparent hover:border-border'
+                    )}
+                    style={{
+                      backgroundColor: bulkValueQuadrant === key ? q.color + '20' : undefined,
+                      color: bulkValueQuadrant === key ? q.color : undefined,
+                    }}
+                  >
+                    <span
+                      className="inline-block h-2 w-2 rounded-full mr-2"
+                      style={{ backgroundColor: q.color }}
+                    />
+                    {q.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Energy Rating selection */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Energy Level</label>
+              <div className="grid grid-cols-3 gap-2">
+                {(Object.entries(ENERGY_RATINGS) as [EnergyRating, (typeof ENERGY_RATINGS)[EnergyRating]][]).map(([key, e]) => (
+                  <button
+                    key={key}
+                    onClick={() => setBulkEnergyRating(bulkEnergyRating === key ? null : key)}
+                    className={cn(
+                      'px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all text-center',
+                      bulkEnergyRating === key
+                        ? 'border-current shadow-sm'
+                        : 'border-transparent hover:border-border'
+                    )}
+                    style={{
+                      backgroundColor: bulkEnergyRating === key ? e.color + '20' : undefined,
+                      color: bulkEnergyRating === key ? e.color : undefined,
+                    }}
+                  >
+                    {e.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowBulkEditDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleApplyBulkCategorize}
+              disabled={!bulkValueQuadrant && !bulkEnergyRating}
+            >
+              Apply to {selectedCalendarBlocks.length} Event{selectedCalendarBlocks.length !== 1 ? 's' : ''}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Calendar Sync Verification Dialog */}
       <Dialog open={isVerifyingSyncOpen} onOpenChange={setIsVerifyingSyncOpen}>
         <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
@@ -2102,6 +2253,8 @@ export default function TimeAuditPage() {
                   onManageTags={handleManageTags}
                   onWeekChange={handleDateRangeChange}
                   initialWeekStart={viewedDateRange.start}
+                  onSelectionChange={handleSelectionChange}
+                  onBulkCategorize={handleBulkCategorize}
                 />
                 {/* Sidebar toggle button - fixed position */}
                 <Button

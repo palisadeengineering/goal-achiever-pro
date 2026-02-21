@@ -17,7 +17,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Plus, Loader2, Palette, Repeat, EyeOff } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Loader2, Palette, Repeat, EyeOff, CheckSquare, X } from 'lucide-react';
 import { cn, formatHour } from '@/lib/utils';
 import { VALUE_QUADRANTS, getValueQuadrantConfig, getEnergyRatingConfig } from '@/constants/drip';
 import { useLocalStorage } from '@/lib/hooks/use-local-storage';
@@ -115,6 +115,10 @@ interface WeeklyCalendarViewProps {
   availableTags?: TagInfo[];
   onToggleTag?: (blockId: string, tagId: string, isAdding: boolean) => Promise<void>;
   onManageTags?: () => void;
+  // Multi-select callback: fires when Ctrl+Click selection changes
+  onSelectionChange?: (selectedBlocks: TimeBlock[]) => void;
+  // Fires when user clicks "Categorize" on the multi-select bar
+  onBulkCategorize?: (selectedBlocks: TimeBlock[]) => void;
 }
 
 // Generate time slots for given hour range in 15-min increments
@@ -250,6 +254,8 @@ function EventCard({
   availableTags,
   onToggleTag,
   onManageTags,
+  isSelected,
+  onCtrlClick,
 }: {
   block: TimeBlock;
   durationSlots: number;
@@ -262,6 +268,8 @@ function EventCard({
   availableTags?: TagInfo[];
   onToggleTag?: (blockId: string, tagId: string, isAdding: boolean) => Promise<void>;
   onManageTags?: () => void;
+  isSelected?: boolean;
+  onCtrlClick?: (block: TimeBlock) => void;
 }) {
   // _getBlockColor is kept for API compatibility but we use inline styles
   const { attributes, listeners, setNodeRef: setDragRef, transform, isDragging } = useDraggable({
@@ -474,9 +482,10 @@ function EventCard({
         // Visual styling
         'transition-all duration-200 ease-out',
         'shadow-md hover:shadow-lg',
-        'ring-1 ring-white/15',
+        !isSelected && 'ring-1 ring-white/15',
         getBgColor(),
         // State-based styling
+        isSelected && 'ring-2 ring-white ring-offset-2 ring-offset-background shadow-lg',
         isDragging && 'opacity-80 shadow-2xl scale-[1.02] ring-2 ring-white/40',
         isResizing && 'ring-2 ring-white/50',
         block.syncStatus === 'pending' && 'animate-pulse',
@@ -492,6 +501,11 @@ function EventCard({
           if (isKeyboardClick) return;
           if (!isDragging && !isResizing) {
             e.stopPropagation();
+            // Ctrl+Click (or Meta+Click on Mac) toggles multi-select
+            if ((e.ctrlKey || e.metaKey) && onCtrlClick) {
+              onCtrlClick(block);
+              return;
+            }
             // On touch devices for small events, open popover instead of edit
             if (isTouchDevice && (sizeBucket === 'xs' || sizeBucket === 'sm')) {
               setPopoverOpen(true);
@@ -715,6 +729,8 @@ export function WeeklyCalendarView({
   availableTags,
   onToggleTag,
   onManageTags,
+  onSelectionChange,
+  onBulkCategorize,
 }: WeeklyCalendarViewProps) {
   const [settings] = useLocalStorage<UserSettings>('user-settings', DEFAULT_SETTINGS);
   const [internalColorMode, setInternalColorMode] = useState<'value' | 'energy'>('value');
@@ -729,6 +745,44 @@ export function WeeklyCalendarView({
   const [currentTime, setCurrentTime] = useState(new Date());
   const calendarGridRef = useRef<HTMLDivElement>(null);
   const lastCalculatedDropRef = useRef<{ date: string; time: string } | null>(null);
+
+  // Multi-select state (Ctrl+Click)
+  const [selectedBlockIds, setSelectedBlockIds] = useState<Set<string>>(new Set());
+
+  // Toggle a block in/out of the selection
+  const handleCtrlClick = useCallback((block: TimeBlock) => {
+    setSelectedBlockIds(prev => {
+      const next = new Set(prev);
+      if (next.has(block.id)) {
+        next.delete(block.id);
+      } else {
+        next.add(block.id);
+      }
+      return next;
+    });
+  }, []);
+
+  // Clear the selection
+  const clearSelection = useCallback(() => {
+    setSelectedBlockIds(new Set());
+  }, []);
+
+  // Resolve selected block IDs to full TimeBlock objects and notify parent
+  useEffect(() => {
+    if (selectedBlockIds.size === 0) {
+      onSelectionChange?.([]);
+      return;
+    }
+    const selectedBlocks: TimeBlock[] = [];
+    for (const blocks of Object.values(timeBlocks)) {
+      for (const block of blocks) {
+        if (selectedBlockIds.has(block.id)) {
+          selectedBlocks.push(block);
+        }
+      }
+    }
+    onSelectionChange?.(selectedBlocks);
+  }, [selectedBlockIds, timeBlocks, onSelectionChange]);
 
   // Mobile view
   const [isMobileView, setIsMobileView] = useState(false);
@@ -773,6 +827,13 @@ export function WeeklyCalendarView({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
+      // Escape clears multi-select
+      if (e.key === 'Escape' && selectedBlockIds.size > 0) {
+        e.preventDefault();
+        clearSelection();
+        return;
+      }
+
       if (e.altKey) {
         switch (e.key) {
           case 'ArrowLeft':
@@ -808,7 +869,7 @@ export function WeeklyCalendarView({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [settings.weekStartsOn, onAddBlock, colorMode, handleColorModeChange, setCurrentWeekStart]);
+  }, [settings.weekStartsOn, onAddBlock, colorMode, handleColorModeChange, setCurrentWeekStart, selectedBlockIds, clearSelection]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -1646,7 +1707,11 @@ export function WeeklyCalendarView({
                                     : { ...block, date: dateKey }
                                   }
                                   durationSlots={displayDurationSlots}
-                                  onBlockClick={onBlockClick}
+                                  onBlockClick={(b) => {
+                                    // Regular click clears selection and opens edit
+                                    clearSelection();
+                                    onBlockClick?.(b);
+                                  }}
                                   getBlockColor={(q) => getBlockColor(q, block.energyRating)}
                                   onResizeStart={handleResizeStart}
                                   isResizing={isBeingResized}
@@ -1655,6 +1720,8 @@ export function WeeklyCalendarView({
                                   availableTags={availableTags}
                                   onToggleTag={onToggleTag}
                                   onManageTags={onManageTags}
+                                  isSelected={selectedBlockIds.has(block.id)}
+                                  onCtrlClick={handleCtrlClick}
                                 />
                               </div>
                             );
@@ -1702,6 +1769,41 @@ export function WeeklyCalendarView({
           </div>
         </CardContent>
       </Card>
+
+      {/* Floating selection bar */}
+      {selectedBlockIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-primary text-primary-foreground px-5 py-3 rounded-full shadow-2xl flex items-center gap-4 animate-in slide-in-from-bottom-4 fade-in duration-200">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <CheckSquare className="h-4 w-4" />
+            {selectedBlockIds.size} event{selectedBlockIds.size !== 1 ? 's' : ''} selected
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="h-7 rounded-full text-xs font-medium"
+            onClick={() => {
+              const selectedBlocks: TimeBlock[] = [];
+              for (const blocks of Object.values(timeBlocks)) {
+                for (const block of blocks) {
+                  if (selectedBlockIds.has(block.id)) {
+                    selectedBlocks.push(block);
+                  }
+                }
+              }
+              onBulkCategorize?.(selectedBlocks);
+            }}
+          >
+            Categorize
+          </Button>
+          <button
+            onClick={clearSelection}
+            className="h-6 w-6 rounded-full hover:bg-primary-foreground/20 flex items-center justify-center transition-colors"
+            title="Clear selection (Esc)"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* Drag overlay - Google Calendar style */}
       <DragOverlay dropAnimation={null}>
