@@ -148,6 +148,14 @@ export function useEventPatterns() {
   // Track whether we've synced from the database this session
   const hasSyncedRef = useRef(false);
 
+  // Guard: when true, the sync effect must not upload or download data.
+  // Set by clearCategorizationsForEvents to prevent the sync from
+  // re-uploading stale data that was just cleared.
+  const hasClearedRef = useRef(false);
+
+  // Allows clearCategorizationsForEvents to abort an in-flight sync fetch
+  const syncControllerRef = useRef<AbortController | null>(null);
+
   /**
    * On mount, perform bidirectional sync between localStorage and database:
    * 1. Upload local-only categorizations to the DB (so other devices can see them)
@@ -158,6 +166,7 @@ export function useEventPatterns() {
     hasSyncedRef.current = true;
 
     const controller = new AbortController();
+    syncControllerRef.current = controller;
 
     (async () => {
       try {
@@ -166,6 +175,9 @@ export function useEventPatterns() {
         });
         if (!res.ok) return;
 
+        // If a clear happened while the fetch was in-flight, bail out
+        if (hasClearedRef.current) return;
+
         const { categorizations: dbCategorizations = [] } = await res.json();
         const dbMap = new Map<string, boolean>();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -173,7 +185,10 @@ export function useEventPatterns() {
           if (row.externalEventId) dbMap.set(row.externalEventId, true);
         }
 
-        // Upload local categorizations that aren't in the DB yet
+        // Re-read localStorage AFTER the fetch (not before) to minimize
+        // the race window with clearCategorizationsForEvents
+        if (hasClearedRef.current) return;
+
         const localCats: EventCategorization[] = (() => {
           try {
             const raw = window.localStorage.getItem(CATEGORIZATION_STORAGE_KEY);
@@ -219,7 +234,8 @@ export function useEventPatterns() {
         }
 
         // Batch upload local-only items (API supports up to 500 per request)
-        if (toUpload.length > 0) {
+        // Skip if a clear happened during processing
+        if (toUpload.length > 0 && !hasClearedRef.current) {
           for (let i = 0; i < toUpload.length; i += 500) {
             const batch = toUpload.slice(i, i + 500);
             fetch('/api/event-categorizations', {
@@ -231,7 +247,8 @@ export function useEventPatterns() {
         }
 
         // Download DB-only categorizations into localStorage
-        if (dbCategorizations.length > 0) {
+        // Skip if a clear happened during processing
+        if (dbCategorizations.length > 0 && !hasClearedRef.current) {
           setCategorizations((prev) => {
             const localCatMap = new Map(prev.map((c) => [c.eventId, c]));
             let changed = false;
@@ -587,7 +604,15 @@ export function useEventPatterns() {
     async (eventIds: string[]) => {
       if (eventIds.length === 0) return;
 
-      // Remove from local state
+      // Prevent the bidirectional sync from re-uploading cleared data.
+      // Must be set BEFORE clearing localStorage so the sync sees it
+      // even if it already read stale data from localStorage.
+      hasClearedRef.current = true;
+      syncControllerRef.current?.abort();
+
+      // Remove from local state (useLocalStorage.setValue writes to
+      // localStorage synchronously, so by the time these return the
+      // localStorage entries are already updated)
       const idsToRemove = new Set(eventIds);
       setCategorizations((prev) => prev.filter((c) => !idsToRemove.has(c.eventId)));
       setIgnoredEvents((prev) => prev.filter((e) => !idsToRemove.has(e.eventId)));

@@ -86,17 +86,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Maximum 500 categorizations per request' }, { status: 400 });
     }
 
-    // Validate all items
-    for (const item of items) {
-      if (!item.externalEventId || !item.eventName) {
-        return NextResponse.json(
-          { error: 'externalEventId and eventName are required' },
-          { status: 400 }
-        );
-      }
+    // Validate all items — filter out invalid ones instead of rejecting the whole batch
+    const validItems = items.filter((item) => item.externalEventId && item.eventName);
+    if (validItems.length === 0) {
+      return NextResponse.json(
+        { error: 'No valid categorizations provided (externalEventId and eventName are required)' },
+        { status: 400 }
+      );
     }
 
-    const rows = items.map((item) => ({
+    // Deduplicate by externalEventId (last-write-wins) to prevent
+    // upsert failures when the same event appears multiple times in a batch
+    const deduped = new Map<string, typeof validItems[number]>();
+    for (const item of validItems) {
+      deduped.set(item.externalEventId, item);
+    }
+
+    const rows = Array.from(deduped.values()).map((item) => ({
       user_id: userId,
       external_event_id: item.externalEventId,
       event_name: item.eventName,
@@ -119,7 +125,7 @@ export async function POST(request: NextRequest) {
       .select();
 
     if (error) {
-      console.error('Error upserting event categorizations:', error);
+      console.error('Error upserting event categorizations:', error, { rowCount: rows.length });
       return NextResponse.json({ error: 'Failed to save categorizations' }, { status: 500 });
     }
 
