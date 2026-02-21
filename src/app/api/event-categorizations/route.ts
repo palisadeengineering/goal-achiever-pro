@@ -38,6 +38,7 @@ export async function GET() {
       leverageType: row.leverage_type || null,
       detectedProjectId: row.detected_project_id || null,
       detectedProjectName: row.detected_project_name || null,
+      dayMarker: row.day_marker || null,
       isIgnored: row.is_ignored,
       categorizedAt: row.categorized_at,
     }));
@@ -75,6 +76,7 @@ export async function POST(request: NextRequest) {
       leverageType?: string;
       detectedProjectId?: string;
       detectedProjectName?: string;
+      dayMarker?: string;
       isIgnored?: boolean;
     }> = Array.isArray(body) ? body : Array.isArray(body.categorizations) ? body.categorizations : [body];
 
@@ -113,6 +115,7 @@ export async function POST(request: NextRequest) {
       leverage_type: item.leverageType || null,
       detected_project_id: item.detectedProjectId || null,
       detected_project_name: item.detectedProjectName || null,
+      day_marker: item.dayMarker || null,
       is_ignored: item.isIgnored ?? false,
       updated_at: new Date().toISOString(),
     }));

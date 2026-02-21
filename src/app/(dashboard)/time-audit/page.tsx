@@ -37,6 +37,7 @@ import { MonthlyCalendarView } from '@/components/features/time-audit/monthly-ca
 import { ValuePieChart } from '@/components/features/time-audit/drip-pie-chart';
 import { EnergyPieChart } from '@/components/features/time-audit/energy-pie-chart';
 import { TimeSummaryStats } from '@/components/features/time-audit/time-summary-stats';
+import { WorkSummaryCard } from '@/components/features/time-audit/work-summary-card';
 import { TimeBlockForm, TimeBlock } from '@/components/features/time-audit/time-block-form';
 import { InsightsView } from '@/components/features/time-audit/insights-view';
 import { ChartsView } from '@/components/features/time-audit/charts-view';
@@ -79,6 +80,8 @@ interface CalendarTimeBlock {
   // Tags
   tagIds?: string[];
   tags?: { id: string; name: string; color: string }[];
+  // Day marker
+  dayMarker?: string | null;
 }
 
 
@@ -202,6 +205,7 @@ export default function TimeAuditPage() {
       parentBlockId: b.parentBlockId,
       // Include tagIds
       tagIds: b.tagIds,
+      dayMarker: b.dayMarker || null,
     })), ...uniqueLocalBlocks];
 
     // Expand recurring events for a wide range to support navigation
@@ -525,6 +529,7 @@ export default function TimeAuditPage() {
         // Include tags
         tagIds: block.tagIds,
         tags: mapTagIds(block.tagIds),
+        dayMarker: block.dayMarker || null,
       });
     });
 
@@ -566,6 +571,7 @@ export default function TimeAuditPage() {
           externalEventId: event.id,
           source: 'google_calendar',
           createdAt: new Date().toISOString(),
+          dayMarker: categorization?.dayMarker || null,
         });
       }
     });
@@ -583,6 +589,8 @@ export default function TimeAuditPage() {
       valueQuadrant: ValueQuadrant;
       energyRating: EnergyRating;
       source: string;
+      dayMarker?: string | null;
+      durationMinutes: number;
     }> = [];
 
     const viewStartStr = format(viewedDateRange.start, 'yyyy-MM-dd');
@@ -606,6 +614,8 @@ export default function TimeAuditPage() {
             valueQuadrant: block.valueQuadrant,
             energyRating: block.energyRating,
             source: block.source || 'manual',
+            dayMarker: block.dayMarker || null,
+            durationMinutes: calculateDuration(block.startTime, block.endTime),
           });
         });
       }
@@ -2021,6 +2031,9 @@ export default function TimeAuditPage() {
         delegationCandidates={stats.delegationCandidates}
         energyBalance={stats.energyBalance}
       />
+
+      {/* Work Summary (day markers) */}
+      <WorkSummaryCard timeData={allTimeData} />
 
       {/* Edit Pattern Suggestion Banner */}
       {patternSuggestion && (

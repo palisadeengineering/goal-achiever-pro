@@ -53,6 +53,8 @@ export interface TimeBlock {
   meetingCategoryId?: string;
   meetingCategoryName?: string;
   aiClassificationConfidence?: number;
+  // Day marker
+  dayMarker?: string | null;
   // Recurring event fields
   isRecurring?: boolean;
   recurrenceRule?: string;

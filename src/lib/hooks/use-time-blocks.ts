@@ -29,6 +29,7 @@ export interface TimeBlock {
   parentBlockId?: string;
   isRecurrenceException?: boolean;
   originalDate?: string;
+  dayMarker?: string | null;
   tagIds?: string[];
   createdAt?: string;
   updatedAt?: string;

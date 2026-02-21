@@ -102,6 +102,7 @@ export async function GET(request: NextRequest) {
         activityType: block.activity_type,
         detectedProjectId: block.detected_project_id,
         detectedProjectName: (block as Record<string, unknown>).detected_projects ? ((block as Record<string, unknown>).detected_projects as { name: string })?.name : null,
+        dayMarker: block.day_marker || null,
         // Meeting category data
         meetingCategoryId: meetingDetails?.meeting_categories?.id || null,
         meetingCategoryName: meetingDetails?.meeting_categories?.name || null,
@@ -152,6 +153,7 @@ export async function POST(request: NextRequest) {
       externalEventId,
       minId,
       tagIds,
+      dayMarker,
       // Recurring event fields
       isRecurring,
       recurrenceRule,
@@ -190,6 +192,7 @@ export async function POST(request: NextRequest) {
         source: source || 'manual',
         external_event_id: externalEventId || null,
         min_id: minId || null,
+        day_marker: dayMarker || null,
         // Recurring event fields
         is_recurring: isRecurring || false,
         recurrence_rule: recurrenceRule || null,
@@ -242,6 +245,7 @@ export async function POST(request: NextRequest) {
       energyRating: timeBlock.energy_rating,
       valueQuadrant: timeBlock.drip_quadrant || 'na',
       leverageType: timeBlock.leverage_type,
+      dayMarker: timeBlock.day_marker || null,
       source: timeBlock.source,
       externalEventId: timeBlock.external_event_id,
       // Recurring event fields
@@ -291,6 +295,7 @@ export async function PUT(request: NextRequest) {
       energyRating,
       valueQuadrant,
       leverageType,
+      dayMarker: dayMarkerUpdate,
       tagIds,
       // Recurring event fields
       isRecurring,
@@ -330,6 +335,7 @@ export async function PUT(request: NextRequest) {
     if (energyRating !== undefined) updateData.energy_rating = energyRating;
     if (valueQuadrant !== undefined) updateData.drip_quadrant = valueQuadrant;
     if (leverageType !== undefined) updateData.leverage_type = leverageType;
+    if (dayMarkerUpdate !== undefined) updateData.day_marker = dayMarkerUpdate || null;
     // Recurring event fields
     if (isRecurring !== undefined) updateData.is_recurring = isRecurring;
     if (recurrenceRule !== undefined) updateData.recurrence_rule = recurrenceRule;
@@ -403,6 +409,7 @@ export async function PUT(request: NextRequest) {
       energyRating: timeBlock.energy_rating,
       valueQuadrant: timeBlock.drip_quadrant || 'na',
       leverageType: timeBlock.leverage_type,
+      dayMarker: timeBlock.day_marker || null,
       source: timeBlock.source,
       externalEventId: timeBlock.external_event_id,
       // Recurring event fields

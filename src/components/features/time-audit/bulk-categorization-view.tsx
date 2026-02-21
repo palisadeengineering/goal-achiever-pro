@@ -18,7 +18,8 @@ import type { ValueQuadrant, EnergyRating, LeverageType } from '@/types/database
 import type { EnhancedCategorizationFields } from '@/lib/hooks/use-event-patterns';
 import type { GoogleCalendarEvent } from '@/lib/hooks/use-google-calendar';
 import { Input } from '@/components/ui/input';
-import { CheckCircle2, ListTodo, Sparkles, EyeOff, Eye, Undo2, Trash2, Briefcase, Code, FileText, DollarSign, Users, Plus } from 'lucide-react';
+import { CheckCircle2, ListTodo, Sparkles, EyeOff, Eye, Undo2, Trash2, Briefcase, Code, FileText, DollarSign, Users, Plus, Play, Square, Pause, Clock } from 'lucide-react';
+import { WorkSummaryCard } from './work-summary-card';
 import { format, parseISO, isValid } from 'date-fns';
 
 // Activity Type options (broad task classification)
@@ -48,6 +49,12 @@ const WORK_TYPE_OPTIONS = [
   { value: 'training', label: 'Training/Team Development' },
   { value: 'site_visit', label: 'Site Visit/Field Work' },
   { value: 'personal', label: 'Personal' },
+];
+
+const DAY_MARKER_OPTIONS: { value: string; label: string; icon: React.ComponentType<{ className?: string }>; color: string }[] = [
+  { value: 'start_of_work', label: 'Start of Work', icon: Play, color: '#22c55e' },
+  { value: 'end_of_work', label: 'End of Work', icon: Square, color: '#ef4444' },
+  { value: 'break', label: 'Break', icon: Pause, color: '#f59e0b' },
 ];
 
 const LEVERAGE_TYPE_OPTIONS: { value: LeverageType | 'none'; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
@@ -92,6 +99,7 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
     getSuggestion,
     saveCategorization,
     isCategorized,
+    getCategorization,
     applySuggestionToSimilar,
     ignoreEvent,
     unignoreEvent,
@@ -103,7 +111,7 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
   const { tags, createTag } = useTags();
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [activeTab, setActiveTab] = useState<'single' | 'bulk' | 'ignored'>('single');
+  const [activeTab, setActiveTab] = useState<'single' | 'bulk' | 'ignored' | 'summary'>('single');
 
   // Detected projects for project selector
   const [detectedProjects, setDetectedProjects] = useState<{ id: string; name: string }[]>([]);
@@ -284,6 +292,13 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
     return await createTag(name);
   }, [createTag]);
 
+  const handleProjectCreated = useCallback((project: { id: string; name: string }) => {
+    setDetectedProjects((prev) => {
+      if (prev.some(p => p.id === project.id)) return prev;
+      return [...prev, project];
+    });
+  }, []);
+
   // Show "All categorized" only when there are no uncategorized AND no ignored events
   if (uncategorizedEvents.length === 0 && ignoredEvents.length === 0) {
     return (
@@ -330,7 +345,7 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
         )}
       </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'single' | 'bulk' | 'ignored')}>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'single' | 'bulk' | 'ignored' | 'summary')}>
         <TabsList>
           <TabsTrigger value="single" className="gap-2">
             <ListTodo className="h-4 w-4" />
@@ -343,6 +358,10 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
           <TabsTrigger value="ignored" className="gap-2">
             <EyeOff className="h-4 w-4" />
             Ignored ({ignoredEvents.length})
+          </TabsTrigger>
+          <TabsTrigger value="summary" className="gap-2">
+            <Clock className="h-4 w-4" />
+            Summary
           </TabsTrigger>
         </TabsList>
 
@@ -413,6 +432,7 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
                     onCreateTag={handleCreateTag}
                     onSearchTags={searchTags}
                     detectedProjects={detectedProjects}
+                    onProjectCreated={handleProjectCreated}
                   />
                 ))}
               </div>
@@ -470,9 +490,55 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
             </>
           )}
         </TabsContent>
+
+        {/* Summary Tab */}
+        <TabsContent value="summary" className="mt-4">
+          <SummaryTabContent events={events} getCategorization={getCategorization} />
+        </TabsContent>
       </Tabs>
     </div>
   );
+}
+
+// ========================================================
+// Summary Tab Content - Computes work summary from events + categorizations
+// ========================================================
+function SummaryTabContent({
+  events,
+  getCategorization,
+}: {
+  events: GoogleCalendarEvent[];
+  getCategorization: (eventId: string) => { dayMarker?: string | null } | null;
+}) {
+  const summaryTimeData = useMemo(() => {
+    return events
+      .filter((e) => {
+        const isAllDay = e.isAllDay || (e.startTime === '00:00' && e.endTime === '23:59');
+        return !isAllDay;
+      })
+      .map((e) => {
+        const cat = getCategorization(e.id);
+        const dateStr = e.date || '';
+        const startTimeStr = e.startTime || '';
+        const endTimeStr = e.endTime || startTimeStr;
+
+        // Calculate duration
+        const [sh, sm] = startTimeStr.split(':').map(Number);
+        const [eh, em] = endTimeStr.split(':').map(Number);
+        const durationMinutes = (eh * 60 + (em || 0)) - (sh * 60 + (sm || 0));
+
+        return {
+          date: dateStr,
+          startTime: startTimeStr,
+          endTime: endTimeStr,
+          dayMarker: cat?.dayMarker || null,
+          durationMinutes: durationMinutes > 0 ? durationMinutes : 0,
+        };
+      })
+      .filter((d) => d.date && d.startTime);
+  }, [events, getCategorization]);
+
+  return <WorkSummaryCard timeData={summaryTimeData} />;
 }
 
 // ========================================================
@@ -486,9 +552,10 @@ interface GroupCardProps {
   onCreateTag: (name: string) => Promise<Tag | null>;
   onSearchTags: (query: string) => Promise<Tag[]>;
   detectedProjects: { id: string; name: string }[];
+  onProjectCreated?: (project: { id: string; name: string }) => void;
 }
 
-export function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearchTags, detectedProjects }: GroupCardProps) {
+export function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearchTags, detectedProjects, onProjectCreated }: GroupCardProps) {
   const [selectedValue, setSelectedValue] = useState<ValueQuadrant | null>(
     group.suggestion?.valueQuadrant || null
   );
@@ -504,8 +571,41 @@ export function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearc
   const [selectedActivityType, setSelectedActivityType] = useState<string>('');
   const [selectedWorkType, setSelectedWorkType] = useState<string>('');
   const [selectedLeverage, setSelectedLeverage] = useState<string>('');
+  const [selectedDayMarker, setSelectedDayMarker] = useState<string>('');
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [isApplying, setIsApplying] = useState(false);
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
+
+  const handleCreateProject = async () => {
+    const name = customProjectName.trim();
+    if (!name || isCreatingProject) return;
+    setIsCreatingProject(true);
+    try {
+      const res = await fetch('/api/detected-projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+      if (res.ok) {
+        const { project } = await res.json();
+        setSelectedProject(project.id);
+        setCustomProjectName('');
+        setShowNewProjectInput(false);
+        onProjectCreated?.({ id: project.id, name: project.name || name });
+      } else if (res.status === 409) {
+        const data = await res.json();
+        if (data.existingId) {
+          setSelectedProject(data.existingId);
+          setCustomProjectName('');
+          setShowNewProjectInput(false);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to create project:', err);
+    } finally {
+      setIsCreatingProject(false);
+    }
+  };
 
   const handleApply = async () => {
     if (!selectedValue || !selectedEnergy) return;
@@ -514,12 +614,9 @@ export function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearc
     try {
       // Build enhanced fields for categorization persistence
       const isExistingProject = selectedProject && selectedProject !== 'none';
-      const isNewProject = showNewProjectInput && customProjectName.trim();
       const hasLeverage = selectedLeverage && selectedLeverage !== 'none';
 
       const enhanced: EnhancedCategorizationFields = {};
-      let resolvedProjectId: string | undefined;
-      let resolvedProjectName: string | undefined;
 
       if (hasLeverage) {
         enhanced.leverageType = selectedLeverage;
@@ -530,45 +627,22 @@ export function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearc
       if (selectedWorkType) {
         enhanced.activityCategory = selectedWorkType;
       }
-
-      // Create new project if needed, or use existing
-      if (isNewProject) {
-        try {
-          const createRes = await fetch('/api/detected-projects', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: customProjectName.trim() }),
-          });
-          if (createRes.ok) {
-            const { project } = await createRes.json();
-            resolvedProjectId = project.id;
-            resolvedProjectName = project.name || customProjectName.trim();
-          } else if (createRes.status === 409) {
-            const { existingId } = await createRes.json();
-            if (existingId) {
-              resolvedProjectId = existingId;
-              resolvedProjectName = customProjectName.trim();
-            }
-          }
-        } catch (err) {
-          console.error('Failed to create project:', err);
-        }
-      } else if (isExistingProject) {
-        resolvedProjectId = selectedProject;
-        resolvedProjectName = detectedProjects.find(p => p.id === selectedProject)?.name || selectedProject;
+      if (selectedDayMarker) {
+        enhanced.dayMarker = selectedDayMarker;
       }
 
-      if (resolvedProjectId) {
-        enhanced.detectedProjectId = resolvedProjectId;
-        enhanced.detectedProjectName = resolvedProjectName;
+      // Use already-created project (immediate creation handles new projects)
+      if (isExistingProject) {
+        enhanced.detectedProjectId = selectedProject;
+        enhanced.detectedProjectName = detectedProjects.find(p => p.id === selectedProject)?.name || selectedProject;
       }
 
       // Apply categorization with enhanced fields (saves to localStorage + event_categorizations DB)
       onApply(group, selectedValue, selectedEnergy, Object.keys(enhanced).length > 0 ? enhanced : undefined);
 
       // Also try to update time_blocks directly if they exist (for already-imported events)
-      const hasEnhancedFields = resolvedProjectId || selectedWorkType || selectedActivityType ||
-        hasLeverage || selectedTags.length > 0;
+      const hasEnhancedFields = enhanced.detectedProjectId || selectedWorkType || selectedActivityType ||
+        hasLeverage || selectedDayMarker || selectedTags.length > 0;
 
       if (hasEnhancedFields) {
         const updates: Record<string, unknown> = {};
@@ -582,8 +656,11 @@ export function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearc
         if (selectedWorkType) {
           updates.activityCategory = selectedWorkType;
         }
-        if (resolvedProjectId) {
-          updates.detectedProjectId = resolvedProjectId;
+        if (enhanced.detectedProjectId) {
+          updates.detectedProjectId = enhanced.detectedProjectId;
+        }
+        if (selectedDayMarker) {
+          updates.dayMarker = selectedDayMarker;
         }
         if (selectedTags.length > 0) {
           updates.tagIds = selectedTags.map(t => t.id);
@@ -779,14 +856,56 @@ export function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearc
             </Badge>
           </div>
           {showNewProjectInput && (
-            <Input
-              className="h-8 text-xs mt-1.5 max-w-xs"
-              placeholder="Type project name..."
-              value={customProjectName}
-              onChange={(e) => setCustomProjectName(e.target.value)}
-              autoFocus
-            />
+            <div className="flex items-center gap-1.5 mt-1.5 max-w-xs">
+              <Input
+                className="h-8 text-xs"
+                placeholder="Type project name..."
+                value={customProjectName}
+                onChange={(e) => setCustomProjectName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleCreateProject(); }}
+                autoFocus
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 px-3 text-xs shrink-0"
+                onClick={handleCreateProject}
+                disabled={!customProjectName.trim() || isCreatingProject}
+              >
+                {isCreatingProject ? '...' : 'Create'}
+              </Button>
+            </div>
           )}
+        </div>
+
+        {/* Day Marker chips */}
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Day Marker <span className="text-muted-foreground/60">(optional)</span></Label>
+          <div className="flex flex-wrap gap-1.5">
+            {DAY_MARKER_OPTIONS.map((option) => {
+              const Icon = option.icon;
+              const isSelected = selectedDayMarker === option.value;
+              return (
+                <Badge
+                  key={option.value}
+                  variant="outline"
+                  className={cn(
+                    'cursor-pointer transition-colors text-xs',
+                    isSelected && 'ring-2 ring-offset-1'
+                  )}
+                  style={{
+                    borderColor: isSelected ? option.color : undefined,
+                    backgroundColor: isSelected ? `${option.color}15` : undefined,
+                    ['--tw-ring-color' as string]: option.color,
+                  }}
+                  onClick={() => setSelectedDayMarker(isSelected ? '' : option.value)}
+                >
+                  <Icon className="h-3 w-3 mr-1" />
+                  {option.label}
+                </Badge>
+              );
+            })}
+          </div>
         </div>
 
         {/* Activity Type (Task Type) chips */}

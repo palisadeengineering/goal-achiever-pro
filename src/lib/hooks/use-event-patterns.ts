@@ -23,6 +23,7 @@ export interface EventCategorization {
   leverageType?: string | null;
   detectedProjectId?: string | null;
   detectedProjectName?: string | null;
+  dayMarker?: string | null;
   categorizedAt: string;
 }
 
@@ -52,6 +53,7 @@ export interface EnhancedCategorizationFields {
   leverageType?: string | null;
   detectedProjectId?: string | null;
   detectedProjectName?: string | null;
+  dayMarker?: string | null;
 }
 
 /**
@@ -86,6 +88,7 @@ function persistCategorizationToDb(
       ...(enhanced?.leverageType && { leverageType: enhanced.leverageType }),
       ...(enhanced?.detectedProjectId && { detectedProjectId: enhanced.detectedProjectId }),
       ...(enhanced?.detectedProjectName && { detectedProjectName: enhanced.detectedProjectName }),
+      ...(enhanced?.dayMarker && { dayMarker: enhanced.dayMarker }),
     }),
   }).catch((err) => console.warn('Failed to persist categorization to DB:', err));
 
@@ -257,15 +260,28 @@ export function useEventPatterns() {
             for (const dbRow of dbCategorizations as any[]) {
               const eventId = dbRow.externalEventId;
               if (!eventId || dbRow.isIgnored) continue;
+              if (!dbRow.valueQuadrant || !dbRow.energyRating) continue;
 
-              if (dbRow.valueQuadrant && dbRow.energyRating && !localCatMap.has(eventId)) {
+              const existing = localCatMap.get(eventId);
+              if (!existing) {
+                // New entry from DB — add to local with all fields
                 localCatMap.set(eventId, {
                   eventId,
                   eventName: dbRow.eventName || '',
                   valueQuadrant: dbRow.valueQuadrant as ValueQuadrant,
                   energyRating: dbRow.energyRating as EnergyRating,
+                  activityType: dbRow.activityType || null,
+                  activityCategory: dbRow.activityCategory || null,
+                  leverageType: dbRow.leverageType || null,
+                  detectedProjectId: dbRow.detectedProjectId || null,
+                  detectedProjectName: dbRow.detectedProjectName || null,
+                  dayMarker: dbRow.dayMarker || null,
                   categorizedAt: dbRow.categorizedAt || new Date().toISOString(),
                 });
+                changed = true;
+              } else if (dbRow.dayMarker && !existing.dayMarker) {
+                // Existing local entry missing dayMarker that DB has — merge it
+                localCatMap.set(eventId, { ...existing, dayMarker: dbRow.dayMarker });
                 changed = true;
               }
             }
@@ -507,6 +523,7 @@ export function useEventPatterns() {
             leverageType: enhanced?.leverageType || null,
             detectedProjectId: enhanced?.detectedProjectId || null,
             detectedProjectName: enhanced?.detectedProjectName || null,
+            dayMarker: enhanced?.dayMarker || null,
             categorizedAt: new Date().toISOString(),
           },
         ];

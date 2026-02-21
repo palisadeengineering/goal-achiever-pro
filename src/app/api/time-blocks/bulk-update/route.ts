@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { valueQuadrant, energyRating, leverageType, activityType, activityCategory, detectedProjectId, tagIds, tagMode } = updates;
+    const { valueQuadrant, energyRating, leverageType, activityType, activityCategory, detectedProjectId, dayMarker, tagIds, tagMode } = updates;
 
     // Validate enum values
     const validValueQuadrants = ['production', 'investment', 'replacement', 'delegation', 'na'];
@@ -62,11 +62,15 @@ export async function POST(request: NextRequest) {
     if (leverageType !== undefined && !validLeverageTypes.includes(leverageType)) {
       return NextResponse.json({ error: `Invalid leverageType: ${leverageType}` }, { status: 400 });
     }
+    const validDayMarkers = ['start_of_work', 'end_of_work', 'break'];
+    if (dayMarker !== undefined && dayMarker !== null && !validDayMarkers.includes(dayMarker)) {
+      return NextResponse.json({ error: `Invalid dayMarker: ${dayMarker}` }, { status: 400 });
+    }
 
     // Ensure at least one field is being updated
     const hasFieldUpdate = valueQuadrant !== undefined || energyRating !== undefined ||
       leverageType !== undefined || activityType !== undefined || activityCategory !== undefined ||
-      detectedProjectId !== undefined;
+      detectedProjectId !== undefined || dayMarker !== undefined;
     const hasTagUpdate = tagIds !== undefined && Array.isArray(tagIds);
 
     if (!hasFieldUpdate && !hasTagUpdate) {
@@ -189,6 +193,9 @@ export async function POST(request: NextRequest) {
       if (activityCategory !== undefined) {
         updateData.activity_category = activityCategory || null;
       }
+      if (dayMarker !== undefined) {
+        updateData.day_marker = dayMarker || null;
+      }
       if (detectedProjectId !== undefined) {
         if (detectedProjectId === null || detectedProjectId === '') {
           updateData.detected_project_id = null;
@@ -299,6 +306,7 @@ export async function POST(request: NextRequest) {
       leverageType: block.leverage_type,
       activityType: block.activity_type,
       detectedProjectId: block.detected_project_id,
+      dayMarker: block.day_marker || null,
       source: block.source,
       externalEventId: block.external_event_id,
       createdAt: block.created_at,

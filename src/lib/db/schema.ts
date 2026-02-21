@@ -452,6 +452,8 @@ export const timeBlocks = pgTable('time_blocks', {
   lightsUpScore: integer('lights_up_score'),
   // Leverage tracking (4 C's)
   leverageType: text('leverage_type'), // 'code' | 'content' | 'capital' | 'collaboration' | null
+  // Day marker (workday boundaries)
+  dayMarker: text('day_marker'), // 'start_of_work' | 'end_of_work' | 'break' | null
   // Source tracking
   source: text('source').default('manual'),
   externalEventId: text('external_event_id'),
@@ -521,6 +523,7 @@ export const eventCategorizations = pgTable('event_categorizations', {
   leverageType: text('leverage_type'), // 'code', 'content', 'capital', 'collaboration'
   detectedProjectId: uuid('detected_project_id'),
   detectedProjectName: text('detected_project_name'),
+  dayMarker: text('day_marker'), // 'start_of_work' | 'end_of_work' | 'break' | null
   isIgnored: boolean('is_ignored').default(false),
   categorizedAt: timestamp('categorized_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
