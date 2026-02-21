@@ -447,6 +447,10 @@ export async function DELETE(request: NextRequest) {
 
     // Handle clear by source (e.g., clear all Google Calendar synced blocks)
     if (clearSource) {
+      const VALID_SOURCES = ['google_calendar', 'calendar_sync', 'manual', 'imported'];
+      if (!VALID_SOURCES.includes(clearSource)) {
+        return NextResponse.json({ error: 'Invalid source value' }, { status: 400 });
+      }
       // Count blocks to be deleted first
       const { count: beforeCount } = await supabase
         .from('time_blocks')

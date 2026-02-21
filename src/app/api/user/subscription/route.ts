@@ -6,9 +6,7 @@ export async function GET() {
     const supabase = await createClient();
 
     if (!supabase) {
-      return NextResponse.json(
-        { tier: 'free', status: 'active', stripeCustomerId: null }
-      );
+      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
     }
 
     const { data: { user } } = await supabase.auth.getUser();

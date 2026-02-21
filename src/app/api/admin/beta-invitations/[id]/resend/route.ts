@@ -2,16 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { sendEmail } from '@/lib/email/resend';
 import { generateBetaInvitationEmailHtml } from '@/lib/email/templates/beta-invitation';
-
-// Generate a secure random token
-function generateToken(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let token = '';
-  for (let i = 0; i < 32; i++) {
-    token += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return token;
-}
+import { generateInviteToken } from '@/lib/permissions/check-access';
 
 // Verify the requesting user is an authenticated admin
 async function verifyAdmin(): Promise<{ isAdmin: boolean; error?: string }> {
@@ -77,7 +68,7 @@ export async function POST(
     }
 
     // Generate new token and update invitation
-    const newToken = generateToken();
+    const newToken = generateInviteToken();
     const { error: updateError } = await supabase
       .from('beta_invitations')
       .update({

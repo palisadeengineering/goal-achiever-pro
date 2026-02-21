@@ -2,27 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
-// Demo user for development
-const DEMO_USER = {
-  id: '00000000-0000-0000-0000-000000000001',
-  email: 'demo@example.com',
-  full_name: 'Demo User',
-  avatar_url: null,
-  created_at: new Date().toISOString(),
-};
-
 export async function GET() {
   try {
     const supabase = await createClient();
 
     if (!supabase) {
-      return NextResponse.json(DEMO_USER);
+      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
     }
 
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json(DEMO_USER);
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Get profile from database
@@ -65,7 +56,7 @@ export async function PUT(request: NextRequest) {
     const supabase = await createClient();
 
     if (!supabase) {
-      return NextResponse.json({ success: true, message: 'Demo mode - changes not persisted' });
+      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
     }
 
     const { data: { user } } = await supabase.auth.getUser();
