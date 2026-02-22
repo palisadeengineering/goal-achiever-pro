@@ -494,6 +494,12 @@ function EventCard({
       <button
         {...listeners}
         {...attributes}
+        onPointerDown={(e) => {
+          // When Ctrl/Meta is held, skip dnd-kit drag so Ctrl+Click works
+          if ((e.ctrlKey || e.metaKey) && onCtrlClick) return;
+          // Otherwise let dnd-kit handle it
+          listeners?.onPointerDown?.(e);
+        }}
         onClick={(e) => {
           const isKeyboardClick = e.detail === 0;
           if (isKeyboardClick) return;
