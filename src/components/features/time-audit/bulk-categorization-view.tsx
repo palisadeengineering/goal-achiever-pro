@@ -193,14 +193,14 @@ export function BulkCategorizationView({ events, onComplete, onCategorize }: Bul
     [uncategorizedEvents, getSuggestion]
   );
 
-  const handleCategorize = (eventId: string, valueQuadrant: ValueQuadrant, energyRating: EnergyRating) => {
+  const handleCategorize = (eventId: string, valueQuadrant: ValueQuadrant, energyRating: EnergyRating, enhanced?: EnhancedCategorizationFields) => {
     const event = uncategorizedEvents.find((e) => e.id === eventId);
     if (event) {
       const date = event.date || (event.start?.dateTime ? event.start.dateTime.split('T')[0] : undefined);
       const startTime = event.startTime || (event.start?.dateTime ? new Date(event.start.dateTime).toTimeString().slice(0, 5) : undefined);
       const endTime = event.endTime || (event.end?.dateTime ? new Date(event.end.dateTime).toTimeString().slice(0, 5) : undefined);
       const eventMeta = date && startTime && endTime ? { date, startTime, endTime } : undefined;
-      saveCategorization(eventId, event.summary, valueQuadrant, energyRating, eventMeta);
+      saveCategorization(eventId, event.summary, valueQuadrant, energyRating, eventMeta, enhanced);
       onCategorize?.();
     }
     if (currentIndex < uncategorizedEvents.length - 1) {
@@ -876,36 +876,6 @@ export function GroupCard({ group, onApply, onIgnore, tags, onCreateTag, onSearc
               </Button>
             </div>
           )}
-        </div>
-
-        {/* Day Marker chips */}
-        <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Day Marker <span className="text-muted-foreground/60">(optional)</span></Label>
-          <div className="flex flex-wrap gap-1.5">
-            {DAY_MARKER_OPTIONS.map((option) => {
-              const Icon = option.icon;
-              const isSelected = selectedDayMarker === option.value;
-              return (
-                <Badge
-                  key={option.value}
-                  variant="outline"
-                  className={cn(
-                    'cursor-pointer transition-colors text-xs',
-                    isSelected && 'ring-2 ring-offset-1'
-                  )}
-                  style={{
-                    borderColor: isSelected ? option.color : undefined,
-                    backgroundColor: isSelected ? `${option.color}15` : undefined,
-                    ['--tw-ring-color' as string]: option.color,
-                  }}
-                  onClick={() => setSelectedDayMarker(isSelected ? '' : option.value)}
-                >
-                  <Icon className="h-3 w-3 mr-1" />
-                  {option.label}
-                </Badge>
-              );
-            })}
-          </div>
         </div>
 
         {/* Activity Type (Task Type) chips */}

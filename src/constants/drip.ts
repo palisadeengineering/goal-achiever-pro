@@ -54,8 +54,8 @@ export const VALUE_QUADRANTS: Record<ValueQuadrant, {
     energyLevel: 'high',
   },
   na: {
-    name: 'N/A',
-    description: 'Not applicable or uncategorized',
+    name: 'Personal',
+    description: 'Personal or non-work activities',
     action: 'Review later',
     color: '#3b82f6', // Blue (changed from gray for better visibility)
     bgColor: 'bg-blue-100 dark:bg-blue-900/30',

@@ -115,8 +115,6 @@ interface WeeklyCalendarViewProps {
   availableTags?: TagInfo[];
   onToggleTag?: (blockId: string, tagId: string, isAdding: boolean) => Promise<void>;
   onManageTags?: () => void;
-  // Multi-select callback: fires when Ctrl+Click selection changes
-  onSelectionChange?: (selectedBlocks: TimeBlock[]) => void;
   // Fires when user clicks "Categorize" on the multi-select bar
   onBulkCategorize?: (selectedBlocks: TimeBlock[]) => void;
 }
@@ -729,7 +727,6 @@ export function WeeklyCalendarView({
   availableTags,
   onToggleTag,
   onManageTags,
-  onSelectionChange,
   onBulkCategorize,
 }: WeeklyCalendarViewProps) {
   const [settings] = useLocalStorage<UserSettings>('user-settings', DEFAULT_SETTINGS);
@@ -766,23 +763,6 @@ export function WeeklyCalendarView({
   const clearSelection = useCallback(() => {
     setSelectedBlockIds(new Set());
   }, []);
-
-  // Resolve selected block IDs to full TimeBlock objects and notify parent
-  useEffect(() => {
-    if (selectedBlockIds.size === 0) {
-      onSelectionChange?.([]);
-      return;
-    }
-    const selectedBlocks: TimeBlock[] = [];
-    for (const blocks of Object.values(timeBlocks)) {
-      for (const block of blocks) {
-        if (selectedBlockIds.has(block.id)) {
-          selectedBlocks.push(block);
-        }
-      }
-    }
-    onSelectionChange?.(selectedBlocks);
-  }, [selectedBlockIds, timeBlocks, onSelectionChange]);
 
   // Mobile view
   const [isMobileView, setIsMobileView] = useState(false);

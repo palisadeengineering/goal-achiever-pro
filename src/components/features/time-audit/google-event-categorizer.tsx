@@ -9,7 +9,14 @@ import { useEventPatterns } from '@/lib/hooks/use-event-patterns';
 import { VALUE_QUADRANTS, ENERGY_RATINGS, getValueQuadrantConfig, getEnergyRatingConfig } from '@/constants/drip';
 import type { ValueQuadrant, EnergyRating } from '@/types/database';
 import type { GoogleCalendarEvent } from '@/lib/hooks/use-google-calendar';
-import { Calendar, Clock, Sparkles, SkipForward, EyeOff } from 'lucide-react';
+import { Calendar, Clock, Sparkles, SkipForward, EyeOff, Play, Square, Pause } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+
+const DAY_MARKER_OPTIONS: { value: string; label: string; icon: React.ComponentType<{ className?: string }>; color: string }[] = [
+  { value: 'start_of_work', label: 'Start of Work', icon: Play, color: '#22c55e' },
+  { value: 'end_of_work', label: 'End of Work', icon: Square, color: '#ef4444' },
+  { value: 'break', label: 'Break', icon: Pause, color: '#f59e0b' },
+];
 import { format, parseISO, isValid } from 'date-fns';
 
 // Safe date parsing helper
@@ -27,7 +34,7 @@ function safeParseDate(dateString: string | undefined | null): Date | null {
 
 interface GoogleEventCategorizerProps {
   event: GoogleCalendarEvent;
-  onCategorize: (eventId: string, valueQuadrant: ValueQuadrant, energyRating: EnergyRating) => void;
+  onCategorize: (eventId: string, valueQuadrant: ValueQuadrant, energyRating: EnergyRating, enhanced?: { dayMarker?: string }) => void;
   onSkip: () => void;
   onIgnore?: (eventId: string, eventName: string) => void;
 }
@@ -47,6 +54,7 @@ export function GoogleEventCategorizer({
   const [selectedEnergy, setSelectedEnergy] = useState<EnergyRating | null>(
     suggestion?.energyRating || null
   );
+  const [selectedDayMarker, setSelectedDayMarker] = useState<string>('');
 
   // Track the current event ID to detect when we switch to a different event
   const prevEventIdRef = useRef<string>(event.id);
@@ -67,6 +75,7 @@ export function GoogleEventCategorizer({
         setSelectedValue(null); // eslint-disable-line react-hooks/set-state-in-effect
         setSelectedEnergy(null); // eslint-disable-line react-hooks/set-state-in-effect
       }
+      setSelectedDayMarker(''); // eslint-disable-line react-hooks/set-state-in-effect
       // Update the ref to current event ID
       prevEventIdRef.current = event.id;
     }
@@ -74,7 +83,8 @@ export function GoogleEventCategorizer({
 
   const handleCategorize = () => {
     if (!selectedValue || !selectedEnergy) return;
-    onCategorize(event.id, selectedValue, selectedEnergy);
+    const enhanced = selectedDayMarker ? { dayMarker: selectedDayMarker } : undefined;
+    onCategorize(event.id, selectedValue, selectedEnergy, enhanced);
   };
 
   const handleApplySuggestion = () => {
@@ -215,6 +225,36 @@ export function GoogleEventCategorizer({
                 </Button>
               )
             )}
+          </div>
+        </div>
+
+        {/* Day Marker */}
+        <div>
+          <Label className="text-sm font-medium mb-2 block">Day Marker <span className="text-xs text-muted-foreground font-normal">(optional)</span></Label>
+          <div className="flex gap-2">
+            {DAY_MARKER_OPTIONS.map((option) => {
+              const Icon = option.icon;
+              const isSelected = selectedDayMarker === option.value;
+              return (
+                <Button
+                  key={option.value}
+                  variant="outline"
+                  className={cn(
+                    'h-auto py-2 px-3',
+                    isSelected && 'ring-2 ring-offset-1'
+                  )}
+                  style={{
+                    borderColor: isSelected ? option.color : undefined,
+                    backgroundColor: isSelected ? `${option.color}15` : undefined,
+                    ['--tw-ring-color' as string]: option.color,
+                  }}
+                  onClick={() => setSelectedDayMarker(isSelected ? '' : option.value)}
+                >
+                  <Icon className="h-3.5 w-3.5 mr-1.5" />
+                  <span className="text-sm">{option.label}</span>
+                </Button>
+              );
+            })}
           </div>
         </div>
 

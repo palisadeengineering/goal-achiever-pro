@@ -1756,11 +1756,7 @@ export default function TimeAuditPage() {
     setShowTagManager(true);
   }, []);
 
-  // Multi-select handlers for Ctrl+Click on calendar events
-  const handleSelectionChange = useCallback((blocks: CalendarTimeBlock[]) => {
-    setSelectedCalendarBlocks(blocks);
-  }, []);
-
+  // Multi-select handler for Ctrl+Click bulk categorize on calendar
   const handleBulkCategorize = useCallback((blocks: CalendarTimeBlock[]) => {
     if (blocks.length === 0) return;
     setSelectedCalendarBlocks(blocks);
@@ -2253,7 +2249,6 @@ export default function TimeAuditPage() {
                   onManageTags={handleManageTags}
                   onWeekChange={handleDateRangeChange}
                   initialWeekStart={viewedDateRange.start}
-                  onSelectionChange={handleSelectionChange}
                   onBulkCategorize={handleBulkCategorize}
                 />
                 {/* Sidebar toggle button - fixed position */}
