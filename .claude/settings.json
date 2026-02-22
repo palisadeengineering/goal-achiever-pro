@@ -10,6 +10,7 @@
       "Bash(npm run build)",
       "Bash(npm run lint)",
       "Bash(npm run test*)",
+      "Bash(npx playwright *)",
       "Bash(npx drizzle-kit *)",
       "Bash(npx shadcn@latest add *)",
       "Bash(npm install *)",
@@ -47,5 +48,17 @@
   },
   "enabledPlugins": {
     "superpowers@superpowers-marketplace": true
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh"
+          }
+        ]
+      }
+    ]
   }
 }

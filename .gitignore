@@ -66,3 +66,10 @@ docs/sessions/
 
 # Email template previews (generated)
 email-previews/
+
+# Playwright
+e2e/test-results/
+e2e/report/
+e2e/screenshots/
+/playwright-report/
+/blob-report/
