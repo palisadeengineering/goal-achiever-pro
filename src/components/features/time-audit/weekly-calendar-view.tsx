@@ -275,6 +275,24 @@ function EventCard({
     data: { block },
   });
 
+  // Extract @dnd-kit's pointer handler so we can intercept Ctrl/Cmd+Click
+  // before the drag sensor or context menu can interfere
+  const { onPointerDown: dndPointerDown, ...otherDndListeners } = (listeners || {}) as Record<string, (event: React.SyntheticEvent) => void>;
+
+  // Handle Ctrl/Cmd+Click at the pointerdown level for reliable multi-select:
+  // 1. On macOS, Ctrl+Click triggers contextmenu (not click), so onClick never fires
+  // 2. @dnd-kit's PointerSensor can consume pointer events, preventing onClick
+  const handlePointerDown = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
+    if (e.button === 0 && (e.ctrlKey || e.metaKey) && onCtrlClick) {
+      e.preventDefault();
+      e.stopPropagation();
+      onCtrlClick(block);
+      return;
+    }
+    // Forward to @dnd-kit for drag detection
+    dndPointerDown?.(e);
+  }, [block, onCtrlClick, dndPointerDown]);
+
   // Use measured height for adaptive sizing
   const fallbackHeight = durationSlots * 14;
   const { ref: sizeRef, sizeBucket, bucketClass } = useEventSize(fallbackHeight);
@@ -492,24 +510,16 @@ function EventCard({
       style={style}
     >
       <button
-        {...listeners}
+        {...otherDndListeners}
         {...attributes}
-        onPointerDown={(e) => {
-          // When Ctrl/Meta is held, skip dnd-kit drag so Ctrl+Click works
-          if ((e.ctrlKey || e.metaKey) && onCtrlClick) return;
-          // Otherwise let dnd-kit handle it
-          listeners?.onPointerDown?.(e);
-        }}
+        onPointerDown={handlePointerDown}
         onClick={(e) => {
           const isKeyboardClick = e.detail === 0;
           if (isKeyboardClick) return;
           if (!isDragging && !isResizing) {
             e.stopPropagation();
-            // Ctrl+Click (or Meta+Click on Mac) toggles multi-select
-            if ((e.ctrlKey || e.metaKey) && onCtrlClick) {
-              onCtrlClick(block);
-              return;
-            }
+            // Ctrl/Cmd+Click already handled in onPointerDown — guard against double-fire
+            if ((e.ctrlKey || e.metaKey) && onCtrlClick) return;
             // On touch devices for small events, open popover instead of edit
             if (isTouchDevice && (sizeBucket === 'xs' || sizeBucket === 'sm')) {
               setPopoverOpen(true);
