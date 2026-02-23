@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Calendar, CalendarDays, CalendarRange, Lock, RefreshCw, ChevronDown, Upload, ArrowUpRight, BarChart3, ListChecks, Trash2, ChevronRight, PanelRightClose, PanelRight, Settings2, EyeOff, Eye, Download, Eraser } from 'lucide-react';
+import { Plus, Calendar, CalendarDays, CalendarRange, Lock, RefreshCw, ChevronDown, BarChart3, ListChecks, Trash2, PanelRightClose, PanelRight, Settings2, EyeOff, Eye, Download, Eraser } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,13 +25,13 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { WeeklyCalendarView, IgnoreableBlock, TagInfo } from '@/components/features/time-audit/weekly-calendar-view';
+import { WeeklyCalendarView, IgnoreableBlock } from '@/components/features/time-audit/weekly-calendar-view';
 import { TagManager } from '@/components/features/time-audit/tag-manager';
 import { BulkCategorizationView } from '@/components/features/time-audit/bulk-categorization-view';
 import { useGoogleCalendar } from '@/lib/hooks/use-google-calendar';
 import { useEventPatterns } from '@/lib/hooks/use-event-patterns';
-import { useTimeBlocks, TimeBlock as DbTimeBlock } from '@/lib/hooks/use-time-blocks';
-import { startOfWeek, endOfWeek, addDays, addWeeks, addMonths } from 'date-fns';
+import { useTimeBlocks } from '@/lib/hooks/use-time-blocks';
+import { startOfWeek, endOfWeek, addWeeks, addMonths } from 'date-fns';
 import { BiweeklyCalendarView } from '@/components/features/time-audit/biweekly-calendar-view';
 import { MonthlyCalendarView } from '@/components/features/time-audit/monthly-calendar-view';
 import { ValuePieChart } from '@/components/features/time-audit/drip-pie-chart';
@@ -43,10 +43,7 @@ import { InsightsView } from '@/components/features/time-audit/insights-view';
 import { ChartsView } from '@/components/features/time-audit/charts-view';
 import { useLocalStorage } from '@/lib/hooks/use-local-storage';
 import { useTags } from '@/lib/hooks/use-tags';
-import { useEditPatterns } from '@/lib/hooks/use-edit-patterns';
-import { EditSuggestionBanner } from '@/components/features/time-audit/edit-suggestion-banner';
 import { EventList, EventListItem } from '@/components/features/time-audit/event-list';
-import { BulkDeleteDialog, CleanupSuggestions } from '@/components/features/time-audit/bulk-delete-dialog';
 import { cn } from '@/lib/utils';
 import { VALUE_QUADRANTS, ENERGY_RATINGS, getValueQuadrantConfig } from '@/constants/drip';
 import { ROUTES } from '@/constants/routes';
@@ -145,7 +142,6 @@ export default function TimeAuditPage() {
     fetchEvents: fetchGoogleEvents,
     clearCache: clearGoogleCache,
     removeEvent: removeGoogleEvent,
-    debugInfo: googleDebugInfo,
   } = useGoogleCalendar();
 
   // Database time blocks - fetch a wide range to support navigation
@@ -158,8 +154,6 @@ export default function TimeAuditPage() {
     updateTimeBlock,
     deleteTimeBlock,
     clearAllTimeBlocks,
-    clearGoogleSyncedBlocks,
-    importTimeBlocks,
     fetchTimeBlocks,
     refetch: refetchTimeBlocks,
     syncFromGoogle,
@@ -231,15 +225,6 @@ export default function TimeAuditPage() {
   const [initialTime, setInitialTime] = useState<string>();
   const [initialEndTime, setInitialEndTime] = useState<string>();
 
-  // Push to Google Calendar dialog
-  const [showPushDialog, setShowPushDialog] = useState(false);
-  const [pushingToCalendar, setPushingToCalendar] = useState(false);
-  const [blockToPush, setBlockToPush] = useState<TimeBlock | null>(null);
-
-  // Import progress
-  const [isImporting, setIsImporting] = useState(false);
-  const [importResult, setImportResult] = useState<{ imported: number; skipped: number } | null>(null);
-
   const { getUncategorizedEventIds, getCategorization, saveCategorization, categorizations, refreshFromStorage, clearCategorizations, clearCategorizationsForEvents, ignoreEvent, removeCategorization, isIgnored, unignoreEvent, ignoredEvents } = useEventPatterns();
 
   // Refresh key to trigger InsightsView refetch when categorizations change
@@ -249,13 +234,10 @@ export default function TimeAuditPage() {
     setInsightsRefreshKey(prev => prev + 1);
   }, [refreshFromStorage]);
 
-  const { tags, fetchTags, createTag, updateTag, deleteTag } = useTags();
+  const { tags, createTag, updateTag, deleteTag } = useTags();
 
   // Tag manager dialog state
   const [showTagManager, setShowTagManager] = useState(false);
-
-  // Edit pattern detection
-  const { trackEdit, getPatternSuggestion, dismissPattern } = useEditPatterns();
 
   const [showCategorizationDialog, setShowCategorizationDialog] = useState(false);
   const [categorizationDismissed, setCategorizationDismissed] = useState(false); // Track if user manually closed
@@ -268,13 +250,6 @@ export default function TimeAuditPage() {
   const [bulkValueQuadrant, setBulkValueQuadrant] = useState<ValueQuadrant | null>(null);
   const [bulkEnergyRating, setBulkEnergyRating] = useState<EnergyRating | null>(null);
 
-  // AI cleanup suggestions state
-  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
-  const [aiSuggestions, setAiSuggestions] = useState<CleanupSuggestions | null>(null);
-  const [isLoadingAiSuggestions, setIsLoadingAiSuggestions] = useState(false);
-
-  // Debug panel state
-  const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [syncTimeframe, setSyncTimeframe] = useLocalStorage<'1week' | '2weeks' | '1month'>('google-sync-timeframe', '1week');
 
   // Sidebar state
@@ -300,9 +275,6 @@ export default function TimeAuditPage() {
 
   // Callback for calendar views to report their current date range
   const handleDateRangeChange = useCallback((start: Date, end: Date) => {
-    const startStr = format(start, 'yyyy-MM-dd');
-    const endStr = format(end, 'yyyy-MM-dd');
-    console.log(`[handleDateRangeChange] Setting viewedDateRange: ${startStr} to ${endStr}`);
     setViewedDateRange({ start, end });
   }, []);
 
@@ -331,52 +303,33 @@ export default function TimeAuditPage() {
   // Uses ref to always get the LATEST viewedDateRange when the timeout fires
   // This prevents stale closure issues during rapid navigation
   useEffect(() => {
-    if (!isGoogleConnected) {
-      console.log('[Auto-Sync] Not connected, skipping');
-      return;
-    }
+    if (!isGoogleConnected) return;
 
-    // Get string representations for comparison
     const currentStartStr = format(viewedDateRange.start, 'yyyy-MM-dd');
     const currentEndStr = format(viewedDateRange.end, 'yyyy-MM-dd');
 
-    // Skip if we already fetched this exact range
     if (lastFetchedRangeRef.current?.start === currentStartStr &&
         lastFetchedRangeRef.current?.end === currentEndStr) {
-      console.log(`[Auto-Sync] Already fetched this range, skipping: ${currentStartStr} to ${currentEndStr}`);
       return;
     }
-
-    console.log(`[Auto-Sync] Scheduling fetch for: ${currentStartStr} to ${currentEndStr}`);
 
     // Debounce: wait 300ms after last navigation before fetching
     const timeoutId = setTimeout(() => {
       // Use the REF to get the LATEST viewedDateRange at execution time
-      // This is crucial - it ensures we fetch for the week the user ACTUALLY landed on
       const latestRange = viewedDateRangeRef.current;
       const latestStartStr = format(latestRange.start, 'yyyy-MM-dd');
       const latestEndStr = format(latestRange.end, 'yyyy-MM-dd');
 
-      // Double-check we haven't already fetched this range (might have happened via manual sync)
       if (lastFetchedRangeRef.current?.start === latestStartStr &&
           lastFetchedRangeRef.current?.end === latestEndStr) {
-        console.log(`[Auto-Sync] Already fetched (double-check), skipping: ${latestStartStr} to ${latestEndStr}`);
         return;
       }
 
-      console.log(`[Auto-Sync] FETCHING for week: ${latestStartStr} to ${latestEndStr}`);
-
-      // Mark this range as fetched BEFORE the async call to prevent duplicate requests
       lastFetchedRangeRef.current = { start: latestStartStr, end: latestEndStr };
-
       fetchGoogleEvents(latestRange.start, latestRange.end);
     }, 300);
 
-    // Cleanup: cancel pending fetch if viewedDateRange changes again
-    return () => {
-      console.log(`[Auto-Sync] Cancelled pending fetch (navigation changed from ${currentStartStr})`);
-      clearTimeout(timeoutId);
-    };
+    return () => clearTimeout(timeoutId);
   }, [viewedDateRange, isGoogleConnected, fetchGoogleEvents]);
 
   // Fetch Google events when connected - uses the currently viewed date range
@@ -401,9 +354,6 @@ export default function TimeAuditPage() {
     const syncStart = startOfWeek(viewedDateRange.start, { weekStartsOn: 0 });
     const syncEnd = calculateSyncEndDate(viewedDateRange.start, selectedTimeframe);
 
-    // Log for debugging
-    console.log(`[Google Sync] Manual sync ${selectedTimeframe}: ${format(syncStart, 'yyyy-MM-dd')} to ${format(syncEnd, 'yyyy-MM-dd')}`);
-
     // Update the lastFetchedRangeRef so auto-sync knows we've fetched this range
     lastFetchedRangeRef.current = {
       start: format(syncStart, 'yyyy-MM-dd'),
@@ -421,7 +371,6 @@ export default function TimeAuditPage() {
   } | null>(null);
 
   const handleSyncFromGoogle = useCallback(async () => {
-    console.log('[Time Audit] Starting reverse sync from Google Calendar...');
     setLastSyncFromGoogleResult(null);
 
     const result = await syncFromGoogle();
@@ -432,15 +381,6 @@ export default function TimeAuditPage() {
         deleted: result.deleted,
         errors: result.errors,
       });
-
-      // Show result in console for debugging
-      console.log('[Time Audit] Reverse sync complete:', result);
-
-      if (result.synced > 0 || result.deleted > 0) {
-        console.log(`[Time Audit] Updated ${result.synced} blocks, unlinked ${result.deleted} blocks`);
-      }
-    } else {
-      console.error('[Time Audit] Reverse sync failed:', result.errors);
     }
 
     // Clear result after 5 seconds
@@ -856,32 +796,9 @@ export default function TimeAuditPage() {
   }, [allTimeData]);
 
   // Get edit pattern suggestion
-  const patternSuggestion = useMemo(() => {
-    const blockInfos = timeBlocks.map(b => ({
-      id: b.id,
-      activityName: b.activityName,
-      valueQuadrant: b.valueQuadrant,
-      energyRating: b.energyRating,
-    }));
-    return getPatternSuggestion(blockInfos);
-  }, [timeBlocks, getPatternSuggestion]);
-
   // Handle saving a new or edited time block (saves to database and optionally syncs to Google Calendar)
   const handleSaveBlock = async (blockData: Omit<TimeBlock, 'id' | 'createdAt'>) => {
     if (editingBlock) {
-      // Track the edit for pattern detection
-      if (editingBlock.valueQuadrant !== blockData.valueQuadrant ||
-          editingBlock.energyRating !== blockData.energyRating) {
-        trackEdit(
-          editingBlock.id,
-          editingBlock.activityName,
-          editingBlock.valueQuadrant,
-          blockData.valueQuadrant,
-          editingBlock.energyRating,
-          blockData.energyRating
-        );
-      }
-
       // Check if this is a Google Calendar event being saved for the first time
       const isGoogleEvent = editingBlock.source === 'google_calendar' && editingBlock.externalEventId;
       const existsInDb = dbTimeBlocks.some(b => b.id === editingBlock.id);
@@ -1061,115 +978,6 @@ export default function TimeAuditPage() {
     setInitialTime(undefined);
   };
 
-  // Import categorized Google Calendar events to database
-  const handleImportCategorized = useCallback(async () => {
-    setIsImporting(true);
-    setImportResult(null);
-
-    try {
-      // Get all categorized Google events that aren't already imported
-      const importedExternalIds = new Set(
-        timeBlocks.filter(b => b.externalEventId).map(b => b.externalEventId)
-      );
-
-      const eventsToImport = googleEvents
-        .filter(event => {
-          // Skip if already imported
-          if (importedExternalIds.has(event.id)) {
-            return false;
-          }
-          // Only import categorized events
-          return getCategorization(event.id) !== null;
-        })
-        .map(event => {
-          const categorization = getCategorization(event.id)!;
-          const startDateTime = event.start?.dateTime || event.startTime;
-          const endDateTime = event.end?.dateTime || event.endTime;
-
-          const startDate = new Date(startDateTime!);
-          const endDate = new Date(endDateTime!);
-
-          return {
-            date: format(startDate, 'yyyy-MM-dd'),
-            startTime: format(startDate, 'HH:mm'),
-            endTime: format(endDate, 'HH:mm'),
-            activityName: event.summary || 'Untitled Event',
-            valueQuadrant: categorization.valueQuadrant,
-            energyRating: categorization.energyRating,
-            source: 'calendar_sync',
-            externalEventId: event.id,
-          };
-        });
-
-      if (eventsToImport.length === 0) {
-        setImportResult({ imported: 0, skipped: 0 });
-        return;
-      }
-
-      const result = await importTimeBlocks(eventsToImport);
-      setImportResult(result);
-
-      // Refresh data after import
-      await fetchTimeBlocks();
-    } catch (error) {
-      console.error('Import error:', error);
-      setImportResult({ imported: 0, skipped: 0 });
-    } finally {
-      setIsImporting(false);
-    }
-  }, [googleEvents, timeBlocks, getCategorization, importTimeBlocks, fetchTimeBlocks]);
-
-  // Push a time block to Google Calendar
-  const handlePushToCalendar = useCallback(async (block: TimeBlock) => {
-    if (!isGoogleConnected) return;
-
-    setPushingToCalendar(true);
-
-    try {
-      const startDateTime = new Date(`${block.date}T${block.startTime}:00`);
-      const endDateTime = new Date(`${block.date}T${block.endTime}:00`);
-
-      const response = await fetch('/api/calendar/google/events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          summary: block.activityName,
-          description: `Value: ${block.valueQuadrant} | Energy: ${block.energyRating}`,
-          start: startDateTime.toISOString(),
-          end: endDateTime.toISOString(),
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create calendar event');
-      }
-
-      setShowPushDialog(false);
-      setBlockToPush(null);
-
-      // Refresh Google events
-      handleSyncGoogle();
-    } catch (error) {
-      console.error('Push to calendar error:', error);
-    } finally {
-      setPushingToCalendar(false);
-    }
-  }, [isGoogleConnected, handleSyncGoogle]);
-
-  // Count categorized events ready for import
-  const categorizedNotImportedCount = useMemo(() => {
-    const importedExternalIds = new Set(
-      timeBlocks.filter(b => b.externalEventId).map(b => b.externalEventId)
-    );
-
-    return googleEvents.filter(event => {
-      if (importedExternalIds.has(event.id)) {
-        return false;
-      }
-      return getCategorization(event.id) !== null;
-    }).length;
-  }, [googleEvents, timeBlocks, getCategorization]);
-
   // Handle clicking on the calendar to add a block (receives Date object from WeeklyCalendarView)
   // Supports optional endTime from drag-to-select
   const handleAddBlock = (date: Date, startTime: string, endTime?: string) => {
@@ -1233,46 +1041,6 @@ export default function TimeAuditPage() {
     setIsFormOpen(true);
   };
 
-  // Handle applying pattern suggestion to all matching blocks
-  const handleApplyPattern = async () => {
-    if (!patternSuggestion) return;
-
-    const updates: { valueQuadrant?: ValueQuadrant; energyRating?: EnergyRating } = {};
-    if (patternSuggestion.suggestedValue) {
-      updates.valueQuadrant = patternSuggestion.suggestedValue;
-    }
-    if (patternSuggestion.suggestedEnergy) {
-      updates.energyRating = patternSuggestion.suggestedEnergy;
-    }
-
-    try {
-      const response = await fetch('/api/time-blocks/bulk-update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          blockIds: patternSuggestion.matchingBlockIds,
-          updates,
-        }),
-      });
-
-      if (response.ok) {
-        // Dismiss the pattern after successful apply
-        dismissPattern(patternSuggestion.normalizedName);
-        // Refresh time blocks to show updated data
-        await fetchTimeBlocks();
-      }
-    } catch (error) {
-      console.error('Failed to apply pattern:', error);
-    }
-  };
-
-  // Handle dismissing pattern suggestion
-  const handleDismissPattern = () => {
-    if (patternSuggestion) {
-      dismissPattern(patternSuggestion.normalizedName);
-    }
-  };
-
   // Handle clearing synced Google Calendar data, categorizations, and all time blocks
   const handleClearSyncedData = useCallback(async () => {
     clearGoogleCache();
@@ -1282,41 +1050,6 @@ export default function TimeAuditPage() {
     // Reset lastFetchedRange so next navigation triggers a fresh fetch
     lastFetchedRangeRef.current = null;
   }, [clearGoogleCache, clearCategorizations, setLocalTimeBlocks, clearAllTimeBlocks]);
-
-  // State for reset & re-sync operation
-  const [isResettingSync, setIsResettingSync] = useState(false);
-
-  // Handle Reset & Re-sync: clears only Google-synced blocks (keeps manual entries), then re-fetches
-  const handleResetAndResync = useCallback(async () => {
-    setIsResettingSync(true);
-    try {
-      // Step 1: Clear Google-synced blocks from database (keeps manual entries)
-      const result = await clearGoogleSyncedBlocks();
-      console.log(`[Reset & Re-sync] Cleared ${result.deletedCount} Google-synced blocks`);
-
-      // Step 2: Clear Google events cache from localStorage
-      clearGoogleCache();
-
-      // Step 3: Clear categorizations (event patterns)
-      clearCategorizations();
-
-      // Step 4: Reset lastFetchedRange so we can re-fetch
-      lastFetchedRangeRef.current = null;
-
-      // Step 5: Re-fetch from Google Calendar
-      const syncStart = startOfWeek(viewedDateRange.start, { weekStartsOn: 0 });
-      const syncEnd = calculateSyncEndDate(viewedDateRange.start, syncTimeframe);
-      console.log(`[Reset & Re-sync] Fetching fresh events: ${format(syncStart, 'yyyy-MM-dd')} to ${format(syncEnd, 'yyyy-MM-dd')}`);
-
-      await fetchGoogleEvents(syncStart, syncEnd);
-
-      console.log('[Reset & Re-sync] Complete!');
-    } catch (error) {
-      console.error('[Reset & Re-sync] Error:', error);
-    } finally {
-      setIsResettingSync(false);
-    }
-  }, [clearGoogleSyncedBlocks, clearGoogleCache, clearCategorizations, viewedDateRange.start, calculateSyncEndDate, syncTimeframe, fetchGoogleEvents]);
 
   // Handle clearing categorizations for the current week only
   const handleClearWeekCategorizations = useCallback(async () => {
@@ -1347,79 +1080,6 @@ export default function TimeAuditPage() {
     // 3. Refetch time blocks to update local state with the reset values
     await refetchTimeBlocks();
   }, [googleEvents, clearCategorizationsForEvents, refetchTimeBlocks]);
-
-  // State for calendar sync verification
-  const [isVerifyingSyncOpen, setIsVerifyingSyncOpen] = useState(false);
-  const [verificationResults, setVerificationResults] = useState<Array<{
-    eventId: string;
-    eventName: string;
-    googleDate: string;
-    googleStartTime: string;
-    googleEndTime: string;
-    timeAuditDate: string;
-    timeAuditStartTime: string;
-    timeAuditEndTime: string;
-    isSynced: boolean;
-    issues: string[];
-  }>>([]);
-  const [isVerifying, setIsVerifying] = useState(false);
-
-  // Handle verifying calendar sync
-  const handleVerifySync = useCallback(async () => {
-    setIsVerifying(true);
-    setIsVerifyingSyncOpen(true);
-    const results: typeof verificationResults = [];
-
-    try {
-      // For each Google Calendar event, compare with what Time Audit shows
-      googleEvents.forEach((event) => {
-        // Get the pre-extracted values (what Time Audit should show)
-        const googleDate = event.date || '';
-        const googleStartTime = event.startTime || '';
-        const googleEndTime = event.endTime || '';
-
-        // Find matching block in calendarTimeBlocks
-        const matchingBlocks = Object.entries(calendarTimeBlocks).flatMap(([date, blocks]) =>
-          blocks.filter(b => b.id === event.id || b.externalEventId === event.id)
-            .map(b => ({ ...b, date }))
-        );
-
-        const matchingBlock = matchingBlocks[0];
-
-        const timeAuditDate = matchingBlock?.date || 'Not found';
-        const timeAuditStartTime = matchingBlock?.startTime || 'N/A';
-        const timeAuditEndTime = matchingBlock?.endTime || 'N/A';
-
-        const issues: string[] = [];
-        if (googleDate !== timeAuditDate) {
-          issues.push(`Date mismatch: Google=${googleDate}, TimeAudit=${timeAuditDate}`);
-        }
-        if (googleStartTime !== timeAuditStartTime) {
-          issues.push(`Start time mismatch: Google=${googleStartTime}, TimeAudit=${timeAuditStartTime}`);
-        }
-        if (googleEndTime !== timeAuditEndTime) {
-          issues.push(`End time mismatch: Google=${googleEndTime}, TimeAudit=${timeAuditEndTime}`);
-        }
-
-        results.push({
-          eventId: event.id,
-          eventName: event.summary || 'Untitled Event',
-          googleDate,
-          googleStartTime,
-          googleEndTime,
-          timeAuditDate,
-          timeAuditStartTime,
-          timeAuditEndTime,
-          isSynced: issues.length === 0,
-          issues,
-        });
-      });
-
-      setVerificationResults(results);
-    } finally {
-      setIsVerifying(false);
-    }
-  }, [googleEvents, calendarTimeBlocks]);
 
   // Handle deleting a time block (and optionally from Google Calendar)
   const handleDeleteBlock = useCallback(async (block: TimeBlock) => {
@@ -1526,73 +1186,6 @@ export default function TimeAuditPage() {
       setIsDeletingEvent(false);
     }
   }, [dbTimeBlocks, deleteTimeBlock, setLocalTimeBlocks, isGoogleConnected, fetchTimeBlocks, removeGoogleEvent]);
-
-  // Fetch AI cleanup suggestions
-  const fetchAiCleanupSuggestions = useCallback(async () => {
-    setIsLoadingAiSuggestions(true);
-    setShowBulkDeleteDialog(true);
-    setAiSuggestions(null);
-
-    try {
-      const response = await fetch('/api/ai/suggest-event-cleanup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ events: manageEventsList }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch AI suggestions');
-      }
-
-      const data = await response.json();
-      setAiSuggestions(data.suggestions);
-    } catch (error) {
-      console.error('Error fetching AI suggestions:', error);
-    } finally {
-      setIsLoadingAiSuggestions(false);
-    }
-  }, [manageEventsList]);
-
-  // Handle bulk delete from AI suggestions
-  const handleBulkDelete = useCallback(async (eventIds: string[]) => {
-    // Prevent categorization popup from showing after bulk delete
-    setCategorizationDismissed(true);
-
-    for (const eventId of eventIds) {
-      const event = manageEventsList.find(e => e.id === eventId);
-      if (event) {
-        // Immediately remove from Google events state for instant UI update
-        if (event.externalEventId) {
-          removeGoogleEvent(event.externalEventId);
-        }
-        removeGoogleEvent(event.id);
-
-        // If it's a Google Calendar event, delete from Google Calendar
-        if (event.externalEventId && isGoogleConnected) {
-          const googleEventId = event.externalEventId.replace('gcal_', '');
-          try {
-            await fetch(`/api/calendar/google/events?eventId=${googleEventId}`, {
-              method: 'DELETE',
-            });
-          } catch (error) {
-            console.error('Error deleting from Google Calendar:', error);
-          }
-        }
-
-        // Delete from database if it exists there
-        const existsInDb = dbTimeBlocks.some(b => b.id === event.id);
-        if (existsInDb) {
-          await deleteTimeBlock(event.id);
-        }
-
-        // Remove from local storage
-        setLocalTimeBlocks(blocks => blocks.filter(b => b.id !== event.id));
-      }
-    }
-
-    // Fetch updated time blocks from database
-    await fetchTimeBlocks();
-  }, [manageEventsList, dbTimeBlocks, deleteTimeBlock, setLocalTimeBlocks, isGoogleConnected, fetchTimeBlocks, removeGoogleEvent]);
 
   // Handle moving/resizing a time block (drag-drop or resize)
   const handleBlockMove = useCallback(async (
@@ -1858,26 +1451,11 @@ export default function TimeAuditPage() {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
-                      onClick={handleResetAndResync}
-                      disabled={isResettingSync || isLoadingGoogle}
-                      className="text-orange-600 dark:text-orange-400"
-                    >
-                      <RefreshCw className={`h-4 w-4 mr-2 ${isResettingSync ? 'animate-spin' : ''}`} />
-                      {isResettingSync ? 'Resetting...' : 'Reset & Re-sync'}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
                       onClick={handleClearWeekCategorizations}
                       disabled={googleEvents.length === 0}
                     >
                       <Eraser className="h-4 w-4 mr-2" />
                       Clear Week Categorizations
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={handleVerifySync}
-                      disabled={isVerifying || googleEvents.length === 0}
-                    >
-                      <ListChecks className={`h-4 w-4 mr-2 ${isVerifying ? 'animate-pulse' : ''}`} />
-                      {isVerifying ? 'Verifying...' : 'Verify Calendar Sync'}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -1903,18 +1481,6 @@ export default function TimeAuditPage() {
                   </Badge>
                   <span className="hidden md:inline">Categorize</span> Events
                 </Button>
-                {categorizedNotImportedCount > 0 && (
-                  <Button
-                    variant="default"
-                    onClick={handleImportCategorized}
-                    disabled={isImporting}
-                    size="sm"
-                    className="hidden md:flex"
-                  >
-                    <Upload className={`h-4 w-4 mr-2 ${isImporting ? 'animate-pulse' : ''}`} />
-                    Import {categorizedNotImportedCount}
-                  </Button>
-                )}
                 {(googleEvents.length > 0 || timeBlocks.length > 0) && (
                   <Button
                     variant="outline"
@@ -2078,99 +1644,6 @@ export default function TimeAuditPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Calendar Sync Verification Dialog */}
-      <Dialog open={isVerifyingSyncOpen} onOpenChange={setIsVerifyingSyncOpen}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Calendar Sync Verification</DialogTitle>
-            <DialogDescription>
-              Comparing Google Calendar events with Time Audit display
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            {/* Summary */}
-            <div className="flex gap-4 p-4 bg-muted rounded-lg">
-              <div className="text-center">
-                <div className="text-2xl font-bold">{verificationResults.length}</div>
-                <div className="text-sm text-muted-foreground">Total Events</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
-                  {verificationResults.filter(r => r.isSynced).length}
-                </div>
-                <div className="text-sm text-muted-foreground">In Sync ✓</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-orange-600">
-                  {verificationResults.filter(r => !r.isSynced).length}
-                </div>
-                <div className="text-sm text-muted-foreground">Issues ⚠️</div>
-              </div>
-            </div>
-
-            {/* Results Table */}
-            {verificationResults.filter(r => !r.isSynced).length > 0 && (
-              <div>
-                <h4 className="font-semibold mb-2 text-orange-600">Events with Issues</h4>
-                <div className="border rounded-lg overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead className="bg-muted">
-                      <tr>
-                        <th className="p-2 text-left">Event</th>
-                        <th className="p-2 text-left">Google Calendar</th>
-                        <th className="p-2 text-left">Time Audit</th>
-                        <th className="p-2 text-left">Issues</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {verificationResults.filter(r => !r.isSynced).map((result) => (
-                        <tr key={result.eventId} className="border-t">
-                          <td className="p-2 font-medium">{result.eventName}</td>
-                          <td className="p-2">
-                            <div>{result.googleDate}</div>
-                            <div className="text-muted-foreground">
-                              {result.googleStartTime} - {result.googleEndTime}
-                            </div>
-                          </td>
-                          <td className="p-2">
-                            <div>{result.timeAuditDate}</div>
-                            <div className="text-muted-foreground">
-                              {result.timeAuditStartTime} - {result.timeAuditEndTime}
-                            </div>
-                          </td>
-                          <td className="p-2 text-orange-600">
-                            {result.issues.map((issue, i) => (
-                              <div key={i} className="text-xs">{issue}</div>
-                            ))}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {verificationResults.filter(r => r.isSynced).length > 0 && (
-              <div>
-                <h4 className="font-semibold mb-2 text-green-600">
-                  Events in Sync ({verificationResults.filter(r => r.isSynced).length})
-                </h4>
-                <div className="text-sm text-muted-foreground">
-                  {verificationResults.filter(r => r.isSynced).map(r => r.eventName).slice(0, 10).join(', ')}
-                  {verificationResults.filter(r => r.isSynced).length > 10 && '...'}
-                </div>
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsVerifyingSyncOpen(false)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* Summary Stats */}
       <TimeSummaryStats
         totalMinutes={stats.totalMinutes}
@@ -2181,15 +1654,6 @@ export default function TimeAuditPage() {
 
       {/* Work Summary (day markers) */}
       <WorkSummaryCard timeData={allTimeData} />
-
-      {/* Edit Pattern Suggestion Banner */}
-      {patternSuggestion && (
-        <EditSuggestionBanner
-          pattern={patternSuggestion}
-          onApply={handleApplyPattern}
-          onDismiss={handleDismissPattern}
-        />
-      )}
 
       {/* Main Content - Top Level Tabs */}
       <Tabs value={mainTab} onValueChange={(v) => setMainTab(v as 'calendar' | 'insights' | 'manage' | 'charts')} className="space-y-4">
@@ -2263,24 +1727,6 @@ export default function TimeAuditPage() {
                 </Button>
               </div>
 
-              {/* Quick Debug Strip for Calendar Tab */}
-              {showDebugPanel && (
-                <div className="mt-2 p-2 bg-muted rounded-md text-xs font-mono flex flex-wrap gap-4 items-center">
-                  <span>📊 DB: <strong className="text-blue-600">{timeBlocks.length}</strong></span>
-                  <span>🌐 Google: <strong className="text-purple-600">{googleEvents.length}</strong></span>
-                  <span>📅 On Calendar: <strong className="text-cyan-600">
-                    {Object.entries(calendarTimeBlocks)
-                      .filter(([date]) => {
-                        const viewStartStr = format(viewedDateRange.start, 'yyyy-MM-dd');
-                        const viewEndStr = format(viewedDateRange.end, 'yyyy-MM-dd');
-                        return date >= viewStartStr && date <= viewEndStr;
-                      })
-                      .reduce((sum, [, blocks]) => sum + blocks.length, 0)}
-                  </strong></span>
-                  <span>⏳ Loading: <strong className={isLoadingGoogle ? 'text-orange-600' : 'text-cyan-600'}>{isLoadingGoogle ? 'Yes' : 'No'}</strong></span>
-                  <span>📆 Range: {format(viewedDateRange.start, 'MMM d')} - {format(viewedDateRange.end, 'MMM d')}</span>
-                </div>
-              )}
             </TabsContent>
 
             <TabsContent value="biweekly">
@@ -2578,38 +2024,8 @@ export default function TimeAuditPage() {
                     View Value Matrix
                   </Link>
                 </Button>
-                {isGoogleConnected && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full justify-start text-xs h-8"
-                    onClick={() => {
-                      const recentBlock = timeBlocks[timeBlocks.length - 1];
-                      if (recentBlock && !recentBlock.externalEventId) {
-                        setBlockToPush(recentBlock);
-                        setShowPushDialog(true);
-                      }
-                    }}
-                    disabled={timeBlocks.length === 0}
-                  >
-                    <ArrowUpRight className="h-3 w-3 mr-1" />
-                    Push to Calendar
-                  </Button>
-                )}
               </CardContent>
             </Card>
-
-            {/* Import Result Notification */}
-            {importResult && (
-              <Card className="bg-cyan-50 dark:bg-cyan-900/20 border-cyan-200 dark:border-cyan-800 p-0">
-                <CardContent className="p-2">
-                  <p className="text-xs text-cyan-800 dark:text-cyan-200">
-                    Imported {importResult.imported}
-                    {importResult.skipped > 0 && ` (${importResult.skipped} skipped)`}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
           </div>
         )}
       </div>
@@ -2641,7 +2057,6 @@ export default function TimeAuditPage() {
                 events={manageEventsList}
                 dateRange={viewedDateRange}
                 onDelete={handleEventListDelete}
-                onAISuggest={fetchAiCleanupSuggestions}
                 isLoading={isLoadingDb || isLoadingGoogle}
                 isDeleting={isDeletingEvent}
               />
@@ -2709,136 +2124,6 @@ export default function TimeAuditPage() {
             </Card>
           )}
 
-          {/* Debug Panel */}
-          <Card className="mt-4">
-            <CardHeader className="py-3">
-              <Button
-                variant="ghost"
-                className="w-full justify-between"
-                onClick={() => setShowDebugPanel(!showDebugPanel)}
-              >
-                <span className="flex items-center gap-2 text-sm font-medium">
-                  🐛 Debug Info
-                </span>
-                <ChevronRight className={`h-4 w-4 transition-transform ${showDebugPanel ? 'rotate-90' : ''}`} />
-              </Button>
-            </CardHeader>
-            {showDebugPanel && (
-              <CardContent className="pt-0">
-                <div className="space-y-4 text-xs font-mono">
-                  {/* Connection Status */}
-                  <div>
-                    <h4 className="font-semibold mb-2 text-sm">Connection Status</h4>
-                    <div className="space-y-1 bg-muted p-3 rounded-md">
-                      <p>Google Connected: <span className={isGoogleConnected ? 'text-cyan-600' : 'text-red-600'}>{isGoogleConnected ? 'Yes' : 'No'}</span></p>
-                      <p>Loading: {isLoadingGoogle ? 'Yes' : 'No'}</p>
-                      <p>Events in state: {googleEvents.length}</p>
-                    </div>
-                  </div>
-
-                  {/* Current View Range */}
-                  <div>
-                    <h4 className="font-semibold mb-2 text-sm">Current View Range</h4>
-                    <div className="bg-muted p-3 rounded-md">
-                      <p>Start: {format(viewedDateRange.start, 'yyyy-MM-dd HH:mm:ss')}</p>
-                      <p>End: {format(viewedDateRange.end, 'yyyy-MM-dd HH:mm:ss')}</p>
-                    </div>
-                  </div>
-
-                  {/* Calendar Data Stats */}
-                  <div>
-                    <h4 className="font-semibold mb-2 text-sm">Calendar Data</h4>
-                    <div className="space-y-1 bg-muted p-3 rounded-md">
-                      <p>Time Blocks (DB): <span className="text-blue-600">{timeBlocks.length}</span></p>
-                      <p>Google Events (state): <span className="text-purple-600">{googleEvents.length}</span></p>
-                      <p>Uncategorized Events: <span className={uncategorizedCount > 0 ? 'text-orange-600' : 'text-cyan-600'}>{uncategorizedCount}</span></p>
-                      <p>All Time Data (for stats): <span className="text-cyan-600">{allTimeData.length}</span></p>
-                      <p className="mt-2 font-semibold">Events on Calendar by Date:</p>
-                      {Object.entries(calendarTimeBlocks).length === 0 ? (
-                        <p className="text-red-600">No events in calendarTimeBlocks!</p>
-                      ) : (
-                        <div className="pl-2 max-h-32 overflow-y-auto">
-                          {Object.entries(calendarTimeBlocks)
-                            .filter(([date]) => {
-                              const viewStartStr = format(viewedDateRange.start, 'yyyy-MM-dd');
-                              const viewEndStr = format(viewedDateRange.end, 'yyyy-MM-dd');
-                              return date >= viewStartStr && date <= viewEndStr;
-                            })
-                            .sort(([a], [b]) => a.localeCompare(b))
-                            .map(([date, blocks]) => (
-                              <p key={date}>
-                                {date}: <span className="text-cyan-600">{blocks.length} events</span>
-                              </p>
-                            ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Google Events Sample */}
-                  <div>
-                    <h4 className="font-semibold mb-2 text-sm">Google Events Sample (first 5)</h4>
-                    <div className="bg-muted p-3 rounded-md max-h-40 overflow-y-auto">
-                      {googleEvents.length === 0 ? (
-                        <p className="text-red-600">No Google events in state</p>
-                      ) : (
-                        googleEvents.slice(0, 5).map((event, i) => (
-                          <div key={event.id} className="mb-2 pb-2 border-b border-muted-foreground/20 last:border-0">
-                            <p className="font-semibold">{i + 1}. {event.summary}</p>
-                            <p className="text-muted-foreground">
-                              {event.date && event.startTime ? `${event.date} ${event.startTime}` : 'No date'}
-                            </p>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-
-                  {/* API Debug Info */}
-                  {googleDebugInfo && (
-                    <div>
-                      <h4 className="font-semibold mb-2 text-sm">Last API Response Debug</h4>
-                      <div className="bg-muted p-3 rounded-md overflow-x-auto max-h-48 overflow-y-auto">
-                        <pre className="whitespace-pre-wrap break-all">{JSON.stringify(googleDebugInfo, null, 2)}</pre>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Sync Actions */}
-                  <div className="flex gap-2 flex-wrap">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleSyncGoogle()}
-                      disabled={isLoadingGoogle}
-                    >
-                      Force Sync
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => clearGoogleCache()}
-                    >
-                      Clear Cache
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        console.log('[Debug] googleEvents:', googleEvents);
-                        console.log('[Debug] calendarTimeBlocks:', calendarTimeBlocks);
-                        console.log('[Debug] timeBlocks:', timeBlocks);
-                        console.log('[Debug] allTimeData:', allTimeData);
-                        console.log('[Debug] viewedDateRange:', viewedDateRange);
-                      }}
-                    >
-                      Log to Console
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            )}
-          </Card>
         </TabsContent>
 
         <TabsContent value="charts" className="mt-4">
@@ -2880,81 +2165,6 @@ export default function TimeAuditPage() {
         </Button>
       </div>
 
-      {/* Push to Google Calendar Dialog */}
-      <Dialog open={showPushDialog} onOpenChange={setShowPushDialog}>
-        <DialogContent draggable>
-          <DialogHeader draggable>
-            <DialogTitle>Push to Google Calendar</DialogTitle>
-            <DialogDescription>
-              Drag to move • Create this time block as an event in your Google Calendar.
-            </DialogDescription>
-          </DialogHeader>
-          {blockToPush && (
-            <div className="space-y-4">
-              <div className="p-4 rounded-lg bg-muted">
-                <h4 className="font-medium">{blockToPush.activityName}</h4>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {blockToPush.date} &bull; {blockToPush.startTime} - {blockToPush.endTime}
-                </p>
-                <div className="flex gap-2 mt-2">
-                  <Badge variant="outline" className="capitalize">
-                    {blockToPush.valueQuadrant}
-                  </Badge>
-                  <Badge
-                    variant="outline"
-                    className={
-                      blockToPush.energyRating === 'green'
-                        ? 'text-cyan-600 border-cyan-300'
-                        : blockToPush.energyRating === 'red'
-                        ? 'text-red-600 border-red-300'
-                        : 'text-yellow-600 border-yellow-300'
-                    }
-                  >
-                    {blockToPush.energyRating}
-                  </Badge>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowPushDialog(false);
-                    setBlockToPush(null);
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={() => handlePushToCalendar(blockToPush)}
-                  disabled={pushingToCalendar}
-                >
-                  {pushingToCalendar ? (
-                    <>
-                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      Creating...
-                    </>
-                  ) : (
-                    <>
-                      <ArrowUpRight className="h-4 w-4 mr-2" />
-                      Create Event
-                    </>
-                  )}
-                </Button>
-              </DialogFooter>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* AI Bulk Delete Dialog */}
-      <BulkDeleteDialog
-        open={showBulkDeleteDialog}
-        onOpenChange={setShowBulkDeleteDialog}
-        suggestions={aiSuggestions}
-        isLoading={isLoadingAiSuggestions}
-        onDelete={handleBulkDelete}
-        onRefresh={fetchAiCleanupSuggestions}
-      />
     </div>
   );
 }
