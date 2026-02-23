@@ -164,7 +164,7 @@ describe('Vuln 3: Invite accept requires email verification', () => {
   });
 
   function makeRequest(body?: unknown) {
-    const init: RequestInit = { method: 'POST' };
+    const init: { method: string; body?: string; headers?: Record<string, string> } = { method: 'POST' };
     if (body !== undefined) {
       init.body = JSON.stringify(body);
       init.headers = { 'Content-Type': 'application/json' };

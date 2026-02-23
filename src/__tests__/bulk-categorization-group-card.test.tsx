@@ -53,7 +53,8 @@ describe('GroupCard - Redesigned with all-visible chips', () => {
     expect(screen.getByText('Replacement')).toBeInTheDocument();
     expect(screen.getByText('Investment')).toBeInTheDocument();
     expect(screen.getByText('Production')).toBeInTheDocument();
-    expect(screen.getByText('N/A')).toBeInTheDocument();
+    // The 'na' quadrant is named 'Personal' in VALUE_QUADRANTS
+    expect(screen.getAllByText('Personal').length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders all Energy Rating chips without any toggle', () => {
