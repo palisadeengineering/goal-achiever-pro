@@ -758,6 +758,9 @@ export function WeeklyCalendarView({
   const [currentTime, setCurrentTime] = useState(new Date());
   const calendarGridRef = useRef<HTMLDivElement>(null);
   const lastCalculatedDropRef = useRef<{ date: string; time: string } | null>(null);
+  // Tracks how far below the event's top edge the user grabbed during drag.
+  // Used to prevent events from "sliding down" when dragged or clicked.
+  const dragGrabOffsetRef = useRef<number>(0);
 
   // Multi-select state (Ctrl+Click)
   const [selectedBlockIds, setSelectedBlockIds] = useState<Set<string>>(new Set());
@@ -869,7 +872,7 @@ export function WeeklyCalendarView({
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: { distance: 10, delay: 100, tolerance: 5 },
+      activationConstraint: { distance: 10, delay: 250, tolerance: 5 },
     })
   );
 
@@ -904,9 +907,10 @@ export function WeeklyCalendarView({
     const dayColumnWidth = (gridRect.width - TIME_COLUMN_WIDTH) / 7;
     const dayIndex = Math.min(6, Math.max(0, Math.floor(relativeX / dayColumnWidth)));
 
-    // Calculate Y position relative to grid content
-    // The grid content starts at the top of calendarGridRef
-    const relativeY = (pointerCoordinates.y - gridRect.top) + scrollTop;
+    // Calculate Y position relative to grid content.
+    // Subtract grab offset so the drop position maps to the event's intended
+    // top edge, not to where the pointer is within the event.
+    const relativeY = (pointerCoordinates.y - gridRect.top) + scrollTop - dragGrabOffsetRef.current;
 
     // Convert pixel position to minutes
     const totalMinutesFromTop = (relativeY / HOUR_HEIGHT) * 60;
@@ -1225,7 +1229,32 @@ export function WeeklyCalendarView({
 
   const handleDragStart = (event: DragStartEvent) => {
     const block = event.active.data.current?.block as TimeBlock;
-    if (block) setActiveBlock(block);
+    if (block) {
+      setActiveBlock(block);
+
+      // Calculate grab offset: how far below the event's top edge the user grabbed.
+      // Without this, dragging from the middle of an event makes it "slide down"
+      // because the drop position maps to where the pointer is, not the event top.
+      const activatorEvent = event.activatorEvent as PointerEvent | null;
+      if (activatorEvent && calendarGridRef.current) {
+        const gridRect = calendarGridRef.current.getBoundingClientRect();
+        const scrollContainer = calendarGridRef.current.closest('.overflow-y-auto') as HTMLElement | null;
+        const scrollTop = scrollContainer?.scrollTop || 0;
+
+        // Pointer position in grid-content coordinates
+        const pointerGridY = (activatorEvent.clientY - gridRect.top) + scrollTop;
+
+        // Event top position in grid-content coordinates
+        const [startHour, startMin] = block.startTime.split(':').map(Number);
+        const startMins = startHour * 60 + startMin;
+        const calendarStartMins = settings.calendarStartHour * 60;
+        const eventTopGridY = ((startMins - calendarStartMins) / 60) * HOUR_HEIGHT;
+
+        dragGrabOffsetRef.current = pointerGridY - eventTopGridY;
+      } else {
+        dragGrabOffsetRef.current = 0;
+      }
+    }
   };
 
   const SNAP_THRESHOLD_MINS = 30;
@@ -1266,6 +1295,7 @@ export function WeeklyCalendarView({
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveBlock(null);
+    dragGrabOffsetRef.current = 0;
 
     if (!onBlockMove) {
       lastCalculatedDropRef.current = null;

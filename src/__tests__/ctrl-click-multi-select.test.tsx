@@ -152,8 +152,8 @@ describe('Ctrl+Click multi-select on calendar events', () => {
     ],
   };
 
-  let onBulkCategorize: ReturnType<typeof vi.fn>;
-  let onBlockClick: ReturnType<typeof vi.fn>;
+  let onBulkCategorize: (...args: unknown[]) => void;
+  let onBlockClick: (...args: unknown[]) => void;
 
   beforeEach(() => {
     onBulkCategorize = vi.fn();
@@ -361,6 +361,6 @@ describe('Ctrl+Click multi-select on calendar events', () => {
     });
 
     expect(onBulkCategorize).toHaveBeenCalledTimes(1);
-    expect(onBulkCategorize.mock.calls[0][0]).toHaveLength(2);
+    expect((onBulkCategorize as ReturnType<typeof vi.fn>).mock.calls[0][0]).toHaveLength(2);
   });
 });
