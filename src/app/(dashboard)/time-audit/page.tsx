@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Calendar, CalendarDays, CalendarRange, Lock, RefreshCw, ChevronDown, BarChart3, ListChecks, Trash2, PanelRightClose, PanelRight, Settings2, EyeOff, Eye, Download, Eraser } from 'lucide-react';
+import { Plus, Calendar, CalendarDays, CalendarRange, RefreshCw, ChevronDown, BarChart3, ListChecks, Trash2, PanelRightClose, PanelRight, Settings2, EyeOff, Eye, Download, Eraser } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,8 +51,6 @@ import { expandRecurringEvents } from '@/lib/utils/recurrence';
 import type { ValueQuadrant, EnergyRating } from '@/types/database';
 import { ShareButton } from '@/components/features/sharing';
 
-type SubscriptionTier = 'free' | 'pro' | 'elite';
-
 // Helper to normalize time format to HH:mm (handles both HH:mm and HH:mm:ss formats)
 function normalizeTimeFormat(time: string): string {
   // If time already has seconds (HH:mm:ss), strip them
@@ -84,14 +82,6 @@ interface CalendarTimeBlock {
 }
 
 
-function checkProAccess(tier: SubscriptionTier): boolean {
-  return tier === 'pro' || tier === 'elite';
-}
-
-function checkEliteAccess(tier: SubscriptionTier): boolean {
-  return tier === 'elite';
-}
-
 // Calculate duration in minutes between two time strings
 function calculateDuration(startTime: string, endTime: string): number {
   const [startHour, startMin] = startTime.split(':').map(Number);
@@ -121,11 +111,6 @@ export default function TimeAuditPage() {
       window.location.reload();
     }
   }, [searchParams]);
-
-  // In real app, check user subscription tier from database
-  const userTier: SubscriptionTier = 'elite'; // Temporarily set to elite for testing
-  const hasProAccess = checkProAccess(userTier);
-  const hasEliteAccess = checkEliteAccess(userTier);
 
   // Get current week date range for initial fetch
   // Use weekStartsOn: 0 (Sunday) to match WeeklyCalendarView's default
@@ -1686,15 +1671,13 @@ export default function TimeAuditPage() {
                 <Calendar className="h-4 w-4" />
                 Weekly
               </TabsTrigger>
-              <TabsTrigger value="biweekly" className="gap-2" disabled={!hasProAccess}>
+              <TabsTrigger value="biweekly" className="gap-2">
                 <CalendarDays className="h-4 w-4" />
                 Bi-weekly
-                {!hasProAccess && <Lock className="h-3 w-3" />}
               </TabsTrigger>
-              <TabsTrigger value="monthly" className="gap-2" disabled={!hasEliteAccess}>
+              <TabsTrigger value="monthly" className="gap-2">
                 <CalendarRange className="h-4 w-4" />
                 Monthly
-                {!hasEliteAccess && <Lock className="h-3 w-3" />}
               </TabsTrigger>
             </TabsList>
 
@@ -1730,45 +1713,11 @@ export default function TimeAuditPage() {
             </TabsContent>
 
             <TabsContent value="biweekly">
-              {hasProAccess ? (
-                <BiweeklyCalendarView timeBlocks={timeBlocks} onDateRangeChange={handleDateRangeChange} />
-              ) : (
-                <Card className="py-12">
-                  <CardContent className="flex flex-col items-center justify-center text-center">
-                    <Lock className="h-12 w-12 text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Bi-weekly View</h3>
-                    <p className="text-muted-foreground mb-4 max-w-md">
-                      Compare two weeks side-by-side to identify patterns and trends in your time usage.
-                    </p>
-                    <Button asChild>
-                      <Link href={ROUTES.settingsSubscription}>
-                        Upgrade to Pro
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
+              <BiweeklyCalendarView timeBlocks={timeBlocks} onDateRangeChange={handleDateRangeChange} />
             </TabsContent>
 
             <TabsContent value="monthly">
-              {hasEliteAccess ? (
-                <MonthlyCalendarView timeBlocks={timeBlocks} onDateRangeChange={handleDateRangeChange} />
-              ) : (
-                <Card className="py-12">
-                  <CardContent className="flex flex-col items-center justify-center text-center">
-                    <Lock className="h-12 w-12 text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Monthly View</h3>
-                    <p className="text-muted-foreground mb-4 max-w-md">
-                      Get a bird&apos;s eye view of your entire month with detailed Value breakdowns for each day.
-                    </p>
-                    <Button asChild>
-                      <Link href={ROUTES.settingsSubscription}>
-                        Upgrade to Elite
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
+              <MonthlyCalendarView timeBlocks={timeBlocks} onDateRangeChange={handleDateRangeChange} />
             </TabsContent>
           </Tabs>
         </div>
