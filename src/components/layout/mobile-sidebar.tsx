@@ -5,18 +5,13 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
   Target,
-  ListTodo,
-  Calendar,
-  Grid3X3,
-  Timer,
-  BookOpen,
-  Users,
-  Zap,
+  LayoutDashboard,
+  Clock,
   BarChart3,
+  Zap,
+  Users,
+  UserPlus,
   Settings,
-  Home,
-  Eye,
-  Trophy,
 } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -25,70 +20,45 @@ interface NavItem {
   title: string;
   href: string;
   icon: React.ElementType;
-  tier?: 'pro' | 'elite';
 }
 
 const mainNavItems: NavItem[] = [
-  { title: 'Dashboard', href: ROUTES.dashboard, icon: Home },
-  { title: 'Vision', href: ROUTES.vision, icon: Eye },
-  { title: 'Impact Projects', href: ROUTES.goals, icon: Trophy },
-  { title: 'MINS', href: ROUTES.mins, icon: ListTodo },
-];
-
-const systemNavItems: NavItem[] = [
-  { title: 'Time Audit', href: ROUTES.timeAudit, icon: Calendar },
-  { title: 'Value Matrix', href: ROUTES.drip, icon: Grid3X3 },
-  { title: 'Routines', href: ROUTES.routines, icon: Target },
-  { title: 'Pomodoro', href: ROUTES.pomodoro, icon: Timer },
-  { title: 'Reviews', href: ROUTES.reviews, icon: BookOpen },
-];
-
-const advancedNavItems: NavItem[] = [
-  { title: 'Leverage', href: ROUTES.leverage, icon: Zap, tier: 'pro' },
-  { title: 'Network', href: ROUTES.network, icon: Users, tier: 'pro' },
+  { title: 'Dashboard', href: ROUTES.dashboard, icon: LayoutDashboard },
+  { title: 'Time Audit', href: ROUTES.timeAudit, icon: Clock },
   { title: 'Analytics', href: ROUTES.analytics, icon: BarChart3 },
+];
+
+const toolNavItems: NavItem[] = [
+  { title: 'Leverage', href: ROUTES.leverage, icon: Zap },
+  { title: 'Network', href: ROUTES.network, icon: Users },
+];
+
+const teamNavItems: NavItem[] = [
+  { title: 'Team', href: ROUTES.team, icon: UserPlus },
 ];
 
 const bottomNavItems: NavItem[] = [
   { title: 'Settings', href: ROUTES.settings, icon: Settings },
 ];
 
-interface MobileSidebarProps {
-  userTier?: 'free' | 'pro' | 'elite' | 'founding_member';
-}
-
-export function MobileSidebar({ userTier = 'free' }: MobileSidebarProps) {
+export function MobileSidebar() {
   const pathname = usePathname();
-
-  const tierHierarchy = { free: 0, pro: 1, elite: 2, founding_member: 2 };
-
-  const hasAccess = (tier?: 'pro' | 'elite') => {
-    if (!tier) return true;
-    return tierHierarchy[userTier] >= tierHierarchy[tier];
-  };
 
   const NavLink = ({ item }: { item: NavItem }) => {
     const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-    const accessible = hasAccess(item.tier);
 
     return (
       <Link
-        href={accessible ? item.href : ROUTES.settingsSubscription}
+        href={item.href}
         className={cn(
           'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
           isActive
             ? 'bg-primary text-primary-foreground'
-            : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-          !accessible && 'opacity-50'
+            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
         )}
       >
         <item.icon className="h-4 w-4" />
         <span className="flex-1">{item.title}</span>
-        {item.tier && !accessible && (
-          <span className="text-xs uppercase bg-muted px-1.5 py-0.5 rounded">
-            {item.tier}
-          </span>
-        )}
       </Link>
     );
   };
@@ -113,25 +83,19 @@ export function MobileSidebar({ userTier = 'free' }: MobileSidebarProps) {
             ))}
           </div>
 
-          {/* Systems Section */}
-          <div className="pt-4">
-            <h3 className="mb-2 px-3 text-xs font-semibold uppercase text-muted-foreground">
-              Daily Systems
-            </h3>
+          {/* Tools Section */}
+          <div className="pt-4 border-t mt-4">
             <div className="space-y-1">
-              {systemNavItems.map((item) => (
+              {toolNavItems.map((item) => (
                 <NavLink key={item.href} item={item} />
               ))}
             </div>
           </div>
 
-          {/* Advanced Section */}
-          <div className="pt-4">
-            <h3 className="mb-2 px-3 text-xs font-semibold uppercase text-muted-foreground">
-              Advanced
-            </h3>
+          {/* Team Section */}
+          <div className="pt-4 border-t mt-4">
             <div className="space-y-1">
-              {advancedNavItems.map((item) => (
+              {teamNavItems.map((item) => (
                 <NavLink key={item.href} item={item} />
               ))}
             </div>

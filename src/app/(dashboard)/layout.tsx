@@ -79,7 +79,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar userTier={subscriptionTier} isAdmin={isAdmin} />
+      <Sidebar isAdmin={isAdmin} />
       <div className="flex flex-1 flex-col overflow-hidden">
         <DashboardHeader
           user={userProfile}

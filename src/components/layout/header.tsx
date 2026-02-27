@@ -56,7 +56,7 @@ export function Header({ user, subscriptionTier = 'free', onSignOut }: HeaderPro
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="p-0 w-64">
-            <MobileSidebar userTier={subscriptionTier} />
+            <MobileSidebar />
           </SheetContent>
         </Sheet>
 
