@@ -2,7 +2,7 @@
 
 ## Quick Overview
 
-A comprehensive goal-setting and time-optimization web app built on **proven productivity and time optimization methodologies**. Helps entrepreneurs define visions, create Impact Projects, track time, and optimize productivity.
+A time-tracking and productivity optimization web app centered on the **DRIP Value Matrix** (Delegation, Replacement, Investment, Production). Syncs with Google Calendar, uses AI to auto-categorize activities into DRIP quadrants, and provides analytics dashboards with AI coaching nudges to help users spend more time on high-value work.
 
 ## Tech Stack
 
@@ -14,8 +14,8 @@ A comprehensive goal-setting and time-optimization web app built on **proven pro
 | State | Zustand, TanStack React Query |
 | Database | Supabase (PostgreSQL) - Project: `uomrqmsbmuzlyghaocrj` |
 | ORM | Drizzle ORM |
-| AI | OpenAI GPT-4o-mini |
-| Payments | Stripe |
+| AI | Anthropic Claude (via API) |
+| Payments | Stripe (wired but dormant) |
 | Auth | Supabase Auth |
 
 ## Project Structure
@@ -25,113 +25,154 @@ src/
 ├── app/
 │   ├── (auth)/              # Login, signup, callback
 │   ├── (dashboard)/         # Protected routes
-│   │   ├── vision/          # Vision & SMART goals
-│   │   ├── goals/           # Impact Projects (12 annual projects)
-│   │   ├── mins/            # Most Important Next Steps
-│   │   ├── time-audit/      # Time tracking (15-min blocks)
-│   │   ├── drip/            # Value Matrix analysis
-│   │   ├── routines/        # Morning/evening/midday routines
-│   │   ├── pomodoro/        # Focus timer
-│   │   ├── reviews/         # Daily reviews (3x daily)
-│   │   ├── leverage/        # 4 C's tracking
+│   │   ├── dashboard/       # Main dashboard (3 viz modes + scorecard + AI coaching)
+│   │   ├── time-audit/      # Time tracking calendar & AI categorization
+│   │   │   └── projects/    # Detected projects management
+│   │   ├── analytics/       # Charts, trends, custom user charts
+│   │   ├── leverage/        # 4 C's tracking (Code/Content/Capital/Collaboration)
 │   │   ├── network/         # Friend inventory
-│   │   ├── analytics/       # Dashboard & charts
-│   │   └── settings/        # User settings & subscription
+│   │   ├── team/            # Team sharing & collaboration
+│   │   ├── settings/        # User settings, profile, subscription
+│   │   └── admin/           # Admin panels (AI usage, beta access, feedback)
 │   ├── (marketing)/         # Public pages
-│   ├── (onboarding)/        # Onboarding flow
 │   └── api/                 # API routes
-│       ├── ai/              # AI generation endpoints
-│       ├── visions/         # Vision CRUD
-│       ├── power-goals/     # Power goals CRUD
-│       ├── targets/         # Monthly/weekly targets
-│       ├── stripe/          # Payment processing
-│       └── calendar/        # Google Calendar integration
+│       ├── ai/              # AI endpoints (classify, insights, tags, coaching)
+│       ├── calendar/        # Google Calendar sync
+│       ├── time-blocks/     # Time block CRUD
+│       ├── event-categorizations/  # Event categorization
+│       ├── tags/            # Tag management
+│       ├── detected-projects/  # Project detection
+│       ├── meeting-categories/ # Meeting categories
+│       ├── leverage/        # Leverage CRUD
+│       ├── network/         # Network CRUD
+│       ├── team/            # Team management
+│       ├── sharing/         # Sharing & permissions
+│       ├── stripe/          # Payment processing (dormant)
+│       ├── user/            # User management
+│       ├── profile/         # Profile management
+│       ├── feedback/        # Beta feedback
+│       ├── admin/           # Admin endpoints
+│       ├── dashboard/       # Dashboard stats
+│       └── user-charts/     # Custom chart management
 ├── components/
 │   ├── layout/              # Header, Sidebar, PageHeader
 │   ├── ui/                  # shadcn/ui components
 │   ├── features/            # Domain-specific components
-│   │   ├── vision/          # SmartGoalEditor, AIProjectPlanner, KPIAccountabilitySystem
-│   │   ├── goals/           # GoalForm, GoalsGrid
-│   │   ├── time-audit/      # Calendar views, DRIP matrix
+│   │   ├── dashboard/       # Value Matrix grid, Stacked Timeline, Bubble Chart, Scorecard, Coaching Nudge
+│   │   ├── time-audit/      # Calendar views, DRIP matrix, categorization
 │   │   ├── analytics/       # Charts and trends
-│   │   └── targets/         # Target generation wizard
+│   │   ├── drip/            # DRIP Value Matrix components
+│   │   ├── leverage/        # Leverage components
+│   │   ├── sharing/         # Team sharing components
+│   │   └── feedback/        # Beta feedback components
 │   └── shared/              # Reusable components
 ├── lib/
 │   ├── db/                  # Drizzle schema & migrations
 │   ├── supabase/            # Supabase client & middleware
-│   ├── stripe/              # Stripe integration
+│   ├── stripe/              # Stripe integration (dormant)
+│   ├── calendar/            # Google Calendar sync utilities
 │   ├── hooks/               # Custom hooks (useTheme, etc.)
 │   ├── stores/              # Zustand stores
-│   └── validations/         # Zod schemas
+│   ├── validations/         # Zod schemas
+│   ├── services/            # Business logic services
+│   ├── permissions/         # Team/sharing permission logic
+│   └── rate-limit/          # AI endpoint rate limiting
 ├── types/                   # TypeScript interfaces
-├── constants/               # Routes and constants
+├── constants/               # Routes, DRIP constants
 └── middleware.ts            # Auth middleware
 ```
 
-## Core Features
+## Core Architecture
 
-### Goal Hierarchy
 ```
-Vision (SMART Goals)
-  └── 12 Impact Projects (annual projects, 4 quarters)
-       └── Monthly Targets
-            └── Weekly Targets
-                 └── Daily Actions
+Google Calendar Events
+  → AI Activity Classification (DRIP category, tags, projects)
+    → Value Matrix (Delegation, Replacement, Investment, Production)
+      → Analytics & Trends
+        → AI Coaching Nudges
 ```
 
 ### Key Modules
-- **Vision**: SMART goal framework with AI-assisted generation
-- **Impact Projects**: 12 annual projects for strategic planning
-- **MINs**: Most Important Next Steps scheduling
-- **Time Audit**: 15-minute block tracking with Value Matrix categorization
-- **Value Matrix**: Delegation, Replacement, Investment, Production quadrants
-- **300% Rule**: Track Clarity, Belief, Consistency scores
-- **KPI Tracking**: AI-generated KPIs aligned with vision
+- **Dashboard**: Three visualization modes (Value Matrix Grid, Stacked Timeline, Bubble Chart) plus scorecard and AI coaching nudges
+- **Time Audit**: Calendar-synced time tracking with AI auto-categorization into DRIP quadrants
+- **Analytics**: Charts, trends, and custom user-defined charts
 - **Leverage (4 C's)**: Code, Content, Capital, Collaboration tracking
+- **Network**: Friend/contact inventory
+- **Team**: Collaborative sharing with permissions
+- **Admin**: AI usage monitoring, beta access management, feedback review
 
 ## Database Schema (Key Tables)
 
 | Table | Purpose |
 |-------|---------|
 | `profiles` | User accounts (extends Supabase auth) |
-| `visions` | SMART goals with 300% scores |
-| `power_goals` | 12 annual projects linked to visions |
-| `monthly_targets` | Monthly breakdown of power goals |
-| `weekly_targets` | Weekly breakdown |
-| `daily_actions` | Daily breakdown |
-| `mins` | Most Important Next Steps |
-| `time_blocks` | 15-min increments with Value Matrix + energy ratings |
+| `time_blocks` | Time tracking entries with DRIP category & energy ratings |
+| `time_block_meeting_details` | Meeting metadata for time blocks |
 | `activity_categories` | Custom activity types |
-| `routines` / `routine_steps` | Daily routines |
-| `daily_reviews` | 3x daily review entries |
-| `north_star_metrics` | Primary KPIs |
-| `metric_logs` | KPI history |
+| `event_categorizations` | AI event categorization results |
+| `time_block_tags` | Tag definitions |
+| `time_block_tag_assignments` | Tag-to-block links |
+| `time_block_leverage_links` | Time block to leverage item links |
+| `detected_projects` | AI-detected projects from calendar events |
+| `meeting_categories` | Meeting type classifications |
+| `user_charts` | Custom user-defined analytics charts |
+| `audit_snapshots` | Point-in-time audit summaries |
+| `leverage_items` | 4 C's leverage tracking |
 | `friend_inventory` | Network relationships |
+| `user_settings` | User preferences |
+| `pro_tips` | Contextual tips |
+| `calendar_sync_settings` | Google Calendar sync config |
+| `calendar_sync_records` | Calendar event sync history |
+| `calendar_webhook_channels` | Calendar push notification channels |
+| `ai_usage_logs` | AI endpoint usage tracking |
+| `team_members` | Team collaboration members |
+| `tab_permissions` / `item_permissions` | Sharing permissions |
+| `share_invitations` | Team invite records |
+| `task_comments` | Comments on shared tasks |
+| `beta_feedback` | User feedback during beta |
+| `beta_invitations` | Beta access invitations |
 
 ## API Endpoints
 
-### AI Generation
-- `POST /api/ai/generate-smart` - Generate SMART components from vision
-- `POST /api/ai/generate-power-goals` - Create Impact Projects from SMART goals
-- `POST /api/ai/generate-kpis` - Generate aligned KPIs
-- `POST /api/ai/generate-targets` - Generate monthly/weekly targets
-- `POST /api/ai/suggest-vision` - AI vision improvement suggestions
+### AI
+- `POST /api/ai/classify-activity` - AI categorize activities into DRIP quadrants
+- `POST /api/ai/generate-time-insights` - Generate time audit insights
+- `POST /api/ai/suggest-tags` - AI tag suggestions
+- `POST /api/ai/suggest-event-cleanup` - Suggest calendar cleanup
+- `POST /api/ai/generate-coaching-nudge` - AI coaching nudges for dashboard
 
 ### Data CRUD
-- `/api/visions` - Vision management
-- `/api/power-goals` - Impact Projects management
-- `/api/targets` - Target management
+- `/api/time-blocks` - Time block management
+- `/api/event-categorizations` - Event categorization
+- `/api/tags` - Tag management
+- `/api/detected-projects` - Detected project management
+- `/api/meeting-categories` - Meeting categories
+- `/api/leverage` - Leverage items
+- `/api/network` - Friend inventory
+- `/api/team` - Team members
+- `/api/sharing` - Sharing & permissions
+- `/api/user-charts` - Custom chart management
+- `/api/dashboard/stats` - Dashboard statistics
 
 ### Integrations
-- `/api/stripe/*` - Checkout, webhooks, billing portal
-- `/api/calendar/google/*` - Google Calendar sync
+- `/api/stripe/*` - Checkout, webhooks, billing portal (dormant)
+- `/api/calendar/*` - Google Calendar sync
+
+### User & Admin
+- `/api/user` - User management
+- `/api/profile` - Profile management
+- `/api/feedback` - Beta feedback
+- `/api/admin/*` - Admin endpoints
+
+## Subscription Tiers
+
+Everything is free during beta. Stripe is wired but dormant — no active tier gating.
 
 ## Key Patterns
 
 ### Authentication
 - Supabase Auth with JWT tokens
 - Demo mode for testing (whitelisted email: `joel@pe-se.com`)
-- Subscription tiers: free, pro, premium with route-level gating
 
 ### State Management
 - **Zustand**: Global UI state
@@ -139,26 +180,15 @@ Vision (SMART Goals)
 - **React Hook Form + Zod**: Form handling
 
 ### Database Patterns
-- Hierarchical goal structure
+- DRIP categorization (delegation, replacement, investment, production)
 - Soft deletes (`archived_at`, `is_active` flags)
 - User-scoped queries via `user_id`
 
 ### AI Integration
 - Anthropic Claude instantiated inside route handlers (not at module level)
 - Structured JSON output parsing
+- Rate limiting (per-minute and daily caps)
 - Demo user fallback for development
-
-## Subscription Tiers
-
-| Feature | Free | Pro | Premium |
-|---------|------|-----|---------|
-| Vision & Impact Projects | Yes | Yes | Yes |
-| Basic Time Tracking | Yes | Yes | Yes |
-| Biweekly Time Audit | No | Yes | Yes |
-| Leverage/Network | No | Yes | Yes |
-| Midday Reviews | No | Yes | Yes |
-| Monthly Time Audit | No | No | Yes |
-| Accountability Features | No | No | Yes |
 
 ## Common Commands
 
@@ -187,23 +217,15 @@ DATABASE_URL=
 # Anthropic
 ANTHROPIC_API_KEY=
 
-# Stripe
+# Stripe (dormant)
 STRIPE_SECRET_KEY=
 STRIPE_WEBHOOK_SECRET=
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
 
-# Google Calendar (optional)
+# Google Calendar
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 ```
-
-## Recent Changes (Git History)
-
-1. **Fix auth bypass** for demo mode and vision saving
-2. **Fix Impact Projects saving** with vision
-3. **Add Generate Impact Projects** from SMART goals feature
-4. **Add KPI accountability system** and multi-vision support
-5. **Add vision improvements**: date input, AI suggestions, KPI generation
 
 ## Key Files to Know
 
@@ -212,10 +234,17 @@ GOOGLE_CLIENT_SECRET=
 | `src/lib/db/schema.ts` | Database schema (Drizzle) |
 | `src/middleware.ts` | Auth & route protection |
 | `src/app/(dashboard)/layout.tsx` | Dashboard layout with sidebar |
-| `src/components/layout/sidebar.tsx` | Navigation (tier-aware) |
+| `src/components/layout/sidebar.tsx` | Navigation sidebar |
+| `src/app/(dashboard)/dashboard/page.tsx` | Main dashboard with 3 viz modes |
+| `src/components/features/dashboard/value-matrix-grid.tsx` | Value Matrix grid visualization |
+| `src/components/features/dashboard/stacked-timeline.tsx` | Stacked timeline visualization |
+| `src/components/features/dashboard/bubble-chart.tsx` | Bubble chart visualization |
+| `src/components/features/dashboard/scorecard.tsx` | Dashboard scorecard |
+| `src/components/features/dashboard/coaching-nudge.tsx` | AI coaching nudge component |
 | `src/lib/supabase/client.ts` | Supabase browser client |
 | `src/lib/supabase/server.ts` | Supabase server client |
-| `src/constants/routes.ts` | Route definitions & tier requirements |
+| `src/constants/routes.ts` | Route definitions |
+| `src/constants/drip.ts` | DRIP Value Matrix constants |
 
 ## Claude Lessons Learned (DO NOT REPEAT)
 
