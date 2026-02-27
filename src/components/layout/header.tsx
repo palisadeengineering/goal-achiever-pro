@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Menu, Bell, Settings, LogOut, User, Crown } from 'lucide-react';
+import { Menu, Bell, Settings, LogOut, User } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { MobileSidebar } from './mobile-sidebar';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
@@ -24,11 +24,10 @@ interface HeaderProps {
     fullName?: string;
     avatarUrl?: string;
   };
-  subscriptionTier?: 'free' | 'pro' | 'elite' | 'founding_member';
   onSignOut?: () => void;
 }
 
-export function Header({ user, subscriptionTier = 'free', onSignOut }: HeaderProps) {
+export function Header({ user, onSignOut }: HeaderProps) {
   const initials = user?.fullName
     ? user.fullName
         .split(' ')
@@ -36,13 +35,6 @@ export function Header({ user, subscriptionTier = 'free', onSignOut }: HeaderPro
         .join('')
         .toUpperCase()
     : user?.email?.[0]?.toUpperCase() || '?';
-
-  const tierColors = {
-    free: 'bg-gray-100 text-gray-800',
-    pro: 'bg-blue-100 text-blue-800',
-    elite: 'bg-purple-100 text-purple-800',
-    founding_member: 'bg-amber-100 text-amber-800',
-  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -65,21 +57,10 @@ export function Header({ user, subscriptionTier = 'free', onSignOut }: HeaderPro
 
         {/* Right Side */}
         <div className="flex items-center gap-4">
-          {/* Subscription Badge */}
-          {subscriptionTier !== 'elite' && subscriptionTier !== 'founding_member' && (
-            <Link href={ROUTES.settingsSubscription}>
-              <Badge variant="outline" className={tierColors[subscriptionTier]}>
-                {subscriptionTier === 'free' ? (
-                  <>
-                    <Crown className="h-3 w-3 mr-1" />
-                    Upgrade
-                  </>
-                ) : (
-                  subscriptionTier.toUpperCase()
-                )}
-              </Badge>
-            </Link>
-          )}
+          {/* Beta Badge */}
+          <Badge variant="outline" className="border-emerald-500/50 text-emerald-600 dark:text-emerald-400">
+            Beta
+          </Badge>
 
           {/* Theme Toggle */}
           <ThemeToggle />
@@ -116,12 +97,6 @@ export function Header({ user, subscriptionTier = 'free', onSignOut }: HeaderPro
                 <Link href={ROUTES.settingsProfile}>
                   <User className="mr-2 h-4 w-4" />
                   Profile
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href={ROUTES.settingsSubscription}>
-                  <Crown className="mr-2 h-4 w-4" />
-                  Subscription
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>

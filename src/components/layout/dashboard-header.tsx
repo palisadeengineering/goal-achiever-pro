@@ -10,10 +10,9 @@ interface DashboardHeaderProps {
     fullName?: string;
     avatarUrl?: string;
   };
-  subscriptionTier: 'free' | 'pro' | 'elite' | 'founding_member';
 }
 
-export function DashboardHeader({ user, subscriptionTier }: DashboardHeaderProps) {
+export function DashboardHeader({ user }: DashboardHeaderProps) {
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -26,7 +25,6 @@ export function DashboardHeader({ user, subscriptionTier }: DashboardHeaderProps
   return (
     <Header
       user={user}
-      subscriptionTier={subscriptionTier}
       onSignOut={handleSignOut}
     />
   );

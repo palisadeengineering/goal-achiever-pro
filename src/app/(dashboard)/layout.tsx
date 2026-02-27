@@ -23,9 +23,6 @@ export default async function DashboardLayout({
   };
   let isAdmin = false;
 
-  // Everything is free during MVP/PMF phase
-  const subscriptionTier: 'free' | 'pro' | 'elite' | 'founding_member' = 'free';
-
   if (supabase) {
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -62,7 +59,6 @@ export default async function DashboardLayout({
       <div className="flex flex-1 flex-col overflow-hidden">
         <DashboardHeader
           user={userProfile}
-          subscriptionTier={subscriptionTier}
         />
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <Providers>
