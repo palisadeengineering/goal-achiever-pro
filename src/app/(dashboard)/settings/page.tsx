@@ -1,13 +1,12 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '@/components/layout/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -19,7 +18,6 @@ import {
 } from '@/components/ui/select';
 import {
   Calendar,
-  Crown,
   Bell,
   Moon,
   Globe,
@@ -27,7 +25,6 @@ import {
   Loader2,
   Check,
   X,
-  ExternalLink,
   Clock,
   Sparkles,
 } from 'lucide-react';
@@ -60,23 +57,13 @@ const DEFAULT_SETTINGS: UserSettings = {
   aiProvider: 'anthropic',
 };
 
-interface SubscriptionInfo {
-  tier: 'free' | 'pro' | 'elite';
-  status: string;
-  stripeCustomerId: string | null;
-}
-
 function SettingsContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const queryClient = useQueryClient();
   const { theme: currentTheme, setTheme } = useTheme();
   const [isConnectingGoogle, setIsConnectingGoogle] = useState(false);
   const [googleConnected, setGoogleConnected] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const [subscription, setSubscription] = useState<SubscriptionInfo>({ tier: 'free', status: 'active', stripeCustomerId: null });
-  const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
-  const [isManagingSubscription, setIsManagingSubscription] = useState(false);
 
   // Fetch settings from API
   const { data: settings = DEFAULT_SETTINGS, isLoading: isLoadingSettings } = useQuery<UserSettings>({
@@ -163,54 +150,6 @@ function SettingsContent() {
     checkGoogleConnection();
   }, []);
 
-  // Fetch subscription status
-  useEffect(() => {
-    const fetchSubscription = async () => {
-      try {
-        const response = await fetch('/api/user/subscription');
-        if (response.ok) {
-          const data = await response.json();
-          setSubscription({
-            tier: data.tier || 'free',
-            status: data.status || 'active',
-            stripeCustomerId: data.stripeCustomerId || null,
-          });
-        }
-      } catch (error) {
-        console.error('Failed to fetch subscription:', error);
-      } finally {
-        setIsLoadingSubscription(false);
-      }
-    };
-    fetchSubscription();
-  }, []);
-
-  const manageSubscription = async () => {
-    if (!subscription.stripeCustomerId) {
-      router.push('/pricing');
-      return;
-    }
-
-    setIsManagingSubscription(true);
-    try {
-      const response = await fetch('/api/stripe/create-portal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
-      });
-      const data = await response.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        setStatusMessage({ type: 'error', message: 'Failed to open billing portal' });
-        setIsManagingSubscription(false);
-      }
-    } catch (error) {
-      setStatusMessage({ type: 'error', message: 'Failed to open billing portal' });
-      setIsManagingSubscription(false);
-    }
-  };
-
   const connectGoogleCalendar = async () => {
     setIsConnectingGoogle(true);
     try {
@@ -276,82 +215,26 @@ function SettingsContent() {
         </Card>
       )}
 
-      {/* Subscription Status */}
+      {/* Beta Status */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
-                <Crown className="h-5 w-5 text-yellow-500" />
-                Subscription
+                <Sparkles className="h-5 w-5 text-emerald-500" />
+                Plan
               </CardTitle>
-              <CardDescription>Manage your subscription plan</CardDescription>
+              <CardDescription>Your current plan</CardDescription>
             </div>
-            {isLoadingSubscription ? (
-              <Badge variant="outline">
-                <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                Loading...
-              </Badge>
-            ) : (
-              <Badge variant={subscription.tier === 'free' ? 'outline' : 'default'}>
-                {subscription.tier.charAt(0).toUpperCase() + subscription.tier.slice(1)} Plan
-                {subscription.status === 'past_due' && ' (Past Due)'}
-                {subscription.status === 'canceled' && ' (Canceled)'}
-              </Badge>
-            )}
+            <Badge variant="outline" className="border-emerald-500/50 text-emerald-600">
+              Beta — All Features Free
+            </Badge>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {subscription.tier === 'free' ? (
-              <>
-                <p className="text-sm text-muted-foreground">
-                  Upgrade to unlock Pro/Elite features like Google Calendar sync, advanced analytics, and more.
-                </p>
-                <div className="flex gap-2">
-                  <Button onClick={() => router.push('/pricing')}>
-                    Upgrade to Pro
-                    <ExternalLink className="h-4 w-4 ml-2" />
-                  </Button>
-                  <Button variant="outline" onClick={() => router.push('/pricing')}>
-                    View Plans
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="text-sm text-muted-foreground">
-                  {subscription.status === 'active' && `You're on the ${subscription.tier.charAt(0).toUpperCase() + subscription.tier.slice(1)} plan. Thank you for your support!`}
-                  {subscription.status === 'past_due' && 'Your payment is past due. Please update your payment method.'}
-                  {subscription.status === 'canceled' && 'Your subscription has been canceled. You can resubscribe anytime.'}
-                  {subscription.status === 'trialing' && `You're on a free trial of the ${subscription.tier.charAt(0).toUpperCase() + subscription.tier.slice(1)} plan.`}
-                </p>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={manageSubscription}
-                    disabled={isManagingSubscription}
-                  >
-                    {isManagingSubscription ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Opening...
-                      </>
-                    ) : (
-                      <>
-                        Manage Subscription
-                        <ExternalLink className="h-4 w-4 ml-2" />
-                      </>
-                    )}
-                  </Button>
-                  {subscription.tier === 'pro' && (
-                    <Button variant="outline" onClick={() => router.push('/pricing')}>
-                      Upgrade to Elite
-                    </Button>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
+          <p className="text-sm text-muted-foreground">
+            All features are free during beta while we validate product-market fit. Paid tiers coming soon.
+          </p>
         </CardContent>
       </Card>
 
@@ -384,9 +267,9 @@ function SettingsContent() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Badge variant={googleConnected ? 'default' : 'secondary'}>
-                {googleConnected ? 'Connected' : 'Pro'}
-              </Badge>
+              {googleConnected && (
+                <Badge variant="default">Connected</Badge>
+              )}
               {googleConnected ? (
                 <Button variant="outline" size="sm" onClick={disconnectGoogleCalendar}>
                   Disconnect
@@ -500,7 +383,7 @@ function SettingsContent() {
             </Select>
           </div>
           <p className="text-xs text-muted-foreground border-t pt-3">
-            AI is used for generating vision suggestions, SMART goals, Impact Projects, KPIs, and more.
+            AI is used for auto-categorizing calendar events, generating time insights, and coaching nudges.
             Powered by Claude from Anthropic for best-in-class reasoning.
           </p>
         </CardContent>
@@ -645,40 +528,6 @@ function SettingsContent() {
               Start time must be before end time
             </p>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Pomodoro Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Pomodoro Settings</CardTitle>
-          <CardDescription>Customize your focus timer</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="workMinutes">Work Duration (minutes)</Label>
-              <Input
-                id="workMinutes"
-                type="number"
-                min="1"
-                max="120"
-                value={settings.pomodoroWorkMinutes}
-                onChange={(e) => updateSetting('pomodoroWorkMinutes', parseInt(e.target.value) || 25)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="breakMinutes">Break Duration (minutes)</Label>
-              <Input
-                id="breakMinutes"
-                type="number"
-                min="1"
-                max="60"
-                value={settings.pomodoroBreakMinutes}
-                onChange={(e) => updateSetting('pomodoroBreakMinutes', parseInt(e.target.value) || 5)}
-              />
-            </div>
-          </div>
         </CardContent>
       </Card>
 
