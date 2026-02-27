@@ -6,37 +6,16 @@ export type InvitationStatus = 'pending' | 'accepted' | 'expired' | 'revoked';
 
 // All shareable tabs in the application
 export type TabName =
-  | 'today'
-  | 'progress'
-  | 'vision'
-  | 'goals'
-  | 'okrs'
-  | 'milestones'
-  | 'mins'
   | 'time_audit'
-  | 'drip'
-  | 'routines'
-  | 'pomodoro'
-  | 'reviews'
   | 'leverage'
   | 'network'
-  | 'analytics'
-  | 'backtrack';
+  | 'analytics';
 
 // All shareable entity types
 export type EntityType =
-  | 'vision'
-  | 'power_goal'
-  | 'monthly_target'
-  | 'weekly_target'
-  | 'daily_action'
   | 'time_block'
-  | 'routine'
-  | 'key_result'
-  | 'min'
   | 'leverage_item'
-  | 'friend'
-  | 'metric';
+  | 'friend';
 
 // Tab permission record
 export interface TabPermission {
@@ -159,60 +138,24 @@ export interface ShareDialogTab {
 
 // Tab display names and descriptions
 export const TAB_DISPLAY_INFO: Record<TabName, { displayName: string; description: string }> = {
-  today: { displayName: 'Today', description: 'Daily tasks and calendar' },
-  progress: { displayName: 'Progress', description: 'Goal completion trends' },
-  vision: { displayName: 'Vision', description: 'SMART goals and vision board' },
-  goals: { displayName: 'Goals', description: 'Impact Projects and milestones' },
-  okrs: { displayName: 'OKRs', description: 'Key Results and objectives' },
-  milestones: { displayName: 'Milestones', description: 'Major project milestones' },
-  mins: { displayName: 'MINS', description: 'Most Important Next Steps' },
   time_audit: { displayName: 'Time Audit', description: 'Time tracking and analysis' },
-  drip: { displayName: 'Value', description: 'Value Matrix analysis' },
-  routines: { displayName: 'Routines', description: 'Daily routines' },
-  pomodoro: { displayName: 'Pomodoro', description: 'Focus timer sessions' },
-  reviews: { displayName: 'Reviews', description: 'Daily reviews' },
   leverage: { displayName: 'Leverage', description: '4 C\'s tracking' },
   network: { displayName: 'Network', description: 'Friend inventory' },
   analytics: { displayName: 'Analytics', description: 'Dashboard and charts' },
-  backtrack: { displayName: 'Backtrack Plans', description: 'Vision planning and progress' },
 };
 
 // Map routes to tab names
 export const ROUTE_TO_TAB: Record<string, TabName> = {
-  '/today': 'today',
-  '/progress': 'progress',
-  '/vision': 'vision',
-  '/goals': 'goals',
-  '/okrs': 'okrs',
-  '/milestones': 'milestones',
-  '/mins': 'mins',
   '/time-audit': 'time_audit',
-  '/drip': 'drip',
-  '/routines': 'routines',
-  '/pomodoro': 'pomodoro',
-  '/reviews': 'reviews',
   '/leverage': 'leverage',
   '/network': 'network',
   '/analytics': 'analytics',
-  '/backtrack': 'backtrack',
 };
 
 // Map tab names to routes
 export const TAB_TO_ROUTE: Record<TabName, string> = {
-  today: '/today',
-  progress: '/progress',
-  vision: '/vision',
-  goals: '/goals',
-  okrs: '/okrs',
-  milestones: '/milestones',
-  mins: '/mins',
   time_audit: '/time-audit',
-  drip: '/drip',
-  routines: '/routines',
-  pomodoro: '/pomodoro',
-  reviews: '/reviews',
   leverage: '/leverage',
   network: '/network',
   analytics: '/analytics',
-  backtrack: '/backtrack',
 };
