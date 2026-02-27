@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { subWeeks, startOfWeek, endOfWeek, format } from 'date-fns';
 import { PageHeader } from '@/components/layout/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -50,12 +50,6 @@ import Link from 'next/link';
 type DateRangeOption = '1week' | '2weeks' | '1month' | '3months';
 type ViewTab = 'overview' | 'projects' | 'meetings';
 
-interface PowerGoal {
-  id: string;
-  title: string;
-  quarter: number;
-}
-
 const COLOR_OPTIONS = [
   '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e',
   '#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e',
@@ -70,11 +64,9 @@ export default function AnalyticsPage() {
   const [editProjectId, setEditProjectId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editColor, setEditColor] = useState('');
-  const [editPowerGoalId, setEditPowerGoalId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingProject, setIsLoadingProject] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [powerGoals, setPowerGoals] = useState<PowerGoal[]>([]);
 
   const dateRange = useMemo(() => {
     const end = endOfWeek(new Date(), { weekStartsOn: 1 });
@@ -123,18 +115,6 @@ export default function AnalyticsPage() {
   const analytics = useAnalyticsData(dateRange);
   const enhancedAnalytics = useEnhancedAnalytics(dateRange, granularity);
 
-  // Fetch power goals when edit dialog opens
-  useEffect(() => {
-    if (editProjectId) {
-      fetch('/api/power-goals')
-        .then((res) => res.ok ? res.json() : null)
-        .then((data) => {
-          if (data?.powerGoals) setPowerGoals(data.powerGoals);
-        })
-        .catch(() => {});
-    }
-  }, [editProjectId]);
-
   // Handle project click - fetch project details and open edit dialog
   const handleProjectClick = useCallback(async (projectId: string) => {
     setEditProjectId(projectId);
@@ -153,7 +133,6 @@ export default function AnalyticsPage() {
       if (project) {
         setEditName(project.name);
         setEditColor(project.color || '#6b7280');
-        setEditPowerGoalId(project.powerGoalId || null);
       } else {
         setLoadError('Project not found');
       }
@@ -176,7 +155,6 @@ export default function AnalyticsPage() {
         body: JSON.stringify({
           name: editName,
           color: editColor,
-          powerGoalId: editPowerGoalId,
         }),
       });
 
@@ -487,7 +465,7 @@ export default function AnalyticsPage() {
           <DialogHeader>
             <DialogTitle>Edit Project</DialogTitle>
             <DialogDescription>
-              Update project details and link to a Power Goal
+              Update project details
             </DialogDescription>
           </DialogHeader>
 
@@ -533,27 +511,6 @@ export default function AnalyticsPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label>Link to Power Goal</Label>
-                <Select
-                  value={editPowerGoalId || 'none'}
-                  onValueChange={(v) => setEditPowerGoalId(v === 'none' ? null : v)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a Power Goal..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">
-                      <span className="text-muted-foreground">No link</span>
-                    </SelectItem>
-                    {powerGoals.map((goal) => (
-                      <SelectItem key={goal.id} value={goal.id}>
-                        Q{goal.quarter}: {goal.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
           )}
 
