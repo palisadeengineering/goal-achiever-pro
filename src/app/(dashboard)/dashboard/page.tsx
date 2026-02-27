@@ -207,7 +207,7 @@ export default function DashboardPage() {
             )}
 
             <Button asChild className="w-full">
-              <Link href={ROUTES.mins}>
+              <Link href={ROUTES.dashboard}>
                 View All MINS
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
@@ -334,7 +334,7 @@ export default function DashboardPage() {
             </div>
 
             <Button asChild variant="outline" className="w-full">
-              <Link href={ROUTES.reviews}>
+              <Link href={ROUTES.dashboard}>
                 Daily Reviews
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
@@ -350,7 +350,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="grid gap-3">
             <Button asChild variant="outline" className="justify-start h-auto py-3">
-              <Link href={ROUTES.pomodoro}>
+              <Link href={ROUTES.timeAudit}>
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-primary/10">
                     <Clock className="h-5 w-5 text-primary" />
@@ -366,7 +366,7 @@ export default function DashboardPage() {
             </Button>
 
             <Button asChild variant="outline" className="justify-start h-auto py-3">
-              <Link href={ROUTES.reviews}>
+              <Link href={ROUTES.dashboard}>
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-primary/10">
                     <Target className="h-5 w-5 text-primary" />

@@ -2020,7 +2020,7 @@ export default function TimeAuditPage() {
               </CardHeader>
               <CardContent className="p-3 pt-0 space-y-1.5">
                 <Button variant="outline" size="sm" className="w-full justify-start text-xs h-8" asChild>
-                  <Link href={ROUTES.drip}>
+                  <Link href={ROUTES.analytics}>
                     View Value Matrix
                   </Link>
                 </Button>

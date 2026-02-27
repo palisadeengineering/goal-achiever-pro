@@ -14,39 +14,8 @@ export const ROUTES = {
   callback: '/callback',
   acceptInvite: (token: string) => `/accept-invite/${token}`,
 
-  // Onboarding
-  onboarding: {
-    welcome: '/welcome',
-    vision: '/vision-setup',
-    complete: '/complete',
-  },
-
   // Dashboard
   dashboard: '/dashboard',
-  today: '/today',
-  progress: '/progress',
-
-  // Backtrack Planning
-  backtrack: '/backtrack',
-  backtrackNew: '/backtrack/new',
-  backtrackDetail: (id: string) => `/backtrack/${id}`,
-
-  // Vision & Goals
-  planner: '/planner',
-  visionPlanner: '/vision-planner',
-  vision: '/vision',
-  goals: '/goals',
-  goalNew: '/goals/new',
-  goalDetail: (id: string) => `/goals/${id}`,
-
-  // Projects V2
-  projects: '/projects',
-  projectNew: '/projects/new',
-  projectDetail: (id: string) => `/projects/${id}`,
-
-  // MINS
-  mins: '/mins',
-  minsCalendar: '/mins/calendar',
 
   // Time Audit
   timeAudit: '/time-audit',
@@ -55,48 +24,16 @@ export const ROUTES = {
   timeAuditMonthly: '/time-audit/monthly',
   timeAuditProjects: '/time-audit/projects',
 
-  // Value Matrix
-  drip: '/drip',
-  dripAnalysis: '/drip/analysis',
+  // Leverage & Network
+  leverage: '/leverage',
+  network: '/network',
 
-  // Daily Systems
-  routines: '/routines',
-  routineDetail: (id: string) => `/routines/${id}`,
-  routineToday: '/routines/today',
-  pomodoro: '/pomodoro',
-
-  // Reviews
-  reviews: '/reviews',
-  reviewMorning: '/reviews/morning',
-  reviewMidday: '/reviews/midday',
-  reviewEvening: '/reviews/evening',
+  // Analytics
+  analytics: '/analytics',
 
   // Team & Collaboration
   team: '/team',
   teamMember: (id: string) => `/team/${id}`,
-
-  // Key Results / OKRs
-  okrs: '/okrs',
-  okrNew: '/okrs/new',
-  okrDetail: (id: string) => `/okrs/${id}`,
-
-  // Leverage & Network (Pro+)
-  leverage: '/leverage',
-  network: '/network',
-
-  // Rewards
-  rewards: '/rewards',
-
-  // Metrics & Analytics
-  metrics: '/metrics',
-  scorecard: '/metrics/scorecard',
-  analytics: '/analytics',
-
-  // Help & Guide
-  guide: '/guide',
-
-  // Accountability (Elite)
-  accountability: '/accountability',
 
   // Settings
   settings: '/settings',
@@ -116,36 +53,11 @@ export const ROUTES = {
 // Routes that require authentication
 export const PROTECTED_ROUTES = [
   '/dashboard',
-  '/today',
-  '/progress',
-  '/backtrack',
-  '/planner',
-  '/vision-planner',
-  '/vision',
-  '/projects',
-  '/goals',
-  '/mins',
   '/time-audit',
-  '/drip',
-  '/routines',
-  '/pomodoro',
-  '/reviews',
-  '/team',
-  '/okrs',
+  '/analytics',
   '/leverage',
   '/network',
-  '/metrics',
-  '/analytics',
-  '/accountability',
+  '/team',
   '/settings',
+  '/admin',
 ];
-
-// Routes by subscription tier requirement
-export const TIER_REQUIRED_ROUTES: Record<string, 'pro' | 'elite'> = {
-  '/time-audit/biweekly': 'pro',
-  '/time-audit/monthly': 'pro',
-  '/leverage': 'pro',
-  '/network': 'pro',
-  '/accountability': 'elite',
-  '/reviews/midday': 'pro',
-};
