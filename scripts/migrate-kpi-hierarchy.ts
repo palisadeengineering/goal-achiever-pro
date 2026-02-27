@@ -12,7 +12,7 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { config } from 'dotenv';
-import { visionKpis, kpiProgressCache } from '../src/lib/db/schema';
+import { visionKpis, kpiProgressCache } from '../src/lib/db/schema-archived';
 import { eq, isNull, sql } from 'drizzle-orm';
 
 // Load environment variables
