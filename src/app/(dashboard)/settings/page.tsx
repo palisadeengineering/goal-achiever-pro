@@ -31,12 +31,52 @@ import {
 import { formatHour } from '@/lib/utils';
 import { useTheme } from '@/lib/hooks/use-theme';
 
+const COMMON_TIMEZONES = [
+  'America/New_York',
+  'America/Chicago',
+  'America/Denver',
+  'America/Los_Angeles',
+  'America/Anchorage',
+  'Pacific/Honolulu',
+  'America/Phoenix',
+  'America/Toronto',
+  'America/Vancouver',
+  'America/Mexico_City',
+  'America/Sao_Paulo',
+  'America/Argentina/Buenos_Aires',
+  'Europe/London',
+  'Europe/Paris',
+  'Europe/Berlin',
+  'Europe/Madrid',
+  'Europe/Rome',
+  'Europe/Amsterdam',
+  'Europe/Stockholm',
+  'Europe/Moscow',
+  'Europe/Istanbul',
+  'Africa/Cairo',
+  'Africa/Johannesburg',
+  'Asia/Dubai',
+  'Asia/Kolkata',
+  'Asia/Bangkok',
+  'Asia/Singapore',
+  'Asia/Shanghai',
+  'Asia/Tokyo',
+  'Asia/Seoul',
+  'Australia/Sydney',
+  'Australia/Melbourne',
+  'Australia/Perth',
+  'Pacific/Auckland',
+  'Pacific/Fiji',
+  'UTC',
+];
+
 interface UserSettings {
   theme: 'light' | 'dark' | 'system';
   notifications: boolean;
   emailReminders: boolean;
   weekStartsOn: 'sunday' | 'monday';
   timeFormat: '12h' | '24h';
+  timezone: string;
   pomodoroWorkMinutes: number;
   pomodoroBreakMinutes: number;
   calendarStartHour: number;
@@ -50,6 +90,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   emailReminders: false,
   weekStartsOn: 'sunday',
   timeFormat: '12h',
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   pomodoroWorkMinutes: 25,
   pomodoroBreakMinutes: 5,
   calendarStartHour: 5,
@@ -432,6 +473,29 @@ function SettingsContent() {
           <CardDescription>Configure date and time preferences</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Timezone</Label>
+              <p className="text-sm text-muted-foreground">
+                Auto-detected from your browser. Syncs with Google Calendar.
+              </p>
+            </div>
+            <Select
+              value={settings.timezone}
+              onValueChange={(v) => updateSetting('timezone', v)}
+            >
+              <SelectTrigger className="w-56">
+                <SelectValue placeholder={Intl.DateTimeFormat().resolvedOptions().timeZone} />
+              </SelectTrigger>
+              <SelectContent className="max-h-60">
+                {COMMON_TIMEZONES.map((tz) => (
+                  <SelectItem key={tz} value={tz}>
+                    {tz.replace(/_/g, ' ')}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex items-center justify-between">
             <div>
               <Label>Week Starts On</Label>
