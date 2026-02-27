@@ -14,29 +14,43 @@ You are the database specialist for Goal Achiever Pro. You own the Drizzle ORM s
 | File | Purpose |
 |------|---------|
 | `src/lib/db/schema.ts` | Full Drizzle ORM schema (tables, enums, relations) |
+| `src/lib/db/schema-archived.ts` | Archived table definitions from cut features (reference only) |
 | `src/lib/db/index.ts` | Database client initialization |
 | `drizzle.config.ts` | Drizzle Kit configuration |
 
 ## Schema Overview
 
-### Core Tables
+### Active Tables
 
 | Table | Purpose |
 |-------|---------|
 | `profiles` | User accounts (extends Supabase auth) |
-| `visions` | SMART goals with 300% scores (clarity, belief, consistency) |
-| `power_goals` | 12 annual Impact Projects linked to visions |
-| `monthly_targets` | Monthly breakdown of power goals |
-| `weekly_targets` | Weekly breakdown |
-| `daily_actions` | Daily breakdown |
-| `mins` | Most Important Next Steps |
-| `time_blocks` | 15-min time tracking with Value Matrix + energy ratings |
+| `detected_projects` | AI-detected projects from calendar events |
+| `meeting_categories` | Meeting type classifications |
+| `time_blocks` | Time tracking entries with DRIP category & energy ratings |
+| `time_block_meeting_details` | Meeting metadata for time blocks |
 | `activity_categories` | Custom activity types |
-| `routines` / `routine_steps` | Daily routines and their steps |
-| `daily_reviews` | 3x daily review entries |
-| `north_star_metrics` | Primary KPIs |
-| `metric_logs` | KPI tracking history |
+| `event_categorizations` | AI event categorization results |
+| `time_block_tags` | Tag definitions for time blocks |
+| `time_block_tag_assignments` | Many-to-many tag-to-block links |
+| `time_block_leverage_links` | Links between time blocks and leverage items |
+| `user_charts` | Custom user-defined analytics charts |
+| `audit_snapshots` | Point-in-time audit summaries |
+| `leverage_items` | 4 C's leverage tracking (Code/Content/Capital/Collaboration) |
 | `friend_inventory` | Network relationships |
+| `user_settings` | User preferences |
+| `pro_tips` | Contextual tips for users |
+| `calendar_sync_settings` | Google Calendar sync configuration |
+| `calendar_sync_records` | Calendar event sync history |
+| `calendar_webhook_channels` | Google Calendar push notification channels |
+| `ai_usage_logs` | AI endpoint usage tracking |
+| `team_members` | Team collaboration members |
+| `tab_permissions` | Tab-level sharing permissions |
+| `item_permissions` | Item-level sharing permissions |
+| `share_invitations` | Team share invite records |
+| `task_comments` | Comments on shared tasks |
+| `beta_feedback` | User feedback during beta |
+| `beta_invitations` | Beta access invitations |
 
 ### Key Patterns
 
@@ -44,10 +58,10 @@ You are the database specialist for Goal Achiever Pro. You own the Drizzle ORM s
 - Every user-owned table has a `user_id` column referencing `profiles.id`
 - Soft deletes via `archived_at` timestamp or `is_active` boolean flags
 - Standard timestamps: `created_at`, `updated_at`
-- Hierarchical goal structure uses foreign keys: vision -> power_goals -> monthly_targets -> weekly_targets -> daily_actions
+- DRIP categorization stored as text enum: `delegation`, `replacement`, `investment`, `production`
 
 ### Enums
-Schema defines several PostgreSQL enums: `task_priority`, `task_recurrence`, `four_cs_type`, `streak_type`, `achievement_category`, `reward_trigger_type`, and others.
+Schema defines a PostgreSQL enum: `four_cs_type` (code, content, capital, collaboration).
 
 ## Commands
 

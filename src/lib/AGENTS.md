@@ -9,6 +9,7 @@ You are the core libraries specialist for Goal Achiever Pro. You own shared util
 - Create and maintain custom React hooks
 - Define Zod validation schemas
 - Handle Stripe integration utilities
+- Manage calendar sync and rate limiting utilities
 
 ## Directory Structure
 
@@ -20,9 +21,16 @@ src/lib/
 │   ├── server.ts        # Server Supabase client
 │   └── middleware.ts    # Auth session middleware
 ├── stripe/              # Stripe client & helpers
+├── calendar/            # Google Calendar sync utilities
+├── auth/                # Auth helpers
 ├── hooks/               # Custom React hooks (useTheme, etc.)
 ├── stores/              # Zustand stores (UI state)
 ├── validations/         # Zod validation schemas
+├── services/            # Business logic services
+├── permissions/         # Team/sharing permission logic
+├── rate-limit/          # Rate limiting for AI endpoints
+├── email/               # Email utilities
+├── progress/            # Progress tracking utilities
 └── utils.ts             # Utility functions (cn, etc.)
 ```
 
@@ -63,7 +71,7 @@ if (!supabase) {
 ### Stripe Integration
 - `src/lib/stripe/` — Stripe client initialization and helpers
 - Checkout, webhooks, and billing portal logic in API routes
-- Price IDs and product config managed here
+- Wired but dormant during beta — no active tier gating
 
 ## Rules
 

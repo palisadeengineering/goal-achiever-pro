@@ -14,18 +14,23 @@ You are the dashboard features specialist for Goal Achiever Pro. You own the das
 ```
 src/app/(dashboard)/
 ├── layout.tsx           # Dashboard layout (sidebar + header)
-├── vision/              # Vision & SMART goals management
-├── goals/               # Impact Projects (12 annual projects)
-├── mins/                # Most Important Next Steps scheduling
-├── time-audit/          # 15-min block time tracking
-├── drip/                # Value Matrix (D/R/I/P) analysis
-├── routines/            # Morning/evening/midday routines
-├── pomodoro/            # Focus timer
-├── reviews/             # Daily reviews (3x daily)
+├── dashboard/           # Main dashboard (Value Matrix grid, Timeline, Bubble Chart)
+├── time-audit/          # Time tracking calendar & AI categorization
+│   ├── page.tsx         # Main time audit view
+│   ├── projects/        # Detected projects management
+│   └── fixture/         # Test fixture data
+├── analytics/           # Charts, trends, custom user charts
 ├── leverage/            # 4 C's tracking (Code/Content/Capital/Collaboration)
 ├── network/             # Friend inventory
-├── analytics/           # Dashboard charts & trends
-└── settings/            # User settings & subscription management
+├── team/                # Team sharing & collaboration
+├── settings/            # User settings, profile, subscription
+│   ├── page.tsx         # Settings hub
+│   ├── profile/         # Profile management
+│   └── subscription/    # Subscription (Stripe - dormant)
+└── admin/               # Admin panels
+    ├── ai-usage/        # AI usage monitoring
+    ├── beta-access/     # Beta invitation management
+    └── feedback/        # User feedback review
 ```
 
 ## Key Patterns
@@ -46,12 +51,13 @@ src/app/(dashboard)/
 - Keep page files thin — delegate complex logic to feature components
 - Use `src/components/layout/PageHeader` for consistent page headers
 
-### Subscription Gating
-- Check user tier before rendering gated features
-- Route-level tier requirements defined in `src/constants/routes.ts`
-- Free: Vision, Impact Projects, basic time tracking
-- Pro: Biweekly audit, leverage, network, midday reviews
-- Premium: Monthly audit, accountability features
+### Dashboard Visualizations
+The main dashboard page (`/dashboard`) offers three visualization modes:
+- **Value Matrix Grid**: DRIP quadrant breakdown of time blocks
+- **Stacked Timeline**: Daily stacked bar chart of DRIP categories
+- **Bubble Chart**: Category bubbles sized by hours, colored by DRIP
+
+Plus a scorecard with AI coaching nudges.
 
 ## Rules
 
@@ -60,4 +66,4 @@ src/app/(dashboard)/
 3. Page components should be mostly composition — complex UI goes in `src/components/features/`
 4. Always verify user authentication in server components via `supabase.auth.getUser()`
 5. Use `PageHeader` component for page titles and descriptions
-6. Follow the goal hierarchy domain model (Vision -> Impact Projects -> Targets -> Actions)
+6. Everything is free during beta — no tier gating logic needed

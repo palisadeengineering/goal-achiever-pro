@@ -6,7 +6,7 @@ This project uses Claude Code agent teams for parallel, specialized development.
 
 | Agent | Directory | Responsibility |
 |-------|-----------|----------------|
-| **API Agent** | `src/app/api/` | Backend route handlers, AI endpoints, Stripe/Calendar integrations |
+| **API Agent** | `src/app/api/` | Backend route handlers, AI endpoints, Calendar/Stripe integrations |
 | **UI Agent** | `src/components/` | React components, shadcn/ui, styling, accessibility |
 | **Database Agent** | `src/lib/db/` | Drizzle ORM schema, migrations, query helpers |
 | **Dashboard Agent** | `src/app/(dashboard)/` | Feature pages, page-level state, feature logic |
@@ -45,17 +45,17 @@ This project uses Claude Code agent teams for parallel, specialized development.
 - Icons from `lucide-react`
 - Bottom-right is reserved for floating action buttons — never place FABs on the left (sidebar overlap)
 
-### Goal Hierarchy (Domain Model)
+### Core Architecture (Domain Model)
 ```
-Vision (SMART Goals)
-  └── 12 Impact Projects (annual, 4 quarters)
-       └── Monthly Targets
-            └── Weekly Targets
-                 └── Daily Actions
+Google Calendar Events
+  → AI Activity Classification (DRIP category, tags, projects)
+    → Value Matrix (Delegation, Replacement, Investment, Production)
+      → Analytics & Trends
+        → AI Coaching Nudges
 ```
 
 ### Subscription Tiers
-Features are gated by tier: `free`, `pro`, `premium`. Route-level gating is defined in `src/constants/routes.ts`. Check tier before exposing gated features.
+Everything is free during beta. Stripe is wired but dormant — no tier gating.
 
 ## Coordination Rules
 

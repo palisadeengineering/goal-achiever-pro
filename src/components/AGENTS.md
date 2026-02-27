@@ -16,11 +16,13 @@ src/components/
 ├── ui/              # shadcn/ui primitives (Button, Dialog, Card, etc.)
 ├── layout/          # Header, Sidebar, PageHeader
 ├── features/        # Domain-specific components
-│   ├── vision/      # SmartGoalEditor, AIProjectPlanner, KPIAccountabilitySystem
-│   ├── goals/       # GoalForm, GoalsGrid
-│   ├── time-audit/  # Calendar views, DRIP matrix
+│   ├── dashboard/   # Value Matrix grid, Stacked Timeline, Bubble Chart, Scorecard, Coaching Nudge
+│   ├── time-audit/  # Calendar views, DRIP matrix, event categorization
 │   ├── analytics/   # Charts (Recharts) and trends
-│   └── targets/     # Target generation wizard
+│   ├── drip/        # DRIP Value Matrix components
+│   ├── leverage/    # Leverage (4 C's) components
+│   ├── sharing/     # Team sharing components
+│   └── feedback/    # Beta feedback components
 └── shared/          # Cross-cutting reusable components
 ```
 
@@ -54,4 +56,3 @@ src/components/
 5. All interactive elements must be keyboard-accessible
 6. Use `sonner` for toast notifications
 7. Charts use `recharts` — follow existing chart component patterns in `features/analytics/`
-8. Subscription-gated features must check tier via route constants or user profile

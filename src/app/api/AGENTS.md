@@ -5,10 +5,10 @@ You are the backend API specialist for Goal Achiever Pro. You own all Next.js AP
 ## Responsibilities
 
 - Create and maintain API route handlers (Next.js App Router `route.ts` files)
-- Implement AI generation endpoints (`/api/ai/*`)
+- Implement AI classification and coaching endpoints (`/api/ai/*`)
 - Manage Stripe payment integration (`/api/stripe/*`)
 - Handle Google Calendar sync (`/api/calendar/*`)
-- CRUD endpoints for visions, power goals, targets, and other domain entities
+- CRUD endpoints for time blocks, categorizations, tags, leverage, network, team, and sharing
 
 ## Key Patterns
 
@@ -41,25 +41,36 @@ export async function POST(request: NextRequest) {
 
 ### Authentication
 - Always verify the user via `supabase.auth.getUser()`
-- Check subscription tier for gated features
 - Demo user bypass uses email whitelist (`joel@pe-se.com`)
+- No tier gating — everything is free during beta
 
 ## Existing Endpoints
 
 | Path | Method | Purpose |
 |------|--------|---------|
-| `/api/ai/generate-smart` | POST | Generate SMART goal components |
-| `/api/ai/generate-power-goals` | POST | Create Impact Projects from goals |
-| `/api/ai/generate-kpis` | POST | Generate aligned KPIs |
-| `/api/ai/generate-targets` | POST | Generate monthly/weekly targets |
-| `/api/ai/suggest-vision` | POST | AI vision improvement |
-| `/api/visions` | GET/POST | Vision CRUD |
-| `/api/power-goals` | GET/POST | Impact Projects CRUD |
-| `/api/targets` | GET/POST | Target management |
-| `/api/stripe/checkout` | POST | Create Stripe checkout session |
-| `/api/stripe/webhook` | POST | Handle Stripe webhook events |
-| `/api/stripe/billing-portal` | POST | Create billing portal session |
-| `/api/calendar/google/*` | Various | Google Calendar sync |
+| `/api/ai/classify-activity` | POST | AI categorize time blocks into DRIP |
+| `/api/ai/generate-time-insights` | POST | Generate time audit insights |
+| `/api/ai/suggest-tags` | POST | AI tag suggestions for activities |
+| `/api/ai/suggest-event-cleanup` | POST | Suggest calendar event cleanup |
+| `/api/ai/generate-coaching-nudge` | POST | AI coaching nudges for dashboard |
+| `/api/calendar/*` | Various | Google Calendar sync & webhooks |
+| `/api/time-blocks` | GET/POST/PATCH/DELETE | Time block CRUD |
+| `/api/event-categorizations` | GET/POST | Event categorization management |
+| `/api/tags` | GET/POST | Tag management |
+| `/api/detected-projects` | GET/POST/PATCH | Detected project management |
+| `/api/meeting-categories` | GET/POST | Meeting category management |
+| `/api/leverage` | GET/POST/PATCH/DELETE | Leverage item CRUD |
+| `/api/network` | GET/POST/PATCH/DELETE | Friend inventory CRUD |
+| `/api/team` | GET/POST/PATCH/DELETE | Team member management |
+| `/api/sharing` | GET/POST/PATCH/DELETE | Sharing & permissions |
+| `/api/invite` | POST | Share invitations |
+| `/api/stripe/*` | POST | Checkout, webhooks, billing portal |
+| `/api/user` | GET/PATCH | User profile & settings |
+| `/api/profile` | GET/PATCH | Profile management |
+| `/api/feedback` | POST | Beta feedback submission |
+| `/api/admin/*` | Various | Admin endpoints |
+| `/api/dashboard/stats` | GET | Dashboard statistics |
+| `/api/user-charts` | GET/POST/PATCH/DELETE | Custom chart management |
 
 ## Rules
 
