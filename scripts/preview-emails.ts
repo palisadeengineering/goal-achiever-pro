@@ -71,9 +71,9 @@ const templates = [
       ownerEmail: 'jane@example.com',
       inviteeName: previewData.userName,
       tabs: [
-        { tabName: 'vision', permissionLevel: 'edit' },
-        { tabName: 'goals', permissionLevel: 'edit' },
-        { tabName: 'time_audit', permissionLevel: 'view' },
+        { tabName: 'time_audit', permissionLevel: 'edit' },
+        { tabName: 'leverage', permissionLevel: 'edit' },
+        { tabName: 'network', permissionLevel: 'view' },
         { tabName: 'analytics', permissionLevel: 'view' },
       ],
       acceptUrl: `${previewData.appUrl}/sharing/accept?token=invite123`,

@@ -1,11 +1,10 @@
-import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/server';
 import type {
   TabName,
   EntityType,
   PermissionLevel,
   SharedContent,
   TabPermission,
-  OwnerInfo,
 } from '@/types/sharing';
 
 /**
@@ -350,18 +349,9 @@ export async function getPermissionLevel(
  */
 function entityTypeToTab(entityType: EntityType): TabName | null {
   const mapping: Partial<Record<EntityType, TabName>> = {
-    vision: 'vision',
-    power_goal: 'goals',
-    monthly_target: 'goals',
-    weekly_target: 'goals',
-    daily_action: 'today',
     time_block: 'time_audit',
-    routine: 'routines',
-    key_result: 'okrs',
-    min: 'mins',
     leverage_item: 'leverage',
     friend: 'network',
-    metric: 'analytics',
   };
 
   return mapping[entityType] || null;
