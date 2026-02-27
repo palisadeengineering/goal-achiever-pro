@@ -1,78 +1,114 @@
 'use client';
 
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { PageHeader } from '@/components/layout/page-header';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import {
-  Target,
-  ListTodo,
-  Calendar,
-  Zap,
-  TrendingUp,
-  Clock,
-  CheckCircle2,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  AlertTriangle,
   ArrowRight,
   Loader2,
+  LayoutGrid,
+  BarChart3,
+  Circle,
+  Zap,
+  TrendingUp,
+  Cog,
+  Users,
+  TrendingDown,
+  Minus,
 } from 'lucide-react';
 import Link from 'next/link';
 import { ROUTES } from '@/constants/routes';
+import { ValueMatrixGrid } from '@/components/features/dashboard/value-matrix-grid';
+import { StackedTimeline } from '@/components/features/dashboard/stacked-timeline';
+import { BubbleChart } from '@/components/features/dashboard/bubble-chart';
+import { Scorecard } from '@/components/features/dashboard/scorecard';
+import { CoachingNudge } from '@/components/features/dashboard/coaching-nudge';
+import type { DashboardStats, Period, Visualization } from '@/components/features/dashboard/types';
 
-interface DashboardStats {
-  visionCount: number;
-  powerGoals: {
-    total: number;
-    active: number;
-    completed: number;
-    avgProgress: number;
-  };
-  mins: {
-    todayTotal: number;
-    todayCompleted: number;
-    weekTotal: number;
-    weekCompleted: number;
-    completionRate: number;
-  };
-  drip: {
-    distribution: {
-      delegation: number;
-      replacement: number;
-      investment: number;
-      production: number;
-    };
-    totalMinutes: number;
-    totalHours: number;
-  };
-  threeHundredRule: {
-    clarity: number;
-    belief: number;
-    consistency: number;
-    total: number;
-  };
-  routines: {
-    todayCompletion: number;
-  };
-  reviews: {
-    todayCount: number;
-    morningDone: boolean;
-  };
-}
-
-async function fetchDashboardStats(): Promise<DashboardStats> {
-  const response = await fetch('/api/dashboard/stats');
+async function fetchDashboardStats(period: Period): Promise<DashboardStats> {
+  const response = await fetch(`/api/dashboard/stats?period=${period}`);
   if (!response.ok) {
     throw new Error('Failed to fetch dashboard stats');
   }
   return response.json();
 }
 
+const PERIOD_LABELS: Record<Period, string> = {
+  week: 'This Week',
+  '2weeks': 'Last 2 Weeks',
+  month: 'This Month',
+  '3months': 'Last 3 Months',
+};
+
+const VIZ_OPTIONS: Array<{ value: Visualization; label: string; icon: React.ReactNode }> = [
+  { value: 'matrix', label: 'Matrix', icon: <LayoutGrid className="h-4 w-4" /> },
+  { value: 'timeline', label: 'Timeline', icon: <BarChart3 className="h-4 w-4" /> },
+  { value: 'bubble', label: 'Bubble', icon: <Circle className="h-4 w-4" /> },
+];
+
+interface DripCardProps {
+  label: string;
+  hours: number;
+  trend: number;
+  icon: React.ReactNode;
+  colorClass: string;
+}
+
+function DripCard({ label, hours, trend, icon, colorClass }: DripCardProps) {
+  const trendIcon =
+    trend > 0 ? (
+      <TrendingUp className="h-3 w-3 text-emerald-400" />
+    ) : trend < 0 ? (
+      <TrendingDown className="h-3 w-3 text-rose-400" />
+    ) : (
+      <Minus className="h-3 w-3 text-muted-foreground" />
+    );
+
+  const trendLabel =
+    trend > 0 ? `+${trend}%` : trend < 0 ? `${trend}%` : '0%';
+
+  return (
+    <Card className={`border-l-4 ${colorClass}`}>
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            {icon}
+            <span className="text-xs font-medium uppercase tracking-wider">{label}</span>
+          </div>
+        </div>
+        <div className="mt-2 flex items-end justify-between">
+          <span className="text-2xl font-bold">{hours.toFixed(1)}h</span>
+          <div className="flex items-center gap-1 text-xs">
+            {trendIcon}
+            <span className={trend > 0 ? 'text-emerald-400' : trend < 0 ? 'text-rose-400' : 'text-muted-foreground'}>
+              {trendLabel}
+            </span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function DashboardPage() {
+  const [period, setPeriod] = useState<Period>('week');
+  const [visualization, setVisualization] = useState<Visualization>('matrix');
+
   const { data: stats, isLoading } = useQuery({
-    queryKey: ['dashboardStats'],
-    queryFn: fetchDashboardStats,
-    refetchInterval: 60000, // Refresh every minute
+    queryKey: ['dashboardStats', period],
+    queryFn: () => fetchDashboardStats(period),
+    refetchInterval: 60000,
   });
 
   if (isLoading) {
@@ -83,321 +119,146 @@ export default function DashboardPage() {
     );
   }
 
-  // Use real data or defaults
-  const visionProgress = stats?.powerGoals.avgProgress || 0;
-  const powerGoalsCompleted = stats?.powerGoals.completed || 0;
-  const powerGoalsTotal = stats?.powerGoals.total || 0;
-  const minsToday = stats?.mins.todayTotal || 0;
-  const minsCompletedToday = stats?.mins.todayCompleted || 0;
-  const productionTimePercent = stats?.drip.distribution.production || 0;
+  const drip = stats?.drip ?? { production: 0, investment: 0, replacement: 0, delegation: 0 };
+  const dripTrend = stats?.dripTrend ?? { production: 0, investment: 0, replacement: 0, delegation: 0 };
+  const totalHours = stats?.totalHours ?? 0;
+  const uncategorizedCount = stats?.uncategorizedCount ?? 0;
+  const events = stats?.events ?? [];
+  const leverageItemCount = stats?.leverageItemCount ?? 0;
+  const networkTouchCount = stats?.networkTouchCount ?? 0;
+  const productionTrend = stats?.productionTrend ?? [];
 
-  const clarity = stats?.threeHundredRule.clarity || 0;
-  const belief = stats?.threeHundredRule.belief || 0;
-  const consistency = stats?.threeHundredRule.consistency || 0;
-  const threeHundredTotal = stats?.threeHundredRule.total || 0;
-
-  const valueDistribution = stats?.drip.distribution || {
-    delegation: 0,
-    replacement: 0,
-    investment: 0,
-    production: 0,
+  // Derive previousDrip from drip and dripTrend for coaching nudge
+  const previousDrip = {
+    production: dripTrend.production !== 0 ? drip.production / (1 + dripTrend.production / 100) : drip.production,
+    investment: dripTrend.investment !== 0 ? drip.investment / (1 + dripTrend.investment / 100) : drip.investment,
+    replacement: dripTrend.replacement !== 0 ? drip.replacement / (1 + dripTrend.replacement / 100) : drip.replacement,
+    delegation: dripTrend.delegation !== 0 ? drip.delegation / (1 + dripTrend.delegation / 100) : drip.delegation,
   };
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Dashboard"
-        description="Welcome back! Here's your progress overview."
+        description="Your time at a glance — read-only summary of how you spend it."
       />
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Vision Progress</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{visionProgress}%</div>
-            <Progress value={visionProgress} className="mt-2" />
-          </CardContent>
-        </Card>
+      {/* Uncategorized banner */}
+      {uncategorizedCount > 0 && (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-amber-500/50 bg-amber-950/20 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
+            <span className="text-sm">
+              You have <strong>{uncategorizedCount}</strong> uncategorized event{uncategorizedCount !== 1 ? 's' : ''}
+            </span>
+          </div>
+          <Button asChild variant="outline" size="sm" className="shrink-0">
+            <Link href={ROUTES.timeAudit}>
+              Review Now
+              <ArrowRight className="ml-1 h-3 w-3" />
+            </Link>
+          </Button>
+        </div>
+      )}
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Milestones</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {powerGoalsCompleted}/{powerGoalsTotal}
+      {/* DRIP stat cards */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+        <DripCard
+          label="Prod"
+          hours={drip.production}
+          trend={dripTrend.production}
+          icon={<Zap className="h-3.5 w-3.5" />}
+          colorClass="border-l-emerald-500"
+        />
+        <DripCard
+          label="Inv"
+          hours={drip.investment}
+          trend={dripTrend.investment}
+          icon={<TrendingUp className="h-3.5 w-3.5" />}
+          colorClass="border-l-cyan-500"
+        />
+        <DripCard
+          label="Rep"
+          hours={drip.replacement}
+          trend={dripTrend.replacement}
+          icon={<Cog className="h-3.5 w-3.5" />}
+          colorClass="border-l-amber-500"
+        />
+        <DripCard
+          label="Del"
+          hours={drip.delegation}
+          trend={dripTrend.delegation}
+          icon={<Users className="h-3.5 w-3.5" />}
+          colorClass="border-l-rose-500"
+        />
+        <Card className="col-span-2 lg:col-span-1 border-l-4 border-l-primary">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <span className="text-xs font-medium uppercase tracking-wider">Total</span>
             </div>
-            <p className="text-xs text-muted-foreground">
-              {stats?.powerGoals.active || 0} active milestones
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Today&apos;s MINS</CardTitle>
-            <ListTodo className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {minsCompletedToday}/{minsToday}
+            <div className="mt-2">
+              <span className="text-2xl font-bold">{totalHours.toFixed(1)}h</span>
             </div>
-            <p className="text-xs text-muted-foreground">
-              {minsToday - minsCompletedToday} tasks remaining
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Production Time</CardTitle>
-            <Zap className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{productionTimePercent}%</div>
-            <p className="text-xs text-muted-foreground">
-              Time in high-value activities
-            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid gap-4 md:gap-6 lg:grid-cols-2">
-        {/* Today's Focus */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Today&apos;s Focus
-            </CardTitle>
-            <CardDescription>
-              Your most important next steps for today
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {minsToday === 0 ? (
-              <div className="text-center py-6 text-muted-foreground">
-                <ListTodo className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p>No MINS scheduled for today</p>
-                <p className="text-sm">Add your most important tasks</p>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <CheckCircle2 className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium">
-                      {minsCompletedToday} of {minsToday} MINS completed
-                    </p>
-                    <Progress value={stats?.mins.completionRate || 0} className="h-2 mt-2" />
-                  </div>
-                  <Badge variant={minsCompletedToday === minsToday ? "default" : "secondary"}>
-                    {stats?.mins.completionRate || 0}%
-                  </Badge>
-                </div>
-              </>
-            )}
+      {/* Visualization area */}
+      <Card>
+        <CardContent className="p-4">
+          {/* Controls row */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+            {/* Period selector */}
+            <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(PERIOD_LABELS).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-            <Button asChild className="w-full">
-              <Link href={ROUTES.dashboard}>
-                View All MINS
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Value Distribution Overview */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              This Week&apos;s Value Distribution
-            </CardTitle>
-            <CardDescription>
-              How you&apos;re spending your time across quadrants ({stats?.drip.totalHours || 0}h tracked)
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Value Distribution Bars */}
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <div className="flex justify-between text-sm">
-                  <span className="flex items-center gap-2">
-                    <span className="h-3 w-3 rounded bg-cyan-500" />
-                    Production
-                  </span>
-                  <span className="font-medium">{valueDistribution.production}%</span>
-                </div>
-                <Progress value={valueDistribution.production} className="h-2 bg-cyan-100" />
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex justify-between text-sm">
-                  <span className="flex items-center gap-2">
-                    <span className="h-3 w-3 rounded bg-blue-500" />
-                    Investment
-                  </span>
-                  <span className="font-medium">{valueDistribution.investment}%</span>
-                </div>
-                <Progress value={valueDistribution.investment} className="h-2 bg-blue-100" />
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex justify-between text-sm">
-                  <span className="flex items-center gap-2">
-                    <span className="h-3 w-3 rounded bg-orange-500" />
-                    Replacement
-                  </span>
-                  <span className="font-medium">{valueDistribution.replacement}%</span>
-                </div>
-                <Progress value={valueDistribution.replacement} className="h-2 bg-orange-100" />
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex justify-between text-sm">
-                  <span className="flex items-center gap-2">
-                    <span className="h-3 w-3 rounded bg-purple-500" />
-                    Delegation
-                  </span>
-                  <span className="font-medium">{valueDistribution.delegation}%</span>
-                </div>
-                <Progress value={valueDistribution.delegation} className="h-2 bg-purple-100" />
-              </div>
+            {/* Visualization toggle */}
+            <div className="flex items-center gap-1 rounded-lg border p-1">
+              {VIZ_OPTIONS.map((opt) => (
+                <Button
+                  key={opt.value}
+                  variant={visualization === opt.value ? 'default' : 'ghost'}
+                  size="sm"
+                  className="gap-1.5 text-xs"
+                  onClick={() => setVisualization(opt.value)}
+                >
+                  {opt.icon}
+                  <span className="hidden sm:inline">{opt.label}</span>
+                </Button>
+              ))}
             </div>
+          </div>
 
-            <Button asChild variant="outline" className="w-full">
-              <Link href={ROUTES.timeAudit}>
-                View Time Audit
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+          {/* Active visualization */}
+          {visualization === 'matrix' && <ValueMatrixGrid events={events} />}
+          {visualization === 'timeline' && <StackedTimeline events={events} />}
+          {visualization === 'bubble' && <BubbleChart events={events} />}
+        </CardContent>
+      </Card>
 
-        {/* 300% Rule Tracker */}
-        <Card>
-          <CardHeader>
-            <CardTitle>300% Rule</CardTitle>
-            <CardDescription>
-              Clarity + Belief + Consistency = Achievement
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <div className="flex justify-between text-sm">
-                  <span>Clarity</span>
-                  <span className="font-medium">{clarity}%</span>
-                </div>
-                <Progress value={clarity} className="h-2" />
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex justify-between text-sm">
-                  <span>Belief</span>
-                  <span className="font-medium">{belief}%</span>
-                </div>
-                <Progress value={belief} className="h-2" />
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex justify-between text-sm">
-                  <span>Consistency</span>
-                  <span className="font-medium">{consistency}%</span>
-                </div>
-                <Progress value={consistency} className="h-2" />
-              </div>
-            </div>
-
-            <div className="p-3 rounded-lg bg-muted">
-              <p className="text-sm text-center">
-                Combined Score: <span className="font-bold text-lg">{threeHundredTotal}%</span>
-              </p>
-              <p className="text-xs text-center text-muted-foreground mt-1">
-                {threeHundredTotal === 0
-                  ? "Complete a daily review to track your 300% score"
-                  : threeHundredTotal >= 270
-                    ? "Excellent! You're on fire!"
-                    : threeHundredTotal >= 200
-                      ? "Great progress! Keep pushing!"
-                      : "Time to recalibrate - check your reviews"}
-              </p>
-            </div>
-
-            <Button asChild variant="outline" className="w-full">
-              <Link href={ROUTES.dashboard}>
-                Daily Reviews
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Jump into your daily activities</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            <Button asChild variant="outline" className="justify-start h-auto py-3">
-              <Link href={ROUTES.timeAudit}>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <Clock className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="text-left">
-                    <p className="font-medium">Start Pomodoro</p>
-                    <p className="text-xs text-muted-foreground">
-                      25-minute focused work session
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            </Button>
-
-            <Button asChild variant="outline" className="justify-start h-auto py-3">
-              <Link href={ROUTES.dashboard}>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <Target className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="text-left">
-                    <p className="font-medium">Daily Review</p>
-                    <p className="text-xs text-muted-foreground">
-                      {stats?.reviews.todayCount || 0} reviews today
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            </Button>
-
-            <Button asChild variant="outline" className="justify-start h-auto py-3">
-              <Link href={ROUTES.timeAudit}>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <Calendar className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="text-left">
-                    <p className="font-medium">Log Time Block</p>
-                    <p className="text-xs text-muted-foreground">
-                      Track your time and energy
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+      {/* Bottom row: Scorecard + Coaching Nudge */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Scorecard
+          leverageItemCount={leverageItemCount}
+          networkTouchCount={networkTouchCount}
+          productionTrend={productionTrend}
+        />
+        <CoachingNudge
+          drip={drip}
+          previousDrip={previousDrip}
+          totalHours={totalHours}
+          events={events}
+        />
       </div>
     </div>
   );

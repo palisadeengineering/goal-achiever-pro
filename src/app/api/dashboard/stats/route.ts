@@ -134,7 +134,7 @@ export async function GET(request: NextRequest) {
     // 1. Current period time blocks
     const currentBlocksPromise = supabase
       .from('time_blocks')
-      .select('id, activity_name, notes, drip_quadrant, duration_minutes, energy_rating')
+      .select('id, activity_name, notes, drip_quadrant, duration_minutes, energy_rating, block_date')
       .eq('user_id', userId)
       .gte('block_date', current.start)
       .lte('block_date', current.end);
@@ -253,6 +253,7 @@ export async function GET(request: NextRequest) {
       hours: minutesToHours(b.duration_minutes ?? 0),
       quadrant: b.drip_quadrant ?? null,
       energyRating: b.energy_rating ?? null,
+      blockDate: b.block_date ?? null,
     }));
 
     return NextResponse.json({
