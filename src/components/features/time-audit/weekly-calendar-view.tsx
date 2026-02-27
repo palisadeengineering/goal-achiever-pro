@@ -1113,15 +1113,14 @@ export function WeeklyCalendarView({
     return isWithinInterval(new Date(), { start: currentWeekStart, end: weekEnd });
   }, [currentWeekStart]);
 
-  const getCurrentTimePosition = useCallback(() => {
+  const getCurrentTimePositionPx = useCallback(() => {
     const hours = currentTime.getHours();
     const minutes = currentTime.getMinutes();
     if (hours < settings.calendarStartHour || hours > settings.calendarEndHour) return null;
 
     const totalMinutes = (hours - settings.calendarStartHour) * 60 + minutes;
-    const totalGridMinutes = (settings.calendarEndHour - settings.calendarStartHour + 1) * 60;
-    return (totalMinutes / totalGridMinutes) * 100;
-  }, [currentTime, settings.calendarStartHour, settings.calendarEndHour]);
+    return (totalMinutes / 60) * HOUR_HEIGHT;
+  }, [currentTime, settings.calendarStartHour, settings.calendarEndHour, HOUR_HEIGHT]);
 
   const getBlockDuration = (block: TimeBlock): number => {
     const [sh, sm] = block.startTime.split(':').map(Number);
@@ -1577,10 +1576,10 @@ export function WeeklyCalendarView({
               {/* Time grid */}
               <div className="max-h-[600px] overflow-y-auto relative">
                 {/* Current time indicator */}
-                {isCurrentWeekVisible && getCurrentTimePosition() !== null && (
+                {isCurrentWeekVisible && getCurrentTimePositionPx() !== null && (
                   <div
                     className="absolute left-0 right-0 z-20 pointer-events-none"
-                    style={{ top: `${getCurrentTimePosition()}%` }}
+                    style={{ top: `${getCurrentTimePositionPx()}px` }}
                   >
                     <div className="grid grid-cols-[48px_repeat(7,1fr)]">
                       <div className="relative">
