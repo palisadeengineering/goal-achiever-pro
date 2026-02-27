@@ -2,7 +2,7 @@ import { Sidebar } from '@/components/layout/sidebar';
 import { DashboardHeader } from '@/components/layout/dashboard-header';
 import { Providers } from '@/components/providers';
 import { FeedbackButton } from '@/components/features/feedback/feedback-button';
-import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 
 export default async function DashboardLayout({
@@ -23,7 +23,8 @@ export default async function DashboardLayout({
   };
   let isAdmin = false;
 
-  let subscriptionTier: 'free' | 'pro' | 'elite' | 'founding_member' = 'free';
+  // Everything is free during MVP/PMF phase
+  const subscriptionTier: 'free' | 'pro' | 'elite' | 'founding_member' = 'free';
 
   if (supabase) {
     const { data: { user } } = await supabase.auth.getUser();
@@ -40,35 +41,13 @@ export default async function DashboardLayout({
         avatarUrl: user.user_metadata?.avatar_url,
       };
 
-      // Run profile and beta queries in parallel instead of sequentially
-      const serviceClient = createServiceRoleClient();
-      const profilePromise = supabase
+      const { data: profile } = await supabase
         .from('profiles')
-        .select('is_admin, subscription_tier')
+        .select('is_admin')
         .eq('id', user.id)
         .single();
 
-      const betaPromise = serviceClient && userProfile.email
-        ? serviceClient
-            .from('beta_invitations')
-            .select('id')
-            .ilike('email', userProfile.email)
-            .eq('status', 'accepted')
-            .single()
-        : Promise.resolve({ data: null });
-
-      const [{ data: profile }, { data: betaInvite }] = await Promise.all([
-        profilePromise,
-        betaPromise,
-      ]);
-
       isAdmin = profile?.is_admin || false;
-      subscriptionTier = (profile?.subscription_tier as typeof subscriptionTier) || 'free';
-
-      // Beta access grants elite if user is on free tier
-      if (betaInvite && subscriptionTier === 'free') {
-        subscriptionTier = 'elite';
-      }
     }
   }
 
