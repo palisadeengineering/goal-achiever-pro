@@ -73,3 +73,10 @@ e2e/report/
 e2e/screenshots/
 /playwright-report/
 /blob-report/
+.playwright-mcp/
+
+# Playwright verification screenshots (root-level)
+/*-page.png
+/*-screenshot.png
+/*-v2.png
+/time-audit.png
