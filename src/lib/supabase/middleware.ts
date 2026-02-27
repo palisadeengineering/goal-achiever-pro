@@ -58,30 +58,16 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protected routes
+  // Protected routes - redirect to login if not authenticated
   const protectedPaths = [
     '/dashboard',
-    '/vision',
-    '/goals',
-    '/mins',
     '/time-audit',
-    '/drip',
-    '/routines',
-    '/pomodoro',
-    '/reviews',
+    '/analytics',
     '/leverage',
     '/network',
-    '/metrics',
-    '/analytics',
-    '/accountability',
-    '/settings',
-    '/planner',
-    '/today',
-    '/progress',
-    '/okrs',
     '/team',
+    '/settings',
     '/admin',
-    '/guide',
   ];
 
   const isProtectedPath = protectedPaths.some((path) =>
@@ -93,52 +79,6 @@ export async function updateSession(request: NextRequest) {
     url.pathname = '/login';
     url.searchParams.set('redirect', request.nextUrl.pathname);
     return NextResponse.redirect(url);
-  }
-
-  // Subscription tier gating — only checked for the specific tier-gated routes
-  const TIER_REQUIRED_ROUTES: Record<string, 'pro' | 'elite'> = {
-    '/time-audit/biweekly': 'pro',
-    '/time-audit/monthly': 'pro',
-    '/leverage': 'pro',
-    '/network': 'pro',
-    '/accountability': 'elite',
-    '/reviews/midday': 'pro',
-  };
-
-  if (user) {
-    const tierHierarchy: Record<string, number> = {
-      free: 0,
-      pro: 1,
-      elite: 2,
-      founding_member: 2,
-    };
-
-    // Check if the current path matches any tier-gated route
-    const matchedRoute = Object.keys(TIER_REQUIRED_ROUTES).find((route) =>
-      request.nextUrl.pathname.startsWith(route)
-    );
-
-    if (matchedRoute) {
-      const requiredTier = TIER_REQUIRED_ROUTES[matchedRoute];
-
-      // Query the user's subscription tier
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('subscription_tier')
-        .eq('id', user.id)
-        .single();
-
-      const userTier = profile?.subscription_tier || 'free';
-      const userLevel = tierHierarchy[userTier] ?? 0;
-      const requiredLevel = tierHierarchy[requiredTier] ?? 0;
-
-      if (userLevel < requiredLevel) {
-        const url = request.nextUrl.clone();
-        url.pathname = '/settings/subscription';
-        url.searchParams.set('upgrade', requiredTier);
-        return NextResponse.redirect(url);
-      }
-    }
   }
 
   // Redirect authenticated users away from auth pages and homepage to dashboard
