@@ -87,14 +87,10 @@ test.describe('Visual Verification - Authenticated', () => {
 
   test('capture all main pages for visual review', async ({ page }) => {
     const pages = [
-      { path: '/vision', name: 'vision' },
-      { path: '/goals', name: 'goals' },
-      { path: '/mins', name: 'mins' },
       { path: '/time-audit', name: 'time-audit' },
-      { path: '/routines', name: 'routines' },
-      { path: '/pomodoro', name: 'pomodoro' },
-      { path: '/reviews', name: 'reviews' },
       { path: '/analytics', name: 'analytics' },
+      { path: '/leverage', name: 'leverage' },
+      { path: '/network', name: 'network' },
       { path: '/settings', name: 'settings' },
     ];
 

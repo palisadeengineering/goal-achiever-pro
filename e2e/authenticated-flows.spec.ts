@@ -35,7 +35,7 @@ test.describe('Authenticated Flows', () => {
 
   test('login succeeds and lands on dashboard', async ({ page }) => {
     // After login, we should be on the dashboard
-    expect(page.url()).toMatch(/\/(dashboard|today)/);
+    expect(page.url()).toMatch(/\/(dashboard|time-audit)/);
 
     // Sidebar should be visible
     await verifySidebar(page);
@@ -50,52 +50,28 @@ test.describe('Authenticated Flows', () => {
     await takeVerificationScreenshot(page, 'sidebar-navigation');
   });
 
-  test('vision page loads', async ({ page }) => {
-    await navigateAndVerify(page, '/vision');
-
-    await takeVerificationScreenshot(page, 'vision-page');
-  });
-
-  test('goals page loads', async ({ page }) => {
-    await navigateAndVerify(page, '/goals');
-
-    await takeVerificationScreenshot(page, 'goals-page');
-  });
-
   test('time audit page loads', async ({ page }) => {
     await navigateAndVerify(page, '/time-audit');
 
     await takeVerificationScreenshot(page, 'time-audit-page');
   });
 
-  test('MINS page loads', async ({ page }) => {
-    await navigateAndVerify(page, '/mins');
-
-    await takeVerificationScreenshot(page, 'mins-page');
-  });
-
-  test('routines page loads', async ({ page }) => {
-    await navigateAndVerify(page, '/routines');
-
-    await takeVerificationScreenshot(page, 'routines-page');
-  });
-
-  test('pomodoro timer page loads', async ({ page }) => {
-    await navigateAndVerify(page, '/pomodoro');
-
-    await takeVerificationScreenshot(page, 'pomodoro-page');
-  });
-
-  test('reviews page loads', async ({ page }) => {
-    await navigateAndVerify(page, '/reviews');
-
-    await takeVerificationScreenshot(page, 'reviews-page');
-  });
-
   test('analytics page loads', async ({ page }) => {
     await navigateAndVerify(page, '/analytics');
 
     await takeVerificationScreenshot(page, 'analytics-page');
+  });
+
+  test('leverage page loads', async ({ page }) => {
+    await navigateAndVerify(page, '/leverage');
+
+    await takeVerificationScreenshot(page, 'leverage-page');
+  });
+
+  test('network page loads', async ({ page }) => {
+    await navigateAndVerify(page, '/network');
+
+    await takeVerificationScreenshot(page, 'network-page');
   });
 
   test('settings page loads', async ({ page }) => {
